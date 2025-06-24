@@ -1,24 +1,34 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  darkMode: 'class', // enables dark mode via .dark class
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        primary: '#1A4D8F',
-        secondary: '#A8D0E6',
-        accent: '#FFD166',
-        background: '#FAF9F6',
-        text: '#333333',
+        primary: {
+          light: '#d0f0fd',
+          DEFAULT: '#3aa9d6',
+          dark: '#256b93',
+        },
+        accent: {
+          light: '#fcefc7',
+          DEFAULT: '#f4b400',
+          dark: '#c28f00',
+        },
+        base: {
+          light: '#ffffff',
+          dark: '#1a1a1a',
+        },
+        text: {
+          light: '#1a1a1a',
+          dark: '#f1f1f1',
+        },
       },
     },
   },
   plugins: [
-    require("@tailwindcss/forms"),
-    require("@tailwindcss/typography"),
-    require("tailwindcss-animate")
-  ]
-
-};
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    require('tailwindcss-animate'),
+  ],
+}
