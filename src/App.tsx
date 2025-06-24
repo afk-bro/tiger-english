@@ -1,12 +1,16 @@
+// src/App.tsx
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+
 function App() {
   return (
-    <div className="min-h-screen bg-yellow-300 text-black flex items-center justify-center">
-      <h1 className="text-4xl font-bold underline">
-        Tailwind is finally working!
-      </h1>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        {/* Future routes: Login, Register, Dashboard, etc. */}
+      </Routes>
+    </Router>
   );
 }
 
 export default App;
-
