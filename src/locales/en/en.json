@@ -1,8 +1,43 @@
 {
-  "hero_title": "Learn English with Confidence",
-  "hero_subtitle": "Designed for Thai students and professionals.",
-  "cta_button": "Start Learning Today",
-  "cta": "Start your journey now!",
-  "greeting": "Welcome to Gain English"
+  "hero": {
+    "badge": "AI-Powered English Learning",
+    "title": "Learn English with Confidence",
+    "subtitle": "Designed for Thai students and professionals. Build vocabulary, improve fluency, and grow your skills with AI-powered tools and personalized tutoring.",
+    "cta": "Start Learning Today",
+    "learn_more": "Learn More"
+  },
+  "features": {
+    "heading": "Everything You Need to Master English",
+    "subheading": "Our comprehensive platform combines cutting-edge AI with proven teaching methods",
+    "cards": {
+      "flashcards": {
+        "title": "Interactive Flashcards",
+        "desc": "Generate AI-powered vocabulary cards with contextual images, audio pronunciation, and personalized definitions tailored to your learning style."
+      },
+      "tutoring": {
+        "title": "Personalized Tutoring",
+        "desc": "Get one-on-one support from experienced tutors who understand Thai learners' unique challenges and adapt to your pace and goals."
+      },
+      "ai": {
+        "title": "AI-Powered Learning",
+        "desc": "Experience intelligent content that adapts to your progress, identifies weak areas, and provides targeted exercises for maximum improvement."
+      }
+    }
+  },
+  "cta": {
+    "heading": "Ready to Transform Your English Skills?",
+    "desc": "Join thousands of Thai learners using our proven methods.",
+    "button": "Create Your Account",
+    "contact": "Contact Us"
+  },
+  "header": {
+  "tagline": "Learn with Confidence",
+  "nav": {
+    "flashcards": "Flashcards",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Get Started"
+  }
 }
-
+}
