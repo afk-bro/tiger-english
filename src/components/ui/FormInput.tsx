@@ -1,5 +1,6 @@
 // src/components/ui/FormInput.tsx
-import { InputHTMLAttributes, ReactNode, forwardRef } from 'react';
+import type { InputHTMLAttributes, ReactNode } from 'react';
+import {forwardRef} from 'react'
 
 type FormInputProps = {
   label: string;
