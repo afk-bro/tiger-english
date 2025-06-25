@@ -2,6 +2,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, CreditCard, LogIn, UserPlus } from 'lucide-react';
 import DarkModeToggle from './DarkModeToggle';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Header() {
   const location = useLocation();
@@ -67,6 +68,9 @@ export default function Header() {
             
             <div className="ml-2">
               <DarkModeToggle />
+              </div>
+              <div className="ml-2">
+              <LanguageSwitcher />
             </div>
           </nav>
 
