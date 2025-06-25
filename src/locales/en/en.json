@@ -31,13 +31,24 @@
     "contact": "Contact Us"
   },
   "header": {
-  "tagline": "Learn with Confidence",
-  "nav": {
-    "flashcards": "Flashcards",
-    "about": "About",
-    "contact": "Contact",
-    "login": "Login",
-    "register": "Get Started"
+    "tagline": "Learn with Confidence",
+    "nav": {
+      "flashcards": "Flashcards",
+      "about": "About",
+      "contact": "Contact",
+      "login": "Login",
+      "register": "Get Started"
+    }
+  },
+  "register": {
+    "title": "Create Your Account",
+    "subtitle": "Join Gain English and start mastering English with AI tools and real tutors.",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign Up",
+    "login_link": "Already have an account?",
+    "login_cta": "Log in"
   }
-}
 }
