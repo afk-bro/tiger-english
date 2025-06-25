@@ -1,7 +1,8 @@
 // src/components/home/FinalCtaSection.tsx
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import Button from "../ui/Button";
 
 export default function FinalCtaSection() {
   const { t } = useTranslation();
@@ -12,22 +13,25 @@ export default function FinalCtaSection() {
       <div className="relative text-center py-24 px-6">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            {t('cta.heading')}
+            {t("cta.heading")}
           </h2>
           <p className="text-xl text-white/90 max-w-2xl mx-auto mb-12">
-            {t('cta.desc')}
+            {t("cta.desc")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/register">
-              <button className="group bg-white text-primary-600 hover:bg-primary-50 px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 flex items-center gap-2">
-                {t('cta.button')}
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              <Button
+                to="/register"
+                variant="primary"
+                iconRight={<ArrowRight />}
+              >
+                {t("cta.button")}
+              </Button>
             </Link>
             <Link to="/contact">
-              <button className="text-white hover:text-white/80 px-8 py-4 text-lg font-medium border border-white/30 hover:border-white/50 rounded-xl transition-all duration-200">
-                {t('cta.contact')}
-              </button>
+              <Button to="/contact" variant="outline" iconRight={<ArrowRight />}>
+                {t("cta.contact")}
+              </Button>
             </Link>
           </div>
         </div>
