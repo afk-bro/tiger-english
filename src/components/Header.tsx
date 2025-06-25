@@ -1,10 +1,17 @@
 // src/components/Header.tsx
-import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, CreditCard, LogIn, UserPlus } from 'lucide-react';
-import DarkModeToggle from './DarkModeToggle';
-import LanguageSwitcher from './LanguageSwitcher';
-import Button from './ui/Button';
-import { useTranslation } from 'react-i18next';
+import { Link, useLocation } from "react-router-dom";
+import {
+  BookOpen,
+  CreditCard,
+  LogIn,
+  UserPlus,
+  Info,
+  Mail,
+} from "lucide-react";
+import DarkModeToggle from "./DarkModeToggle";
+import LanguageSwitcher from "./LanguageSwitcher";
+import Button from "./ui/Button";
+import { useTranslation } from "react-i18next";
 
 export default function Header() {
   const location = useLocation();
@@ -15,8 +22,8 @@ export default function Header() {
   const navLinkClass = (path: string) =>
     `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
       isActive(path)
-        ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-        : 'text-text-light/70 dark:text-text-dark/70 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20'
+        ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+        : "text-text-light/70 dark:text-text-dark/70 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
     }`;
 
   return (
@@ -33,33 +40,39 @@ export default function Header() {
                 Gain English
               </span>
               <span className="text-xs text-text-light/60 dark:text-text-dark/60 font-medium">
-                {t('header.tagline')}
+                {t("header.tagline")}
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-2">
-            <Link to="/flashcards" className={navLinkClass('/flashcards')}>
+            <Link to="/flashcards" className={navLinkClass("/flashcards")}>
               <CreditCard className="w-4 h-4" />
-              {t('header.nav.flashcards')}
+              {t("header.nav.flashcards")}
             </Link>
-            <Link to="/about" className={navLinkClass('/about')}>
-              {t('header.nav.about')}
+            <Link to="/about" className={navLinkClass("/about")}>
+              <Info className="w-4 h-4" />
+              {t("header.nav.about")}
             </Link>
-            <Link to="/contact" className={navLinkClass('/contact')}>
-              {t('header.nav.contact')}
+            <Link to="/contact" className={navLinkClass("/contact")}>
+              <Mail className="w-4 h-4" />
+              {t("header.nav.contact")}
             </Link>
 
             <div className="w-px h-6 bg-primary-200 dark:bg-primary-700 mx-2"></div>
 
-            <Link to="/login" className={navLinkClass('/login')}>
+            <Link to="/login" className={navLinkClass("/login")}>
               <LogIn className="w-4 h-4" />
-              {t('header.nav.login')}
+              {t("header.nav.login")}
             </Link>
 
-            <Button to="/register" variant="primary" iconRight={<UserPlus className="w-4 h-4" />}>
-              {t('header.nav.register')}
+            <Button
+              to="/register"
+              variant="primary"
+              iconRight={<UserPlus className="w-4 h-4" />}
+            >
+              {t("header.nav.register")}
             </Button>
 
             <div className="ml-2 flex items-center gap-2">
@@ -72,8 +85,18 @@ export default function Header() {
           <div className="md:hidden flex items-center gap-3">
             <DarkModeToggle />
             <button className="p-2 text-text-light dark:text-text-dark hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </button>
           </div>
