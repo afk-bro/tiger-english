@@ -4,9 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Layout from "../components/Layout";
 import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
-import { useTranslation } from 'react-i18next';
-
+import { Mail, Lock, User, ArrowRight, UserPlus } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Link } from 'react-router-dom'
 
 export default function Register() {
   const schema = z.object({
@@ -28,7 +28,6 @@ export default function Register() {
 
   const { t } = useTranslation();
 
-
   const onSubmit = (data: FormData) => {
     console.log("Registering:", data);
     // send to Supabase or show toast
@@ -36,13 +35,23 @@ export default function Register() {
   return (
     <Layout>
       <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-accent-50 dark:from-base-dark dark:to-primary-900/20 px-6 py-20">
-
         <div className="w-full max-w-md bg-white dark:bg-base-dark border border-primary-100 dark:border-primary-700/40 rounded-2xl shadow-md p-8 space-y-6">
           {/* ... header stuff here ... */}
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl mb-4">
+              <UserPlus className="text-white w-6 h-6" />
+            </div>
+            <h2 className="text-2xl font-bold text-text-light dark:text-text-dark">
+              {t("register.title")}
+            </h2>
+            <p className="text-sm text-text-light/70 dark:text-text-dark/70 mt-2">
+              {t("register.subtitle")}
+            </p>
+          </div>
 
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
             <FormInput
-              label={t('register.first_name')}
+              label={t("register.first_name")}
               icon={
                 <User className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               }
@@ -55,7 +64,7 @@ export default function Register() {
               </p>
             )}
             <FormInput
-              label={t('register.last_name')}
+              label={t("register.last_name")}
               icon={
                 <User className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               }
@@ -68,7 +77,7 @@ export default function Register() {
               </p>
             )}
             <FormInput
-              label={t('register.email')}
+              label={t("register.email")}
               icon={
                 <Mail className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               }
@@ -82,7 +91,7 @@ export default function Register() {
               </p>
             )}
             <FormInput
-              label={t('register.password')}
+              label={t("register.password")}
               icon={
                 <Lock className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               }
@@ -101,11 +110,20 @@ export default function Register() {
               iconRight={<ArrowRight />}
               className="w-full"
             >
-              {t('register.submit')}
+              {t("register.submit")}
             </Button>
           </form>
 
           {/* ... login link ... */}
+          <p className="text-sm text-center text-text-light/70 dark:text-text-dark/70">
+            {t("register.login_link")}{" "}
+            <Link
+              to="/login"
+              className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
+            >
+              {t("register.login_cta")}
+            </Link>
+          </p>
         </div>
       </section>
     </Layout>
