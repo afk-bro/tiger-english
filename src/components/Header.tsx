@@ -1,5 +1,6 @@
 // src/components/Header.tsx
 import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 import {
   BookOpen,
   CreditCard,
@@ -18,6 +19,8 @@ export default function Header() {
   const { t } = useTranslation();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinkClass = (path: string) =>
     `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -70,7 +73,7 @@ export default function Header() {
             <Button
               to="/register"
               variant="primary"
-              size='sm'
+              size="sm"
               iconRight={<UserPlus className="w-4 h-4" />}
             >
               {t("header.nav.register")}
@@ -82,10 +85,12 @@ export default function Header() {
             </div>
           </nav>
 
-          {/* Mobile nav button (inactive for now) */}
+          {/* Mobile nav button */}
           <div className="md:hidden flex items-center gap-3">
-            <DarkModeToggle />
-            <button className="p-2 text-text-light dark:text-text-dark hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 text-text-light dark:text-text-dark hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+            >
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -102,6 +107,41 @@ export default function Header() {
             </button>
           </div>
         </div>
+        {isMenuOpen && (
+          <div className="md:hidden mt-4 pt-4 border-t border-primary-100 dark:border-primary-800/30">
+            <nav className="flex flex-col gap-2">
+              <Link to="/flashcards" className={navLinkClass("/flashcards")}>
+                <CreditCard className="w-4 h-4" />
+                {t("header.nav.flashcards")}
+              </Link>
+              <Link to="/about" className={navLinkClass("/about")}>
+                <Info className="w-4 h-4" />
+                {t("header.nav.about")}
+              </Link>
+              <Link to="/contact" className={navLinkClass("/contact")}>
+                <Mail className="w-4 h-4" />
+                {t("header.nav.contact")}
+              </Link>
+              <Link to="/login" className={navLinkClass("/login")}>
+                <LogIn className="w-4 h-4" />
+                {t("header.nav.login")}
+              </Link>
+              <Button
+                to="/register"
+                size="sm"
+                variant="primary"
+                iconRight={<UserPlus className="w-4 h-4" />}
+                className="mt-2"
+              >
+                {t("header.nav.register")}
+              </Button>
+            </nav>
+            <div className="flex justify-center gap-4 mt-6">
+              <DarkModeToggle />
+              <LanguageSwitcher />
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
