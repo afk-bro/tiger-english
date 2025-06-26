@@ -8,6 +8,7 @@ type ButtonProps = {
   to?: string; // if present, renders a <Link>
   iconRight?: ReactNode;
   variant?: 'primary' | 'ghost' | 'outline' | 'white';
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
   type?: 'button' | 'submit';
 };
@@ -18,6 +19,7 @@ export default function Button({
   iconRight,
   variant = 'primary',
   className = '',
+  size = 'md',
   type = 'button',
 }: ButtonProps) {
   const base =
@@ -34,10 +36,16 @@ export default function Button({
       'bg-white text-primary-600 hover:bg-primary-50 shadow-lg hover:shadow-xl transform hover:-translate-y-1',
   };
 
-  const combined = clsx(base, styles[variant], className);
+  const sizeStyles = {
+  sm: 'px-4 py-2 text-sm rounded-md',
+  md: 'px-6 py-3 text-base rounded-lg',
+  lg: 'px-8 py-4 text-lg rounded-xl',
+};
+
+  const classes = clsx(base, styles[variant], sizeStyles[size ?? 'md'], className);
 
   const content = (
-    <span className={combined}>
+    <span className={classes}>
       {children}
       {iconRight}
     </span>
@@ -46,7 +54,7 @@ export default function Button({
   return to ? (
     <Link to={to}>{content}</Link>
   ) : (
-    <button type={type} className={combined}>
+    <button type={type} className={classes}>
       {children}
       {iconRight}
     </button>

@@ -70,6 +70,7 @@ export default function Header() {
             <Button
               to="/register"
               variant="primary"
+              size='sm'
               iconRight={<UserPlus className="w-4 h-4" />}
             >
               {t("header.nav.register")}
