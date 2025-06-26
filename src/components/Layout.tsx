@@ -1,0 +1,14 @@
+// src/components/Layout.tsx
+import type { ReactNode } from 'react';
+import Header from './Header';
+import Footer from './Footer';
+
+export default function Layout({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen flex flex-col bg-base-light text-text-light dark:bg-base-dark dark:text-text-dark transition-colors duration-300 font-sans">
+      <Header />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </div>
+  );
+}
