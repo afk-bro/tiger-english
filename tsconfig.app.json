@@ -21,7 +21,12 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+     /* Added for i18next */
+  "esModuleInterop": true,
+  "allowSyntheticDefaultImports": true,
+  "resolveJsonModule": true
   },
   "include": ["src"]
 }
