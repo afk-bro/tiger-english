@@ -1,26 +1,34 @@
 // src/components/ui/FormInput.tsx
-import type { InputHTMLAttributes, ReactNode } from 'react';
 import {forwardRef} from 'react'
 
 type FormInputProps = {
+  name: string;
   label: string;
-  icon: ReactNode;
   placeholder?: string;
-} & InputHTMLAttributes<HTMLInputElement>;
+  type?: string;
+  icon?: React.ReactNode;
+  value?: string;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  disabled?: boolean;
+};
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
-  ({ label, icon, placeholder, ...rest }, ref) => {
+  ({ name, label, placeholder, type = 'text', icon, ...rest }, ref) => {
     return (
-      <div>
-        <label className="text-sm font-medium block mb-1 text-text-light dark:text-text-dark">
+      <div className="space-y-1">
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
         </label>
-        <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-base-dark">
-          <div className="px-3">{icon}</div>
+        <div className="relative">
+          {icon && <div className="absolute inset-y-0 left-0 pl-3 flex items-center">{icon}</div>}
           <input
+            id={name}              // ✅ must match htmlFor
+            name={name}
+            type={type}
             ref={ref}
             placeholder={placeholder}
-            className="w-full px-3 py-2 bg-transparent text-text-light dark:text-text-dark placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none"
+            className="input-class"
             {...rest}
           />
         </div>
@@ -29,4 +37,5 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
   }
 );
 
+FormInput.displayName = 'FormInput';
 export default FormInput;

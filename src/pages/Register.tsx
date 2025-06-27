@@ -6,7 +6,11 @@ import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
 import { Mail, Lock, User, ArrowRight, UserPlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
+import { registerUser } from "../features/auth/registerUser";
+import { toast } from "sonner";
+import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
 
 export default function Register() {
   const schema = z.object({
@@ -28,15 +32,30 @@ export default function Register() {
 
   const { t } = useTranslation();
 
-  const onSubmit = (data: FormData) => {
-    console.log("Registering:", data);
-    // send to Supabase or show toast
+  const navigate = useNavigate();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const onSubmit = async (data: FormData) => {
+    setIsSubmitting(true);
+    const result = await registerUser({
+      email: data.email,
+      password: data.password,
+      firstName: data.firstName,
+      lastName: data.lastName,
+    });
+    setIsSubmitting(false);
+    if (result.success) {
+      toast.success(result.message);
+      navigate("/login");
+    } else {
+      toast.error(result.error);
+    }
   };
   return (
     <Layout>
       <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-accent-50 dark:from-base-dark dark:to-primary-900/20 px-6 py-20">
         <div className="w-full max-w-md bg-white dark:bg-base-dark border border-primary-100 dark:border-primary-700/40 rounded-2xl shadow-md p-8 space-y-6">
-          {/* ... header stuff here ... */}
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl mb-4">
               <UserPlus className="text-white w-6 h-6" />
@@ -109,8 +128,9 @@ export default function Register() {
               variant="primary"
               iconRight={<ArrowRight />}
               className="w-full"
+              disabled={isSubmitting}
             >
-              {t("register.submit")}
+              { isSubmitting ? t("register.loading") : t("register.submit")}
             </Button>
           </form>
 
