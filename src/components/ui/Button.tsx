@@ -14,6 +14,7 @@ type ButtonProps = {
   fullWidth?: boolean;
   block?: boolean;
   align?: "left" | "center" | "right";
+  disabled?: boolean;
 };
 
 export default function Button({
@@ -27,6 +28,7 @@ export default function Button({
   fullWidth,
   block,
   align,
+  disabled = false,
 }: ButtonProps) {
   const base =
     "inline-flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-200";
@@ -74,7 +76,10 @@ export default function Button({
   return to ? (
     <Link to={to}>{content}</Link>
   ) : (
-    <button type={type} className={classes}>
+    <button
+      type={type}
+      className={clsx(classes, disabled && "opacity-50 cursor-not-allowed")}
+    >
       {children}
       {iconRight}
     </button>
