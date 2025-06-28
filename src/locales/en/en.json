@@ -51,5 +51,19 @@
     "login_link": "Already have an account?",
     "login_cta": "Log in",
     "loading": "Creating account..."
+  },
+  "login": {
+    "title": "Welcome back",
+    "subtitle": "Log in to continue learning",
+    "email": "Email address",
+    "password": "Password",
+    "submit": "Log In",
+    "loading": "Logging in...",
+    "no_account": "Don't have an account?",
+    "create_account": "Sign up"
+  },
+  "logout": {
+    "success": "Logged out successfully",
+    "fail": "Logout failed"
   }
 }
