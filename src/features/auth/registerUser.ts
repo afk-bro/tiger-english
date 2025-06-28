@@ -40,11 +40,13 @@ export async function registerUser({
     };
   }
 
-  const { error: profileError } = await supabase.from('profiles').insert({
+  const { error: profileError } = await supabase.from('profiles').insert([
+  {
     id: user.id,
     first_name: firstName,
     last_name: lastName,
-  });
+  },
+]);
 
   if (profileError) {
     return {
