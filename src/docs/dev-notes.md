@@ -4,6 +4,7 @@
 - `registerUser.ts`: handles sign-up using Supabase:
   - `auth.signUp({ email, password })`
   - Inserts user profile into `profiles` table
+  - Supabase requires insert() payload to be an array of rows
 - Success/Failure handled via `sonner.toast`
 - Navigation controlled via `useNavigate('/login')` after success
 
