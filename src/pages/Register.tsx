@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Layout from "../components/Layout";
 import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
 import { Mail, Lock, User, ArrowRight, UserPlus } from "lucide-react";
@@ -53,7 +52,6 @@ export default function Register() {
     }
   };
   return (
-    <Layout>
       <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-accent-50 dark:from-base-dark dark:to-primary-900/20 px-6 py-20">
         <div className="w-full max-w-md bg-white dark:bg-base-dark border border-primary-100 dark:border-primary-700/40 rounded-2xl shadow-md p-8 space-y-6">
           <div className="text-center">
@@ -146,6 +144,5 @@ export default function Register() {
           </p>
         </div>
       </section>
-    </Layout>
   );
 }
