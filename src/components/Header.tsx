@@ -13,6 +13,7 @@ import DarkModeToggle from "./DarkModeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
 import Button from "./ui/Button";
 import { useTranslation } from "react-i18next";
+import UserMenu from "@/components/ui/UserMenu";
 
 export default function Header() {
   const location = useLocation();
@@ -65,15 +66,12 @@ export default function Header() {
 
             <div className="w-px h-6 bg-primary-200 dark:bg-primary-700 mx-2"></div>
 
-            <Link to="/login" className={navLinkClass("/login")}>
-              <LogIn className="w-4 h-4" />
-              {t("header.nav.login")}
-            </Link>
+            <UserMenu />
 
             <Button
               to="/register"
               variant="primary"
-              size="sm"
+              size="xs"
               iconRight={<UserPlus className="w-4 h-4" />}
             >
               {t("header.nav.register")}

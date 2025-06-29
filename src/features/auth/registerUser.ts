@@ -45,6 +45,7 @@ export async function registerUser({
     id: user.id,
     first_name: firstName,
     last_name: lastName,
+    email: user.email
   },
 ]);
 
