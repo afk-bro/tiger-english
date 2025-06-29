@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   BookOpen,
   CreditCard,
-  LogIn,
   UserPlus,
   Info,
   Mail,
@@ -14,6 +13,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import Button from "./ui/Button";
 import { useTranslation } from "react-i18next";
 import UserMenu from "@/components/ui/UserMenu";
+import { useUserStore } from "@/stores/useUserStore";
 
 export default function Header() {
   const location = useLocation();
@@ -29,6 +29,8 @@ export default function Header() {
         ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
         : "text-text-light/70 dark:text-text-dark/70 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
     }`;
+
+  const { profile } = useUserStore();
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 dark:bg-base-dark/95 backdrop-blur-sm border-b border-primary-100 dark:border-primary-800/30 shadow-sm">
@@ -68,14 +70,16 @@ export default function Header() {
 
             <UserMenu />
 
-            <Button
-              to="/register"
-              variant="primary"
-              size="xs"
-              iconRight={<UserPlus className="w-4 h-4" />}
-            >
-              {t("header.nav.register")}
-            </Button>
+            {!profile && (
+              <Button
+                to="/register"
+                variant="primary"
+                size="xs"
+                iconRight={<UserPlus className="w-4 h-4" />}
+              >
+                {t("header.nav.register")}
+              </Button>
+            )}
 
             <div className="ml-2 flex items-center gap-2">
               <DarkModeToggle />
@@ -120,19 +124,20 @@ export default function Header() {
                 <Mail className="w-4 h-4" />
                 {t("header.nav.contact")}
               </Link>
-              <Link to="/login" className={navLinkClass("/login")}>
-                <LogIn className="w-4 h-4" />
-                {t("header.nav.login")}
-              </Link>
-              <Button
-                to="/register"
-                size="sm"
-                variant="primary"
-                iconRight={<UserPlus className="w-4 h-4" />}
-                className="mt-2"
-              >
-                {t("header.nav.register")}
-              </Button>
+              <div className="flex items-center">
+                <UserMenu mobile={true} />
+              </div>
+              {!profile && (
+                <Button
+                  to="/register"
+                  size="xs"
+                  variant="primary"
+                  iconRight={<UserPlus className="w-4 h-4" />}
+                  className="mt-2"
+                >
+                  {t("header.nav.register")}
+                </Button>
+              )}
             </nav>
             <div className="flex justify-center gap-4 mt-6">
               <DarkModeToggle />
