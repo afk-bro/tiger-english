@@ -7,8 +7,9 @@ type ButtonProps = {
   children: ReactNode;
   to?: string; // if present, renders a <Link>
   iconRight?: ReactNode;
-  variant?: "primary" | "ghost" | "outline" | "white";
-  size?: "sm" | "md" | "lg";
+  iconLeft?: React.ReactNode;
+  variant?: "primary" | "secondary" | "ghost" | "outline" | "white" | "danger";
+  size?: "xs" | "sm" | "md" | "lg";
   className?: string;
   type?: "button" | "submit";
   fullWidth?: boolean;
@@ -36,15 +37,20 @@ export default function Button({
   const styles = {
     primary:
       "bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-1",
+    secondary:
+      "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600",
     ghost:
       "text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300",
     outline:
       "border border-white text-white hover:text-white/80 hover:border-white/50",
     white:
       "bg-white text-primary-600 hover:bg-primary-50 shadow-lg hover:shadow-xl transform hover:-translate-y-1",
+    danger:
+      "bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700",
   };
 
   const sizeStyles = {
+    xs: "px-2 py-1 text-xs",
     sm: "px-4 py-2 text-sm rounded-md",
     md: "px-6 py-3 text-base rounded-lg",
     lg: "px-8 py-4 text-lg rounded-xl",
