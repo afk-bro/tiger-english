@@ -2,8 +2,15 @@ import { useUserStore } from "@/stores/useUserStore";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "@/features/auth/logoutUser";
 import { toast } from "sonner";
-import { Menu, MenuButton, MenuItem, MenuItems, Transition } from "@headlessui/react";
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition,
+} from "@headlessui/react";
 import { Fragment } from "react";
+import { blurActiveElement } from "@/utils/dom"
 
 interface UserMenuProps {
   mobile?: boolean;
@@ -18,6 +25,7 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
     if (!error) {
       clearProfile();
       toast.success("Logged out");
+      blurActiveElement();
       navigate("/login");
     }
   };
@@ -38,7 +46,10 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
   // Mobile version - simple logout button
   if (mobile) {
     return (
-      <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">
+      <button
+        onClick={handleLogout}
+        className="text-sm text-red-600 hover:underline"
+      >
         Logout
       </button>
     );
@@ -61,15 +72,29 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
         leaveTo="transform opacity-0 scale-95"
       >
         <MenuItems className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-          <div className="px-1 py-1">
             <div className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
               <div className="font-medium">
+                <div className="px-1 py-1">
                 {profile.first_name} {profile.last_name}
+                </div>
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 {profile.email}
               </div>
             </div>
+          <div className="px-1 py-1">
+            <MenuItem>
+              {({ active }) => (
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className={`${
+                    active ? "bg-gray-100 dark:bg-gray-700" : ""
+                  } group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 dark:text-gray-100`}
+                >
+                  Dashboard
+                </button>
+              )}
+            </MenuItem>
           </div>
           <div className="px-1 py-1">
             <MenuItem>

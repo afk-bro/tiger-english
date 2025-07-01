@@ -1,18 +1,13 @@
 // src/components/Header.tsx
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import {
-  BookOpen,
-  CreditCard,
-  UserPlus,
-  Info,
-  Mail,
-} from "lucide-react";
+import { BookOpen, CreditCard, UserPlus, Info, Mail } from "lucide-react";
 import DarkModeToggle from "./DarkModeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
 import Button from "./ui/Button";
 import { useTranslation } from "react-i18next";
 import UserMenu from "@/components/ui/UserMenu";
+import NavLink from "@/components/ui/NavLink";
 import { useUserStore } from "@/stores/useUserStore";
 
 export default function Header() {
@@ -53,21 +48,18 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-2">
-            <Link to="/flashcards" className={navLinkClass("/flashcards")}>
-              <CreditCard className="w-4 h-4" />
+            <NavLink to="/flashcards" icon={<CreditCard className="w-4 h-4" />}>
               {t("header.nav.flashcards")}
-            </Link>
-            <Link to="/about" className={navLinkClass("/about")}>
-              <Info className="w-4 h-4" />
+            </NavLink>
+            <NavLink to="/about" icon={<Info className="w-4 h-4" />}>
               {t("header.nav.about")}
-            </Link>
-            <Link to="/contact" className={navLinkClass("/contact")}>
-              <Mail className="w-4 h-4" />
+            </NavLink>
+            <NavLink to="/contact" icon={<Mail className="w-4 h-4" />}>
               {t("header.nav.contact")}
-            </Link>
+            </NavLink>
 
             <div className="w-px h-6 bg-primary-200 dark:bg-primary-700 mx-2"></div>
-
+            {/* Login / Logout */}
             <UserMenu />
 
             {!profile && (
