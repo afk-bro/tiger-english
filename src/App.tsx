@@ -6,6 +6,7 @@ import Login from "@/pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AppInitializer from "./components/AppInitiazlier";
 import Layout from "./components/Layout";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/about" element={<About />} />
         {/* Future routes: Login, Register, Dashboard, etc. */}
       </Routes>
       </Layout>
