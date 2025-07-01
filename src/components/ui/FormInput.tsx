@@ -12,6 +12,8 @@ type FormInputProps = {
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
   disabled?: boolean;
+  error?: string;
+  id?: string;
 };
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
