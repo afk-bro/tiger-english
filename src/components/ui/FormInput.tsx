@@ -14,6 +14,7 @@ type FormInputProps = {
   disabled?: boolean;
   error?: string;
   id?: string;
+  rows?: number;
 };
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
