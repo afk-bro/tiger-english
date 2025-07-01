@@ -54,3 +54,15 @@
 - Aliases set with `@` via `vite.config.ts` + `tsconfig.json`
 - Button components accept `variant`, `size`, `iconRight`, `disabled`
 - Language toggle via `LanguageSwitcher.tsx` with `i18n.changeLanguage()`
+
+## 8. Utils
+- blurActiveElement util — used in UserMenu logout
+
+## 9. UI
+- modularized NavLink
+
+## 🧱 Components
+- `/dashboard` uses: WelcomePanel, XPProgress, etc.
+
+## 🔄 Zustand
+- useUserStore manages profile, fetched in AppInitializer
