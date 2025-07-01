@@ -1,5 +1,4 @@
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
@@ -10,23 +9,16 @@ import { registerUser } from "../features/auth/registerUser";
 import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
 import { useState } from "react";
+import { registerSchema, RegisterFormData } from "@/schemas/authSchema"
 
 export default function Register() {
-  const schema = z.object({
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
-    email: z.string().email("Invalid email"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-  });
-
-  type FormData = z.infer<typeof schema>;
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
   });
 
   const { t } = useTranslation();
@@ -35,7 +27,7 @@ export default function Register() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
     const result = await registerUser({
       email: data.email,

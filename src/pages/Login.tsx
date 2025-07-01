@@ -1,5 +1,4 @@
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
@@ -9,28 +8,24 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { loginSchema, LoginFormData } from "@/schemas/authSchema";
+
 
 export default function Login() {
-  const schema = z.object({
-    email: z.string().email("Invalid email"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-  });
-
-  type FormData = z.infer<typeof schema>;
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
 
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
