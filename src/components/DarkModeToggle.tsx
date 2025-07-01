@@ -9,7 +9,7 @@ export default function DarkModeToggle() {
       onClick={() => setDarkMode(!darkMode)}
       className="text-sm border px-3 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
     >
-      {darkMode ? '☀ Light Mode' : '🌙 Dark Mode'}
+      {darkMode ? '☀' : '🌙'}
     </button>
   );
 }
