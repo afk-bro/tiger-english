@@ -21,7 +21,7 @@ export default function ContactForm() {
       console.log("Contact form data submitted:", data);
       toast.success("Message sent!");
       reset();
-    } catch (err) {
+    } catch (_err) {
       toast.error("Something went wrong. Please try again.");
     }
   };
