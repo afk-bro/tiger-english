@@ -8,6 +8,7 @@ import AppInitializer from "./components/AppInitiazlier";
 import Layout from "./components/Layout";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import ProtectedRoute from "@/routes/ProtectedRoute";
 
 function App() {
   return (
@@ -18,9 +19,12 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+
+        <Route element={<ProtectedRoute />} >
+        <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
         {/* Future routes: Login, Register, Dashboard, etc. */}
       </Routes>
       </Layout>
