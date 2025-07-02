@@ -31,13 +31,14 @@
     "contact": "Contact Us"
   },
   "header": {
+    "logo": "Gain English",
     "tagline": "Learn with Confidence",
     "nav": {
       "flashcards": "Flashcards",
       "about": "About",
       "contact": "Contact",
       "login": "Login",
-      "register": "Get Started"
+      "register": "Register"
     }
   },
   "register": {

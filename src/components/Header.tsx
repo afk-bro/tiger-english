@@ -1,14 +1,12 @@
 // src/components/Header.tsx
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { BookOpen, CreditCard, UserPlus, Info, Mail } from "lucide-react";
+import { BookOpen, CreditCard, Info, Mail } from "lucide-react";
 import DarkModeToggle from "./DarkModeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
-import Button from "./ui/Button";
 import { useTranslation } from "react-i18next";
 import UserMenu from "@/components/ui/UserMenu";
 import NavLink from "@/components/ui/NavLink";
-import { useUserStore } from "@/stores/useUserStore";
 
 export default function Header() {
   const location = useLocation();
@@ -25,8 +23,6 @@ export default function Header() {
         : "text-text-light/70 dark:text-text-dark/70 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
     }`;
 
-  const { profile } = useUserStore();
-
   return (
     <header className="sticky top-0 z-50 bg-white/95 dark:bg-base-dark/95 backdrop-blur-sm border-b border-primary-100 dark:border-primary-800/30 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 py-4">
@@ -38,7 +34,7 @@ export default function Header() {
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
-                Gain English
+                {t("header.logo")}
               </span>
               <span className="text-xs text-text-light/60 dark:text-text-dark/60 font-medium">
                 {t("header.tagline")}
@@ -62,18 +58,7 @@ export default function Header() {
             {/* Login / Logout */}
             <UserMenu />
 
-            {!profile && (
-              <Button
-                to="/register"
-                variant="primary"
-                size="xs"
-                iconRight={<UserPlus className="w-4 h-4" />}
-              >
-                {t("header.nav.register")}
-              </Button>
-            )}
-
-            <div className="ml-2 flex items-center gap-2">
+            <div className="flex gap-2 mt-4 sm:mt-0 sm:ml-auto">
               <DarkModeToggle />
               <LanguageSwitcher />
             </div>
@@ -119,17 +104,6 @@ export default function Header() {
               <div className="flex items-center">
                 <UserMenu mobile={true} />
               </div>
-              {!profile && (
-                <Button
-                  to="/register"
-                  size="xs"
-                  variant="primary"
-                  iconRight={<UserPlus className="w-4 h-4" />}
-                  className="mt-2"
-                >
-                  {t("header.nav.register")}
-                </Button>
-              )}
             </nav>
             <div className="flex justify-center gap-4 mt-6">
               <DarkModeToggle />
