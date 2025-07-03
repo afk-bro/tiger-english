@@ -7,6 +7,7 @@ type UserProfile = {
   first_name: string;
   last_name: string;
   email?: string;
+  username: string;
 };
 
 type UserStore = {
@@ -33,14 +34,24 @@ export const useUserStore = create<UserStore>((set) => ({
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, first_name, last_name, email")
+      .select("id, first_name, last_name, email, username")
       .eq("id", session.user.id)
       .single();
 
     if (error) {
       set({ error: error.message, profile: null, loading: false });
     } else {
-      set({ profile: data, error: null, loading: false });
+      set({
+        profile: {
+          id: data.id,
+          email: data.email,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          username: data.username,
+        },
+        error: null,
+        loading: false,
+      });
     }
   },
 

@@ -51,7 +51,8 @@
     "submit": "Sign Up",
     "login_link": "Already have an account?",
     "login_cta": "Log in",
-    "loading": "Creating account..."
+    "loading": "Creating account...",
+    "username": "Username"
   },
   "login": {
     "title": "Welcome back",
