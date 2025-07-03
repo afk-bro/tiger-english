@@ -8,25 +8,26 @@ import AppInitializer from "./components/AppInitiazlier";
 import Layout from "./components/Layout";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import ProtectedRoute from "@/routes/ProtectedRoute";
+import UserLayout from "@/routes/UserLayout";
 
 function App() {
   return (
     <Router>
       <AppInitializer />
-      <Layout >
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-
-        <Route element={<ProtectedRoute />} >
-        <Route path="/dashboard" element={<Dashboard />} />
-        </Route>
-        {/* Future routes: Login, Register, Dashboard, etc. */}
-      </Routes>
+      <Layout>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          {/* Username-protected routes */}
+          <Route path="/u/:username" element={<UserLayout />}>
+            <Route index element={<Dashboard />} />
+            {/* Future: <Route path="stats" element={<StatsPage />} /> */}
+          </Route>
+        </Routes>
       </Layout>
     </Router>
   );

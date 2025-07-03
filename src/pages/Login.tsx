@@ -9,10 +9,9 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { loginSchema, LoginFormData } from "@/schemas/authSchema";
-
+import { useUserStore } from "@/stores/useUserStore";
 
 export default function Login() {
-
   const {
     register,
     handleSubmit,
@@ -24,6 +23,7 @@ export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { profile } = useUserStore();
 
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
@@ -35,9 +35,11 @@ export default function Login() {
 
     if (error) {
       toast.error(error.message);
-    } else {
+    }
+    
+    if (profile?.username) {
       toast.success("Login successful");
-      navigate("/dashboard"); // Adjust route as needed
+      navigate(`/u/${profile.username}`);
     }
   };
 

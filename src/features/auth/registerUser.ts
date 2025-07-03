@@ -6,6 +6,7 @@ type RegisterArgs = {
   password: string;
   firstName: string;
   lastName: string;
+  userName: string;
 };
 
 type RegisterResult =
@@ -17,6 +18,7 @@ export async function registerUser({
   password,
   firstName,
   lastName,
+  userName,
 }: RegisterArgs): Promise<RegisterResult> {
   // Step 1: Sign up user with Supabase Auth
   const { data, error } = await supabase.auth.signUp({
@@ -45,7 +47,8 @@ export async function registerUser({
     id: user.id,
     first_name: firstName,
     last_name: lastName,
-    email: user.email
+    email: user.email,
+    username: userName,
   },
 ]);
 
