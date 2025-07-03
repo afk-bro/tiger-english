@@ -116,7 +116,7 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
             <MenuItem>
               {({ active }) => (
                 <button
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/u/:username/dashboard")}
                   className={`${
                     active ? "bg-gray-100 dark:bg-gray-700" : ""
                   } group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 dark:text-gray-100`}

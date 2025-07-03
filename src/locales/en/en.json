@@ -38,7 +38,9 @@
       "about": "About",
       "contact": "Contact",
       "login": "Login",
-      "register": "Register"
+      "register": "Register",
+      "dashboard": "Dashboard",
+      "logout": "Logout"
     }
   },
   "register": {
