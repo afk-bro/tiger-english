@@ -7,9 +7,9 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState } from "react";
-import { supabase } from "../lib/supabase";
 import { loginSchema, LoginFormData } from "@/schemas/authSchema";
 import { useUserStore } from "@/stores/useUserStore";
+import { loginUser } from "@/features/auth/loginUser";
 
 export default function Login() {
   const {
@@ -23,23 +23,29 @@ export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { profile } = useUserStore();
 
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    });
+
+    // Call reusable login handler
+    const result = await loginUser(data);
+
+    // Stop loading spinner
     setIsSubmitting(false);
 
-    if (error) {
-      toast.error(error.message);
+    if (!result.success) {
+      toast.error(result.message || "Login failed");
+      return;
     }
-    
-    if (profile?.username) {
+
+    // Safely get latest profile data from Zustand store
+    const updatedProfile = useUserStore.getState().profile;
+
+    if (updatedProfile?.username) {
       toast.success("Login successful");
-      navigate(`/u/${profile.username}`);
+      navigate(`/u/${updatedProfile.username}`);
+    } else {
+      toast.error("Profile not found after login");
     }
   };
 
