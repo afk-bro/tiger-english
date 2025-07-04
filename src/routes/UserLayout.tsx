@@ -13,10 +13,14 @@ const UserLayout = () => {
     }
   }, [profile, loading, fetchProfile]);
 
+  // Show nothing until loading completes
   if (loading) return <div>Loading...</div>;
 
+  // Only redirect if we are sure profile is missing
+  if (!profile) return <Navigate to="/login" replace />;
+
   // Optional: allow admin override later
-  if (!profile || profile.username !== username) {
+  if (profile.username !== username) {
     return <Navigate to="/login" replace />;
   }
 
