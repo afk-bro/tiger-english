@@ -16,7 +16,7 @@ export default function HeroSection() {
             <Sparkles className="w-4 h-4" />
             {t("hero.badge")}
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight mb-6 bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight mb-6 bg-gradient-to-r from-primary-300 to-[#fcd34d] font-display bg-clip-text text-transparent tracking-wide">
             {t("hero.title")}
           </h1>
           <p className="text-xl md:text-2xl text-text-light/80 dark:text-text-dark/80 max-w-3xl mx-auto mb-12 leading-relaxed">

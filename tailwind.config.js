@@ -7,37 +7,37 @@ export default {
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular'],
+        display: ['"DM Serif Display"', 'serif'],
+        body: ['"Poppins"', 'sans-serif'],
       },
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          light: '#dbeafe',
-          DEFAULT: '#3b82f6',
-          dark: '#1e40af',
+          50: '#f0f4ff',
+          100: '#d6e3fc',
+          200: '#adc8f7',
+          300: '#84aaf0',
+          400: '#5a8ae9',
+          500: '#326de2', // Updated for depth
+          600: '#2755c7',
+          700: '#1f41a0',
+          800: '#1b3987',
+          900: '#162e6f',
+          DEFAULT: '#326de2',
+          light: '#adc8f7',
+          dark: '#1b3987',
         },
         accent: {
-          50: '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdba74',
-          400: '#fb923c',
-          500: '#f97316',
-          600: '#ea580c',
-          700: '#c2410c',
-          800: '#9a3412',
-          900: '#7c2d12',
-          light: '#fed7aa',
-          DEFAULT: '#f97316',
-          dark: '#ea580c',
+          50: '#fffdf3',
+          100: '#fef9e7',
+          200: '#fcf1c4',
+          300: '#f9e08b',
+          400: '#f6cb51',
+          500: '#fcd34d', // ✨ primary gold — light and bright
+          600: '#eab308', // deeper gold
+          700: '#c28700', // warm gold accent
+          DEFAULT: '#fcd34d',
+          light: '#fcf1c4',
+          dark: '#c28700',
         },
         success: {
           50: '#ecfdf5',
@@ -56,19 +56,29 @@ export default {
         },
         base: {
           light: '#fefefe',
-          dark: '#0f172a',
+          dark: '#111827',
         },
         text: {
-          light: '#1e293b',
-          dark: '#f1f5f9',
+          light: '#1f2937',
+          dark: '#f3f4f6',
         },
         surface: {
           light: '#f8fafc',
           dark: '#1e293b',
         },
-      },
-    },
+
+        tiger: {
+          500: '#e1b773',
+          600: '#d97706',
+          700: '#9a6728',
+        },
+        gold: {
+          500: '#fcd34d',
+        },
+      }
+    }
   },
+
   plugins: [
     require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),

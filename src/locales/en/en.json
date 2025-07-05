@@ -2,7 +2,7 @@
   "hero": {
     "badge": "AI-Powered English Learning",
     "title": "Learn English with Confidence",
-    "subtitle": "Designed for Thai students and professionals. Build vocabulary, improve fluency, and grow your skills with AI-powered tools and personalized tutoring.",
+    "subtitle": "Designed for students and professionals. Build vocabulary, improve fluency, and grow your skills with AI-powered tools and personalized tutoring.",
     "cta": "Start Learning Today",
     "learn_more": "Learn More"
   },
@@ -26,13 +26,13 @@
   },
   "cta": {
     "heading": "Ready to Transform Your English Skills?",
-    "desc": "Join thousands of Thai learners using our proven methods.",
+    "desc": "Confident English for students, professionals, and future leaders.",
     "button": "Create Your Account",
     "contact": "Contact Us"
   },
   "header": {
-    "logo": "Gain English",
-    "tagline": "Learn with Confidence",
+    "logo": "Golden Lantern Academy",
+    "tagline": "Lighting the path to confident English",
     "nav": {
       "flashcards": "Flashcards",
       "about": "About",
@@ -45,7 +45,7 @@
   },
   "register": {
     "title": "Create Your Account",
-    "subtitle": "Join Gain English and start mastering English with AI tools and real tutors.",
+    "subtitle": "Join Golden Lantern Academy and start mastering English with AI tools and real tutors.",
     "first_name": "First Name",
     "last_name": "Last Name",
     "email": "Email",

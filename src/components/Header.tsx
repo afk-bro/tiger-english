@@ -1,12 +1,13 @@
 // src/components/Header.tsx
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { BookOpen, CreditCard, Info, Mail } from "lucide-react";
+import { CreditCard, Info, Mail } from "lucide-react";
 import DarkModeToggle from "./DarkModeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 import UserMenu from "@/components/ui/UserMenu";
 import NavLink from "@/components/ui/NavLink";
+import Logo from "@/assets/golden_lantern.png";
 
 export default function Header() {
   const location = useLocation();
@@ -28,15 +29,20 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-              <BookOpen className="w-6 h-6 text-white" />
-            </div>
+          <Link to="/" className="flex items-center gap-1 group">
+            <img
+              src={Logo}
+              alt="Golden Lantern Academy"
+              className="h-12 w-auto" // adjust height/width as needed
+            />
             <div className="flex flex-col">
-              <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+              <span className="hidden dark:inline text-xl font-display tracking-wide bg-gradient-to-r from-accent-600 to-accent-400 bg-clip-text text-transparent">
                 {t("header.logo")}
               </span>
-              <span className="text-xs text-text-light/60 dark:text-text-dark/60 font-medium">
+              <span className="inline dark:hidden text-xl font-display tracking-wide bg-gradient-to-r from-[#9a6728] to-[#7c4c16] bg-clip-text text-transparent">
+                {t("header.logo")}
+              </span>
+              <span className="font-body text-xs text-text-light/60 dark:text-text-dark/60 font-medium">
                 {t("header.tagline")}
               </span>
             </div>
