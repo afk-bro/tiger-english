@@ -1,11 +1,13 @@
 // /types/flashcard.ts
+// src/types/flashcard.ts
+
 export interface Flashcard {
-  id: string;
-  user_id: string;
-  word: string;
-  definition: string;
-  example_sentence?: string;
-  part_of_speech?: string;
-  difficulty: 'basic' | 'intermediate' | 'advanced';
-  created_at: string;
+  id: string;                   // Unique identifier
+  nativeWord: string;          // Word in the learner’s language (e.g., Thai)
+  englishWord: string;         // The English translation (what they are learning)
+  partOfSpeech?: string;       // Optional: noun, verb, adjective, etc.
+  level?: "basic" | "intermediate" | "advanced";  // Optional difficulty
+  exampleSentence?: string;    // Optional usage sentence
+  imageUrl?: string;           // Optional image to reinforce learning
 }
+
