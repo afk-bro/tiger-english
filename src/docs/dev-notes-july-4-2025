@@ -1,0 +1,36 @@
+## 🔁 Flashcard Component System – v0.1
+
+### ✅ Completed:
+- Core `<Flashcard />` component
+- 3D flip effect (Y-axis rotation)
+- Flicker-free animation using:
+  - `backface-visibility: hidden`
+  - opacity coordination (`opacity-0` / `opacity-100`)
+  - GPU hint via `will-change: transform`
+- Tailwind custom utilities for:
+  - `.perspective`
+  - `.preserve-3d`
+  - `.rotate-y-180`
+  - `.backface-hidden`
+- Fully responsive layout ready for grid rendering
+
+### 🧪 Tested:
+- Flip works on click
+- No overlapping or ghost flicker
+- First-click and subsequent state transitions smooth
+- Works in both light and dark themes
+
+### 🛠 Next Step:
+- Build `FlashcardGrid` component
+  - Render 3x3 grid
+  - Isolate flip state per card
+  - Test basic interaction pattern
+- Plan scoring, card metadata (difficulty, part of speech, etc.)
+
+---
+
+### 📂 File Overview:
+- `src/components/flashcards/Flashcard.tsx` – main component
+- `src/index.css` – includes @layer utilities for flip behavior
+- `tailwind.config.js` – uses `safelist` and theme extensions
+
