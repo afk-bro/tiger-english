@@ -28,7 +28,7 @@ export default function About() {
           />
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold text-primary-600 dark:text-primary-400">
-              About Gain English
+              About Golden Lantern Academy
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Building tools for language learners
@@ -40,21 +40,21 @@ export default function About() {
         <section className="mb-10">
           <h2 className="sr-only">My Story</h2>
           <p className="text-lg text-text-light dark:text-text-dark mb-4 leading-relaxed">
-            Gain English was created by me, someone who understands both the
+            Golden Lantern Academy was created by someone who understands both the
             challenges of learning a language and the value of great tools.
-            I have a background in computer science, a TEFL certification, and a passion
+            I have a background in web development, a TEFL certification, and a passion
             for building interactive, learner-friendly experiences.
           </p>
 
           <p className="text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
             This platform started as a side project — a way to combine my technical
-            skills with my interest in education. My goal is to help English learners,
-            especially Thai speakers, grow their vocabulary and confidence through fun,
+            skills with my interest in education. My goal is to help English learners
+            grow their vocabulary and confidence through fun,
             focused practice.
           </p>
 
           <p className="text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
-            I'm currently preparing to live and teach abroad, and Gain English is part
+            I'm currently preparing to live and teach abroad, and Golden Lantern Academy is part
             of that journey. I'm actively improving the site, learning as I go, and building
             it into something that can genuinely help others.
           </p>
