@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import UserLayout from "@/routes/UserLayout";
+import FlashcardTest from "./pages/FlashcardTest";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/flashcard-test" element={<FlashcardTest />} />
           {/* Username-protected routes */}
           <Route path="/u/:username" element={<UserLayout />}>
             <Route index element={<Dashboard />} />

@@ -83,5 +83,33 @@ export default {
     require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),
     require('tailwindcss-animate'),
+    function({ addUtilities }) {
+      const newUtilities = {
+        '.perspective': {
+          perspective: '1000px',
+        },
+        '.preserve-3d': {
+          transformStyle: 'preserve-3d',
+        },
+        '.backface-hidden': {
+          backfaceVisibility: 'hidden',
+          '-webkit-backface-visibility': 'hidden',
+        },
+        '.rotate-y-180': {
+          transform: 'rotateY(180deg)',
+        },
+        '.origin-center': {
+          transformOrigin: 'center center',
+        },
+      }
+      addUtilities(newUtilities)
+    }
   ],
+  safelist: [
+    'perspective',
+    'preserve-3d',
+    'backface-hidden',
+    'rotate-y-180',
+    'transform-gpu',
+  ]
 }
