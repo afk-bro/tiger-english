@@ -19,7 +19,7 @@ export default function FeaturesSection() {
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Flashcards */}
-          <div className="group p-8 bg-white dark:bg-base-dark border border-primary-100 dark:border-primary-800/30 rounded-2xl shadow-sm hover:shadow-xl hover:border-primary-200 dark:hover:border-primary-700/50 transition-all duration-300 hover:shadow-lg transition-shadow">
+          <div className="group p-8 bg-white dark:bg-base-dark border border-primary-100 dark:border-primary-800/30 rounded-2xl shadow-sm hover:shadow-xl hover:border-primary-200 dark:hover:border-primary-700/50 transition-all duration-300">
             <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800 dark:to-primary-700 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
               <BookOpenCheck className="w-8 h-8 text-primary-600 dark:text-primary-400" />
             </div>
