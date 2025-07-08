@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { WelcomeBanner } from "@/components/flashcards/WelcomeBanner";
 import { DifficultySelector } from "@/components/flashcards/DifficultySelector";
+import { FlashcardViewer } from "@/components/flashcards/FlashcardViewer";
 
 type DifficultyLevel = 'basic' | 'intermediate' | 'advanced';
 
@@ -20,9 +21,11 @@ export default function FlashcardsPage() {
           onDifficultyChange={setSelectedDifficulty}
         />
         
+        {/* Flashcard Viewer */}
+        <FlashcardViewer selectedDifficulty={selectedDifficulty} />
+        
         {/* Placeholder for future components */}
         <div className="mt-12">
-          {/* FlashcardViewer will go here */}
           {/* ActionBar will go here */}
           {/* StudyModeView will go here */}
           {/* AddWordModal will go here */}
