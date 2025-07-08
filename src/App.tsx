@@ -10,6 +10,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import UserLayout from "@/routes/UserLayout";
 import FlashcardTest from "./pages/FlashcardTest";
+import FlashcardsPage from "./pages/FlashcardsPage";
 
 function App() {
   return (
@@ -24,6 +25,8 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/flashcard-test" element={<FlashcardTest />} />
+          <Route path="/flashcards" element={<FlashcardsPage />} />
+
           {/* Username-protected routes */}
           <Route path="/u/:username" element={<UserLayout />}>
             <Route index element={<Dashboard />} />
