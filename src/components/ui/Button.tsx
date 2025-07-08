@@ -16,7 +16,7 @@ type ButtonProps = {
   block?: boolean;
   align?: "left" | "center" | "right";
   disabled?: boolean;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent) => void;
 };
 
 export default function Button({
