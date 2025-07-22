@@ -13,6 +13,42 @@ type RegisterResult =
   | { success: true; message: string }
   | { success: false; error: string; field?: string };
 
+// Helper function to check username availability
+async function checkUsernameAvailability(username: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('username')
+    .eq('username', username)
+    .single();
+
+  // If no data found, username is available
+  // If error and it's "PGRST116" (no rows), username is available
+  if (error && error.code === 'PGRST116') {
+    return true; // Username available
+  }
+  
+  if (error) {
+    // Other database errors - assume unavailable for safety
+    console.error('Error checking username availability:', error);
+    return false;
+  }
+
+  // If data exists, username is taken
+  return !data;
+}
+
+// Helper function to cleanup auth user if profile creation fails
+async function cleanupAuthUser(userId: string): Promise<void> {
+  try {
+    const { error } = await supabase.auth.admin.deleteUser(userId);
+    if (error) {
+      console.error('Failed to cleanup auth user:', error);
+    }
+  } catch (cleanupError) {
+    console.error('Error during auth user cleanup:', cleanupError);
+  }
+}
+
 export async function registerUser({
   email,
   password,
@@ -20,7 +56,17 @@ export async function registerUser({
   lastName,
   userName,
 }: RegisterArgs): Promise<RegisterResult> {
-  // Step 1: Sign up user with Supabase Auth
+  // Step 0: Pre-check username availability FIRST (before creating auth user)
+  const isUsernameAvailable = await checkUsernameAvailability(userName);
+  if (!isUsernameAvailable) {
+    return {
+      success: false,
+      error: 'This username is already taken. Please choose a different username.',
+      field: 'username',
+    };
+  }
+
+  // Step 1: Sign up user with Supabase Auth (only after username is confirmed available)
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -94,6 +140,9 @@ export async function registerUser({
 ]);
 
   if (profileError) {
+    // Cleanup auth user since profile creation failed
+    await cleanupAuthUser(user.id);
+
     // Parse database constraint violations
     if (profileError.message.includes('duplicate key') || profileError.code === '23505') {
       // Check if it's a username constraint violation
@@ -137,6 +186,10 @@ export async function registerUser({
       error: `Profile creation failed: ${profileError.message}`,
     };
   }
+
+  // Step 3: Clear the session to prevent automatic login
+  // User should explicitly log in after registration
+  await supabase.auth.signOut();
 
   return {
     success: true,
