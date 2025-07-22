@@ -50,6 +50,7 @@
     "last_name": "Last Name",
     "email": "Email",
     "password": "Password",
+    "confirm_password": "Confirm Password",
     "submit": "Sign Up",
     "login_link": "Already have an account?",
     "login_cta": "Log in",
