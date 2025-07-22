@@ -1,120 +1,28 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
-import { Mail, Lock, User, ArrowRight, UserPlus, AtSign, Check, X } from "lucide-react";
+import ErrorGuidanceCard from "../components/auth/ErrorGuidanceCard";
+import { Mail, Lock, User, ArrowRight, UserPlus, AtSign } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { registerUser } from "../features/auth/registerUser";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { registerSchema, RegisterFormData } from "@/schemas/authSchema";
+import { useRegisterForm } from "../features/auth/useRegisterForm";
+import { useRegisterSubmit } from "../features/auth/useRegisterSubmit";
 
 export default function Register() {
+  const { t } = useTranslation();
+
+  // Use extracted hooks
   const {
     register,
     handleSubmit,
-    watch,
     setError,
     clearErrors,
-    formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-  });
+    errors,
+    handleFieldChange,
+    getPasswordValidationIcon,
+    getConfirmPasswordValidationIcon,
+  } = useRegisterForm();
 
-  const { t } = useTranslation();
-
-  const navigate = useNavigate();
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Watch password fields for real-time validation
-  const password = watch("password");
-  const confirmPassword = watch("confirmPassword");
-
-  // Function to clear server errors when user starts typing
-  const handleFieldChange = (fieldName: keyof RegisterFormData) => {
-    return (e: React.ChangeEvent<HTMLInputElement>) => {
-      // Clear server error for this field when user starts typing
-      if (errors[fieldName]?.type === 'server') {
-        clearErrors(fieldName);
-      }
-      // Call the original register onChange
-      const originalOnChange = register(fieldName).onChange;
-      if (originalOnChange) {
-        originalOnChange(e);
-      }
-    };
-  };
-
-  // Validation helper functions
-  const isPasswordValid = (pwd: string) => {
-    return pwd && pwd.length >= 6;
-  };
-
-  const isConfirmPasswordValid = (pwd: string, confirmPwd: string) => {
-    return confirmPwd && pwd && confirmPwd === pwd;
-  };
-
-  // Validation icon components
-  const getPasswordValidationIcon = () => {
-    if (!password) return null;
-    return isPasswordValid(password) ? (
-      <Check className="w-5 h-5 text-green-500" />
-    ) : (
-      <X className="w-5 h-5 text-red-500" />
-    );
-  };
-
-  const getConfirmPasswordValidationIcon = () => {
-    if (!confirmPassword) return null;
-    return isConfirmPasswordValid(password, confirmPassword) ? (
-      <Check className="w-5 h-5 text-green-500" />
-    ) : (
-      <X className="w-5 h-5 text-red-500" />
-    );
-  };
-
-  const onSubmit = async (data: RegisterFormData) => {
-    setIsSubmitting(true);
-    
-    // Clear any previous server errors
-    clearErrors();
-    
-    const result = await registerUser({
-      email: data.email,
-      password: data.password,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      userName: data.username,
-    });
-    
-    setIsSubmitting(false);
-    
-    if (result.success) {
-      toast.success(result.message);
-      navigate("/login");
-    } else {
-      // If there's a specific field error, highlight that field
-      if (result.field) {
-        setError(result.field as keyof RegisterFormData, {
-          type: 'server',
-          message: result.error,
-        });
-        
-        // Scroll to the field with error
-        const fieldElement = document.getElementById(result.field);
-        if (fieldElement) {
-          fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          fieldElement.focus();
-        }
-      } else {
-        // Show general error toast if no specific field is identified
-        toast.error(result.error);
-      }
-    }
-  };
+  const { isSubmitting, onSubmit } = useRegisterSubmit(setError, clearErrors);
   return (
     <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-accent-50 dark:from-base-dark dark:to-primary-900/20 px-6 py-20">
       <div className="w-full max-w-md bg-white dark:bg-base-dark border border-primary-100 dark:border-primary-700/40 rounded-2xl shadow-md p-8 space-y-6">
@@ -145,11 +53,7 @@ export default function Register() {
             <div className="mt-1">
               <p className="text-sm text-red-500">{errors.username.message}</p>
               {errors.username.type === 'server' && errors.username.message?.includes('already taken') && (
-                <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                  <p className="text-sm text-red-700 dark:text-red-300">
-                    Please try a different username. You can use letters, numbers, and underscores.
-                  </p>
-                </div>
+                <ErrorGuidanceCard errorType="username-taken" />
               )}
             </div>
           )}
@@ -195,17 +99,7 @@ export default function Register() {
             <div className="mt-1">
               <p className="text-sm text-red-500">{errors.email.message}</p>
               {errors.email.type === 'server' && errors.email.message?.includes('already registered') && (
-                <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                  <p className="text-sm text-red-700 dark:text-red-300 mb-2">
-                    It looks like you already have an account with this email.
-                  </p>
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 underline"
-                  >
-                    Log in instead →
-                  </Link>
-                </div>
+                <ErrorGuidanceCard errorType="email-registered" showLoginLink={true} />
               )}
             </div>
           )}
