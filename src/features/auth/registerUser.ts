@@ -1,5 +1,13 @@
 // src/features/auth/registerUser.ts
 import { supabase } from '@/lib/supabase';
+import { ERROR_MESSAGES, ERROR_FIELD_MAPPING } from './constants';
+import { 
+  checkUsernameAvailability, 
+  cleanupAuthUser, 
+  parseAuthError, 
+  parseProfileError, 
+  checkUserAlreadyExists 
+} from './utils';
 
 type RegisterArgs = {
   email: string;
@@ -13,42 +21,6 @@ type RegisterResult =
   | { success: true; message: string }
   | { success: false; error: string; field?: string };
 
-// Helper function to check username availability
-async function checkUsernameAvailability(username: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('username')
-    .eq('username', username)
-    .single();
-
-  // If no data found, username is available
-  // If error and it's "PGRST116" (no rows), username is available
-  if (error && error.code === 'PGRST116') {
-    return true; // Username available
-  }
-  
-  if (error) {
-    // Other database errors - assume unavailable for safety
-    console.error('Error checking username availability:', error);
-    return false;
-  }
-
-  // If data exists, username is taken
-  return !data;
-}
-
-// Helper function to cleanup auth user if profile creation fails
-async function cleanupAuthUser(userId: string): Promise<void> {
-  try {
-    const { error } = await supabase.auth.admin.deleteUser(userId);
-    if (error) {
-      console.error('Failed to cleanup auth user:', error);
-    }
-  } catch (cleanupError) {
-    console.error('Error during auth user cleanup:', cleanupError);
-  }
-}
-
 export async function registerUser({
   email,
   password,
@@ -61,8 +33,8 @@ export async function registerUser({
   if (!isUsernameAvailable) {
     return {
       success: false,
-      error: 'This username is already taken. Please choose a different username.',
-      field: 'username',
+      error: ERROR_MESSAGES.USERNAME_TAKEN,
+      field: ERROR_FIELD_MAPPING.username,
     };
   }
 
@@ -73,39 +45,11 @@ export async function registerUser({
   });
 
   if (error) {
-    // Parse "user already exists" errors
-    if (error.message.includes('User already registered') || 
-        error.message.includes('already registered') ||
-        error.message.includes('already exists') ||
-        error.message.includes('email address is already registered')) {
-      return {
-        success: false,
-        error: 'This email is already registered. Please use a different email or try logging in.',
-        field: 'email',
-      };
-    }
-    
-    // Parse email-related errors
-    if (error.message.includes('Invalid email') || error.message.includes('email')) {
-      return {
-        success: false,
-        error: error.message,
-        field: 'email',
-      };
-    }
-    
-    // Parse password-related errors
-    if (error.message.includes('Password') || error.message.includes('password')) {
-      return {
-        success: false,
-        error: error.message,
-        field: 'password',
-      };
-    }
-
+    const parsedError = parseAuthError(error);
     return {
       success: false,
-      error: `Sign-up failed: ${error.message}`,
+      error: parsedError.message,
+      field: parsedError.field,
     };
   }
 
@@ -114,16 +58,17 @@ export async function registerUser({
   if (!user) {
     return {
       success: false,
-      error: 'No user object returned from Supabase.',
+      error: ERROR_MESSAGES.NO_USER_OBJECT,
     };
   }
 
   // If user exists but no confirmation email was sent, it might mean user already exists
-  if (user && !data.session && user.email_confirmed_at) {
+  const existingUserError = checkUserAlreadyExists(user as any, data as any);
+  if (existingUserError) {
     return {
       success: false,
-      error: 'This email is already registered. Please use a different email or try logging in.',
-      field: 'email',
+      error: existingUserError.message,
+      field: existingUserError.field,
     };
   }
 
@@ -143,47 +88,11 @@ export async function registerUser({
     // Cleanup auth user since profile creation failed
     await cleanupAuthUser(user.id);
 
-    // Parse database constraint violations
-    if (profileError.message.includes('duplicate key') || profileError.code === '23505') {
-      // Check if it's a username constraint violation
-      if (profileError.message.includes('username') || profileError.message.includes('profiles_username_key')) {
-        return {
-          success: false,
-          error: 'This username is already taken. Please choose a different username.',
-          field: 'username',
-        };
-      }
-      
-      // Check if it's an email constraint violation
-      if (profileError.message.includes('email') || profileError.message.includes('profiles_email_key')) {
-        return {
-          success: false,
-          error: 'This email is already registered. Please use a different email or try logging in.',
-          field: 'email',
-        };
-      }
-    }
-
-    // Parse other profile-related errors
-    if (profileError.message.includes('first_name')) {
-      return {
-        success: false,
-        error: 'Invalid first name provided.',
-        field: 'firstName',
-      };
-    }
-
-    if (profileError.message.includes('last_name')) {
-      return {
-        success: false,
-        error: 'Invalid last name provided.',
-        field: 'lastName',
-      };
-    }
-
+    const parsedError = parseProfileError(profileError);
     return {
       success: false,
-      error: `Profile creation failed: ${profileError.message}`,
+      error: parsedError.message,
+      field: parsedError.field,
     };
   }
 
@@ -193,6 +102,6 @@ export async function registerUser({
 
   return {
     success: true,
-    message: 'Account created successfully!',
+    message: ERROR_MESSAGES.ACCOUNT_CREATED,
   };
 }
