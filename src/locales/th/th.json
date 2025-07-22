@@ -50,6 +50,7 @@
     "last_name": "นามสกุล",
     "email": "อีเมล",
     "password": "รหัสผ่าน",
+    "confirm_password": "ยืนยันรหัสผ่าน",
     "submit": "สมัครสมาชิก",
     "login_link": "มีบัญชีอยู่แล้ว?",
     "login_cta": "เข้าสู่ระบบ",
