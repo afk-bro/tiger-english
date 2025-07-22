@@ -114,6 +114,15 @@ Here’s a complete breakdown of everything we accomplished in this session, for
 
 ---
 
+Step 0: Check username availability FIRST
+├─ If taken → Return error immediately (no auth user created)
+└─ If available → Continue to Step 1
+
+Step 1: Create Supabase auth user (only after username confirmed available)
+Step 2: Create profile record  
+Step 3: Clear session to prevent automatic login
+
+
 ## 📌 Next Steps (Suggested)
 
 * [ ] Add show/hide password toggle
