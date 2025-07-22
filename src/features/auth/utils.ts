@@ -1,5 +1,6 @@
 // src/features/auth/utils.ts
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { 
   ERROR_MESSAGES, 
   ERROR_FIELD_MAPPING, 
@@ -53,9 +54,11 @@ export async function checkUsernameAvailability(username: string): Promise<boole
 // Helper function to cleanup auth user if profile creation fails
 export async function cleanupAuthUser(userId: string): Promise<void> {
   try {
-    const { error } = await supabase.auth.admin.deleteUser(userId);
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
     if (error) {
       console.error('Failed to cleanup auth user:', error);
+    } else {
+      console.log('Successfully cleaned up auth user:', userId);
     }
   } catch (cleanupError) {
     console.error('Error during auth user cleanup:', cleanupError);
