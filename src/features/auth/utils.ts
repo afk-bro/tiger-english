@@ -58,7 +58,7 @@ export async function cleanupAuthUser(userId: string): Promise<void> {
     if (error) {
       console.error('Failed to cleanup auth user:', error);
     } else {
-      console.log('Successfully cleaned up auth user:', userId);
+      console.warn('Successfully cleaned up auth user:', userId);
     }
   } catch (cleanupError) {
     console.error('Error during auth user cleanup:', cleanupError);

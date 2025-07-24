@@ -1,6 +1,6 @@
 // src/features/auth/registerUser.ts
 import { supabase } from '@/lib/supabase';
-import { ERROR_MESSAGES, ERROR_FIELD_MAPPING } from './constants';
+import { ERROR_MESSAGES, ERROR_FIELD_MAPPING, SUCCESS_MESSAGES } from './constants';
 import { 
   checkUsernameAvailability, 
   cleanupAuthUser, 
@@ -102,6 +102,6 @@ export async function registerUser({
 
   return {
     success: true,
-    message: ERROR_MESSAGES.ACCOUNT_CREATED,
+    message: SUCCESS_MESSAGES.ACCOUNT_CREATED,
   };
 }

@@ -23,6 +23,12 @@ export const ERROR_MESSAGES = {
   ACCOUNT_CREATED: 'Account created successfully!',
 } as const;
 
+export const SUCCESS_MESSAGES = {
+  ACCOUNT_CREATED: "Account created successfully. Please check your email to verify.",
+  PASSWORD_UPDATED: "Your password has been updated.",
+  LOGGED_OUT: "You have been logged out successfully.",
+};
+
 export const ERROR_FIELD_MAPPING = {
   username: 'username',
   email: 'email',
@@ -51,3 +57,5 @@ export const ERROR_KEYWORDS = {
   FIRST_NAME_RELATED: ['first_name'],
   LAST_NAME_RELATED: ['last_name'],
 } as const;
+
+
