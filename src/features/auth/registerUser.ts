@@ -1,12 +1,12 @@
 // src/features/auth/registerUser.ts
 import { supabase } from '@/lib/supabase';
 import { ERROR_MESSAGES, ERROR_FIELD_MAPPING, SUCCESS_MESSAGES } from './constants';
-import { 
-  checkUsernameAvailability, 
-  cleanupAuthUser, 
-  parseAuthError, 
-  parseProfileError, 
-  checkUserAlreadyExists 
+import {
+  checkUsernameAvailability,
+  cleanupAuthUser,
+  parseAuthError,
+  parseProfileError,
+  checkUserAlreadyExists
 } from './utils';
 
 type RegisterArgs = {
@@ -75,14 +75,14 @@ export async function registerUser({
   // Step 2: Insert profile info
 
   const { error: profileError } = await supabase.from('profiles').insert([
-  {
-    id: user.id,
-    first_name: firstName,
-    last_name: lastName,
-    email: user.email,
-    username: userName,
-  },
-]);
+    {
+      id: user.id,
+      first_name: firstName,
+      last_name: lastName,
+      email: user.email,
+      username: userName,
+    },
+  ]);
 
   if (profileError) {
     // Cleanup auth user since profile creation failed
@@ -96,7 +96,32 @@ export async function registerUser({
     };
   }
 
-  // Step 3: Clear the session to prevent automatic login
+  // Step 3: Insert user stats
+  const { error: statsError } = await supabase.from("user_stats").insert([
+    {
+      user_id: user.id,
+      xp: 0,
+      level: 1,
+      study_streak: 0,
+      last_login: new Date().toISOString(),
+    },
+  ]);
+
+  if (statsError) {
+    // Cleanup orphaned auth user
+    await cleanupAuthUser(user.id);
+
+    // Cleanup orphaned profile row
+    await supabase.from("profiles").delete().eq("id", user.id);
+
+    console.error("Stats insert failed. Cleaned up user + profile:", statsError.message, statsError.details);
+    return {
+      success: false,
+      error: "Something went wrong creating your stats profile.",
+    };
+  }
+
+  // Step 4: Clear the session to prevent automatic login
   // User should explicitly log in after registration
   await supabase.auth.signOut();
 
