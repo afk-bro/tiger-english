@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { registerUser } from "./registerUser";
+import { registerUserAPI } from "./registerUserAPI";
 import { RegisterFormData } from "@/schemas/authSchema";
 import { UseRegisterFormReturn } from "./useRegisterForm";
 
@@ -23,7 +23,7 @@ export function useRegisterSubmit(
     // Clear any previous server errors
     clearErrors();
     
-    const result = await registerUser({
+    const result = await registerUserAPI({
       email: data.email,
       password: data.password,
       firstName: data.firstName,
