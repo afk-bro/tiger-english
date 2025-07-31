@@ -1,8 +1,14 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from typing import List
 import json
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(
+        env_file=".env",
+        extra="ignore"  # Ignore extra fields like SUPABASE_ANON_KEY
+    )
+    
     # Supabase
     supabase_url: str
     supabase_service_role_key: str
@@ -25,8 +31,5 @@ class Settings(BaseSettings):
             return json.loads(self.allowed_origins)
         except json.JSONDecodeError:
             return ["http://localhost:5173"]
-    
-    class Config:
-        env_file = ".env"
 
 settings = Settings()
