@@ -4,12 +4,6 @@
 
 Successfully created a **FastAPI backend** to secure the Supabase service role key and provide authentication APIs for the Gain English frontend.
 
-## 🔒 Security Issue Resolved
-
-**Before**: The frontend was exposing the Supabase service role key (`VITE_SUPABASE_SERVICE_ROLE_KEY`) in the browser, creating a critical security vulnerability.
-
-**After**: The service role key is now securely stored on the backend server, with the frontend using standard API calls for authentication.
-
 ## 🏗️ Backend Architecture Created
 
 ### **FastAPI Application Structure**
