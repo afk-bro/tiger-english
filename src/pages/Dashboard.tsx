@@ -1,10 +1,6 @@
 // src/pages/Dashboard.tsx
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useUserStore } from "@/stores/useUserStore";
-import { logoutUser } from "@/features/auth/logoutUser";
-import { toast } from "sonner";
 import { mockDashboardData, getXPProgressColor, getDifficultyColor } from "@/mocks/mockDashboardData";
+import { useDashboard } from "@/features/dashboard/useDashboard";
 
 import WelcomePanel from "@/components/dashboard/WelcomePanel";
 import XPProgress from "@/components/dashboard/XPProgress";
@@ -13,23 +9,7 @@ import StudyStats from "@/components/dashboard/StudyStats";
 import LogoutButton from "@/components/dashboard/LogoutButton";
 
 export default function Dashboard() {
-  const { profile, loading, clearProfile } = useUserStore();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    const error = await logoutUser();
-    if (!error) {
-      clearProfile();
-      toast.success("Logged out");
-      navigate("/login");
-    }
-  };
-
-  useEffect(() => {
-    if (!loading && !profile) {
-      navigate("/login");
-    }
-  }, [loading, profile, navigate]);
+  const { handleLogout, loading, profile } = useDashboard();
 
   const { xp, flashcardGroups, studyStats } = mockDashboardData;
   const progressColorClass = getXPProgressColor(xp.progressPercentage);
