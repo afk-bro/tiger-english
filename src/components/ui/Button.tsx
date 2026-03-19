@@ -5,9 +5,9 @@ import clsx from "clsx";
 
 type ButtonProps = {
   children: ReactNode;
-  to?: string; // if present, renders a <Link>
+  to?: string;
   iconRight?: ReactNode;
-  iconLeft?: React.ReactNode;
+  iconLeft?: ReactNode;
   variant?: "primary" | "secondary" | "ghost" | "outline" | "white" | "danger";
   size?: "xs" | "sm" | "md" | "lg";
   className?: string;
@@ -23,6 +23,7 @@ export default function Button({
   children,
   to,
   iconRight,
+  iconLeft,
   variant = "primary",
   className = "",
   size = "md",
@@ -66,29 +67,36 @@ export default function Button({
     "text-right": align === "right",
   });
 
-  const classes = clsx(
-    base,
-    styles[variant],
-    sizeStyles[size ?? "md"],
-    layoutStyles,
-    className
-  );
+  const classes = clsx(base, styles[variant], sizeStyles[size ?? "md"], layoutStyles, className);
 
-  const content = (
-    <span className={classes}>
-      {children}
-      {iconRight}
-    </span>
-  );
+  // Link variant: disabled → non-interactive span; enabled → Link with classes
+  if (to) {
+    if (disabled) {
+      return (
+        <span className={clsx(classes, "opacity-50 cursor-not-allowed")}>
+          {iconLeft}
+          {children}
+          {iconRight}
+        </span>
+      );
+    }
+    return (
+      <Link to={to} className={classes}>
+        {iconLeft}
+        {children}
+        {iconRight}
+      </Link>
+    );
+  }
 
-  return to ? (
-    <Link to={to}>{content}</Link>
-  ) : (
+  return (
     <button
       type={type}
       className={clsx(classes, disabled && "opacity-50 cursor-not-allowed")}
+      disabled={disabled}
       onClick={onClick}
     >
+      {iconLeft}
       {children}
       {iconRight}
     </button>

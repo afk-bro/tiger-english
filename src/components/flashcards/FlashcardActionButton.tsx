@@ -1,6 +1,6 @@
 // src/components/flashcards/FlashcardActionButton.tsx
 import { type ReactNode } from "react";
-import { IconButton } from "@/components/ui/buttons";
+import { IconButton } from "@/components/ui/IconButton";
 import clsx from "clsx";
 
 export interface FlashcardActionButtonProps {
