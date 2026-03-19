@@ -1,7 +1,7 @@
 // src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import AppInitializer from "./components/AppInitiazlier";
+import AppInitializer from "./components/AppInitializer";
 import Layout from "./components/Layout";
 import UserLayout from "@/routes/UserLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
