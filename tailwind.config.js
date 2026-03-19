@@ -75,6 +75,20 @@ export default {
         gold: {
           500: '#fcd34d',
         },
+        semantic: {
+          primary:       'rgb(var(--color-primary) / <alpha-value>)',
+          secondary:     'rgb(var(--color-secondary) / <alpha-value>)',
+          accent:        'rgb(var(--color-accent) / <alpha-value>)',
+          success:       'rgb(var(--color-success) / <alpha-value>)',
+          warning:       'rgb(var(--color-warning) / <alpha-value>)',
+          error:         'rgb(var(--color-error) / <alpha-value>)',
+          bg:            'rgb(var(--color-bg) / <alpha-value>)',
+          surface:       'rgb(var(--color-surface) / <alpha-value>)',
+          'surface-2':   'rgb(var(--color-surface-2) / <alpha-value>)',
+          text:          'rgb(var(--color-text) / <alpha-value>)',
+          'text-muted':  'rgb(var(--color-text-muted) / <alpha-value>)',
+          border:        'rgb(var(--color-border) / <alpha-value>)',
+        },
       }
     }
   },
