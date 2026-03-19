@@ -1,0 +1,78 @@
+// src/mocks/mockFlashcardData.ts
+import type { Flashcard } from "@/types/flashcard";
+
+export const mockFlashcards: Flashcard[] = [
+  {
+    id: "1",
+    nativeWord: "สวัสดี",
+    englishWord: "Hello",
+    partOfSpeech: "interjection",
+    level: "basic",
+    exampleSentence: "สวัสดีครับ - Hello (polite form)",
+    imageUrl: "/images/hello.jpg",
+  },
+  {
+    id: "2",
+    nativeWord: "น้ำ",
+    englishWord: "Water",
+    partOfSpeech: "noun",
+    level: "basic",
+    exampleSentence: "ฉันดื่มน้ำ - I drink water",
+  },
+  {
+    id: "3",
+    nativeWord: "อาหาร",
+    englishWord: "Food",
+    partOfSpeech: "noun",
+    level: "basic",
+    exampleSentence: "อาหารอร่อย - The food is delicious",
+  },
+  {
+    id: "4",
+    nativeWord: "การศึกษา",
+    englishWord: "Education",
+    partOfSpeech: "noun",
+    level: "intermediate",
+    exampleSentence: "การศึกษาสำคัญมาก - Education is very important",
+  },
+  {
+    id: "5",
+    nativeWord: "ประสบการณ์",
+    englishWord: "Experience",
+    partOfSpeech: "noun",
+    level: "intermediate",
+    exampleSentence: "เขามีประสบการณ์มาก - He has a lot of experience",
+  },
+  {
+    id: "6",
+    nativeWord: "โอกาส",
+    englishWord: "Opportunity",
+    partOfSpeech: "noun",
+    level: "intermediate",
+    exampleSentence: "นี่เป็นโอกาสดี - This is a good opportunity",
+  },
+  {
+    id: "7",
+    nativeWord: "ความรับผิดชอบ",
+    englishWord: "Responsibility",
+    partOfSpeech: "noun",
+    level: "advanced",
+    exampleSentence: "เขามีความรับผิดชอบสูง - He has high responsibility",
+  },
+  {
+    id: "8",
+    nativeWord: "การพัฒนา",
+    englishWord: "Development",
+    partOfSpeech: "noun",
+    level: "advanced",
+    exampleSentence: "การพัฒนาเทคโนโลยี - Technology development",
+  },
+  {
+    id: "9",
+    nativeWord: "ความเข้าใจ",
+    englishWord: "Understanding",
+    partOfSpeech: "noun",
+    level: "advanced",
+    exampleSentence: "ความเข้าใจที่ลึกซึ้ง - Deep understanding",
+  },
+];
