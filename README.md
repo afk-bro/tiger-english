@@ -109,37 +109,6 @@ npm run test:watch
 - Bug fixes: `fix/bug-description`
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`
 
-## 🔧 Configuration
-
-### Supabase Setup
-1. Create a new Supabase project
-2. Set up authentication with email/password
-3. Create the following tables:
-   - `profiles` (user profiles)
-   - `user_stats` (learning progress)
-   - `flashcards` (flashcard data)
-
-### Database Schema
-```sql
--- Profiles table
-CREATE TABLE profiles (
-  id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  first_name TEXT NOT NULL,
-  last_name TEXT NOT NULL,
-  email TEXT,
-  username TEXT UNIQUE NOT NULL
-);
-
--- User stats table
-CREATE TABLE user_stats (
-  user_id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  xp INTEGER DEFAULT 0,
-  level INTEGER DEFAULT 1,
-  study_streak INTEGER DEFAULT 0,
-  last_login TIMESTAMP DEFAULT NOW()
-);
-```
-
 ## 🚀 Deployment
 
 ### Build for Production
@@ -161,7 +130,3 @@ Ensure all required environment variables are set in your deployment platform.
 ## 📝 License
 
 This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support, email support@gainenglish.com or create an issue in the repository.
