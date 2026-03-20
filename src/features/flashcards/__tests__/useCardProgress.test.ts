@@ -57,4 +57,23 @@ describe('useCardProgress', () => {
     });
     expect(mockUpsert).not.toHaveBeenCalled();
   });
+
+  it('clears progressMap and does not throw on fetch failure', async () => {
+    // Prime with real data so progressMap is non-empty after first fetch
+    mockGet
+      .mockResolvedValueOnce([{ flashcardId: 'c1', status: 'known', lastStudiedAt: null }])
+      .mockRejectedValueOnce(new Error('network error'));
+
+    let userId: string | undefined = 'user-1';
+    const { result, rerender } = renderHook(() => useCardProgress(['c1'], userId));
+    await waitFor(() => expect(result.current.progressMap['c1']).toBeDefined());
+
+    // Trigger a re-fetch that will fail
+    userId = 'user-2';
+    rerender();
+
+    // After the failure the catch handler must clear the map
+    await waitFor(() => expect(result.current.progressMap).toEqual({}));
+    expect(mockGet).toHaveBeenCalledTimes(2);
+  });
 });
