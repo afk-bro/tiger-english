@@ -24,6 +24,14 @@ dist-ssr
 *.sw?
 
 .env
+.env.*
+!.env.example
 
-# Ignore dev notes
-/docs
+# Claude Code
+.mcp.json
+skills-lock.json
+.claude/
+
+# Docs: commit plans, architecture, specs — ignore scratch/notes
+/docs/notes
+/docs/scratch

@@ -13,7 +13,6 @@ const Login = lazy(() => import("@/pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const About = lazy(() => import("@/pages/About"));
 const Contact = lazy(() => import("@/pages/Contact"));
-const FlashcardTest = lazy(() => import("./pages/FlashcardTest"));
 const FlashcardsPage = lazy(() => import("./pages/FlashcardsPage"));
 
 // Loading component for lazy routes
@@ -37,7 +36,6 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/flashcard-test" element={<FlashcardTest />} />
               <Route path="/flashcards" element={<FlashcardsPage />} />
 
               {/* Username-protected routes */}

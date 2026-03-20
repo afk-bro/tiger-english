@@ -1,13 +1,15 @@
 // src/features/flashcards/useFlashcardNavigation.ts
 import { useState, useEffect, useCallback } from "react";
 
-export function useFlashcardNavigation(cardCount: number) {
+// resetKey defaults to '' for backward compatibility with any existing callers.
+// Pass setId to guarantee index reset when switching between same-size sets.
+export function useFlashcardNavigation(cardCount: number, resetKey: string = '') {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
-  // Reset to 0 whenever cardCount changes (i.e. difficulty filter changes)
+  // Reset when either cardCount or resetKey changes
   useEffect(() => {
     setCurrentCardIndex(0);
-  }, [cardCount]);
+  }, [cardCount, resetKey]);
 
   const goToPrevious = useCallback(() => {
     if (cardCount === 0) return;

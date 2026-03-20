@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Flashcard as FlashcardData } from "@/types/flashcard";
+import type { FlashcardCard } from "@/features/flashcards/types";
 import Button from "@/components/ui/Button";
 
 export interface FlashcardProps {
-  data: FlashcardData;
+  data: FlashcardCard;
 }
 
 export function Flashcard({ data }: FlashcardProps) {
