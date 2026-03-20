@@ -36,8 +36,13 @@ export function CreateSetModal({ onClose, onSubmit }: CreateSetModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-set-modal-title"
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6"
+      >
+        <h2 id="create-set-modal-title" className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
           Create flashcard set
         </h2>
 
