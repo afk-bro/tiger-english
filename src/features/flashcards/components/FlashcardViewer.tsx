@@ -73,17 +73,17 @@ export function FlashcardViewer({
         <Flashcard data={currentCard} />
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between w-full gap-2">
         <Button variant="secondary" size="sm" onClick={goToPrevious}>
           ← Previous
         </Button>
 
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto py-1">
           {cards.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentCardIndex(index)}
-              className={`w-2 h-2 rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40 ${
+              className={`w-2 h-2 flex-shrink-0 rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40 ${
                 index === currentCardIndex
                   ? 'bg-primary-500'
                   : 'bg-primary-200 hover:bg-primary-300'
@@ -99,16 +99,16 @@ export function FlashcardViewer({
       </div>
 
       {isAuthenticated && (
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Button
             variant="secondary"
             size="sm"
             onClick={handleMarkUnknown}
-            className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+            className="w-full sm:w-auto border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
           >
             Still learning
           </Button>
-          <Button variant="primary" size="sm" onClick={handleMarkKnown}>
+          <Button variant="primary" size="sm" onClick={handleMarkKnown} className="w-full sm:w-auto">
             I know this
           </Button>
         </div>

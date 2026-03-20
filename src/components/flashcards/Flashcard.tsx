@@ -34,7 +34,7 @@ export function Flashcard({ data }: FlashcardProps) {
   };
 
   return (
-    <div className="w-[640px] h-[384px] lg:w-[960px] lg:h-[576px] max-w-[90vw] perspective cursor-pointer mx-auto" onClick={handleFlip}>
+    <div className="w-full h-52 sm:w-[500px] sm:h-72 lg:w-[800px] lg:h-[480px] mx-auto perspective cursor-pointer" onClick={handleFlip}>
       {/* Flip Container */}
       <div
         className={`relative w-full h-full transition-transform duration-700 preserve-3d transform-gpu origin-center ${
