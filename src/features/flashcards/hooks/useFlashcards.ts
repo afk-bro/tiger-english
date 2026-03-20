@@ -8,16 +8,40 @@ export function useFlashcards(setId: string | null) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!setId) {
       setCards([]);
-      return;
+      setLoading(false);
+      setError(null);
+      return () => {
+        cancelled = true;
+      };
     }
+
     setLoading(true);
     setError(null);
+
     getCardsBySet(setId)
-      .then(setCards)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load cards'))
-      .finally(() => setLoading(false));
+      .then((fetchedCards) => {
+        if (!cancelled) {
+          setCards(fetchedCards);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load cards');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [setId]);
 
   return { cards, loading, error };

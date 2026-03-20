@@ -50,4 +50,48 @@ describe('useFlashcards', () => {
     await waitFor(() => expect(result.current.cards[0].englishWord).toBe('Water'));
     expect(mockGet).toHaveBeenCalledWith('s2');
   });
+
+  it('resets cards, loading and error when setId changes to null', async () => {
+    mockGet.mockRejectedValue(new Error('oops'));
+    let setId: string | null = 's1';
+    const { result, rerender } = renderHook(() => useFlashcards(setId));
+    await waitFor(() => expect(result.current.error).toBe('oops'));
+
+    setId = null;
+    rerender();
+
+    expect(result.current.cards).toEqual([]);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
+
+  it('ignores response from a superseded request when setId changes rapidly', async () => {
+    let resolveStaleRequest!: (cards: typeof fakeCard[]) => void;
+    const firstPromise = new Promise<typeof fakeCard[]>((res) => {
+      resolveStaleRequest = res;
+    });
+    const staleCard = { ...fakeCard, englishWord: 'STALE' };
+    const freshCard = { ...fakeCard, id: 'c2', setId: 's2', englishWord: 'Fresh' };
+
+    mockGet
+      .mockImplementationOnce(() => firstPromise)   // s1 hangs
+      .mockResolvedValueOnce([freshCard]);           // s2 resolves immediately
+
+    let setId: string | null = 's1';
+    const { result, rerender } = renderHook(() => useFlashcards(setId));
+
+    // Switch to s2 before s1 resolves
+    setId = 's2';
+    rerender();
+
+    // Wait for s2 to finish loading
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.cards[0].englishWord).toBe('Fresh');
+
+    // Now resolve the stale s1 request
+    resolveStaleRequest([staleCard]);
+
+    // State must not be overwritten by the stale response
+    expect(result.current.cards[0].englishWord).toBe('Fresh');
+  });
 });

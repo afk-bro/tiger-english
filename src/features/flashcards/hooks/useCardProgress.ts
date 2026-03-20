@@ -16,13 +16,18 @@ export function useCardProgress(
       setProgressMap({});
       return;
     }
-    getProgressByCards(cardIds, userId).then((rows) => {
-      const map: Record<string, CardProgress> = {};
-      rows.forEach((p) => {
-        map[p.flashcardId] = p;
+    getProgressByCards(cardIds, userId)
+      .then((rows) => {
+        const map: Record<string, CardProgress> = {};
+        rows.forEach((p) => {
+          map[p.flashcardId] = p;
+        });
+        setProgressMap(map);
+      })
+      .catch((error) => {
+        console.error('Failed to load card progress', error);
+        setProgressMap({});
       });
-      setProgressMap(map);
-    });
     // idsKey captures all card ids; eslint wants cardIds in deps but that
     // would re-run on every render. idsKey is the correct stable dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
