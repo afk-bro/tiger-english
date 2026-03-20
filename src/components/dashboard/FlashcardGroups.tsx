@@ -17,7 +17,7 @@ export default function FlashcardGroups({ flashcardGroups, getDifficultyColor }:
         {flashcardGroups.slice(0, 5).map((group) => (
           <div
             key={group.id}
-            className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer group"
+            className="card card-interactive p-5 cursor-pointer group"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">

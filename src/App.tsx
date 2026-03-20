@@ -17,7 +17,7 @@ const FlashcardsPage = lazy(() => import("./pages/FlashcardsPage"));
 
 // Loading component for lazy routes
 const PageLoader = () => (
-  <div className="min-h-screen bg-slate-50 dark:bg-base-dark flex items-center justify-center">
+  <div className="min-h-screen bg-semantic-bg dark:bg-semantic-bg flex items-center justify-center">
     <div className="text-xl text-text-light dark:text-text-dark">Loading...</div>
   </div>
 );
