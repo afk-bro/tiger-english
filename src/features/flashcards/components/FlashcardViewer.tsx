@@ -78,7 +78,7 @@ export function FlashcardViewer({
           ← Previous
         </Button>
 
-        <div className="flex gap-1 overflow-x-auto py-1">
+        <div className="flex gap-1 overflow-x-auto py-1 flex-1 min-w-0 justify-center">
           {cards.map((_, index) => (
             <button
               key={index}

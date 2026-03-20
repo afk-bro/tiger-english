@@ -34,7 +34,12 @@ export function Flashcard({ data }: FlashcardProps) {
   };
 
   return (
-    <div className="w-full h-52 sm:w-[500px] sm:h-72 lg:w-[800px] lg:h-[480px] mx-auto perspective cursor-pointer" onClick={handleFlip}>
+    <button
+      type="button"
+      aria-label={isFlipped ? `Showing English: ${englishWord}. Press to flip back.` : `Showing Thai: ${nativeWord}. Press to flip.`}
+      className="w-full h-52 sm:w-[500px] sm:h-72 lg:w-[800px] lg:h-[480px] mx-auto perspective cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40 rounded-xl"
+      onClick={handleFlip}
+    >
       {/* Flip Container */}
       <div
         className={`relative w-full h-full transition-transform duration-700 preserve-3d transform-gpu origin-center ${
@@ -146,6 +151,6 @@ export function Flashcard({ data }: FlashcardProps) {
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
