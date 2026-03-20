@@ -19,7 +19,7 @@ export default function HeroSection() {
             <h1 className="font-display text-3xl md:text-4xl lg:text-5xl leading-[1.1] md:leading-tight tracking-[-0.01em] text-semantic-text dark:text-semantic-text heading-accent-wide">
               {t("hero.title")}
             </h1>
-            <p className="text-sm md:text-base leading-relaxed text-semantic-text-muted dark:text-semantic-text-muted">
+            <p className="text-sm md:text-base leading-relaxed text-semantic-muted dark:text-semantic-muted">
               {t("hero.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 items-start">
