@@ -8,8 +8,8 @@ interface FlashcardGroupsProps {
 
 export default function FlashcardGroups({ flashcardGroups, getDifficultyColor }: FlashcardGroupsProps) {
   return (
-    <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 sm:p-8 mb-8 shadow-lg">
-      <h2 className="text-xl sm:text-2xl font-bold text-text-light dark:text-text-dark mb-6">
+    <div className="card mb-8">
+      <h2 className="text-display heading-accent mb-6">
         Your Flashcard Groups
       </h2>
 
