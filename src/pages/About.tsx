@@ -27,7 +27,7 @@ export default function About() {
             className="w-16 h-16 rounded-full border-2 border-primary-500 shadow-sm mr-4 flex-shrink-0"
           />
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-primary-600 dark:text-primary-400">
+            <h1 className="text-display heading-accent">
               About Golden Lantern Academy
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -118,7 +118,7 @@ export default function About() {
 
         {/* Contact Section */}
         <section className="text-center">
-          <h2 className="text-xl font-semibold text-primary-600 dark:text-primary-400 mb-4">
+          <h2 className="text-display heading-accent mb-4">
             Get In Touch
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
