@@ -2,7 +2,11 @@
 
 **Goal:** Establish a consistent, maintainable visual design system across all pages using Tailwind-first conventions — covering typography, spacing, color roles, card system, micro-interactions, and a gradient accent line signature element.
 
-**Architecture:** All design tokens and component classes live in `tailwind.config.js` and `@layer components` in `src/index.css`. All pages and components are updated in a single pass to use the new classes. No new libraries.
+**Architecture:**
+- Color/font tokens → `tailwind.config.js`
+- CSS variable additions → `src/index.css` (`:root` and `.dark` blocks)
+- Component utility classes (`.card`, `.text-display`, `.heading-accent`, etc.) → `@layer components` in `src/index.css`
+- All pages and components updated in a single pass to use the new classes. No new libraries.
 
 **Tech Stack:** Tailwind CSS, CSS custom properties (already in use), React + TypeScript
 
@@ -13,7 +17,7 @@
 ### Font Families
 - **Hero headings only**: DM Serif Display — strictly the main hero headline and at most one marquee marketing section
 - **Everything else**: Inter
-- **Drop Poppins** from the font stack entirely
+- **Drop Poppins entirely**: remove `body: ['"Poppins"', 'sans-serif']` from `fontFamily` in `tailwind.config.js` and remove the Poppins `<link>` from `index.html`
 
 ### Type Scale
 
@@ -23,16 +27,39 @@
 | `.text-display` | `text-2xl md:text-3xl font-semibold tracking-tight` | Section headings needing presence without DM Serif |
 | Subheading / card title | `text-base md:text-lg font-semibold` | Card headers, feature titles |
 | Body | `text-sm md:text-base leading-relaxed` | All paragraph text |
-| Muted | `text-sm md:text-base leading-relaxed text-muted` | Secondary labels, metadata |
+| Muted | `text-sm md:text-base leading-relaxed text-semantic-muted` | Secondary labels, metadata |
 
 ### Muted Text Levels
-```css
---muted: #64748B;   /* secondary labels, metadata, placeholder text */
---subtle: #94A3B8;  /* tertiary, timestamps, disabled */
-```
-Placeholder text sits at `--muted`, never as faint as `--subtle`.
 
-### `.text-display` utility
+Add to `src/index.css` `:root` and `.dark` blocks:
+
+```css
+/* src/index.css — add to :root */
+:root {
+  /* ... existing vars ... */
+  --color-muted: 100 116 139;   /* #64748B — secondary labels, metadata, placeholder text */
+  --color-subtle: 148 163 184;  /* #94A3B8 — tertiary, timestamps, disabled */
+}
+
+.dark {
+  /* ... existing vars ... */
+  --color-muted: 148 163 184;   /* #94A3B8 */
+  --color-subtle: 100 116 139;  /* #64748B */
+}
+```
+
+Then add to the `semantic` object in `tailwind.config.js`:
+```js
+// inside theme.extend.colors.semantic
+muted:  'rgb(var(--color-muted) / <alpha-value>)',
+subtle: 'rgb(var(--color-subtle) / <alpha-value>)',
+```
+
+This produces Tailwind utilities `text-semantic-muted` and `text-semantic-subtle`. Use these class names throughout. **Do not** rename or remove the existing `--color-text-muted` variable — it is used elsewhere; these are additive.
+
+Placeholder text sits at `--color-muted`, never as faint as `--color-subtle`.
+
+### `.text-display` utility (add to `@layer components` in `src/index.css`)
 ```css
 .text-display {
   @apply text-2xl md:text-3xl font-semibold tracking-tight;
@@ -103,55 +130,82 @@ All sections align to the same left container edge. No ad-hoc centering of indiv
 Semantic roles are for feedback states only — never used as decoration.
 
 ### Hard Rules
-- Cards: border first (`border border-border`), shadow secondary and very soft. No colorful shadows.
+- Cards: border first (`border border-semantic-border`), shadow secondary and very soft. No colorful shadows.
 - Gold appears near headings, highlights, signature moments — not on interactive elements
 - Blue appears on actions and interaction states — not decorative
 - **Buttons**: strongest primary usage (`bg-primary-500 hover:bg-primary-600 active:bg-primary-700`)
 - **Text links**: `text-primary-600`, no underline by default, underline on hover. Never bold or button-weight.
 - **Active nav**: `text-primary-600 font-medium`. No background fills. Inactive: default weight + muted. Hover: `text-primary-500`.
-- Placeholder text: `--muted` (#64748B), never as faint as `--subtle`
+- Placeholder text: `--color-muted` (#64748B), never as faint as `--color-subtle`
 - Gold icon glow: `hover:shadow-[0_0_12px_rgba(252,211,77,0.2)]` — soft halo, low opacity, only on feature icons and highlighted stat icons. Never on utility icons.
 
 ---
 
 ## 4. Card System
 
-### Base Classes
+All card classes go in `@layer components` in `src/index.css`.
+
+The existing `tailwind.config.js` uses namespaced keys (`semantic.surface`, `semantic.border`). Card classes use the full Tailwind class names derived from those keys: `bg-semantic-surface`, `border-semantic-border`, etc. The one exception is `.card` light mode, which uses literal `bg-white` rather than a semantic token — this is intentional for maximum contrast against page backgrounds.
+
 ```css
+/* @layer components in src/index.css */
+
 .card {
-  @apply bg-white dark:bg-surface-dark;
-  @apply rounded-2xl border border-border;
+  @apply bg-white dark:bg-semantic-surface;
+  @apply rounded-2xl border border-semantic-border;
   @apply p-4 md:p-5;
   @apply shadow-sm;
   @apply transition-all duration-200 ease-out;
 }
+/* Note: light mode intentionally uses bg-white, not bg-semantic-surface,
+   for maximum contrast on page backgrounds. */
 
-/* Only when the entire card is a clickable target */
+/* Only applied when the entire card is a clickable target */
 .card-interactive {
   @apply hover:-translate-y-0.5 hover:shadow-md cursor-pointer;
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/30;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40;
 }
 
-/* Slight elevation — stronger border, subtle accent line, elevated shadow */
+/* Slight elevation — stronger border, 2px top accent line, elevated shadow */
 .card-featured {
   @apply border-primary-200 dark:border-primary-800 shadow-md;
-  /* 2px top accent line via ::before */
+  position: relative;
+  overflow: hidden;
 }
+/* Accent line rendered as absolute top strip, not block flow, to work reliably
+   with the card's rounded-2xl corners and any internal padding. */
 .card-featured::before {
   content: '';
-  @apply block h-[2px] w-full rounded-t-2xl -mt-px mb-4;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
   background: linear-gradient(to right, #326de2, #fcd34d);
 }
+/* 0.5rem top margin on the first child adds visual breathing room below the
+   2px accent strip — this is intentional, not a pixel-exact offset. */
+.card-featured > :first-child {
+  margin-top: 0.5rem;
+}
 
-/* Modals, major feature panels */
+/* Modals, major feature panels — overrides .card padding */
 .card-lg {
   @apply p-6 md:p-7;
 }
 
-/* Low-emphasis inner grouping — never nested inside .card-featured */
+/* Low-emphasis inner grouping — never nested inside .card-featured.
+   50% opacity over the parent card surface is intentional in both light and dark
+   mode — produces a subtle recessed inset. The dark mode value resolves
+   automatically via --color-surface. */
 .card-ghost {
-  @apply bg-surface/50 shadow-none border border-border/50 rounded-xl;
+  background-color: rgb(var(--color-surface) / 0.5);
+  border: 1px solid rgb(var(--color-border) / 0.5);
+  @apply shadow-none rounded-xl;
 }
+/* Note: --color-muted (100 116 139) shares the same channel values as
+   --color-secondary. This is intentional — muted is a semantic alias for
+   this grey, used specifically for text contexts. */
 ```
 
 ### Rules
@@ -171,6 +225,8 @@ Not every card uses all three, but this is the mental model for consistent inter
 
 ## 5. Micro-interactions
 
+All micro-interaction utility classes go in `@layer components` in `src/index.css`.
+
 ### Global Transition Baseline
 ```css
 .transition-base {
@@ -184,28 +240,19 @@ Applied to buttons, cards, nav links, inputs, icons. Nothing slower than 200ms e
 |---------|-----------|
 | `.card-interactive` | `hover:-translate-y-0.5 hover:shadow-md` |
 | Primary button | `hover:bg-primary-600` |
-| Secondary button | `hover:bg-surface-2` |
+| Secondary button | `hover:bg-semantic-surface-2` |
 | Text links | underline appears on hover, no weight shift |
 | Nav links | `hover:text-primary-500` |
 | Feature icons (selective) | `hover:shadow-[0_0_12px_rgba(252,211,77,0.2)]` |
 
-### Button Press
-```css
-@apply active:scale-95;
-```
-All buttons. Instant feedback, snaps back on release.
-
-### Focus Ring (Consistent Across All Interactive Elements)
-```css
-@apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40;
-```
-Applied to buttons, inputs, cards, links uniformly.
+### Button Press and Focus
+`active:scale-95` and `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40` must be added directly to the shared `src/components/ui/Button.tsx` component — not at individual call sites. This ensures every button in the app inherits these states automatically. The same principle applies to `NavLink.tsx` (add active/hover/focus states there, not per-page).
 
 ---
 
 ## 6. Signature Element — Gradient Accent Line
 
-Two modes:
+Add to `@layer components` in `src/index.css`:
 
 ```css
 /* Section titles — short, editorial (default) */
@@ -214,17 +261,27 @@ Two modes:
 }
 .heading-accent::after {
   content: '';
-  @apply absolute bottom-0 left-0 h-[2px] w-12 rounded-full;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 3rem; /* w-12 */
+  border-radius: 9999px;
   background: linear-gradient(to right, #326de2, #fcd34d);
 }
 
-/* Hero / key marketing moments only — full span */
+/* Hero / key marketing moments only — full text span */
 .heading-accent-wide {
   @apply relative inline-block pb-2;
 }
 .heading-accent-wide::after {
   content: '';
-  @apply absolute bottom-0 left-0 h-[2px] w-full rounded-full;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  border-radius: 9999px;
   background: linear-gradient(to right, #326de2, #fcd34d);
 }
 ```
@@ -239,24 +296,24 @@ Two modes:
 ## 7. Page-by-Page Application
 
 ### All pages
-- Remove Poppins references
+- Remove Poppins `<link>` from `index.html`; remove `body` key from `fontFamily` in `tailwind.config.js`
 - Apply correct container width class for page context
 - Apply `.card` to all feature/content blocks currently using ad-hoc backgrounds
-- Apply `focus-visible` ring to all interactive elements
-- Apply `active:scale-95` to all buttons
+- `active:scale-95` and `focus-visible` ring handled at component level in `Button.tsx` and `NavLink.tsx` — not per page
 
 ### Home
-- Hero: `max-w-6xl` container, `py-16 md:py-20`, `space-y-6`, text block `max-w-2xl`, hero title gets `.heading-accent-wide`
-- Features section: each feature card → `.card`, feature icons selective gold halo
-- FinalCta: `py-12 md:py-16`
+- Hero (`HeroSection.tsx`): `max-w-6xl` container, `py-16 md:py-20`, `space-y-6`, text block `max-w-2xl`, hero title gets `.heading-accent-wide`
+- Features section (`FeaturesSection.tsx`): each feature card → `.card`, feature icons selective gold halo
+- FinalCta (`FinalCtaSection.tsx`): `py-12 md:py-16`
 
-### Flashcards
+### Flashcards (`FlashcardsPage.tsx` + feature components)
 - `max-w-5xl` container
-- Set list items → `.card .card-interactive`
-- FlashcardViewer → `.card .card-lg`
+- `FlashcardSetList`: set list items → `.card .card-interactive`
+- `FlashcardViewer`: outer wrapper → `.card .card-lg`
+- `CreateSetModal`: dialog inner div → `.card .card-lg` (replaces current ad-hoc background/border/shadow)
 - Section heading → `.heading-accent`
 
-### Dashboard
+### Dashboard (`Dashboard.tsx`)
 - `max-w-5xl` container
 - Stat blocks → `.card`
 - Highlighted stat icon → selective gold halo
