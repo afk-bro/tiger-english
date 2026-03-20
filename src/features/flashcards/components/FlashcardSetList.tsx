@@ -21,7 +21,7 @@ export function FlashcardSetList({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <p className="text-primary-600">Loading sets…</p>
+        <p className="text-semantic-muted">Loading sets…</p>
       </div>
     );
   }
@@ -29,17 +29,15 @@ export function FlashcardSetList({
   if (error) {
     return (
       <div className="flex items-center justify-center py-16">
-        <p className="text-red-600">Failed to load sets: {error}</p>
+        <p className="text-semantic-error">Failed to load sets: {error}</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-primary-800 dark:text-primary-200">
-          Flashcard Sets
-        </h2>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-display heading-accent">Flashcard Sets</h2>
         {isAuthenticated && (
           <Button variant="primary" size="sm" onClick={onCreateSet}>
             + Create set
@@ -47,22 +45,22 @@ export function FlashcardSetList({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {sets.map((set) => (
           <button
             key={set.id}
             onClick={() => onSelectSet(set.id)}
-            className="text-left p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+            className="card card-interactive text-left space-y-3"
           >
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+            <h3 className="text-base md:text-lg font-semibold text-semantic-text dark:text-semantic-text">
               {set.title}
             </h3>
             {set.description && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              <p className="text-sm leading-relaxed text-semantic-muted dark:text-semantic-muted">
                 {set.description}
               </p>
             )}
-            <p className="text-xs text-primary-600 font-medium">
+            <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">
               {set.cardCount} {set.cardCount === 1 ? 'card' : 'cards'}
             </p>
           </button>
@@ -70,7 +68,7 @@ export function FlashcardSetList({
       </div>
 
       {sets.length === 0 && (
-        <p className="text-center text-primary-600 py-12">
+        <p className="text-center text-semantic-muted py-12">
           No sets available yet.
         </p>
       )}
