@@ -1,10 +1,7 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { CreateSetModal } from '../components/CreateSetModal';
-
-afterEach(() => {
-  // RTL cleanup runs automatically; only remove manually-appended nodes here
-});
 
 // ── ARIA semantics ────────────────────────────────────────────────────────────
 
@@ -77,17 +74,18 @@ describe('CreateSetModal — focus management', () => {
     );
   });
 
-  it('does not move focus when Tab is pressed on a non-boundary element', () => {
+  it('Tab from a non-boundary element advances focus to the next element without wrapping', async () => {
+    const user = userEvent.setup();
     render(<CreateSetModal onClose={vi.fn()} onSubmit={vi.fn()} />);
 
     const descriptionTextarea = screen.getByPlaceholderText('Optional description');
     descriptionTextarea.focus();
-
-    // Tab on a middle element should not be intercepted
-    fireEvent.keyDown(descriptionTextarea, { key: 'Tab', bubbles: true });
-
-    // Focus should remain on the textarea (handler did not redirect it)
     expect(document.activeElement).toBe(descriptionTextarea);
+
+    await user.tab();
+
+    // Modal does not intercept Tab on a non-boundary element — focus advances naturally
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel' }));
   });
 
   it('restores focus to the previously focused element on unmount', () => {
