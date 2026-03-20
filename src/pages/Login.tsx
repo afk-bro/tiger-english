@@ -50,8 +50,9 @@ export default function Login() {
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-accent-50 dark:from-base-dark dark:to-primary-900/20 px-6 py-20">
-      <div className="w-full max-w-md bg-white dark:bg-base-dark border border-primary-100 dark:border-primary-700/40 rounded-2xl shadow-md p-8 space-y-6">
+    <section className="min-h-screen flex items-center justify-center bg-semantic-bg dark:bg-semantic-bg px-4 md:px-6 py-12 md:py-16">
+      <div className="w-full max-w-4xl mx-auto flex justify-center">
+        <div className="card card-lg w-full max-w-md space-y-6">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl mb-4">
             <LogIn className="text-white w-6 h-6" />
@@ -107,6 +108,7 @@ export default function Login() {
             {t("login.create_account")}
           </Link>
         </p>
+        </div>
       </div>
     </section>
   );
