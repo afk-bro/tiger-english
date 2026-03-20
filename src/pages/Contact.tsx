@@ -199,7 +199,7 @@ export default function Contact() {
                   tabIndex={0}
                   aria-label={`${social.name} profile (coming soon)`}
                 >
-                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed">
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed">
                     <span className="text-sm" role="img" aria-hidden="true">
                       {social.icon}
                     </span>

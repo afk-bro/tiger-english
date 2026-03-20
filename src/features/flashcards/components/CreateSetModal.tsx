@@ -134,11 +134,11 @@ export function CreateSetModal({ onClose, onSubmit }: CreateSetModalProps) {
             <p className="text-xs text-red-600">{errors.root.message}</p>
           )}
 
-          <div className="flex justify-end space-x-3 pt-2">
-            <Button type="button" variant="secondary" size="sm" onClick={onClose} disabled={isSubmitting}>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+            <Button type="button" variant="secondary" size="sm" onClick={onClose} disabled={isSubmitting} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit" variant="primary" size="sm" disabled={isSubmitting}>
+            <Button type="submit" variant="primary" size="sm" disabled={isSubmitting} className="w-full sm:w-auto">
               {isSubmitting ? 'Creating…' : 'Create set'}
             </Button>
           </div>

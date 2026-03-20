@@ -10,7 +10,6 @@ import NavLink from "@/components/ui/NavLink";
 import Logo from "@/assets/golden_lantern.png";
 
 export default function Header() {
-  const location = useLocation();
   const { t } = useTranslation();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -65,7 +64,9 @@ export default function Header() {
           <div className="md:hidden flex items-center gap-3">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-text-light dark:text-text-dark hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMenuOpen}
+              className="p-3 text-text-light dark:text-text-dark hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
             >
               <svg
                 className="w-6 h-6"

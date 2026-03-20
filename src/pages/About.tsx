@@ -39,21 +39,21 @@ export default function About() {
         {/* Personal Story Section */}
         <section className="mb-10">
           <h2 className="sr-only">My Story</h2>
-          <p className="text-lg text-text-light dark:text-text-dark mb-4 leading-relaxed">
+          <p className="text-base md:text-lg text-text-light dark:text-text-dark mb-4 leading-relaxed">
             Golden Lantern Academy was created by someone who understands both the
             challenges of learning a language and the value of great tools.
             I have a background in web development, a TEFL certification, and a passion
             for building interactive, learner-friendly experiences.
           </p>
 
-          <p className="text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
+          <p className="text-sm md:text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
             This platform started as a side project — a way to combine my technical
             skills with my interest in education. My goal is to help English learners
             grow their vocabulary and confidence through fun,
             focused practice.
           </p>
 
-          <p className="text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
+          <p className="text-sm md:text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
             I'm currently preparing to live and teach abroad, and Golden Lantern Academy is part
             of that journey. I'm actively improving the site, learning as I go, and building
             it into something that can genuinely help others.
@@ -65,7 +65,7 @@ export default function About() {
           <h2 className="text-display heading-accent mb-6">
             Skills & Technologies
           </h2>
-          <p className="text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
+          <p className="text-sm md:text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
             This platform is built with modern web technologies to ensure a fast, 
             accessible, and engaging learning experience:
           </p>
@@ -100,7 +100,7 @@ export default function About() {
                 tabIndex={0}
                 aria-label={`${social.name} profile (coming soon)`}
               >
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed">
+                <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed">
                   <span className="text-lg" role="img" aria-hidden="true">
                     {social.icon}
                   </span>
