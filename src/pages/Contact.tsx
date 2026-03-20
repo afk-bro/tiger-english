@@ -45,12 +45,12 @@ export default function Contact() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
+    <div className="max-w-4xl mx-auto px-4 md:px-6 py-12 md:py-16">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Contact Form Section */}
-        <section className="bg-white dark:bg-surface-dark shadow-lg rounded-2xl p-8 border border-gray-100 dark:border-gray-700">
+        <section className="card card-lg">
           <header className="mb-8">
-            <h1 className="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-2">
+            <h1 className="text-display heading-accent mb-2">
               Get In Touch
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
@@ -151,9 +151,9 @@ export default function Contact() {
         </section>
 
         {/* Contact Information Section */}
-        <section className="bg-white dark:bg-surface-dark shadow-lg rounded-2xl p-8 border border-gray-100 dark:border-gray-700">
+        <section className="card card-lg">
           <header className="mb-8">
-            <h2 className="text-2xl font-semibold text-primary-600 dark:text-primary-400 mb-2">
+            <h2 className="text-display heading-accent mb-4">
               Let's Connect
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
@@ -163,7 +163,7 @@ export default function Contact() {
 
           {/* Direct Contact */}
           <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+            <h3 className="text-base md:text-lg font-semibold text-semantic-text dark:text-semantic-text mb-4">
               Direct Contact
             </h3>
             <div className="space-y-3">
@@ -187,7 +187,7 @@ export default function Contact() {
 
           {/* Social Media */}
           <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+            <h3 className="text-base md:text-lg font-semibold text-semantic-text dark:text-semantic-text mb-4">
               Social Media
             </h3>
             <div className="flex flex-wrap gap-3">
@@ -217,7 +217,7 @@ export default function Contact() {
 
           {/* FAQ */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+            <h3 className="text-base md:text-lg font-semibold text-semantic-text dark:text-semantic-text mb-4">
               Quick Questions?
             </h3>
             <div className="space-y-3 text-sm">
