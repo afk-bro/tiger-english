@@ -87,8 +87,7 @@ body {
   /* Featured card — stronger border, 2px top accent stripe */
   .card-featured {
     @apply border-primary-200 dark:border-primary-800 shadow-md;
-    position: relative;
-    overflow: hidden;
+    @apply relative overflow-hidden;
   }
   .card-featured::before {
     content: '';

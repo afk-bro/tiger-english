@@ -42,7 +42,7 @@ export default function Header() {
               <span className="inline dark:hidden text-xl font-display tracking-wide bg-gradient-to-r from-[#9a6728] to-[#7c4c16] bg-clip-text text-transparent">
                 {t("header.logo")}
               </span>
-              <span className="font-body text-xs text-text-light/60 dark:text-text-dark/60 font-medium">
+              <span className="text-xs text-text-light/60 dark:text-text-dark/60 font-medium">
                 {t("header.tagline")}
               </span>
             </div>
