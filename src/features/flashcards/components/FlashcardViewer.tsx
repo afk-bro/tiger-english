@@ -70,8 +70,7 @@ export function FlashcardViewer({
       </div>
 
       <div className="flex justify-center">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <Flashcard data={currentCard as any} />
+        <Flashcard data={currentCard} />
       </div>
 
       <div className="flex items-center space-x-4">

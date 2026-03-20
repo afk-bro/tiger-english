@@ -50,7 +50,8 @@ export function FlashcardViewer({ selectedDifficulty }: FlashcardViewerProps) {
       </div>
 
       <div className="flex justify-center">
-        <Flashcard data={currentCard} />
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <Flashcard data={currentCard as any} />
       </div>
 
       <div className="flex items-center space-x-4">
