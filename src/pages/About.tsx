@@ -17,8 +17,8 @@ export default function About() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
-      <article className="bg-white dark:bg-surface-dark shadow-lg rounded-2xl p-8 sm:p-10 border border-gray-100 dark:border-gray-700">
+    <div className="max-w-4xl mx-auto px-4 md:px-6 py-12 md:py-16">
+      <article className="card card-lg">
         {/* Header Section */}
         <header className="flex items-center mb-8">
           <img
@@ -27,7 +27,7 @@ export default function About() {
             className="w-16 h-16 rounded-full border-2 border-primary-500 shadow-sm mr-4 flex-shrink-0"
           />
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-primary-600 dark:text-primary-400">
+            <h1 className="text-display heading-accent">
               About Golden Lantern Academy
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -62,7 +62,7 @@ export default function About() {
 
         {/* Skills & Technologies Section */}
         <section className="mb-10">
-          <h2 className="text-2xl font-semibold text-primary-600 dark:text-primary-400 mb-6">
+          <h2 className="text-display heading-accent mb-6">
             Skills & Technologies
           </h2>
           <p className="text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
@@ -73,7 +73,7 @@ export default function About() {
             {technologies.map((tech) => (
               <div
                 key={tech.name}
-                className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-center border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
+                className="card text-center"
               >
                 <div className="font-medium text-text-light dark:text-text-dark text-sm">
                   {tech.name}
@@ -88,7 +88,7 @@ export default function About() {
 
         {/* Social Links Section */}
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-primary-600 dark:text-primary-400 mb-6">
+          <h2 className="text-display heading-accent mb-6">
             Connect With Me
           </h2>
           <div className="flex flex-wrap gap-4 justify-center sm:justify-start mb-6">
@@ -118,7 +118,7 @@ export default function About() {
 
         {/* Contact Section */}
         <section className="text-center">
-          <h2 className="text-xl font-semibold text-primary-600 dark:text-primary-400 mb-4">
+          <h2 className="text-display heading-accent mb-4">
             Get In Touch
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">

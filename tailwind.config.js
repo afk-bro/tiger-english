@@ -8,7 +8,6 @@ export default {
         sans: ['Inter', 'ui-sans-serif', 'system-ui'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular'],
         display: ['"DM Serif Display"', 'serif'],
-        body: ['"Poppins"', 'sans-serif'],
       },
       colors: {
         primary: {
@@ -88,6 +87,8 @@ export default {
           text:          'rgb(var(--color-text) / <alpha-value>)',
           'text-muted':  'rgb(var(--color-text-muted) / <alpha-value>)',
           border:        'rgb(var(--color-border) / <alpha-value>)',
+          muted:         'rgb(var(--color-muted) / <alpha-value>)',
+          subtle:        'rgb(var(--color-subtle) / <alpha-value>)',
         },
       }
     }

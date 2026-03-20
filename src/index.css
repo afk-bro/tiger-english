@@ -38,6 +38,8 @@ body {
     --color-text:       31 41 55;
     --color-text-muted: 107 114 128;
     --color-border:     226 232 240;
+    --color-muted:      100 116 139;   /* #64748B — secondary labels, placeholder text */
+    --color-subtle:     148 163 184;   /* #94A3B8 — tertiary, timestamps, disabled */
   }
 
   .dark {
@@ -53,5 +55,101 @@ body {
     --color-text:       243 244 246;
     --color-text-muted: 156 163 175;
     --color-border:     51 65 85;
+    --color-muted:      148 163 184;   /* inverted in dark mode */
+    --color-subtle:     100 116 139;
+  }
+}
+
+@layer components {
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+
+  .text-display {
+    @apply text-2xl md:text-3xl font-semibold tracking-tight;
+  }
+
+  /* ── Cards ──────────────────────────────────────────────────────────────── */
+
+  /* Base card — light mode uses bg-white intentionally for max contrast */
+  .card {
+    @apply bg-white dark:bg-semantic-surface;
+    @apply rounded-2xl border border-semantic-border;
+    @apply p-4 md:p-5;
+    @apply shadow-sm;
+    @apply transition-all duration-200 ease-out;
+  }
+
+  /* Add to a .card only when the ENTIRE card is a clickable target */
+  .card-interactive {
+    @apply hover:-translate-y-0.5 hover:shadow-md cursor-pointer;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40;
+  }
+
+  /* Featured card — stronger border, 2px top accent stripe */
+  .card-featured {
+    @apply border-primary-200 dark:border-primary-800 shadow-md;
+    @apply relative overflow-hidden;
+  }
+  .card-featured::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(to right, #326de2, #fcd34d);
+  }
+  /* 0.5rem top breathing room below the 2px strip — intentional, not pixel-exact */
+  .card-featured > :first-child {
+    margin-top: 0.5rem;
+  }
+
+  /* Large card — for modals and major feature panels */
+  .card-lg {
+    @apply p-6 md:p-7;
+  }
+
+  /* Ghost card — low-emphasis inner grouping; never nest inside .card-featured */
+  .card-ghost {
+    background-color: rgb(var(--color-surface) / 0.5);
+    border: 1px solid rgb(var(--color-border) / 0.5);
+    @apply shadow-none rounded-xl;
+  }
+
+  /* ── Signature element ──────────────────────────────────────────────────── */
+
+  /* Section headings — short editorial accent line (default) */
+  .heading-accent {
+    @apply relative inline-block pb-2;
+  }
+  .heading-accent::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 3rem;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #326de2, #fcd34d);
+  }
+
+  /* Hero / marquee moments only — full-width accent line */
+  .heading-accent-wide {
+    @apply relative inline-block pb-2;
+  }
+  .heading-accent-wide::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #326de2, #fcd34d);
+  }
+
+  /* ── Transitions ────────────────────────────────────────────────────────── */
+
+  .transition-base {
+    @apply transition-all duration-200 ease-out;
   }
 }

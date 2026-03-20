@@ -94,7 +94,7 @@ export function CreateSetModal({ onClose, onSubmit }: CreateSetModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-set-modal-title"
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6"
+        className="card card-lg w-full max-w-md"
       >
         <h2 id="create-set-modal-title" className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
           Create flashcard set

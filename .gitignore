@@ -32,6 +32,9 @@ dist-ssr
 skills-lock.json
 .claude/
 
+# Git worktrees
+.worktrees/
+
 # Docs: commit plans, architecture, specs — ignore scratch/notes
 /docs/notes
 /docs/scratch

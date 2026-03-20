@@ -1,4 +1,3 @@
-// src/components/ui/Button.tsx
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
@@ -35,27 +34,30 @@ export default function Button({
   onClick,
 }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-200";
+    "inline-flex items-center justify-center gap-2 font-semibold rounded-xl " +
+    "transition-all duration-200 ease-out " +
+    "active:scale-95 " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40";
 
   const styles = {
     primary:
-      "bg-gradient-to-r from-accent-600 to-accent-400 hover:from-accent-800 hover:to-accent-300 text-gray-800 shadow-lg hover:shadow-xl transform hover:-translate-y-1 shadow-md hover:shadow-lg border border-gold-400",
+      "bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white shadow-sm hover:shadow-md",
     secondary:
-      "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600",
+      "bg-white hover:bg-semantic-surface-2 text-semantic-text dark:bg-semantic-surface dark:hover:bg-semantic-surface-2 dark:text-semantic-text border border-semantic-border",
     ghost:
       "text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300",
     outline:
       "border border-white text-white hover:text-white/80 hover:border-white/50",
     white:
-      "bg-white text-primary-600 hover:bg-primary-50 shadow-lg hover:shadow-xl transform hover:-translate-y-1",
+      "bg-white text-primary-600 hover:bg-primary-50 shadow-sm hover:shadow-md",
     danger:
       "bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700",
   };
 
   const sizeStyles = {
-    xs: "px-2 py-1 text-xs",
-    sm: "px-4 py-2 text-sm rounded-md",
-    md: "px-6 py-3 text-base rounded-lg",
+    xs: "px-2 py-1 text-xs rounded-md",
+    sm: "px-4 py-2 text-sm rounded-lg",
+    md: "px-6 py-3 text-base rounded-xl",
     lg: "px-8 py-4 text-lg rounded-xl",
   };
 
@@ -69,7 +71,6 @@ export default function Button({
 
   const classes = clsx(base, styles[variant], sizeStyles[size ?? "md"], layoutStyles, className);
 
-  // Link variant: disabled → non-interactive span; enabled → Link with classes
   if (to) {
     if (disabled) {
       return (

@@ -8,7 +8,7 @@ interface StudyStatsProps {
 export default function StudyStats({ studyStats }: StudyStatsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div className="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-lg">
+      <div className="card">
         <div className="flex items-center">
           <div className="p-3 bg-success-100 dark:bg-success-900/30 rounded-lg">
             <span className="text-2xl">📚</span>
@@ -22,7 +22,7 @@ export default function StudyStats({ studyStats }: StudyStatsProps) {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-lg">
+      <div className="card">
         <div className="flex items-center">
           <div className="p-3 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
             <span className="text-2xl">⏱️</span>
@@ -36,7 +36,7 @@ export default function StudyStats({ studyStats }: StudyStatsProps) {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-lg">
+      <div className="card">
         <div className="flex items-center">
           <div className="p-3 bg-accent-100 dark:bg-accent-900/30 rounded-lg">
             <span className="text-2xl">🎯</span>
@@ -50,9 +50,9 @@ export default function StudyStats({ studyStats }: StudyStatsProps) {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-lg">
+      <div className="card">
         <div className="flex items-center">
-          <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+          <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg hover:shadow-[0_0_12px_rgba(252,211,77,0.2)] transition-all duration-200">
             <span className="text-2xl">🔥</span>
           </div>
           <div className="ml-4">
