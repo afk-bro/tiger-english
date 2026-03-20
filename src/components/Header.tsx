@@ -1,5 +1,5 @@
 // src/components/Header.tsx
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { CreditCard, Info, Mail } from "lucide-react";
 import DarkModeToggle from "./DarkModeToggle";
@@ -13,16 +13,7 @@ export default function Header() {
   const location = useLocation();
   const { t } = useTranslation();
 
-  const isActive = (path: string) => location.pathname === path;
-
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const navLinkClass = (path: string) =>
-    `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-      isActive(path)
-        ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-        : "text-text-light/70 dark:text-text-dark/70 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
-    }`;
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 dark:bg-base-dark/95 backdrop-blur-sm border-b border-primary-100 dark:border-primary-800/30 shadow-sm">
@@ -94,19 +85,16 @@ export default function Header() {
         </div>
         {isMenuOpen && (
           <div className="md:hidden mt-4 pt-4 border-t border-primary-100 dark:border-primary-800/30">
-            <nav className="flex flex-col gap-2">
-              <Link to="/flashcards" className={navLinkClass("/flashcards")}>
-                <CreditCard className="w-4 h-4" />
+            <nav className="flex flex-col gap-2" onClick={() => setIsMenuOpen(false)}>
+              <NavLink to="/flashcards" exact icon={<CreditCard className="w-4 h-4" />}>
                 {t("header.nav.flashcards")}
-              </Link>
-              <Link to="/about" className={navLinkClass("/about")}>
-                <Info className="w-4 h-4" />
+              </NavLink>
+              <NavLink to="/about" exact icon={<Info className="w-4 h-4" />}>
                 {t("header.nav.about")}
-              </Link>
-              <Link to="/contact" className={navLinkClass("/contact")}>
-                <Mail className="w-4 h-4" />
+              </NavLink>
+              <NavLink to="/contact" exact icon={<Mail className="w-4 h-4" />}>
                 {t("header.nav.contact")}
-              </Link>
+              </NavLink>
               <div className="flex items-center">
                 <UserMenu mobile={true} />
               </div>
