@@ -1,6 +1,29 @@
 // src/components/dashboard/XPProgress.tsx
 import { XPData } from "@/types/dashboard";
 
+type TierKey = keyof XPData["xpBreakdown"];
+
+const tierStyles: Record<TierKey, { card: string; label: string; xp: string; meta: string }> = {
+  beginner: {
+    card: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+    label: "text-green-700 dark:text-green-300",
+    xp: "text-green-800 dark:text-green-200",
+    meta: "text-green-600 dark:text-green-400",
+  },
+  intermediate: {
+    card: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+    label: "text-blue-700 dark:text-blue-300",
+    xp: "text-blue-800 dark:text-blue-200",
+    meta: "text-blue-600 dark:text-blue-400",
+  },
+  expert: {
+    card: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+    label: "text-purple-700 dark:text-purple-300",
+    xp: "text-purple-800 dark:text-purple-200",
+    meta: "text-purple-600 dark:text-purple-400",
+  },
+};
+
 interface XPProgressProps {
   xp: XPData;
   progressColorClass: string;
@@ -41,13 +64,8 @@ export default function XPProgress({ xp, progressColorClass }: XPProgressProps) 
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {Object.entries(xp.xpBreakdown).map(([tier, data]) => {
-          const tierStyles: Record<string, { card: string; label: string; xp: string; meta: string }> = {
-            beginner:     { card: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",     label: "text-green-700 dark:text-green-300",   xp: "text-green-800 dark:text-green-200",   meta: "text-green-600 dark:text-green-400" },
-            intermediate: { card: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",         label: "text-blue-700 dark:text-blue-300",     xp: "text-blue-800 dark:text-blue-200",     meta: "text-blue-600 dark:text-blue-400" },
-            expert:       { card: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800", label: "text-purple-700 dark:text-purple-300", xp: "text-purple-800 dark:text-purple-200", meta: "text-purple-600 dark:text-purple-400" },
-          };
-          const styles = tierStyles[tier] ?? tierStyles.beginner;
+        {(Object.entries(xp.xpBreakdown) as [TierKey, (typeof xp.xpBreakdown)[TierKey]][]).map(([tier, data]) => {
+          const styles = tierStyles[tier];
 
           return (
             <div
