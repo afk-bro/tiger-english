@@ -11,17 +11,17 @@ interface NavLinkProps {
 
 export default function NavLink({ to, children, icon, exact = false }: NavLinkProps) {
   const { pathname } = useLocation();
-
   const isActive = exact ? pathname === to : pathname.startsWith(to);
 
   return (
     <RouterNavLink
       to={to}
       className={clsx(
-        "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+        "flex items-center gap-2 px-3 py-2 text-sm transition-all duration-200 ease-out",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40 rounded-lg",
         isActive
-          ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-          : "text-text-light/70 dark:text-text-dark/70 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+          ? "text-primary-600 dark:text-primary-400 font-medium"
+          : "text-semantic-muted hover:text-primary-500 dark:text-semantic-muted dark:hover:text-primary-400"
       )}
     >
       {icon}
