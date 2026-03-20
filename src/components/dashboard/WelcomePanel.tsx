@@ -1,4 +1,3 @@
-import React from "react";
 import type { Profile, XPData, StudyStats as StudyStatsType } from "@/types/dashboard";
 
 interface WelcomePanelProps {

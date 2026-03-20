@@ -7,7 +7,7 @@ vi.mock('@/lib/supabase', () => {
 });
 
 import { supabase } from '@/lib/supabase';
-import { getVisibleSets, getCardsBySet, getProgressByCards, upsertCardProgress, createSet } from '../api/flashcards';
+import { getVisibleSets, getCardsBySet, getProgressByCards, upsertCardProgress } from '../api/flashcards';
 
 const mockFrom = vi.mocked(supabase.from);
 
