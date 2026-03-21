@@ -1,0 +1,130 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+
+// Mock react-router navigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return { ...actual, useNavigate: () => mockNavigate };
+});
+
+// Hoist mock functions so they are available when vi.mock factories run
+const { mockOnAuthStateChange, mockGetSession } = vi.hoisted(() => ({
+  mockOnAuthStateChange: vi.fn(),
+  mockGetSession: vi.fn(),
+}));
+
+// Mock supabase
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      onAuthStateChange: mockOnAuthStateChange,
+      getSession: mockGetSession,
+    },
+  },
+}));
+
+// Mock Zustand store
+const mockUseUserStore = vi.fn();
+vi.mock('@/stores/useUserStore', () => ({
+  useUserStore: (selector: (s: unknown) => unknown) => mockUseUserStore(selector),
+}));
+
+import AuthCallback from '../AuthCallback';
+
+function renderCallback(search = '') {
+  return render(
+    <MemoryRouter initialEntries={[`/auth/callback${search}`]}>
+      <AuthCallback />
+    </MemoryRouter>
+  );
+}
+
+function setupSubscription() {
+  let capturedCallback: ((event: string, session: unknown) => void) | null = null;
+  mockOnAuthStateChange.mockImplementation((cb) => {
+    capturedCallback = cb;
+    return { data: { subscription: { unsubscribe: vi.fn() } } };
+  });
+  return { fire: (event: string, session: unknown) => capturedCallback?.(event, session) };
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.useFakeTimers();
+  mockGetSession.mockResolvedValue({ data: { session: { user: { id: '123' } } } });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('AuthCallback', () => {
+  it('shows auth_error immediately when URL contains ?error=', () => {
+    setupSubscription();
+    mockUseUserStore.mockReturnValue(null);
+    renderCallback('?error=access_denied&error_description=User+cancelled');
+    expect(screen.getByText(/authentication failed/i)).toBeInTheDocument();
+  });
+
+  it('shows checking state on mount', () => {
+    setupSubscription();
+    mockUseUserStore.mockReturnValue(null);
+    renderCallback();
+    expect(screen.getByText(/signing you in/i)).toBeInTheDocument();
+  });
+
+  it('transitions to auth_error when no SIGNED_IN event within 3s', async () => {
+    setupSubscription(); // never fires SIGNED_IN
+    mockUseUserStore.mockReturnValue(null);
+    renderCallback();
+
+    await act(async () => {
+      vi.advanceTimersByTime(3001);
+    });
+
+    expect(screen.getByText(/authentication failed/i)).toBeInTheDocument();
+  });
+
+  it('transitions to waiting_profile after SIGNED_IN event', async () => {
+    const sub = setupSubscription();
+    mockUseUserStore.mockReturnValue(null); // no profile yet
+    renderCallback();
+
+    await act(async () => {
+      sub.fire('SIGNED_IN', { user: { id: '123' } });
+    });
+
+    expect(screen.getByText(/setting up your account/i)).toBeInTheDocument();
+  });
+
+  it('redirects to /u/:username when profile.username is set', async () => {
+    const sub = setupSubscription();
+    mockUseUserStore.mockImplementation((selector) => {
+      const state = { profile: { username: 'testuser_abc123' }, error: null };
+      return selector(state);
+    });
+    renderCallback();
+
+    await act(async () => {
+      sub.fire('SIGNED_IN', { user: { id: '123' } });
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/u/testuser_abc123', { replace: true });
+  });
+
+  it('shows timeout state after 10s in waiting_profile', async () => {
+    const sub = setupSubscription();
+    mockUseUserStore.mockReturnValue(null); // profile never arrives
+    renderCallback();
+
+    await act(async () => {
+      sub.fire('SIGNED_IN', { user: { id: '123' } });
+      vi.advanceTimersByTime(10001);
+    });
+
+    expect(screen.getByText(/taking longer than expected/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+  });
+});
