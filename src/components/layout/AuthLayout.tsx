@@ -1,5 +1,5 @@
 // src/components/layout/AuthLayout.tsx
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { useSidebarStore } from "@/stores/useSidebarStore";
 import AppSidebar from "@/components/sidebar/AppSidebar";
@@ -12,6 +12,7 @@ import { Menu } from "lucide-react";
 export default function AuthLayout() {
   const { collapsed, toggleCollapsed } = useSidebarStore();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div className="min-h-screen flex flex-col bg-semantic-bg dark:bg-semantic-bg text-semantic-text dark:text-semantic-text">
@@ -27,6 +28,7 @@ export default function AuthLayout() {
             <UserMenu />
             {/* Mobile sidebar toggle */}
             <button
+              ref={hamburgerRef}
               className="md:hidden p-2 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20"
               onClick={() => setMobileOpen(true)}
               aria-label="Open navigation"
@@ -47,6 +49,7 @@ export default function AuthLayout() {
           onToggleCollapsed={toggleCollapsed}
           isOpen={mobileOpen}
           onClose={() => setMobileOpen(false)}
+          triggerRef={hamburgerRef}
         />
       </div>
     </div>

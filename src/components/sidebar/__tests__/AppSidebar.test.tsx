@@ -33,29 +33,32 @@ function renderSidebar(props = {}) {
 }
 
 describe('AppSidebar', () => {
+  // sidebarContent is rendered in both the desktop panel and the always-mounted mobile drawer,
+  // so nav labels and buttons appear twice in the DOM. Use getAllBy* accordingly.
+
   it('renders all 8 nav items', () => {
     renderSidebar();
     const navLabels = ['Home', 'Dashboard', 'Library', 'Study Groups', 'Notifications', 'Flashcards', 'Drag & Drop', 'Ad Libs'];
     for (const label of navLabels) {
-      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(1);
     }
   });
 
   it('shows labels in expanded mode', () => {
     renderSidebar({ collapsed: false });
-    expect(screen.getByText('Dashboard')).toBeVisible();
+    expect(screen.getAllByText('Dashboard')[0]).toBeVisible();
   });
 
   it('hides labels in collapsed mode and exposes aria-label on nav items', () => {
     renderSidebar({ collapsed: true });
     // Labels are visually hidden; aria-labels present
-    expect(screen.getByLabelText('Dashboard')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Dashboard')[0]).toBeInTheDocument();
   });
 
   it('calls onToggleCollapsed when toggle button is clicked', () => {
     const onToggle = vi.fn();
     renderSidebar({ onToggleCollapsed: onToggle });
-    fireEvent.click(screen.getByRole('button', { name: /collapse|expand/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /collapse|expand/i })[0]);
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
 

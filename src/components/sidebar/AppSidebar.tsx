@@ -13,6 +13,7 @@ interface AppSidebarProps {
   onToggleCollapsed: () => void;
   isOpen: boolean;
   onClose: () => void;
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;  // ref to the button that opened the drawer
 }
 
 const NAV_ITEMS = [
@@ -33,17 +34,15 @@ const UTILITY_ITEMS = [
   { label: "Logout",    icon: LogOut },
 ] as const;
 
-export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClose }: AppSidebarProps) {
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-
-  // Return focus to close button on drawer close (mobile)
+export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClose, triggerRef }: AppSidebarProps) {
+  // Return focus to the trigger (hamburger) button on drawer close
   const prevIsOpen = useRef(isOpen);
   useEffect(() => {
-    if (prevIsOpen.current && !isOpen) {
-      closeButtonRef.current?.focus();
+    if (prevIsOpen.current && !isOpen && triggerRef?.current) {
+      triggerRef.current.focus();
     }
     prevIsOpen.current = isOpen;
-  }, [isOpen]);
+  }, [isOpen, triggerRef]);
 
   const sidebarContent = (
     <div
@@ -118,33 +117,36 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
   // Mobile: off-canvas overlay drawer
   const mobileDrawer = (
     <div className="md:hidden">
-      {isOpen && (
-        <>
-          <div
-            data-testid="sidebar-overlay"
-            className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-200"
+      {/* Overlay */}
+      <div
+        data-testid="sidebar-overlay"
+        onClick={onClose}
+        className={[
+          "fixed inset-0 bg-black/50 z-40 transition-opacity duration-200",
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+        ].join(" ")}
+      />
+      {/* Drawer */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation"
+        className={[
+          "fixed right-0 top-0 h-full z-50 transition-transform duration-200",
+          isOpen ? "translate-x-0" : "translate-x-full",
+        ].join(" ")}
+      >
+        <div className="flex items-start h-full">
+          <button
             onClick={onClose}
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Navigation"
-            className="fixed right-0 top-0 h-full z-50 transition-transform duration-200"
+            aria-label="Close navigation"
+            className="m-2 p-2 rounded-full bg-white dark:bg-gray-800 shadow flex-shrink-0 mt-2"
           >
-            <div className="flex items-start">
-              <button
-                ref={closeButtonRef}
-                onClick={onClose}
-                aria-label="Close navigation"
-                className="m-2 p-2 rounded-full bg-white dark:bg-gray-800 shadow"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              {sidebarContent}
-            </div>
-          </div>
-        </>
-      )}
+            <X className="w-4 h-4" />
+          </button>
+          {sidebarContent}
+        </div>
+      </div>
     </div>
   );
 
