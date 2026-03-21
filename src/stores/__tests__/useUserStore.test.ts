@@ -27,7 +27,7 @@ function makeSelectChain(result: { data: unknown; error: unknown }) {
 }
 
 beforeEach(() => {
-  useUserStore.setState({ profile: null, loading: false, error: null });
+  useUserStore.setState({ profile: null, profileLoading: false, error: null });
   vi.clearAllMocks();
 });
 
@@ -47,7 +47,7 @@ describe('fetchProfile — PGRST116 (no rows)', () => {
     const state = useUserStore.getState();
     expect(state.profile).toBeNull();
     expect(state.error).toBeNull();   // key assertion: NOT an error
-    expect(state.loading).toBe(false);
+    expect(state.profileLoading).toBe(false);
   });
 
   it('sets error when a genuine DB error occurs (non-PGRST116)', async () => {
