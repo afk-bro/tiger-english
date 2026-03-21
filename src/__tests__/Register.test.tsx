@@ -5,31 +5,27 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import Register from '@/pages/Register';
 import { toast } from 'sonner';
-import i18n from '@/lib/i18n'; // or correct path
-
+import i18n from '@/lib/i18n';
 
 beforeAll(async () => {
   await i18n.changeLanguage('en');
 });
 
-screen.debug();
+vi.mock('@/features/auth/registerUserAPI', () => ({
+  registerUserAPI: vi.fn().mockResolvedValue({
+    success: true,
+    message: 'Account created successfully! Please log in to continue.',
+  }),
+}));
 
-// Mock Supabase
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
-      signUp: vi.fn().mockResolvedValue({
-        data: { user: { id: '123' } },
-        error: null,
-      }),
+      signInWithOAuth: vi.fn().mockResolvedValue({ data: {}, error: null }),
     },
-    from: () => ({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-    }),
   },
 }));
 
-// Mock toast
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
@@ -37,7 +33,6 @@ vi.mock('sonner', () => ({
   },
 }));
 
-// Mock useNavigate
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
@@ -46,7 +41,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Wrapper for routing context
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <BrowserRouter>{children}</BrowserRouter>
 );
@@ -55,15 +49,19 @@ describe('Register.tsx', () => {
   it('successfully registers a user and shows a success toast', async () => {
     render(<Register />, { wrapper: Wrapper });
 
+    await userEvent.type(screen.getByLabelText(/username/i), 'johndoe');
     await userEvent.type(screen.getByLabelText(/first name/i), 'John');
     await userEvent.type(screen.getByLabelText(/last name/i), 'Doe');
     await userEvent.type(screen.getByLabelText(/email/i), 'john@example.com');
-    await userEvent.type(screen.getByLabelText(/password/i), 'securepass');
+    await userEvent.type(screen.getByLabelText(/^password$/i), 'securepass123');
+    await userEvent.type(screen.getByLabelText(/confirm password/i), 'securepass123');
 
     fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
 
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith('Account created successfully!');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Account created successfully! Please log in to continue.'
+      );
     });
   });
 });

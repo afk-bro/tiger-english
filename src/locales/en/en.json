@@ -4,6 +4,7 @@
     "title": "Learn English with Confidence",
     "subtitle": "Designed for students and professionals. Build vocabulary, improve fluency, and grow your skills with AI-powered tools and personalized tutoring.",
     "cta": "Start Learning Today",
+    "try_flashcards": "Try Flashcards",
     "learn_more": "Learn More"
   },
   "features": {
@@ -68,7 +69,7 @@
     "create_account": "Sign up"
   },
   "logout": {
-    "success": "Logged out successfully",
+    "success": "Logout Successful",
     "fail": "Logout failed"
   }
 }

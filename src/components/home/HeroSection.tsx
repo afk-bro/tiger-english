@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CreditCard } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Button from "../ui/Button";
 
@@ -21,6 +21,9 @@ export default function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-4 items-start">
               <Button to="/register" variant="primary" iconRight={<ArrowRight />}>
                 {t("hero.cta")}
+              </Button>
+              <Button to="/flashcards" variant="outline" iconRight={<CreditCard className="w-4 h-4" />}>
+                {t("hero.try_flashcards")}
               </Button>
               <Link
                 to="/about"

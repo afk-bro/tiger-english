@@ -28,7 +28,7 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
     const error = await logoutUser();
     if (!error) {
       clearProfile();
-      toast.success(t("auth.logout.success") || "Logged out");
+      toast.success(t("logout.success") || "Logout Successful");
       blurActiveElement();
       navigate("/login");
     }
