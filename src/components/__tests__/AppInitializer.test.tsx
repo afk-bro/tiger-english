@@ -85,6 +85,16 @@ describe('AppInitializer', () => {
     expect(mockFetchProfile).not.toHaveBeenCalled();
   });
 
+  it('calls clearProfile when no session on mount', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: null } });
+
+    await act(async () => {
+      render(<AppInitializer />);
+    });
+
+    expect(mockClearProfile).toHaveBeenCalledTimes(1);
+  });
+
   it('skips INITIAL_SESSION from onAuthStateChange to avoid double-firing', async () => {
     mockGetSession.mockResolvedValue({ data: { session: null } });
     let capturedCallback: ((event: string, session: unknown) => void) | null = null;
@@ -122,7 +132,7 @@ describe('AppInitializer', () => {
   });
 
   it('calls clearProfile on SIGNED_OUT event', async () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } });
+    mockGetSession.mockResolvedValue({ data: { session: { user: { id: '1' } } } });
     let capturedCallback: ((event: string, session: unknown) => void) | null = null;
     mockOnAuthStateChange.mockImplementation((cb) => {
       capturedCallback = cb;

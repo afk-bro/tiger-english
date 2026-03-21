@@ -27,7 +27,11 @@ export default function AppInitializer() {
       setSessionLoading(false);
       if (session) {
         fetchProfile();
+      } else {
+        clearProfile();
       }
+    }).catch(() => {
+      setSessionLoading(false);
     });
 
     return () => listener.subscription.unsubscribe();
