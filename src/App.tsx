@@ -2,7 +2,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import AppInitializer from "./components/AppInitializer";
-import Layout from "./components/Layout";
+import PublicLayout from "./components/layout/PublicLayout";
 import UserLayout from "@/routes/UserLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -28,7 +28,7 @@ function App() {
     <ErrorBoundary>
       <Router>
         <AppInitializer />
-        <Layout>
+        <PublicLayout>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public Routes */}
@@ -47,7 +47,7 @@ function App() {
               </Route>
             </Routes>
           </Suspense>
-        </Layout>
+        </PublicLayout>
       </Router>
     </ErrorBoundary>
   );

@@ -1,9 +1,9 @@
-// src/components/Layout.tsx
+// src/components/layout/PublicLayout.tsx
 import type { ReactNode } from 'react';
-import Header from './Header';
-import Footer from './Footer';
+import Header from '../Header';
+import Footer from '../Footer';
 
-export default function Layout({ children }: { children: ReactNode }) {
+export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-base-light text-text-light dark:bg-base-dark dark:text-text-dark transition-colors duration-300 font-sans">
       <Header />
