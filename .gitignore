@@ -38,3 +38,4 @@ skills-lock.json
 # Docs: commit plans, architecture, specs — ignore scratch/notes
 /docs/notes
 /docs/scratch
+/docs/lessons_learned
