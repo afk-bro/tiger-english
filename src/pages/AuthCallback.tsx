@@ -50,23 +50,38 @@ export default function AuthCallback() {
   useEffect(() => {
     if (state === 'auth_error') return; // already errored from URL params
 
+    let handled = false;
+
+    const handle = (sub: { unsubscribe: () => void }) => {
+      if (handled) return;
+      handled = true;
+      if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
+      sub.unsubscribe();
+      startProfilePolling();
+    };
+
     // Wait for SIGNED_IN event — correct mechanism post-OAuth-redirect
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
-        subscription.unsubscribe();
-        startProfilePolling();
-      }
+      if (event === 'SIGNED_IN') handle(subscription);
+    });
+
+    // Also check if session already exists — SIGNED_IN may have fired before
+    // this component mounted (e.g. on re-login after logout)
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) handle(subscription);
     });
 
     // 3s fallback if SIGNED_IN never fires
     sessionTimerRef.current = setTimeout(() => {
-      subscription.unsubscribe();
-      setState('auth_error');
-      setErrorMessage('Authentication timed out. Please try again.');
+      if (!handled) {
+        subscription.unsubscribe();
+        setState('auth_error');
+        setErrorMessage('Authentication timed out. Please try again.');
+      }
     }, 3_000);
 
     return () => {
+      handled = true;
       clearTimers();
       subscription.unsubscribe();
     };
