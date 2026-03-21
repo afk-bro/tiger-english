@@ -1,5 +1,5 @@
 // src/features/dashboard/useDashboard.ts
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@/stores/useUserStore";
 import { logoutUser } from "@/features/auth/logoutUser";
@@ -8,12 +8,6 @@ import { toast } from "sonner";
 export function useDashboard() {
   const { profile, profileLoading, clearProfile } = useUserStore();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!profileLoading && !profile) {
-      navigate("/login");
-    }
-  }, [profileLoading, profile, navigate]);
 
   const handleLogout = useCallback(async () => {
     const error = await logoutUser();
