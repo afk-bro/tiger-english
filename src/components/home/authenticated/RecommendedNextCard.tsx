@@ -29,7 +29,7 @@ export default function RecommendedNextCard({ data, isLoading }: Props) {
     );
   }
 
-  const items = data.slice(0, 3);
+  const items = [...data].sort((a, b) => a.priority - b.priority).slice(0, 3);
 
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col gap-4 bg-white dark:bg-gray-900">

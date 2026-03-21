@@ -37,6 +37,17 @@ export default function StudyGroupsCard({ data, isLoading }: Props) {
         </p>
       )}
 
+      {hasGroups && (
+        <div className="flex flex-col gap-2">
+          {data.groups.map((group) => (
+            <div key={group.id} className="flex items-center justify-between text-sm">
+              <span className="font-medium text-gray-800 dark:text-gray-100">{group.name}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{group.memberCount} members</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex gap-2">
         <button
           className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors"

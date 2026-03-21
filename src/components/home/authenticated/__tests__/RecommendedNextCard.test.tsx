@@ -56,4 +56,17 @@ describe('RecommendedNextCard', () => {
     renderCard({ data: reviewOnly });
     expect(screen.getByText('Needs review')).toBeInTheDocument();
   });
+
+  it('sorts items by priority before display', () => {
+    const unsortedItems: RecommendedItem[] = [
+      { setId: 'z', title: 'Third', reasonType: 'review', priority: 3 },
+      { setId: 'a', title: 'First', reasonType: 'sequence', priority: 1 },
+      { setId: 'b', title: 'Second', reasonType: 'related', priority: 2 },
+    ];
+    renderCard({ data: unsortedItems });
+    const titles = screen.getAllByText(/^(First|Second|Third)$/);
+    expect(titles[0]).toHaveTextContent('First');
+    expect(titles[1]).toHaveTextContent('Second');
+    expect(titles[2]).toHaveTextContent('Third');
+  });
 });

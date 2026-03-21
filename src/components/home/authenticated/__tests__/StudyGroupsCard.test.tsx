@@ -35,4 +35,10 @@ describe('StudyGroupsCard', () => {
     render(<StudyGroupsCard data={emptyData} isLoading={false} />);
     expect(screen.queryByTestId('pending-badge')).not.toBeInTheDocument();
   });
+
+  it('renders group names and member counts in populated state', () => {
+    render(<StudyGroupsCard data={populatedData} isLoading={false} />);
+    expect(screen.getByText('English Beginners')).toBeInTheDocument();
+    expect(screen.getByText('4 members')).toBeInTheDocument();
+  });
 });
