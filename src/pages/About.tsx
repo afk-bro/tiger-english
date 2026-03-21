@@ -23,7 +23,7 @@ export default function About() {
         <header className="flex items-center mb-8">
           <img
             src={avatar}
-            alt="Profile picture of the Gain English creator"
+            alt="Profile picture of the Tiger English creator"
             className="w-16 h-16 rounded-full border-2 border-primary-500 shadow-sm mr-4 flex-shrink-0"
           />
           <div>
@@ -127,7 +127,7 @@ export default function About() {
           <a
             href="mailto:youremail@example.com"
             className="inline-block bg-primary-600 hover:bg-primary-700 focus:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105"
-            aria-label="Send email to the creator of Gain English"
+            aria-label="Send email to the creator of Tiger English"
           >
             Contact Me
           </a>
