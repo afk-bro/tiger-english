@@ -7,12 +7,12 @@
 -- via user_metadata; the trigger applies explicit precedence.
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, auth
-AS $$
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
 DECLARE
   v_username_meta text;
   v_use_path_a    bool;
@@ -39,7 +39,7 @@ BEGIN
   --           → split full_name (best-effort)
   --           → email prefix fallback
   v_first_name := trim(NEW.raw_user_meta_data->>'first_name');
-  v_last_name  := trim(coalesce(NEW.raw_user_meta_data->>'last_name', ''));
+  v_last_name  := trim(NEW.raw_user_meta_data->>'last_name');
 
   IF v_first_name IS NULL OR v_first_name = '' THEN
     v_full_name := trim(coalesce(NEW.raw_user_meta_data->>'full_name', ''));
@@ -74,8 +74,8 @@ BEGIN
     v_email_base := lower(split_part(NEW.email, '@', 1));
     v_email_base := regexp_replace(v_email_base, '[^a-z0-9]', '_', 'g');
     v_email_base := regexp_replace(v_email_base, '_+',        '_', 'g');
-    v_email_base := trim(both '_' from v_email_base);
     v_email_base := left(v_email_base, 15);
+    v_email_base := trim(both '_' from v_email_base);
     IF v_email_base = '' THEN
       v_email_base := 'user';
     END IF;
@@ -98,7 +98,10 @@ BEGIN
       v_inserted := true;
       EXIT; -- success — leave loop
     EXCEPTION WHEN unique_violation THEN
-      NULL; -- username taken; regenerate on next iteration
+      IF SQLERRM NOT LIKE '%profiles_username_key%' THEN
+        RAISE; -- re-raise PK or other unexpected unique violations
+      END IF;
+      NULL; -- username conflict: regenerate suffix on next iteration
     END;
   END LOOP;
 
@@ -120,6 +123,7 @@ END;
 $$;
 
 -- Wire the trigger
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
