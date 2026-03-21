@@ -80,29 +80,41 @@ Best-effort only. Split `raw_user_meta_data.full_name` on whitespace:
 
 The retry loop wraps only the `profiles` INSERT, since that is where username uniqueness is enforced. `user_stats` is inserted once, after the retry loop exits successfully.
 
+Idempotency for the `id` primary key is handled with an existence check **before** the loop, keeping the INSERT inside the loop to a single conflict target (username only). This avoids the invalid Postgres pattern of two `ON CONFLICT` clauses on one statement.
+
 ```
+-- Idempotency guard: if a profile row already exists for this user, skip provisioning
+IF EXISTS (SELECT 1 FROM public.profiles WHERE id = NEW.id) THEN
+  -- Ensure user_stats also exists (belt-and-suspenders)
+  INSERT INTO public.user_stats (user_id, xp, level, study_streak, last_login)
+    VALUES (NEW.id, 0, 1, 0, NOW())
+    ON CONFLICT (user_id) DO NOTHING;
+  RETURN NEW;
+END IF;
+
+-- Retry loop: only username uniqueness can conflict here
 FOR i IN 1..5 LOOP
   generate candidate username (Path A or B as appropriate)
-  INSERT INTO public.profiles (id, email, first_name, last_name, username)
-    VALUES (NEW.id, NEW.email, v_first, v_last, v_username)
-    ON CONFLICT (id) DO NOTHING         -- idempotent: row already exists
-    ON CONFLICT (username) DO NOTHING;  -- username taken: fall through to retry
 
-  IF the row was inserted (i.e. found_rows = 1) THEN
-    EXIT loop;
-  END IF;
-
-  -- username conflict: regenerate suffix and retry
+  BEGIN
+    INSERT INTO public.profiles (id, email, first_name, last_name, username)
+      VALUES (NEW.id, NEW.email, v_first, v_last, v_username);
+    EXIT;  -- insert succeeded, leave loop
+  EXCEPTION WHEN unique_violation THEN
+    -- username conflict; regenerate suffix on next iteration
+    -- (Path A users: conflict here is a genuine duplicate-registration race, also retried)
+    NULL;
+  END;
 END LOOP;
 
-IF loop exhausted without success THEN
+IF profile was never inserted THEN
   RAISE EXCEPTION 'handle_new_user: could not generate unique username after 5 attempts';
 END IF;
 
 -- Insert user_stats once, after profiles succeeds
 INSERT INTO public.user_stats (user_id, xp, level, study_streak, last_login)
   VALUES (NEW.id, 0, 1, 0, NOW())
-  ON CONFLICT (user_id) DO NOTHING;  -- idempotent
+  ON CONFLICT (user_id) DO NOTHING;  -- single conflict target, valid syntax
 ```
 
 ### Canonical defaults (single source of truth)
