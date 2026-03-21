@@ -114,6 +114,21 @@ describe('AuthCallback', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/u/testuser_abc123', { replace: true });
   });
 
+  it('transitions to auth_error when store has a genuine error in waiting_profile', async () => {
+    const sub = setupSubscription();
+    // storeError is set from the start; the component ignores it until state === 'waiting_profile'
+    mockUseUserStore.mockImplementation((selector: (s: unknown) => unknown) =>
+      selector({ profile: null, error: 'connection refused' })
+    );
+    renderCallback();
+
+    await act(async () => {
+      sub.fire('SIGNED_IN', { user: { id: '123' } });
+    });
+
+    expect(screen.getByText(/authentication failed/i)).toBeInTheDocument();
+  });
+
   it('shows timeout state after 10s in waiting_profile', async () => {
     const sub = setupSubscription();
     mockUseUserStore.mockReturnValue(null); // profile never arrives
