@@ -39,7 +39,12 @@ export const useUserStore = create<UserStore>((set) => ({
       .single();
 
     if (error) {
-      set({ error: error.message, profile: null, loading: false });
+      if (error.code === 'PGRST116') {
+        // No profile row yet — transient state during OAuth callback, not an error.
+        set({ profile: null, error: null, loading: false });
+      } else {
+        set({ error: error.message, profile: null, loading: false });
+      }
     } else {
       set({
         profile: {
