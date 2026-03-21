@@ -1,7 +1,6 @@
 from datetime import datetime
 from supabase import Client
-from ..models.auth import UserRegister, UserLogin, UserResponse
-from ..core.security import get_password_hash, verify_password
+from ..models.auth import UserRegister, UserLogin
 from ..utils.exceptions import AuthException
 
 class AuthService:
@@ -50,7 +49,8 @@ class AuthService:
                 raise AuthException("Email is already registered", field="email")
             raise AuthException(f"Registration failed: {str(e)}")
 
-        # The trigger has already created profiles + user_stats at this point.
+        # profiles + user_stats are created synchronously by the handle_new_user
+        # trigger during the create_user call above — they exist by the time we return.
         return {
             "success": True,
             "message": "Account created successfully! Please log in to continue.",
