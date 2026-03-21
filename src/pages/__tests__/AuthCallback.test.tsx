@@ -10,9 +10,10 @@ vi.mock('react-router-dom', async () => {
 });
 
 // Hoist mock functions so they are available when vi.mock factories run
-const { mockOnAuthStateChange, mockGetSession } = vi.hoisted(() => ({
+const { mockOnAuthStateChange, mockGetSession, mockFetchProfile } = vi.hoisted(() => ({
   mockOnAuthStateChange: vi.fn(),
   mockGetSession: vi.fn(),
+  mockFetchProfile: vi.fn(),
 }));
 
 // Mock supabase
@@ -25,10 +26,13 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
-// Mock Zustand store
+// Mock Zustand store — include getState so startProfilePolling can call fetchProfile
 const mockUseUserStore = vi.fn();
 vi.mock('@/stores/useUserStore', () => ({
-  useUserStore: (selector: (s: unknown) => unknown) => mockUseUserStore(selector),
+  useUserStore: Object.assign(
+    (selector: (s: unknown) => unknown) => mockUseUserStore(selector),
+    { getState: () => ({ fetchProfile: mockFetchProfile }) }
+  ),
 }));
 
 import AuthCallback from '../AuthCallback';
@@ -77,6 +81,7 @@ describe('AuthCallback', () => {
 
   it('transitions to auth_error when no SIGNED_IN event within 3s', async () => {
     setupSubscription(); // never fires SIGNED_IN
+    mockGetSession.mockResolvedValue({ data: { session: null } }); // no existing session
     mockUseUserStore.mockReturnValue(null);
     renderCallback();
 
@@ -99,6 +104,33 @@ describe('AuthCallback', () => {
     expect(screen.getByText(/setting up your account/i)).toBeInTheDocument();
   });
 
+  it('transitions to waiting_profile after INITIAL_SESSION event with a session', async () => {
+    const sub = setupSubscription();
+    mockGetSession.mockResolvedValue({ data: { session: null } }); // no pre-existing session
+    mockUseUserStore.mockReturnValue(null);
+    renderCallback();
+
+    await act(async () => {
+      sub.fire('INITIAL_SESSION', { user: { id: '123' } });
+    });
+
+    expect(screen.getByText(/setting up your account/i)).toBeInTheDocument();
+  });
+
+  it('does not transition on INITIAL_SESSION with null session', async () => {
+    const sub = setupSubscription();
+    mockGetSession.mockResolvedValue({ data: { session: null } });
+    mockUseUserStore.mockReturnValue(null);
+    renderCallback();
+
+    await act(async () => {
+      sub.fire('INITIAL_SESSION', null);
+    });
+
+    // Should still be in checking state, not waiting_profile
+    expect(screen.getByText(/signing you in/i)).toBeInTheDocument();
+  });
+
   it('redirects to /u/:username when profile.username is set', async () => {
     const sub = setupSubscription();
     mockUseUserStore.mockImplementation((selector) => {
@@ -116,7 +148,6 @@ describe('AuthCallback', () => {
 
   it('transitions to auth_error when store has a genuine error in waiting_profile', async () => {
     const sub = setupSubscription();
-    // storeError is set from the start; the component ignores it until state === 'waiting_profile'
     mockUseUserStore.mockImplementation((selector: (s: unknown) => unknown) =>
       selector({ profile: null, error: 'connection refused' })
     );
@@ -141,5 +172,19 @@ describe('AuthCallback', () => {
 
     expect(screen.getByText(/taking longer than expected/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+  });
+
+  it('calls fetchProfile on interval while in waiting_profile', async () => {
+    const sub = setupSubscription();
+    mockUseUserStore.mockReturnValue(null);
+    renderCallback();
+
+    await act(async () => {
+      sub.fire('SIGNED_IN', { user: { id: '123' } });
+      vi.advanceTimersByTime(4500); // covers initial call + ~3 interval ticks
+    });
+
+    // initial fetch + at least 2 interval fetches within 4.5s (at 1.5s each)
+    expect(mockFetchProfile.mock.calls.length).toBeGreaterThanOrEqual(3);
   });
 });

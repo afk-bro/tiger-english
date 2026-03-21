@@ -18,16 +18,26 @@ export default function AuthCallback() {
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const profileTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionTimerRef   = useRef<ReturnType<typeof setTimeout>  | null>(null);
+  const profileTimerRef   = useRef<ReturnType<typeof setTimeout>  | null>(null);
+  const profileIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const clearTimers = () => {
-    if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
-    if (profileTimerRef.current) clearTimeout(profileTimerRef.current);
+    if (sessionTimerRef.current)    clearTimeout(sessionTimerRef.current);
+    if (profileTimerRef.current)    clearTimeout(profileTimerRef.current);
+    if (profileIntervalRef.current) clearInterval(profileIntervalRef.current);
   };
 
   const startProfilePolling = () => {
     setState('waiting_profile');
+
+    // Fetch immediately, then poll every 1.5 s.
+    // AppInitializer only fetches once on SIGNED_IN; a transient PGRST116
+    // (trigger not yet committed) would leave profile permanently null without this.
+    useUserStore.getState().fetchProfile();
+    profileIntervalRef.current = setInterval(() => {
+      useUserStore.getState().fetchProfile();
+    }, 1500);
 
     profileTimerRef.current = setTimeout(() => {
       clearTimers();
@@ -60,18 +70,20 @@ export default function AuthCallback() {
       startProfilePolling();
     };
 
-    // Wait for SIGNED_IN event — correct mechanism post-OAuth-redirect
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') handle(subscription);
+    // SIGNED_IN fires after a fresh OAuth redirect.
+    // INITIAL_SESSION fires when a session already exists on mount (e.g. re-login after logout).
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && session)) {
+        handle(subscription);
+      }
     });
 
-    // Also check if session already exists — SIGNED_IN may have fired before
-    // this component mounted (e.g. on re-login after logout)
+    // Belt-and-suspenders: if both events fire before this effect runs, getSession catches it.
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) handle(subscription);
     });
 
-    // 3s fallback if SIGNED_IN never fires
+    // 3s fallback if neither event fires
     sessionTimerRef.current = setTimeout(() => {
       if (!handled) {
         subscription.unsubscribe();
@@ -88,7 +100,7 @@ export default function AuthCallback() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Watch store for profile arriving (AppInitializer calls fetchProfile on SIGNED_IN)
+  // Navigate once profile is ready; surface store errors
   useEffect(() => {
     if (state !== 'waiting_profile') return;
 
