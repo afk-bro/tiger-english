@@ -17,43 +17,49 @@ When a user is authenticated, the public landing page is replaced in-place with 
 
 ### Route Map
 
-| Route | Layout | Auth required |
-|---|---|---|
-| `/` | Conditional (PublicLayout / AuthLayout) | No — renders based on session |
-| `/dashboard` | AuthLayout | Yes |
-| `/library` | AuthLayout | Yes |
-| `/study-groups` | AuthLayout | Yes |
-| `/notifications` | AuthLayout | Yes |
-| `/flashcards` | AuthLayout | Yes |
-| `/drag-drop` | AuthLayout | Yes |
-| `/ad-libs` | AuthLayout | Yes |
-| `/login`, `/register` | PublicLayout | No (redirects to `/` if session exists) |
-| `/about`, `/contact` | PublicLayout | No |
-| `/auth/callback` | None | No |
-| `/u/:username` | PublicLayout | No (future public profile page) |
+| Route | Layout | Auth required | Notes |
+|---|---|---|---|
+| `/` | Conditional | No | Renders `AuthHome` if session, public `Home` if not |
+| `/dashboard` | AuthLayout | Yes | New flat route replacing `/u/:username` for the user's own dashboard |
+| `/library` | AuthLayout | Yes | |
+| `/study-groups` | AuthLayout | Yes | |
+| `/notifications` | AuthLayout | Yes | |
+| `/flashcards` | AuthLayout | Yes | |
+| `/drag-drop` | AuthLayout | Yes | |
+| `/ad-libs` | AuthLayout | Yes | |
+| `/login`, `/register` | PublicLayout | No | Redirects to `/` if session exists |
+| `/about`, `/contact` | PublicLayout | No | |
+| `/auth/callback` | None | No | |
+| `/u/:username` | PublicLayout | No | Reserved for future public learner profile page |
+
+### Migration: `/u/:username` → `/dashboard`
+
+The existing authenticated dashboard currently lives at `/u/:username` (guarded by `UserLayout`). This feature moves the user's own dashboard to the flat `/dashboard` route inside `AuthLayout`. The `/u/:username` route is preserved but repurposed as a future public profile page (no auth required). `UserLayout` is retired as a route guard — its redirect logic is replaced by `RequireAuth`.
 
 ### Auth Guards
 
-**`RequireAuth`:** Reads resolved session state from the store. Shows a spinner while `sessionLoading: true`. Redirects to `/login` if no session. Renders children when session exists.
+**`RequireAuth`** (`src/features/auth/RequireAuth.tsx`):
+Reads `session` and `sessionLoading` from the store. Shows a spinner while `sessionLoading: true`. Redirects to `/login` if no session. Renders children when session is present.
 
-**`RequireGuest`:** Reads session from the store. Redirects to `/` if session exists. Used on `/login` and `/register` to prevent authenticated users from accessing those pages.
+**`RequireGuest`** (`src/features/auth/RequireGuest.tsx`):
+Reads `session` and `sessionLoading` from the store. Redirects to `/` if session exists. Renders children when no session. Used on `/login` and `/register`.
 
 ### `/` Conditional Render
 
-The root route consumes resolved session state from the store. If a session exists it renders `AuthHome`; if not it renders the public landing page (`Home`). No redirect. Same URL.
+The root route reads `session` and `sessionLoading` from the store. Shows a spinner while `sessionLoading: true`. If a session exists it renders `AuthHome`; if not it renders the public landing page (`Home`). No redirect. Same URL.
 
 ### Layout Split
 
-**`PublicLayout`:**
+**`PublicLayout`** (renamed from current `Layout`):
 - Sticky header with full nav (Flashcards, About, Contact)
 - Login / Register buttons
 - Footer
 
-**`AuthLayout`:**
+**`AuthLayout`** (`src/components/layout/AuthLayout.tsx`):
 - Slimmer header: logo, dark mode toggle, language switcher, profile/user menu, mobile sidebar toggle button
 - No footer
 - Right-side collapsible `AppSidebar`
-- Main content area adjusts width based on sidebar state
+- Main content area adjusts width based on sidebar collapsed state
 
 ---
 
@@ -61,27 +67,39 @@ The root route consumes resolved session state from the store. If a session exis
 
 ### Store Structure
 
-Auth and profile concerns are explicitly separated into two slices:
+Auth and profile concerns are explicitly separated into two slices within `useUserStore`:
 
-**Auth slice** (`session`, `sessionLoading`):
-- Source of truth for access control
-- Owned entirely by `AppInitializer`
-- `sessionLoading` starts `true`, set to `false` after initial resolution
+**Auth slice fields added:**
+- `session: Session | null` — Supabase session object
+- `sessionLoading: boolean` — true until first resolution; starts true
 
-**Profile slice** (`profile`, `profileLoading`, `error`):
-- Enriches the UI with user data
-- Never used for access gating
-- Populated after session is confirmed
+**Profile slice field renamed:**
+- `loading` → `profileLoading` (rename to avoid ambiguity now that auth has its own loading flag)
+- `profile`, `profileLoading`, `error` remain
+
+**Migration note:** `UserLayout.tsx` currently reads `loading` directly from the store and must be updated to `profileLoading`. Any other consumers of `loading` from `useUserStore` should be audited and updated.
 
 ### `AppInitializer` (extended)
 
-Existing component extended to own full session lifecycle:
+Extends the existing component to own the full session lifecycle. The known Supabase double-fire issue (where `onAuthStateChange` emits `INITIAL_SESSION` near-synchronously after subscription, overlapping with `getSession()`) is handled by using `getSession()` for the one-time initial hydration and relying on `onAuthStateChange` only for subsequent changes. A `handled` flag prevents duplicate `fetchProfile()` calls on mount:
+
 1. Sets `sessionLoading: true` on mount
-2. Calls `supabase.auth.getSession()` for initial hydration
-3. Writes resolved session to auth slice, sets `sessionLoading: false`
-4. Subscribes to `supabase.auth.onAuthStateChange()` for live updates
-5. On session present: calls `fetchProfile()`
-6. On session absent: clears profile
+2. Calls `supabase.auth.getSession()` for initial hydration — writes session to store, sets `sessionLoading: false`
+3. Subscribes to `supabase.auth.onAuthStateChange()` — on subsequent events (not the initial `INITIAL_SESSION` on mount), updates session and calls `fetchProfile()` or `clearProfile()` as appropriate
+4. On unmount: unsubscribes
+
+### Sidebar State Store
+
+Sidebar collapse preference is managed in a dedicated `useSidebarStore` (`src/stores/useSidebarStore.ts`) to keep it separate from user/auth concerns:
+
+```ts
+useSidebarStore {
+  collapsed: boolean          // desktop preference, persisted in localStorage
+  toggleCollapsed: () => void // writes to both store and localStorage
+}
+```
+
+On store init, reads `localStorage` key `sidebar_collapsed`. Defaults to `false` (expanded) if key is absent or value is not a valid boolean string. Handles invalid stored value safely (falls back to default without throwing).
 
 ---
 
@@ -89,14 +107,19 @@ Existing component extended to own full session lifecycle:
 
 ### Component API
 
-```
-AppSidebar
-  Desktop: collapsed: boolean, onToggleCollapsed: () => void
-  Mobile:  isOpen: boolean, onClose: () => void
+```ts
+AppSidebar props {
+  // Desktop
+  collapsed: boolean
+  onToggleCollapsed: () => void
+  // Mobile
+  isOpen: boolean
+  onClose: () => void
+}
 ```
 
-`collapsed` is the persisted desktop preference (read/written via `localStorage`, reflected in Zustand store).
-`isOpen` is transient mobile-only state held in `AuthLayout` local state — never persisted.
+`collapsed` — persisted desktop preference from `useSidebarStore`.
+`isOpen` — transient mobile-only state held in `AuthLayout` local state. Never persisted. Resets on every page load and route navigation.
 
 ### Structure
 
@@ -123,13 +146,11 @@ Three vertical zones:
 **Bottom utility zone:**
 - Settings, Help, Profile, Logout
 - Stubbed UI only in this implementation — no routing or functionality yet
-- Icon only in collapsed mode, icon + label in expanded
+- Icon only in collapsed mode, icon + label in expanded mode
 
 ### Nav Item Behaviour
 
-- Uses React Router `NavLink` for active state detection (not manual `pathname` comparison)
-- `end` prop applied to `/` only, to prevent it matching all routes
-- `NavLink`'s `isActive` callback used for subroute support
+Uses React Router `NavLink` for active state — not manual `pathname` comparison. The `end` prop is applied to `/` only, preventing it from matching all routes. `NavLink`'s `isActive` callback handles subroute matching correctly.
 
 ### Active State
 
@@ -143,9 +164,8 @@ Three vertical zones:
 
 ### Sidebar Persistence
 
-- **Desktop collapse preference:** persisted in `localStorage` key `sidebar_collapsed`
-- Read on mount; defaults to `false` (expanded) if key absent or value invalid
-- **Mobile drawer open state:** local component state in `AuthLayout` only — resets on every page load and route navigation — never persisted
+- **Desktop collapse preference:** persisted in `localStorage` key `sidebar_collapsed` via `useSidebarStore`
+- **Mobile drawer open state:** local `isOpen` state in `AuthLayout` only — resets every page load — never persisted
 
 ### Motion
 
@@ -165,6 +185,8 @@ Three vertical zones:
 
 ## 4. AuthHome Page
 
+`AuthHome` is layout-only — it composes the four card components and passes mock data. No logic lives in `AuthHome` itself. Each card receives an `isLoading: boolean` prop that triggers its skeleton state. With mock data `isLoading` is always `false`; it will be driven by async fetch state when real data is wired up.
+
 ### Layout
 
 ```
@@ -177,99 +199,123 @@ Three vertical zones:
 └─────────────────────────┴─────────────────┘
 ```
 
-Mobile: single column, stacked in display order.
-
-`AuthHome` is layout-only — it composes the four card components and passes mock data. No logic lives in `AuthHome` itself.
+Mobile: single column, stacked in display order. `ContinueStudyingCard` is visually dominant and always renders first.
 
 ### Card Components
 
-#### `ContinueStudyingCard` (primary — visually dominant)
+#### `ContinueStudyingCard`
 
-**Populated state:**
+Props: `data: ContinueStudyingData | null, isLoading: boolean`
+
+**Skeleton state:** `isLoading: true`
+**Empty state:** `data === null` — "Start your first set" CTA
+**Populated state:** `data` present
+
+Populated content:
 - Set title + language/theme tag
-- "Reviewed X of Y cards" progress bar
+- "Reviewed X of Y cards" progress bar (`reviewedCount / totalCards`)
+- Boundary: if `totalCards === 0`, render progress bar at 0% (guard against division by zero)
+- Boundary: if `reviewedCount === totalCards` (100%), render the card in populated state with a "completed" visual indicator — do not switch to empty state
 - "Last studied X hours/days ago" relative timestamp
-- Streak or accuracy badge (if data available)
+- Streak or accuracy badge (optional, rendered only if data present)
 - **Continue Studying** primary CTA → navigates to `/flashcards` with `{ state: { setId } }` as route state
-
-**Empty state:** "Start your first set" CTA
 
 ---
 
 #### `RecommendedNextCard`
 
-**Populated state:**
-- Up to 3 recommendation items
-- Each item: set title + reason label
-- Each item has a **Study** button
-- Recommendation priority order (for real data): 1) weak cards needing review, 2) next set in sequence, 3) related theme
+Props: `data: RecommendedItem[] | null, isLoading: boolean`
 
-**Empty state:** "Complete a set to unlock recommendations"
+**Skeleton state:** `isLoading: true`
+**Empty state:** `data === null || data.length === 0` — "Complete a set to unlock recommendations"
+**Populated state:** renders up to 3 items
+
+Each item displays:
+- Set title
+- Reason label: uses `reasonLabel` if present, otherwise falls back to a default string per `reasonType`:
+  - `'review'` → "Needs review"
+  - `'sequence'` → "Next in sequence"
+  - `'related'` → "Related to recent study"
+- **Study** button
 
 ---
 
 #### `InviteFriendsCard`
 
-**Actions:**
-- **Copy Invite Link** (primary) — copies invite URL to clipboard, fires success toast via `sonner`
-- **Invite a Friend** (secondary, optional) — stub for now
-- Copy failure → error toast with fallback message
-- Clipboard API unavailable → error toast with fallback message (intentional, not silent)
-- Invite URL generated from a mock helper in `src/mocks/authHome.mock.ts`, ready to swap for real endpoint
+Props: `data: InviteFriendsData, isLoading: boolean`
+
+**Invite URL format:** `https://tiger-english.com/invite?ref={userId}` — generated by a helper `buildInviteUrl(userId: string): string` exported from `src/lib/invite.ts`. This helper is the swap point for a real endpoint. It is called once when constructing mock data to produce the `inviteUrl` string stored in `InviteFriendsData`. The card component uses `data.inviteUrl` directly and never imports from the mocks directory.
+
+Actions:
+- **Copy Invite Link** (primary) — calls `navigator.clipboard.writeText(data.inviteUrl)`
+  - Success → `toast.success("Invite link copied!")`
+  - Write failure → `toast.error("Failed to copy link. Please copy it manually.")`
+  - Clipboard API unavailable (e.g. non-HTTPS) → `toast.error("Clipboard not available. Please copy the link manually.")` — intentional, not silent
+- **Invite a Friend** (secondary) — stub only in this implementation
 
 ---
 
 #### `StudyGroupsCard`
 
-**Populated state:**
-- **Create Study Group** (primary button)
-- **Invite to Group** (secondary, disabled if no groups exist)
-- Pending invites badge count
+Props: `data: StudyGroupsData, isLoading: boolean`
 
-**Empty state:** "No study groups yet" supporting text + prominent **Create Study Group** CTA (action always obvious)
+**Skeleton state:** `isLoading: true`
+**Empty state:** `data.groups.length === 0` — "No study groups yet" + supporting text + prominent **Create Study Group** CTA (action remains obvious in empty state)
+**Populated state:** group list + pending invites badge
+
+Actions:
+- **Create Study Group** (primary)
+- **Invite to Group** (secondary, disabled if `data.groups.length === 0`)
+- Pending invites badge: shows `data.pendingInviteCount` (hidden if 0)
 
 ---
 
 ### Card States (all four cards)
 
-Each card handles three states:
-1. **Skeleton** — pulsing placeholder matching card dimensions
-2. **Empty** — icon + message + primary CTA
+Each card handles three states driven by props:
+1. **Skeleton** — `isLoading: true` — pulsing placeholder matching card dimensions
+2. **Empty** — data absent or empty — icon + message + primary CTA
 3. **Populated** — full content
 
 ---
 
 ## 5. Data Layer
 
-### Types
-
-Each card has a typed interface in a co-located `types.ts`:
+### Types (`src/components/home/authenticated/types.ts`)
 
 ```ts
-ContinueStudyingData {
+interface ContinueStudyingData {
   setId: string
   title: string
   theme: string
   reviewedCount: number
   totalCards: number
-  lastStudiedAt: string  // ISO timestamp
+  lastStudiedAt: string    // ISO 8601 timestamp
   streak?: number
-  accuracy?: number
+  accuracy?: number        // 0–100
 }
 
-RecommendedItem {
+type ReasonType = 'review' | 'sequence' | 'related'
+
+interface RecommendedItem {
   setId: string
   title: string
-  reasonType: 'review' | 'sequence' | 'related'
-  reasonLabel?: string  // display string; falls back to default per reasonType
+  reasonType: ReasonType
+  reasonLabel?: string     // display string; falls back to default per reasonType if absent
   priority: number
 }
 
-InviteFriendsData {
+interface InviteFriendsData {
   inviteUrl: string
 }
 
-StudyGroupsData {
+interface StudyGroup {
+  id: string
+  name: string
+  memberCount: number
+}
+
+interface StudyGroupsData {
   groups: StudyGroup[]
   pendingInviteCount: number
 }
@@ -277,7 +323,7 @@ StudyGroupsData {
 
 ### Mock Data
 
-`src/mocks/authHome.mock.ts` — exports typed mock objects for each card. Mirrors the existing `mockDashboardData` pattern. When real endpoints are ready, only the data-fetching layer changes.
+`src/mocks/authHome.mock.ts` — exports typed mock objects for each card and the `buildInviteUrl` helper. Mirrors the existing `mockDashboardData` pattern. When real endpoints are ready, only the data-fetching layer changes — card components and their interfaces remain unchanged.
 
 ---
 
@@ -286,47 +332,57 @@ StudyGroupsData {
 ### `AppInitializer`
 - Initializes with `sessionLoading: true`
 - Calls `getSession()` on mount, resolves session, sets `sessionLoading: false`
-- Subscribes to `onAuthStateChange`, updates session on auth change
+- Subscribes to `onAuthStateChange`, updates session on subsequent auth changes
+- Does not call `fetchProfile()` twice on mount (deduplication guard)
 - Guarded routes stop showing spinner after initialization
+
+### `useSidebarStore`
+- Reads persisted `collapsed` state from `localStorage` on init
+- Defaults to `false` (expanded) when `localStorage` key is absent
+- Handles invalid stored value safely (falls back to `false`)
+- `toggleCollapsed` writes updated value to `localStorage`
 
 ### `AppSidebar`
 - Renders all 8 nav items
-- Reads persisted `collapsed` state from `localStorage` on mount
-- Defaults to expanded when `localStorage` key is absent
-- Handles invalid stored value safely (falls back to default)
-- Toggle writes new collapsed value to `localStorage`
 - Active nav item receives `aria-current="page"`
-- Collapsed mode: nav items have accessible `aria-label`
+- Collapsed mode: nav items have accessible `aria-label` with item name
 - Mobile drawer has `role="dialog"` and `aria-modal="true"` when open
 - Focus returns to trigger button on drawer close
 
 ### `ContinueStudyingCard`
-- Renders populated state correctly
-- Renders empty state with CTA
-- Renders skeleton state
+- Renders skeleton state when `isLoading: true`
+- Renders empty state when `data` is null
+- Renders populated state with correct content
+- Progress bar renders at 0% when `totalCards === 0`
+- Shows completed indicator when `reviewedCount === totalCards`
 - Continue Studying navigates to `/flashcards` with `{ state: { setId } }` payload
 
 ### `RecommendedNextCard`
+- Renders skeleton state
 - Renders up to 3 items in populated state
-- Renders empty state
+- Renders empty state when data is empty
+- Renders default `reasonType` label when `reasonLabel` is absent
 
 ### `InviteFriendsCard`
-- Calls `navigator.clipboard.writeText` with correct invite URL
+- Calls `navigator.clipboard.writeText` with correct invite URL on copy
 - Fires success toast on copy
 - Fires error toast on clipboard write failure
-- Fires error toast when clipboard API unavailable
+- Fires error toast when clipboard API is unavailable (`navigator.clipboard` is undefined)
 
 ### `StudyGroupsCard`
+- Renders skeleton state
 - Empty state renders with Create Study Group CTA visible
-- Pending invites badge renders correct count
+- Invite to Group button is disabled when groups array is empty
+- Pending invites badge renders correct count; hidden when count is 0
 
 ### `RequireAuth`
 - Shows spinner while `sessionLoading: true`
-- Redirects to `/login` when no session
-- Renders children when session present
+- Redirects to `/login` when session is null and not loading
+- Renders children when session is present
 
 ### `RequireGuest`
-- Redirects to `/` when session exists
+- Shows spinner while `sessionLoading: true`
+- Redirects to `/` when session exists and not loading
 - Renders children when no session
 
 ### `AuthHome`
@@ -342,19 +398,12 @@ src/
   components/
     layout/
       AuthLayout.tsx
-      PublicLayout.tsx        # renamed from Layout.tsx
+      PublicLayout.tsx              # renamed from Layout.tsx
     sidebar/
       AppSidebar.tsx
       SidebarNavItem.tsx
       __tests__/
         AppSidebar.test.tsx
-  pages/
-    AuthHome.tsx
-  features/
-    auth/
-      RequireAuth.tsx
-      RequireGuest.tsx
-  components/
     home/
       authenticated/
         ContinueStudyingCard.tsx
@@ -367,8 +416,20 @@ src/
           RecommendedNextCard.test.tsx
           InviteFriendsCard.test.tsx
           StudyGroupsCard.test.tsx
-  mocks/
-    authHome.mock.ts
+  pages/
+    AuthHome.tsx
+    Home.tsx                        # existing, unchanged
+  features/
+    auth/
+      RequireAuth.tsx
+      RequireGuest.tsx
+      logoutUser.ts                 # existing
   stores/
-    useUserStore.ts           # add sessionLoading, session to auth slice
+    useUserStore.ts                 # add session, sessionLoading; rename loading → profileLoading
+    useSidebarStore.ts              # new
+  lib/
+    invite.ts                       # new — buildInviteUrl helper
+  mocks/
+    authHome.mock.ts                # new — imports buildInviteUrl to construct mock InviteFriendsData
+    mockDashboardData.ts            # existing, unchanged
 ```
