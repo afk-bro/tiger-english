@@ -1,6 +1,7 @@
 // src/stores/useUserStore.ts
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
+import type { Session } from "@supabase/supabase-js";
 
 type UserProfile = {
   id: string;
@@ -11,24 +12,37 @@ type UserProfile = {
 };
 
 type UserStore = {
+  // Auth slice
+  session: Session | null;
+  sessionLoading: boolean;
+  setSession: (session: Session | null) => void;
+  setSessionLoading: (loading: boolean) => void;
+  // Profile slice
   profile: UserProfile | null;
-  loading: boolean;
+  profileLoading: boolean;
   error: string | null;
   fetchProfile: () => Promise<void>;
   clearProfile: () => void;
 };
 
 export const useUserStore = create<UserStore>((set) => ({
+  // Auth slice
+  session: null,
+  sessionLoading: true,
+  setSession: (session) => set({ session }),
+  setSessionLoading: (sessionLoading) => set({ sessionLoading }),
+
+  // Profile slice
   profile: null,
-  loading: true,
+  profileLoading: true,
   error: null,
 
   fetchProfile: async () => {
-    set({ loading: true, error: null });
+    set({ profileLoading: true, error: null });
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session?.user) {
-      set({ profile: null, loading: false });
+      set({ profile: null, profileLoading: false });
       return;
     }
 
@@ -40,10 +54,9 @@ export const useUserStore = create<UserStore>((set) => ({
 
     if (error) {
       if (error.code === 'PGRST116') {
-        // No profile row yet — transient state during OAuth callback, not an error.
-        set({ profile: null, error: null, loading: false });
+        set({ profile: null, error: null, profileLoading: false });
       } else {
-        set({ error: error.message, profile: null, loading: false });
+        set({ error: error.message, profile: null, profileLoading: false });
       }
     } else {
       set({
@@ -55,10 +68,10 @@ export const useUserStore = create<UserStore>((set) => ({
           username: data.username,
         },
         error: null,
-        loading: false,
+        profileLoading: false,
       });
     }
   },
 
-  clearProfile: () => set({ profile: null, error: null, loading: false }),
+  clearProfile: () => set({ profile: null, error: null, profileLoading: false }),
 }));

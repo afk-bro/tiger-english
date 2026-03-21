@@ -5,16 +5,16 @@ import { useEffect } from "react";
 
 const UserLayout = () => {
   const { username } = useParams();
-  const { profile, loading, fetchProfile } = useUserStore();
+  const { profile, profileLoading, fetchProfile } = useUserStore();
 
   useEffect(() => {
-    if (!profile && !loading) {
+    if (!profile && !profileLoading) {
       fetchProfile();
     }
-  }, [profile, loading, fetchProfile]);
+  }, [profile, profileLoading, fetchProfile]);
 
   // Show nothing until loading completes
-  if (loading) return <div>Loading...</div>;
+  if (profileLoading) return <div>Loading...</div>;
 
   // Only redirect if we are sure profile is missing
   if (!profile) return <Navigate to="/login" replace />;

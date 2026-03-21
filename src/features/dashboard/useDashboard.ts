@@ -6,14 +6,14 @@ import { logoutUser } from "@/features/auth/logoutUser";
 import { toast } from "sonner";
 
 export function useDashboard() {
-  const { profile, loading, clearProfile } = useUserStore();
+  const { profile, profileLoading, clearProfile } = useUserStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !profile) {
+    if (!profileLoading && !profile) {
       navigate("/login");
     }
-  }, [loading, profile, navigate]);
+  }, [profileLoading, profile, navigate]);
 
   const handleLogout = useCallback(async () => {
     const error = await logoutUser();
@@ -24,5 +24,5 @@ export function useDashboard() {
     }
   }, [clearProfile, navigate]);
 
-  return { handleLogout, loading, profile };
+  return { handleLogout, loading: profileLoading, profile };
 }
