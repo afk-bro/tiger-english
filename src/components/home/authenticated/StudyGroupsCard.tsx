@@ -39,8 +39,7 @@ export default function StudyGroupsCard({ data, isLoading }: Props) {
 
       <div className="flex gap-2">
         <button
-          disabled
-          className="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium opacity-60 cursor-not-allowed"
+          className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors"
         >
           Create Study Group
         </button>
