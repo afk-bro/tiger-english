@@ -1,6 +1,7 @@
 import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
 import ErrorGuidanceCard from "../components/auth/ErrorGuidanceCard";
+import GoogleAuthButton from "@/components/ui/GoogleAuthButton";
 import { Mail, Lock, User, ArrowRight, UserPlus, AtSign } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -37,6 +38,19 @@ export default function Register() {
           <p className="text-sm text-text-light/70 dark:text-text-dark/70 mt-2">
             {t("register.subtitle")}
           </p>
+        </div>
+
+        <GoogleAuthButton />
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white dark:bg-gray-900 px-2 text-gray-400 dark:text-gray-500">
+              or
+            </span>
+          </div>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
