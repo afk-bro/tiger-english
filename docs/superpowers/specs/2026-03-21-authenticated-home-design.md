@@ -29,7 +29,7 @@ When a user is authenticated, the public landing page is replaced in-place with 
 | `/ad-libs` | AuthLayout | Yes | |
 | `/login`, `/register` | PublicLayout | No | Redirects to `/` if session exists |
 | `/about`, `/contact` | PublicLayout | No | |
-| `/auth/callback` | None | No | |
+| `/auth/callback` | None | No | Already has loading/error UI in `AuthCallback.tsx` — users never see a blank page during OAuth handoff |
 | `/u/:username` | PublicLayout | No | Reserved for future public learner profile page |
 
 ### Migration: `/u/:username` → `/dashboard`
@@ -80,6 +80,8 @@ Auth and profile concerns are explicitly separated into two slices within `useUs
 **Migration note:** `UserLayout.tsx` currently reads `loading` directly from the store and must be updated to `profileLoading`. Any other consumers of `loading` from `useUserStore` should be audited and updated.
 
 ### `AppInitializer` (extended)
+
+`AppInitializer` must be mounted exactly once at the app root (inside `Router`, outside all route branches) so that auth hydration runs unconditionally on every page load. Mounting it inside a route branch or layout would cause it to run only when those routes are active, producing inconsistent auth state.
 
 Extends the existing component to own the full session lifecycle. The known Supabase double-fire issue (where `onAuthStateChange` emits `INITIAL_SESSION` near-synchronously after subscription, overlapping with `getSession()`) is handled by using `getSession()` for the one-time initial hydration and relying on `onAuthStateChange` only for subsequent changes. A `handled` flag prevents duplicate `fetchProfile()` calls on mount:
 
@@ -185,7 +187,7 @@ Uses React Router `NavLink` for active state — not manual `pathname` compariso
 
 ## 4. AuthHome Page
 
-`AuthHome` is layout-only — it composes the four card components and passes mock data. No logic lives in `AuthHome` itself. Each card receives an `isLoading: boolean` prop that triggers its skeleton state. With mock data `isLoading` is always `false`; it will be driven by async fetch state when real data is wired up.
+`AuthHome` contains no business logic — it does not fetch data, manage auth state, or make routing decisions. Simple composition concerns are fine here: arranging card props, selecting mock data bundles, and passing `isLoading` flags down. The rule is "no business logic", not "literally zero code". Each card receives an `isLoading: boolean` prop that triggers its skeleton state. With mock data `isLoading` is always `false`; it will be driven by async fetch state when real data is wired up.
 
 ### Layout
 
@@ -323,7 +325,7 @@ interface StudyGroupsData {
 
 ### Mock Data
 
-`src/mocks/authHome.mock.ts` — exports typed mock objects for each card and the `buildInviteUrl` helper. Mirrors the existing `mockDashboardData` pattern. When real endpoints are ready, only the data-fetching layer changes — card components and their interfaces remain unchanged.
+`src/mocks/authHome.mock.ts` — exports typed mock objects for each card. Imports `buildInviteUrl` from `src/lib/invite.ts` to construct the mock `InviteFriendsData`. The helper is owned only by `src/lib/invite.ts` — it is not re-exported from the mock file. Mirrors the existing `mockDashboardData` pattern. When real endpoints are ready, only the data-fetching layer changes — card components and their interfaces remain unchanged.
 
 ---
 
