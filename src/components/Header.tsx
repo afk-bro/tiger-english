@@ -7,7 +7,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 import UserMenu from "@/components/ui/UserMenu";
 import NavLink from "@/components/ui/NavLink";
-import Logo from "@/assets/golden_lantern.png";
+import Logo from "@/assets/TE-logo.png";
 
 export default function Header() {
   const { t } = useTranslation();
@@ -22,7 +22,7 @@ export default function Header() {
           <Link to="/" className="flex items-center gap-1 group">
             <img
               src={Logo}
-              alt="Golden Lantern Academy"
+              alt="Tiger English"
               className="h-12 w-auto" // adjust height/width as needed
             />
             <div className="flex flex-col">

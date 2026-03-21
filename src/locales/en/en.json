@@ -31,7 +31,7 @@
     "contact": "Contact Us"
   },
   "header": {
-    "logo": "Golden Lantern Academy",
+    "logo": "Tiger English",
     "tagline": "Lighting the path to confident English",
     "nav": {
       "flashcards": "Flashcards",
@@ -45,7 +45,7 @@
   },
   "register": {
     "title": "Create Your Account",
-    "subtitle": "Join Golden Lantern Academy and start mastering English with AI tools and real tutors.",
+    "subtitle": "Join Tiger English and start mastering English with AI tools and real tutors.",
     "first_name": "First Name",
     "last_name": "Last Name",
     "email": "Email",

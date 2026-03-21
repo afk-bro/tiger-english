@@ -1,4 +1,4 @@
-import avatar from "@/assets/avatar.svg"; // Replace with your actual image
+import avatar from "@/assets/TE-logo.png";
 
 export default function About() {
   const technologies = [
@@ -28,7 +28,7 @@ export default function About() {
           />
           <div>
             <h1 className="text-display heading-accent">
-              About Golden Lantern Academy
+              About Tiger English
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Building tools for language learners
@@ -40,7 +40,7 @@ export default function About() {
         <section className="mb-10">
           <h2 className="sr-only">My Story</h2>
           <p className="text-base md:text-lg text-text-light dark:text-text-dark mb-4 leading-relaxed">
-            Golden Lantern Academy was created by someone who understands both the
+            Tiger English was created by someone who understands both the
             challenges of learning a language and the value of great tools.
             I have a background in web development, a TEFL certification, and a passion
             for building interactive, learner-friendly experiences.
@@ -54,7 +54,7 @@ export default function About() {
           </p>
 
           <p className="text-sm md:text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
-            I'm currently preparing to live and teach abroad, and Golden Lantern Academy is part
+            I'm currently preparing to live and teach abroad, and Tiger English is part
             of that journey. I'm actively improving the site, learning as I go, and building
             it into something that can genuinely help others.
           </p>
