@@ -36,7 +36,7 @@ describe('RequireGuest', () => {
       sel({ session: { user: { id: '1' } }, sessionLoading: false })
     );
     renderGuard();
-    expect(screen.getByText('redirect:/')).toBeInTheDocument();
+    expect(screen.getByText('redirect:/home')).toBeInTheDocument();
   });
 
   it('renders children when no session', () => {

@@ -19,7 +19,7 @@ export default function AuthLayout() {
       {/* Slim authenticated header */}
       <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-primary-100 dark:border-primary-800/30 shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/home" className="flex items-center gap-2">
             <img src={Logo} alt="Tiger English" className="h-9 w-auto" />
           </Link>
           <div className="flex items-center gap-2">

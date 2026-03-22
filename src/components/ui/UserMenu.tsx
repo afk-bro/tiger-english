@@ -117,9 +117,7 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
               {({ active }) => (
                 <button
                   onClick={() => {
-                    if (profile?.username) {
-                      navigate(`/u/${profile.username}`);
-                    }
+                    navigate('/home');
                   }}
                   className={`${
                     active ? "bg-gray-100 dark:bg-gray-700" : ""

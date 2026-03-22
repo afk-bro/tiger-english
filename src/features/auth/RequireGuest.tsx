@@ -14,7 +14,7 @@ export default function RequireGuest({ children }: { children: ReactNode }) {
     );
   }
 
-  if (session) return <Navigate to="/" replace />;
+  if (session) return <Navigate to="/home" replace />;
 
   return <>{children}</>;
 }
