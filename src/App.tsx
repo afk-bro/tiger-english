@@ -9,6 +9,7 @@ import RequireGuest from "./features/auth/RequireGuest";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 const Home           = lazy(() => import("@/pages/Home"));
+const AuthHome       = lazy(() => import("@/pages/AuthHome"));
 const Register       = lazy(() => import("@/pages/Register"));
 const Login          = lazy(() => import("@/pages/Login"));
 const AuthCallback   = lazy(() => import("@/pages/AuthCallback"));
@@ -50,6 +51,7 @@ function App() {
 
             {/* Authenticated routes with AuthLayout + RequireAuth */}
             <Route element={<RequireAuth><AuthLayout /></RequireAuth>}>
+              <Route path="/home" element={<AuthHome />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/library" element={<StubPage title="Library" />} />
               <Route path="/study-groups" element={<StubPage title="Study Groups" />} />

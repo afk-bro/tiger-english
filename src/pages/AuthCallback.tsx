@@ -106,7 +106,7 @@ export default function AuthCallback() {
 
     if (profile?.username) {
       clearTimers();
-      navigate('/', { replace: true });
+      navigate('/home', { replace: true });
       return;
     }
 

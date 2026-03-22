@@ -117,7 +117,7 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
               {({ active }) => (
                 <button
                   onClick={() => {
-                    navigate('/');
+                    navigate('/home');
                   }}
                   className={`${
                     active ? "bg-gray-100 dark:bg-gray-700" : ""
