@@ -42,7 +42,7 @@ export default function Login() {
     // Safely get latest profile data from Zustand store
     const updatedProfile = useUserStore.getState().profile;
 
-    if (updatedProfile?.username) {
+    if (updatedProfile) {
       toast.success("Login successful");
       navigate('/home');
     } else {

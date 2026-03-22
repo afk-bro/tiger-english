@@ -131,7 +131,7 @@ describe('AuthCallback', () => {
     expect(screen.getByText(/signing you in/i)).toBeInTheDocument();
   });
 
-  it('redirects to /u/:username when profile.username is set', async () => {
+  it('redirects to /home when profile is ready', async () => {
     const sub = setupSubscription();
     mockUseUserStore.mockImplementation((selector) => {
       const state = { profile: { username: 'testuser_abc123' }, error: null };
