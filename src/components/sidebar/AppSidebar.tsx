@@ -17,7 +17,7 @@ interface AppSidebarProps {
 }
 
 const NAV_ITEMS = [
-  { to: "/",              label: "Home",         icon: Home,           end: true },
+  { to: "/home",          label: "Home",         icon: Home,           end: true },
   { to: "/dashboard",     label: "Dashboard",    icon: LayoutDashboard },
   { to: "/library",       label: "Library",      icon: BookOpen },
   { to: "/study-groups",  label: "Study Groups", icon: Users },
