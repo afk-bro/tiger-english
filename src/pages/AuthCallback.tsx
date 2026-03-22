@@ -106,7 +106,7 @@ export default function AuthCallback() {
 
     if (profile?.username) {
       clearTimers();
-      navigate(`/u/${profile.username}`, { replace: true });
+      navigate('/', { replace: true });
       return;
     }
 

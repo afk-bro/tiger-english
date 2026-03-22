@@ -44,7 +44,7 @@ export default function Login() {
 
     if (updatedProfile?.username) {
       toast.success("Login successful");
-      navigate(`/u/${updatedProfile.username}`);
+      navigate('/');
     } else {
       toast.error("Profile not found after login");
     }

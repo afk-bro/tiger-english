@@ -143,7 +143,7 @@ describe('AuthCallback', () => {
       sub.fire('SIGNED_IN', { user: { id: '123' } });
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/u/testuser_abc123', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
   });
 
   it('transitions to auth_error when store has a genuine error in waiting_profile', async () => {
