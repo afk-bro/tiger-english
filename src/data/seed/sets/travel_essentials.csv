@@ -1,0 +1,33 @@
+English Phrase,Category
+Hello,Greeting
+Goodbye,Farewell
+Yes,Basic response
+No,Basic response
+Please,Politeness
+Thank you,Politeness
+Excuse me,Getting attention / polite interruption
+Sorry,Apology
+Where is the bathroom?,Asking for directions
+How much is this?,Shopping
+I do not understand,Communication difficulty
+Do you speak English?,Language help
+Can you help me?,Requesting help
+I need help,Urgent request
+Where is the train station?,Transportation
+Where is the bus stop?,Transportation
+How do I get there?,Directions
+What time does it open?,Business hours
+What time does it close?,Business hours
+Can I have the menu?,Restaurant
+I would like this,Ordering
+"The bill, please",Restaurant
+Is this spicy?,Food
+No spicy,Food preference
+"Water, please",Restaurant
+"One ticket, please",Transportation
+Where can I buy tickets?,Transportation
+Is there Wi-Fi?,Connectivity
+What is the password?,Wi-Fi access
+Call the police,Emergency
+Call a doctor,Emergency
+I am lost,Emergency / direction

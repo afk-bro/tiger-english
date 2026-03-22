@@ -44,9 +44,11 @@ describe('getVisibleSets', () => {
 describe('getCardsBySet', () => {
   it('returns mapped FlashcardCard array ordered by sort_order', async () => {
     const fakeRow = {
-      id: 'card-1', set_id: 'set-1', native_word: 'สวัสดี', english_word: 'Hello',
-      part_of_speech: 'interjection', level: 'basic', example_sentence: null,
-      image_url: null, sort_order: 1, created_at: '2026-01-01T00:00:00Z',
+      id: 'card-1', set_id: 'set-1', native_text: 'สวัสดี', english_text: 'Hello',
+      part_of_speech: 'interjection', level: 'basic', category: null,
+      example_sentence: null, image_url: null, english_audio_url: null,
+      native_audio_url: null, notes: null, is_phrase: false,
+      sort_order: 1, created_at: '2026-01-01T00:00:00Z',
     };
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -58,7 +60,7 @@ describe('getCardsBySet', () => {
 
     const result = await getCardsBySet('set-1');
     expect(result).toHaveLength(1);
-    expect(result[0].englishWord).toBe('Hello');
+    expect(result[0].englishText).toBe('Hello');
   });
 });
 

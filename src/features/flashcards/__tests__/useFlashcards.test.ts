@@ -11,12 +11,17 @@ beforeEach(() => vi.clearAllMocks());
 const fakeCard = {
   id: 'c1',
   setId: 's1',
-  nativeWord: 'สวัสดี',
-  englishWord: 'Hello',
+  nativeText: 'สวัสดี',
+  englishText: 'Hello',
   partOfSpeech: null,
   level: 'basic' as const,
+  category: null,
   exampleSentence: null,
   imageUrl: null,
+  englishAudioUrl: null,
+  nativeAudioUrl: null,
+  notes: null,
+  isPhrase: false,
   sortOrder: 1,
 };
 
@@ -33,7 +38,7 @@ describe('useFlashcards', () => {
     const { result } = renderHook(() => useFlashcards('s1'));
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.cards).toHaveLength(1);
-    expect(result.current.cards[0].englishWord).toBe('Hello');
+    expect(result.current.cards[0].englishText).toBe('Hello');
   });
 
   it('refetches when setId changes', async () => {
@@ -43,11 +48,11 @@ describe('useFlashcards', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(mockGet).toHaveBeenCalledWith('s1');
 
-    const fakeCard2 = { ...fakeCard, id: 'c2', setId: 's2', englishWord: 'Water' };
+    const fakeCard2 = { ...fakeCard, id: 'c2', setId: 's2', englishText: 'Water' };
     mockGet.mockResolvedValue([fakeCard2]);
     setId = 's2';
     rerender();
-    await waitFor(() => expect(result.current.cards[0].englishWord).toBe('Water'));
+    await waitFor(() => expect(result.current.cards[0].englishText).toBe('Water'));
     expect(mockGet).toHaveBeenCalledWith('s2');
   });
 
@@ -70,8 +75,8 @@ describe('useFlashcards', () => {
     const firstPromise = new Promise<typeof fakeCard[]>((res) => {
       resolveStaleRequest = res;
     });
-    const staleCard = { ...fakeCard, englishWord: 'STALE' };
-    const freshCard = { ...fakeCard, id: 'c2', setId: 's2', englishWord: 'Fresh' };
+    const staleCard = { ...fakeCard, englishText: 'STALE' };
+    const freshCard = { ...fakeCard, id: 'c2', setId: 's2', englishText: 'Fresh' };
 
     mockGet
       .mockImplementationOnce(() => firstPromise)   // s1 hangs
@@ -86,12 +91,12 @@ describe('useFlashcards', () => {
 
     // Wait for s2 to finish loading
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.cards[0].englishWord).toBe('Fresh');
+    expect(result.current.cards[0].englishText).toBe('Fresh');
 
     // Now resolve the stale s1 request
     resolveStaleRequest([staleCard]);
 
     // State must not be overwritten by the stale response
-    expect(result.current.cards[0].englishWord).toBe('Fresh');
+    expect(result.current.cards[0].englishText).toBe('Fresh');
   });
 });

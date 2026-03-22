@@ -57,37 +57,52 @@ export type Database = {
       }
       flashcards: {
         Row: {
+          category: string | null
           created_at: string
-          english_word: string
+          english_audio_url: string | null
+          english_text: string
           example_sentence: string | null
           id: string
           image_url: string | null
+          is_phrase: boolean
           level: string | null
-          native_word: string
+          native_audio_url: string | null
+          native_text: string
+          notes: string | null
           part_of_speech: string | null
           set_id: string
           sort_order: number
         }
         Insert: {
+          category?: string | null
           created_at?: string
-          english_word: string
+          english_audio_url?: string | null
+          english_text: string
           example_sentence?: string | null
           id?: string
           image_url?: string | null
+          is_phrase?: boolean
           level?: string | null
-          native_word: string
+          native_audio_url?: string | null
+          native_text: string
+          notes?: string | null
           part_of_speech?: string | null
           set_id: string
           sort_order?: number
         }
         Update: {
+          category?: string | null
           created_at?: string
-          english_word?: string
+          english_audio_url?: string | null
+          english_text?: string
           example_sentence?: string | null
           id?: string
           image_url?: string | null
+          is_phrase?: boolean
           level?: string | null
-          native_word?: string
+          native_audio_url?: string | null
+          native_text?: string
+          notes?: string | null
           part_of_speech?: string | null
           set_id?: string
           sort_order?: number
