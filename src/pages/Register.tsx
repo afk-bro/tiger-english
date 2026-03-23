@@ -92,7 +92,6 @@ export default function Register() {
 
           {/* Language selector */}
           <div>
-            <input type="hidden" {...register('native_language')} />
             <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-1">
               <Globe className="inline w-4 h-4 mr-1" />
               {t("register.native_language")}
