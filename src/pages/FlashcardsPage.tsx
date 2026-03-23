@@ -9,7 +9,7 @@ import { FlashcardViewer } from '@/features/flashcards/components/FlashcardViewe
 import { CreateSetModal } from '@/features/flashcards/components/CreateSetModal';
 import { SUPPORTED_LANGUAGES } from '@/schemas/authSchema';
 
-const LANGUAGE_NAMES: Record<string, string> = {
+const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = {
   th: 'Thai',
   zh: 'Chinese',
   vi: 'Vietnamese',

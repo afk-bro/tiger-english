@@ -14,6 +14,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      flashcard_translations: {
+        Row: {
+          created_at: string
+          flashcard_id: string
+          is_reviewed: boolean
+          language_code: string
+          native_audio_url: string | null
+          native_text: string
+          source: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          flashcard_id: string
+          is_reviewed?: boolean
+          language_code: string
+          native_audio_url?: string | null
+          native_text: string
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          flashcard_id?: string
+          is_reviewed?: boolean
+          language_code?: string
+          native_audio_url?: string | null
+          native_text?: string
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcard_translations_flashcard_id_fkey"
+            columns: ["flashcard_id"]
+            isOneToOne: false
+            referencedRelation: "flashcards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flashcard_translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "flashcard_translations_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flashcard_sets: {
         Row: {
           created_at: string
@@ -66,7 +124,6 @@ export type Database = {
           image_url: string | null
           is_phrase: boolean
           level: string | null
-          native_audio_url: string | null
           native_text: string
           notes: string | null
           part_of_speech: string | null
@@ -83,7 +140,6 @@ export type Database = {
           image_url?: string | null
           is_phrase?: boolean
           level?: string | null
-          native_audio_url?: string | null
           native_text: string
           notes?: string | null
           part_of_speech?: string | null
@@ -100,7 +156,6 @@ export type Database = {
           image_url?: string | null
           is_phrase?: boolean
           level?: string | null
-          native_audio_url?: string | null
           native_text?: string
           notes?: string | null
           part_of_speech?: string | null
@@ -117,6 +172,21 @@ export type Database = {
           },
         ]
       }
+      languages: {
+        Row: {
+          code: string
+          name: string
+        }
+        Insert: {
+          code: string
+          name: string
+        }
+        Update: {
+          code?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -124,6 +194,7 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          native_language: string | null
           username: string
         }
         Insert: {
@@ -132,6 +203,7 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          native_language?: string | null
           username: string
         }
         Update: {
@@ -140,9 +212,18 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
+          native_language?: string | null
           username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_native_language_fkey"
+            columns: ["native_language"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       user_card_progress: {
         Row: {
