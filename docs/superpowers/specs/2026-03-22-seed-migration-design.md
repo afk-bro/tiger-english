@@ -2,11 +2,13 @@
 
 **Date:** 2026-03-22
 **Branch:** feat/flashcard-schema-v2
-**Status:** Approved
+**Status:** Draft
 
 ## Overview
 
 Generate a Supabase SQL migration from CSV flashcard sets. Each CSV file maps to one `flashcard_set` row and N `flashcard` rows. The migration is committed alongside a generator script and a metadata file.
+
+This migration adds CSV-sourced curated sets. The existing seed (`20260319000004_seed_curated_sets.sql`) — which contains the Thai and Chinese essentials — remains unchanged and coexists with this migration. That seed uses the v1 column names `native_word`/`english_word`, which is correct: it runs at timestamp `20260319`, before the v2 rename at `20260321000002`, so the columns still exist under those names when it executes.
 
 ## Files
 
@@ -35,7 +37,9 @@ export const SET_META: Record<string, {
 };
 ```
 
-The filename is the stable source key. The generator skips any CSV not present in `SET_META`.
+The filename is the stable source key. The generator skips any CSV not present in `SET_META`. If a `SET_META` entry has no matching CSV file on disk, the generator throws an error (not a silent skip) so data omissions are caught immediately.
+
+`sort_order` in `SET_META` controls the order sets appear in the generated SQL file. It is generator-internal only and is **not** written to the database — `flashcard_sets` has no `sort_order` column.
 
 ## Generator (`generate-seed-migration.ts`)
 
@@ -45,10 +49,10 @@ Runs with `npx tsx scripts/generate-seed-migration.ts`.
 
 1. Import `SET_META`, sort entries by `sort_order`
 2. For each entry:
-   - Read CSV from `src/data/seed/sets/<filename>`
-   - Detect format (v2 standard vs legacy `travel_essentials` format)
-   - Parse and normalize each row (see Normalization)
-   - Compute UUIDs (see UUID Scheme)
+   - Read CSV from `src/data/seed/sets/<filename>` — throw on missing file
+   - Detect format by inspecting column headers; throw on unrecognised headers that match neither v2 nor legacy format
+   - Parse and normalize each row (see Normalization) — **normalization runs before UUID computation**
+   - Compute UUIDs using normalized values (see UUID Scheme)
    - Emit SQL blocks
 3. Write output to `supabase/migrations/20260322000001_seed_csv_sets.sql`
 
@@ -59,11 +63,12 @@ Runs with `npx tsx scripts/generate-seed-migration.ts`.
 **Legacy (`travel_essentials.csv`):** `English Phrase, Category` — mapped as:
 - `english_text` ← `English Phrase`
 - `category` ← `Category`
+- `sort_order` ← 1-based row position (used in UUID hash and INSERT)
 - All other fields → `null`
 
 ### Normalization
 
-Applied to every row before UUID computation and SQL emission:
+Applied to every row **before** UUID computation:
 
 - `category`: lowercase, trim whitespace
 - All text fields: curly/smart quotes (`'` `'` `"` `"`) → straight equivalents (`'` `"`)
@@ -72,16 +77,24 @@ Applied to every row before UUID computation and SQL emission:
 
 ### UUID Scheme
 
-Both UUIDs are derived by taking the first 32 hex characters of a SHA-256 hash and formatting as a standard UUID (8-4-4-4-12):
+Both UUIDs are derived by taking the first 32 hex characters of a SHA-256 hash and formatting as a standard UUID (8-4-4-4-12). The SHA-256 namespace is entirely separate from the fixed `00000000-…` UUIDs used by the existing curated seed — no collision is possible.
 
 ```
 set_id  = sha256(filename)
 card_id = sha256(filename + ':' + english_text + ':' + category + ':' + sort_order)
 ```
 
-Stable across regeneration as long as filename and card content don't change.
+`native_text` is intentionally excluded from the hash: within a single set, `sort_order` is always unique, so `english_text + category + sort_order` is sufficient to identify any card without collision. Normalization is applied first; UUID computation uses the normalized values.
+
+### SQL Escaping
+
+All string values are escaped by replacing `'` with `''` (standard SQL single-quote doubling). Dollar quoting (`$$`) is not used. The generator must apply this to every string field before interpolating into SQL literals.
 
 ## SQL Output Structure
+
+`notes` and `is_phrase` are omitted from the INSERT — Postgres supplies their column defaults (`null` and `false` respectively). This is intentional.
+
+`english_text` is required for all formats. The generator throws if a row has an empty or null `english_text` after normalization.
 
 ```sql
 -- === <Title> (<filename>) ===
