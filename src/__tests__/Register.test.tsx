@@ -51,8 +51,8 @@ function fillForm(overrides: Partial<Record<string, string>> = {}) {
     firstName: 'John',
     lastName: 'Doe',
     email: 'john@example.com',
-    password: 'securepass123',
-    confirmPassword: 'securepass123',
+    password: 'Securepass1!',
+    confirmPassword: 'Securepass1!',
     ...overrides,
   };
   fireEvent.change(screen.getByLabelText(/username/i), { target: { value: values.username } });
@@ -71,8 +71,8 @@ describe('Register.tsx', () => {
     await userEvent.type(screen.getByLabelText(/first name/i), 'John');
     await userEvent.type(screen.getByLabelText(/last name/i), 'Doe');
     await userEvent.type(screen.getByLabelText(/email/i), 'john@example.com');
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'securepass123');
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'securepass123');
+    await userEvent.type(screen.getByLabelText(/^password$/i), 'Securepass1!');
+    await userEvent.type(screen.getByLabelText(/confirm password/i), 'Securepass1!');
 
     fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
 
@@ -120,13 +120,40 @@ describe('Register.tsx', () => {
       });
     });
 
+    it('shows error when password is too short (min 8)', async () => {
+      render(<Register />, { wrapper: Wrapper });
+      fillForm({ password: 'Short1!', confirmPassword: 'Short1!' });
+      fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
+      await waitFor(() => {
+        expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument();
+      });
+    });
+
     it('shows error when password is too long (max 100)', async () => {
       render(<Register />, { wrapper: Wrapper });
-      const longPassword = 'a'.repeat(101);
+      const longPassword = 'A!'.padEnd(101, 'a');
       fillForm({ password: longPassword, confirmPassword: longPassword });
       fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
       await waitFor(() => {
         expect(screen.getByText('Password must be 100 characters or fewer')).toBeInTheDocument();
+      });
+    });
+
+    it('shows error when password has no uppercase letter', async () => {
+      render(<Register />, { wrapper: Wrapper });
+      fillForm({ password: 'nouppercase1!', confirmPassword: 'nouppercase1!' });
+      fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
+      await waitFor(() => {
+        expect(screen.getByText('Password must contain at least one uppercase letter')).toBeInTheDocument();
+      });
+    });
+
+    it('shows error when password has no special character', async () => {
+      render(<Register />, { wrapper: Wrapper });
+      fillForm({ password: 'NoSpecialChar1', confirmPassword: 'NoSpecialChar1' });
+      fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
+      await waitFor(() => {
+        expect(screen.getByText('Password must contain at least one special character (!@#$%^&*)')).toBeInTheDocument();
       });
     });
   });
