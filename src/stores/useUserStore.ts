@@ -9,6 +9,7 @@ type UserProfile = {
   last_name: string;
   email?: string;
   username: string;
+  native_language: string | null;
 };
 
 type UserStore = {
@@ -23,6 +24,7 @@ type UserStore = {
   error: string | null;
   fetchProfile: () => Promise<void>;
   clearProfile: () => void;
+  setNativeLanguage: (code: string | null) => void;
 };
 
 export const useUserStore = create<UserStore>((set) => ({
@@ -48,7 +50,7 @@ export const useUserStore = create<UserStore>((set) => ({
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, first_name, last_name, email, username")
+      .select("id, first_name, last_name, email, username, native_language")
       .eq("id", session.user.id)
       .single();
 
@@ -66,6 +68,7 @@ export const useUserStore = create<UserStore>((set) => ({
           first_name: data.first_name,
           last_name: data.last_name,
           username: data.username,
+          native_language: data.native_language ?? null,
         },
         error: null,
         profileLoading: false,
@@ -74,4 +77,9 @@ export const useUserStore = create<UserStore>((set) => ({
   },
 
   clearProfile: () => set({ profile: null, error: null, profileLoading: false }),
+
+  setNativeLanguage: (code) =>
+    set((state) => ({
+      profile: state.profile ? { ...state.profile, native_language: code } : null,
+    })),
 }));
