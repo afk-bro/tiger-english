@@ -50,16 +50,12 @@ export function useRegisterForm(): UseRegisterFormReturn {
 
   // Function to clear server errors when user starts typing
   const handleFieldChange = (fieldName: keyof RegisterFormData) => {
-    return (e: React.ChangeEvent<HTMLInputElement>) => {
+    return (_e: React.ChangeEvent<HTMLInputElement>) => {
       // Clear server error for this field when user starts typing
       if (errors[fieldName]?.type === 'server') {
         clearErrors(fieldName);
       }
-      // Call the original register onChange
-      const originalOnChange = register(fieldName).onChange;
-      if (originalOnChange) {
-        originalOnChange(e);
-      }
+      // RHF's internal onChange is already called by the register() onChange option mechanism
     };
   };
 
