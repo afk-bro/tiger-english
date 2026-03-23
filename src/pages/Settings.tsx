@@ -1,5 +1,5 @@
 // src/pages/Settings.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUserStore } from '@/stores/useUserStore';
 import { authAPI } from '@/lib/api/auth';
 import { supabase } from '@/lib/supabase';
@@ -21,6 +21,12 @@ export default function Settings() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    if (profile?.native_language != null) {
+      setSelected(profile.native_language);
+    }
+  }, [profile?.native_language]);
+
   const handleSave = async () => {
     setSaving(true);
     setError(null);
@@ -34,8 +40,8 @@ export default function Settings() {
         session.access_token,
       );
 
-      if ('success' in result && result.success === false) {
-        setError(result.message);
+      if (!('id' in result)) {
+        setError((result as { message: string }).message);
         return;
       }
 
