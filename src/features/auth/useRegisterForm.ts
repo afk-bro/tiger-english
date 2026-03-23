@@ -39,8 +39,9 @@ export function useRegisterForm(): UseRegisterFormReturn {
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
 
-  // Clears server errors immediately; re-validates Zod errors on change once the
-  // field has already been validated (i.e. it currently has an error).
+  // Clears server errors on retype. Also explicitly triggers re-validation when a Zod
+  // error is present — reValidateMode:'onChange' alone does not fire when register() uses
+  // a custom onChange in RHF v7.
   const handleFieldChange = (fieldName: keyof RegisterFormData) => {
     return (_e: React.ChangeEvent<HTMLInputElement>) => {
       if (errors[fieldName]?.type === 'server') {
