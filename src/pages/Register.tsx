@@ -2,11 +2,13 @@ import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
 import ErrorGuidanceCard from "../components/auth/ErrorGuidanceCard";
 import GoogleAuthButton from "@/components/ui/GoogleAuthButton";
-import { Mail, Lock, User, ArrowRight, UserPlus, AtSign } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, UserPlus, AtSign, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useRegisterForm } from "../features/auth/useRegisterForm";
 import { useRegisterSubmit } from "../features/auth/useRegisterSubmit";
+import { SUPPORTED_LANGUAGES } from "@/schemas/authSchema";
+import { useEffect } from "react";
 
 export default function Register() {
   const { t } = useTranslation();
@@ -21,9 +23,23 @@ export default function Register() {
     handleFieldChange,
     getPasswordValidationIcon,
     getConfirmPasswordValidationIcon,
+    setValue,
+    watch,
   } = useRegisterForm();
 
   const { isSubmitting, onSubmit } = useRegisterSubmit(setError, clearErrors);
+
+  // Auto-detect browser locale on mount
+  useEffect(() => {
+    const lang = navigator.language.split('-')[0].toLowerCase();
+    if ((SUPPORTED_LANGUAGES as readonly string[]).includes(lang)) {
+      setValue('native_language', lang as typeof SUPPORTED_LANGUAGES[number]);
+    }
+  }, [setValue]);
+
+  const selectedLanguage = watch('native_language');
+  const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = { th: 'Thai', zh: 'Chinese', vi: 'Vietnamese' };
+
   return (
     <section className="min-h-screen flex items-center justify-center bg-semantic-bg dark:bg-semantic-bg px-4 md:px-6 py-12 md:py-16">
       <div className="w-full max-w-4xl mx-auto flex justify-center">
@@ -72,6 +88,34 @@ export default function Register() {
               )}
             </div>
           )}
+
+          {/* Language selector */}
+          <div>
+            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-1">
+              <Globe className="inline w-4 h-4 mr-1" />
+              {t("register.native_language")}
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {SUPPORTED_LANGUAGES.map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setValue('native_language', code)}
+                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                    selectedLanguage === code
+                      ? 'bg-primary-600 text-white border-primary-600'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {LANGUAGE_NAMES[code]}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {t("register.native_language_hint")}
+            </p>
+          </div>
+
           <FormInput
             label={t("register.first_name")}
             icon={<User className="w-5 h-5 text-gray-400 dark:text-gray-500" />}

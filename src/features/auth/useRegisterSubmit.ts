@@ -29,6 +29,7 @@ export function useRegisterSubmit(
       firstName: data.firstName,
       lastName: data.lastName,
       userName: data.username,
+      nativeLanguage: data.native_language ?? null,
     });
     
     setIsSubmitting(false);
