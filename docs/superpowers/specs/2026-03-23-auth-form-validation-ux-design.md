@@ -14,49 +14,94 @@ The register form has Check/X icons on the password and confirm-password fields,
 
 ### New: `src/features/auth/passwordRules.ts`
 
-Single source of truth for all password constraints. Exports a `PASSWORD_RULES` array that every consumer maps over — no rule label or regex is duplicated anywhere.
+Single source of truth for all password constraints. Must be created before `authSchema.ts` is modified (authSchema imports from it).
 
 ```ts
+export const UPPERCASE_RE    = /[A-Z]/;
+export const SPECIAL_CHAR_RE = /[!@#$%^&*]/;
+
 export const PASSWORD_RULES = [
   { key: 'minLength', label: 'At least 8 characters',            test: (v: string) => v.length >= 8 },
-  { key: 'uppercase', label: 'One uppercase letter',              test: (v: string) => /[A-Z]/.test(v) },
-  { key: 'special',   label: 'One special character (!@#$%^&*)', test: (v: string) => /[!@#$%^&*]/.test(v) },
+  { key: 'uppercase', label: 'One uppercase letter',              test: (v: string) => UPPERCASE_RE.test(v) },
+  { key: 'special',   label: 'One special character (!@#$%^&*)', test: (v: string) => SPECIAL_CHAR_RE.test(v) },
 ];
 
-export const isPasswordValid = (v: string) =>
-  PASSWORD_RULES.every((r) => r.test(v));
+export const isPasswordValid = (v: string) => PASSWORD_RULES.every((r) => r.test(v));
 ```
 
-`authSchema.ts` imports the regex constants from here so schema rules and UI rules cannot drift. `PasswordChecklist` maps over `PASSWORD_RULES`. `useRegisterForm` imports `isPasswordValid`.
+`authSchema.ts` imports `UPPERCASE_RE` and `SPECIAL_CHAR_RE` into the `registerSchema` `.regex()` calls only. `loginSchema` password validation is left unchanged (`min(8)` only). `SUPPORTED_LANGUAGES` stays in `authSchema.ts`. `PasswordChecklist` maps over `PASSWORD_RULES`. Both hooks import `isPasswordValid`.
 
 ### New: `src/components/auth/PasswordChecklist.tsx`
 
-Purely presentational component. Props: `value: string`.
+Purely presentational. Props: `value: string`.
 
-- **Hidden** when `value === ''`
-- **Visible** once any character is typed
-- Maps over `PASSWORD_RULES`; each row shows an icon + label
-  - Rule met → green icon + green label
-  - Rule unmet → neutral gray icon + gray label (never red while typing)
+- Root element has `data-testid="password-checklist"` for test assertions
+- Hidden when `value === ''`
+- Callers pass `value={watch('password') ?? ''}` to ensure a string is always provided
+- Visible once any character is typed
+- Maps over `PASSWORD_RULES`; each row: rule met → green icon + green label; rule unmet → neutral gray (never red while typing)
 - Not styled as an error block — guidance tone only
+- Rendered below the password `FormInput` in `Register.tsx`; the password `FormInput` has **no** `validationIcon` prop
 
 ### Modified: `src/features/auth/useRegisterForm.ts`
 
-- Switch RHF to `mode: 'onBlur'`, `reValidateMode: 'onChange'`
-- Remove `handleFieldChange` workaround (RHF handles error-clearing natively with these modes)
-- Replace inline `isPasswordValid()` implementation with import from `passwordRules.ts`
-- Fix `isConfirmPasswordValid()`: only returns true when `isPasswordValid(password)` is also true AND fields match
+Switch RHF to `mode: 'onBlur'`, `reValidateMode: 'onChange'`.
+
+**Revised public interface:**
+
+| Member | Change |
+|---|---|
+| `register`, `handleSubmit`, `watch`, `setValue`, `setError`, `clearErrors`, `errors` | Unchanged |
+| `handleFieldChange` | **Kept, no logic change.** It already only clears `type === 'server'` errors. Keep `onChange: handleFieldChange(field)` on all fields that currently have it, including `password` — the backend can return password field errors via `useRegisterSubmit`'s `FIELD_MAP`. |
+| `getPasswordValidationIcon` | **Removed** — checklist replaces it |
+| `getConfirmPasswordValidationIcon` | **Kept** — logic fixed: returns ✓ only when `isPasswordValid(password) && password === confirmPassword` |
+| `password`, `confirmPassword` | **Removed** from return value — hook uses them internally only |
+
+`isPasswordValid` is replaced with the import from `passwordRules.ts`.
+
+**Note on `useRegisterSubmit`:** It imports `UseRegisterFormReturn` and uses only `setError` and `clearErrors`. These members are unchanged. The interface change (removing `password`, `confirmPassword`, `getPasswordValidationIcon`) is backward-compatible — no modifications needed there.
+
+### Modified: `src/pages/Register.tsx`
+
+- Remove `validationIcon={getPasswordValidationIcon()}` from the password `FormInput`; **keep `hasError={!!errors.password}` unchanged**
+- Add `<PasswordChecklist value={watch('password') ?? ''} />` directly below the password `FormInput`
+- Replace destructured `password` and `confirmPassword` with direct watch calls:
+  ```ts
+  const watchedPassword = watch('password') ?? '';
+  const watchedConfirmPassword = watch('confirmPassword');
+  ```
+  The existing `const selectedLanguage = watch('native_language')` is unchanged.
+- All field registrations, including `onChange: handleFieldChange(field)`, remain unchanged
 
 ### New: `src/features/auth/useLoginForm.ts`
 
-Extracted from `Login.tsx`. Same RHF modes (`onBlur` / `onChange`). Exposes:
-- `register`, `handleSubmit`, `errors`, `watch`
-- `getEmailValidationIcon()` — ✓ when valid format, ✗ when invalid (shown after blur)
-- No password icon exposed — password field uses error state only
+Extracted from `Login.tsx`. Same RHF modes (`onBlur` / `onChange`). Public interface:
+
+```ts
+register, handleSubmit, errors, setError,
+formState: { touchedFields, isSubmitting },
+getEmailValidationIcon: () => React.ReactNode | null
+```
+
+`watch` is not exposed — no caller needs it.
+
+- `isSubmitting` comes from RHF's `formState.isSubmitting` — replaces `useState(false)` in `Login.tsx`
+- `getEmailValidationIcon()`: returns `null` when `!touchedFields.email`; returns ✓ (`<Check>`) when `touchedFields.email && !errors.email`; returns ✗ (`<X>`) when `touchedFields.email && !!errors.email`. Icon visibility is driven by `touchedFields` (set by RHF on blur with `mode: 'onBlur'`), not by `trigger()`.
+- No password icon exposed
+- `onSubmit` handler:
+  - Calls `loginUser(data)`
+  - On `{ success: false, message }`: calls `setError('password', { type: 'server', message })` — **removes the existing `toast.error` call for credential failures; replaced entirely by the inline `errors.password` display**
+  - On `{ success: true }`: reads `useUserStore.getState().profile`; if profile exists: `toast.success` + `navigate('/home')`; if profile missing: `toast.error("Profile not found after login")` — preserves the existing guard
+  - Network/unexpected errors: `toast.error`
 
 ### Modified: `src/pages/Login.tsx`
 
-Refactored to use `useLoginForm`. Email field gets ✓/✗ icon via `validationIcon` prop on `FormInput`. Password field: red border (`hasError`) on invalid format — no green success icon (client-side format check ≠ correct credentials).
+- Remove inline RHF setup (`useForm`, `zodResolver`, `useState(false)` for `isSubmitting`, local `onSubmit`)
+- Import and use `useLoginForm`
+- Email `FormInput`: add `validationIcon={getEmailValidationIcon()}` and `hasError={!!errors.email}`
+- Password `FormInput`: add `hasError={!!errors.password}`, no `validationIcon`
+- Existing inline error `<p>` elements for `errors.email` and `errors.password` stay as-is
+- `disabled={isSubmitting}` on submit button uses `isSubmitting` from `useLoginForm`
 
 ---
 
@@ -64,63 +109,92 @@ Refactored to use `useLoginForm`. Email field gets ✓/✗ icon via `validationI
 
 | Field | Trigger | Feedback |
 |---|---|---|
-| Username, names, email | Blur → live once errored | Inline error message; ErrorGuidanceCard for server errors |
-| Password | First keystroke → live | PasswordChecklist appears; field border red on blur if any rule unmet; clears live as rules are satisfied |
-| Confirm password | Blur → live once errored | ✓/✗ icon; green only when base password is valid AND fields match |
+| Username, email, names, password | Blur → live once errored (Zod via RHF); server errors cleared on retype via `handleFieldChange` | Inline error; ErrorGuidanceCard for server errors on username/email |
+| Password | First keystroke → live | PasswordChecklist appears; **before first blur `errors.password` is undefined and the border is neutral — the checklist alone provides guidance**; after blur with unmet rules: border red via `hasError={!!errors.password}`; clears live as rules are satisfied |
+| Confirm password | Blur → live once errored | ✓/✗ icon; ✓ only when base password is fully valid AND fields match |
 | All fields | Submit | Full RHF validation triggers regardless of blur state |
-
-Server errors (username-taken, email-registered) continue to map to field-level errors via `useRegisterSubmit`. `ErrorGuidanceCard` stays unchanged.
 
 ## Behavior: Login Form
 
 | Field | Trigger | Feedback |
 |---|---|---|
-| Email | Blur → live once errored | ✓/✗ icon |
+| Email | After first blur (RHF sets `touchedFields.email`) | ✓ if valid; ✗ if invalid; `null` if untouched |
+| Email (once touched) | Live | Updates as user corrects |
 | Password | Blur → live once errored | Red border only; no green state |
 | All fields | Submit | Full validation triggers |
 
-Server error ("Invalid credentials") surfaces as a field-level error on the password field.
+Invalid credentials → `errors.password` with `type: 'server'`, displayed by the existing inline `<p>` below the password field. No toast for credential errors.
 
 ---
 
 ## Testing
 
-### `src/features/auth/__tests__/passwordRules.test.ts` (new)
+### `src/features/auth/__tests__/passwordRules.test.ts` (create)
 
-Unit tests for each rule's `test()` function:
-- `minLength`: passes at 8, fails at 7
-- `uppercase`: passes with uppercase present, fails without
-- `special`: passes with `!@#$%^&*` chars, fails without
-- `isPasswordValid`: passes only when all three rules pass
+- `UPPERCASE_RE`: matches uppercase letter, rejects lowercase-only string
+- `SPECIAL_CHAR_RE`: matches `!`, `@`, etc.; rejects alphanumeric
+- `PASSWORD_RULES[0].test` (minLength): passes at 8 chars, fails at 7
+- `PASSWORD_RULES[1].test` (uppercase): passes with uppercase, fails without
+- `PASSWORD_RULES[2].test` (special): passes with special char, fails without
+- `isPasswordValid`: true only when all three pass; false when any single one fails
 
-### `src/components/auth/__tests__/PasswordChecklist.test.tsx` (new)
+### `src/components/auth/__tests__/PasswordChecklist.test.tsx` (create)
 
-- Empty string → checklist not rendered
-- One character typed → checklist visible; all rules neutral
-- Password satisfying only `minLength` → that row green, others neutral
-- Password satisfying all rules → all rows green
+Query via `screen.queryByTestId('password-checklist')` for visibility assertions.
 
-### `src/features/auth/__tests__/useRegisterForm.test.ts` (new or extended)
+- `value=""` → checklist not in the document
+- Single character → checklist in document; no row has green styling
+- Password meeting only `minLength` (e.g. `'abcdefgh'`) → first row green; others not
+- Password meeting all rules (e.g. `'Secure1!'`) → all rows green
 
-Confirm-password icon precondition:
-1. Invalid password + matching confirm → icon is ✗ (not green)
-2. Valid password + non-matching confirm → icon is ✗
-3. Valid password + matching confirm → icon is ✓
+### `src/features/auth/__tests__/useRegisterForm.test.ts` (create)
 
-### `src/__tests__/Register.test.tsx` (extended)
+Use `renderHook(() => useRegisterForm())` from `@testing-library/react`. Drive watched values using `act(() => result.current.setValue('password', '...'))` and `act(() => result.current.setValue('confirmPassword', '...'))` — RHF's `watch` updates synchronously after `setValue` inside `act`.
 
-Password blur interaction sequence:
-1. Type one invalid character into password field → checklist visible, no red border on field
-2. Blur the field → red border appears
-3. Continue typing to satisfy all three rules → checklist all green, red border clears
+Confirm-password icon precondition — three cases:
+1. `setValue('password', 'abc')` + `setValue('confirmPassword', 'abc')` → `getConfirmPasswordValidationIcon()` returns ✗ (password invalid)
+2. `setValue('password', 'Secure1!')` + `setValue('confirmPassword', 'wrong')` → returns ✗ (no match)
+3. `setValue('password', 'Secure1!')` + `setValue('confirmPassword', 'Secure1!')` → returns ✓
 
-Existing boundary tests (username min/max, name max, password complexity) must continue to pass.
+### `src/__tests__/Register.test.tsx` (extend)
 
-### `src/features/auth/__tests__/useLoginForm.test.ts` (new)
+Password blur interaction sequence using `userEvent`:
+1. Type one invalid character into the password field → `screen.getByTestId('password-checklist')` is present; password input does not have an error border
+2. Blur the field (`await userEvent.tab()`) → error border is present on the password input
+3. Continue typing to satisfy all three rules → checklist rows all show green styling; error border clears
 
-- Email ✓/✗ icon logic
-- Password produces no icon
-- Submit validates all fields
+Existing boundary tests must continue to pass.
+
+### `src/__tests__/Login.test.tsx` (create)
+
+**Required mocks** (same pattern as `Register.test.tsx`):
+```ts
+vi.mock('@/features/auth/loginUser', () => ({ loginUser: vi.fn() }));
+vi.mock('@/lib/supabase', () => ({ supabase: { auth: { signInWithOAuth: vi.fn() } } }));
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return { ...actual, useNavigate: () => vi.fn() };
+});
+```
+Wrap renders in `<BrowserRouter>` and call `await i18n.changeLanguage('en')` in `beforeAll`.
+
+Test cases:
+- Submit with blank email → inline `errors.email` message visible
+- Submit with blank password → inline `errors.password` message visible
+- Email field: no icon before blur; after blur with valid email → ✓ icon; after blur with invalid email → ✗ icon. Use `userEvent.type` + `userEvent.tab()` to trigger real blur events (which set `touchedFields.email` via RHF's `mode: 'onBlur'`).
+- Password field: no Check or X icon at any point
+- `loginUser` resolves `{ success: false, message: 'Invalid email or password' }` → inline error appears below password field; `toast.error` not called
+
+### `src/features/auth/__tests__/useLoginForm.test.ts` (create)
+
+Scope: submit/error logic only. Icon behavior is covered by `Login.test.tsx` where real blur events are available. `getEmailValidationIcon` relies on `touchedFields.email`, which RHF only sets via real blur events — not via `trigger()` or `setValue` in a hook-only context.
+
+Use `renderHook` + `act`:
+
+- `formState.isSubmitting` is `false` by default
+- Mock `loginUser` to resolve `{ success: false, message: 'Invalid email or password' }` → after calling `result.current.handleSubmit(onSubmit)({email: 'a@b.com', password: 'Secure1!'})`, `errors.password.type === 'server'` and `errors.password.message` matches
+- `loginUser` not called when submit is prevented by validation (blank fields)
 
 ---
 
@@ -128,13 +202,17 @@ Existing boundary tests (username min/max, name max, password complexity) must c
 
 | File | Action |
 |---|---|
-| `src/features/auth/passwordRules.ts` | Create |
+| `src/features/auth/passwordRules.ts` | Create (first — authSchema imports from it) |
+| `src/schemas/authSchema.ts` | Modify (import UPPERCASE_RE, SPECIAL_CHAR_RE into registerSchema only; loginSchema and SUPPORTED_LANGUAGES unchanged) |
 | `src/components/auth/PasswordChecklist.tsx` | Create |
 | `src/features/auth/useRegisterForm.ts` | Modify |
 | `src/features/auth/useLoginForm.ts` | Create |
+| `src/pages/Register.tsx` | Modify |
 | `src/pages/Login.tsx` | Modify |
-| `src/schemas/authSchema.ts` | Modify (import regex from passwordRules) |
+| `src/features/auth/useRegisterSubmit.ts` | No changes — interface change is backward-compatible |
 | `src/features/auth/__tests__/passwordRules.test.ts` | Create |
 | `src/components/auth/__tests__/PasswordChecklist.test.tsx` | Create |
+| `src/features/auth/__tests__/useRegisterForm.test.ts` | Create |
 | `src/__tests__/Register.test.tsx` | Extend |
+| `src/__tests__/Login.test.tsx` | Create |
 | `src/features/auth/__tests__/useLoginForm.test.ts` | Create |
