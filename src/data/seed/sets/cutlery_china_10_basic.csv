@@ -1,0 +1,12 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Fork,tableware,noun,basic,This is a fork.,,,,1
+,Knife,tableware,noun,basic,This is a knife.,,,,2
+,Spoon,tableware,noun,basic,This is a spoon.,,,,3
+,Chopsticks,tableware,noun,basic,This is a chopsticks.,,,,4
+,Plate,tableware,noun,basic,This is a plate.,,,,5
+,Bowl,tableware,noun,basic,This is a bowl.,,,,6
+,Cup,tableware,noun,basic,This is a cup.,,,,7
+,Glass,tableware,noun,basic,This is a glass.,,,,8
+,Teapot,tableware,noun,basic,This is a teapot.,,,,9
+,Serving spoon,tableware,noun,basic,This is a serving spoon.,,,,10
+,Napkin,tableware,noun,basic,This is a napkin.,,,,11

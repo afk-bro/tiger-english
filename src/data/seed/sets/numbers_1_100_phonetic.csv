@@ -1,0 +1,101 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,one,numbers,number,basic,wun,,,,1
+,two,numbers,number,basic,too,,,,2
+,three,numbers,number,basic,three,,,,3
+,four,numbers,number,basic,for,,,,4
+,five,numbers,number,basic,five,,,,5
+,six,numbers,number,basic,siks,,,,6
+,seven,numbers,number,basic,sev-en,,,,7
+,eight,numbers,number,basic,ate,,,,8
+,nine,numbers,number,basic,nine,,,,9
+,ten,numbers,number,basic,ten,,,,10
+,eleven,numbers,number,basic,i-lev-en,,,,11
+,twelve,numbers,number,basic,twelv,,,,12
+,thirteen,numbers,number,basic,thur-teen,,,,13
+,fourteen,numbers,number,basic,for-teen,,,,14
+,fifteen,numbers,number,basic,fif-teen,,,,15
+,sixteen,numbers,number,basic,siks-teen,,,,16
+,seventeen,numbers,number,basic,sev-en-teen,,,,17
+,eighteen,numbers,number,basic,ate-teen,,,,18
+,nineteen,numbers,number,basic,nine-teen,,,,19
+,twenty,numbers,number,basic,twen-tee,,,,20
+,twenty one,numbers,number,basic,twen-tee wun,,,,21
+,twenty two,numbers,number,basic,twen-tee too,,,,22
+,twenty three,numbers,number,basic,twen-tee three,,,,23
+,twenty four,numbers,number,basic,twen-tee for,,,,24
+,twenty five,numbers,number,basic,twen-tee five,,,,25
+,twenty six,numbers,number,basic,twen-tee siks,,,,26
+,twenty seven,numbers,number,basic,twen-tee sev-en,,,,27
+,twenty eight,numbers,number,basic,twen-tee ate,,,,28
+,twenty nine,numbers,number,basic,twen-tee nine,,,,29
+,thirty,numbers,number,basic,thur-tee,,,,30
+,thirty one,numbers,number,basic,thur-tee wun,,,,31
+,thirty two,numbers,number,basic,thur-tee too,,,,32
+,thirty three,numbers,number,basic,thur-tee three,,,,33
+,thirty four,numbers,number,basic,thur-tee for,,,,34
+,thirty five,numbers,number,basic,thur-tee five,,,,35
+,thirty six,numbers,number,basic,thur-tee siks,,,,36
+,thirty seven,numbers,number,basic,thur-tee sev-en,,,,37
+,thirty eight,numbers,number,basic,thur-tee ate,,,,38
+,thirty nine,numbers,number,basic,thur-tee nine,,,,39
+,forty,numbers,number,basic,for-tee,,,,40
+,forty one,numbers,number,basic,for-tee wun,,,,41
+,forty two,numbers,number,basic,for-tee too,,,,42
+,forty three,numbers,number,basic,for-tee three,,,,43
+,forty four,numbers,number,basic,for-tee for,,,,44
+,forty five,numbers,number,basic,for-tee five,,,,45
+,forty six,numbers,number,basic,for-tee siks,,,,46
+,forty seven,numbers,number,basic,for-tee sev-en,,,,47
+,forty eight,numbers,number,basic,for-tee ate,,,,48
+,forty nine,numbers,number,basic,for-tee nine,,,,49
+,fifty,numbers,number,basic,fif-tee,,,,50
+,fifty one,numbers,number,basic,fif-tee wun,,,,51
+,fifty two,numbers,number,basic,fif-tee too,,,,52
+,fifty three,numbers,number,basic,fif-tee three,,,,53
+,fifty four,numbers,number,basic,fif-tee for,,,,54
+,fifty five,numbers,number,basic,fif-tee five,,,,55
+,fifty six,numbers,number,basic,fif-tee siks,,,,56
+,fifty seven,numbers,number,basic,fif-tee sev-en,,,,57
+,fifty eight,numbers,number,basic,fif-tee ate,,,,58
+,fifty nine,numbers,number,basic,fif-tee nine,,,,59
+,sixty,numbers,number,basic,siks-tee,,,,60
+,sixty one,numbers,number,basic,siks-tee wun,,,,61
+,sixty two,numbers,number,basic,siks-tee too,,,,62
+,sixty three,numbers,number,basic,siks-tee three,,,,63
+,sixty four,numbers,number,basic,siks-tee for,,,,64
+,sixty five,numbers,number,basic,siks-tee five,,,,65
+,sixty six,numbers,number,basic,siks-tee siks,,,,66
+,sixty seven,numbers,number,basic,siks-tee sev-en,,,,67
+,sixty eight,numbers,number,basic,siks-tee ate,,,,68
+,sixty nine,numbers,number,basic,siks-tee nine,,,,69
+,seventy,numbers,number,basic,sev-en-tee,,,,70
+,seventy one,numbers,number,basic,sev-en-tee wun,,,,71
+,seventy two,numbers,number,basic,sev-en-tee too,,,,72
+,seventy three,numbers,number,basic,sev-en-tee three,,,,73
+,seventy four,numbers,number,basic,sev-en-tee for,,,,74
+,seventy five,numbers,number,basic,sev-en-tee five,,,,75
+,seventy six,numbers,number,basic,sev-en-tee siks,,,,76
+,seventy seven,numbers,number,basic,sev-en-tee sev-en,,,,77
+,seventy eight,numbers,number,basic,sev-en-tee ate,,,,78
+,seventy nine,numbers,number,basic,sev-en-tee nine,,,,79
+,eighty,numbers,number,basic,ay-tee,,,,80
+,eighty one,numbers,number,basic,ay-tee wun,,,,81
+,eighty two,numbers,number,basic,ay-tee too,,,,82
+,eighty three,numbers,number,basic,ay-tee three,,,,83
+,eighty four,numbers,number,basic,ay-tee for,,,,84
+,eighty five,numbers,number,basic,ay-tee five,,,,85
+,eighty six,numbers,number,basic,ay-tee siks,,,,86
+,eighty seven,numbers,number,basic,ay-tee sev-en,,,,87
+,eighty eight,numbers,number,basic,ay-tee ate,,,,88
+,eighty nine,numbers,number,basic,ay-tee nine,,,,89
+,ninety,numbers,number,basic,nine-tee,,,,90
+,ninety one,numbers,number,basic,nine-tee wun,,,,91
+,ninety two,numbers,number,basic,nine-tee too,,,,92
+,ninety three,numbers,number,basic,nine-tee three,,,,93
+,ninety four,numbers,number,basic,nine-tee for,,,,94
+,ninety five,numbers,number,basic,nine-tee five,,,,95
+,ninety six,numbers,number,basic,nine-tee siks,,,,96
+,ninety seven,numbers,number,basic,nine-tee sev-en,,,,97
+,ninety eight,numbers,number,basic,nine-tee ate,,,,98
+,ninety nine,numbers,number,basic,nine-tee nine,,,,99
+,one hundred,numbers,number,basic,wun hun-dred,,,,100

@@ -11,12 +11,17 @@ export type FlashcardSet = {
 export type FlashcardCard = {
   id: string
   setId: string
-  nativeWord: string
-  englishWord: string
+  nativeText: string
+  englishText: string
   partOfSpeech: string | null
   level: 'basic' | 'intermediate' | 'advanced' | null
+  category: string | null
   exampleSentence: string | null
   imageUrl: string | null
+  englishAudioUrl: string | null
+  nativeAudioUrl: string | null
+  notes: string | null
+  isPhrase: boolean
   sortOrder: number
 }
 // Note: DB `level` column is text | null (check constraint). Cast required in mapper.
@@ -43,12 +48,17 @@ type SetRow = {
 type CardRow = {
   id: string
   set_id: string
-  native_word: string
-  english_word: string
+  native_text: string
+  english_text: string
   part_of_speech: string | null
   level: string | null
+  category: string | null
   example_sentence: string | null
   image_url: string | null
+  english_audio_url: string | null
+  native_audio_url: string | null
+  notes: string | null
+  is_phrase: boolean
   sort_order: number
   created_at: string
 }
@@ -77,12 +87,17 @@ export function mapCard(row: CardRow): FlashcardCard {
   return {
     id: row.id,
     setId: row.set_id,
-    nativeWord: row.native_word,
-    englishWord: row.english_word,
+    nativeText: row.native_text,
+    englishText: row.english_text,
     partOfSpeech: row.part_of_speech,
     level: row.level as FlashcardCard['level'],
+    category: row.category,
     exampleSentence: row.example_sentence,
     imageUrl: row.image_url,
+    englishAudioUrl: row.english_audio_url,
+    nativeAudioUrl: row.native_audio_url,
+    notes: row.notes,
+    isPhrase: row.is_phrase,
     sortOrder: row.sort_order,
   };
 }

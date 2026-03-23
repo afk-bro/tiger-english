@@ -1,0 +1,21 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Time,time,noun,basic,The time is important.,,,,1
+,Hour,time,noun,basic,The hour is important.,,,,2
+,Minute,time,noun,basic,The minute is important.,,,,3
+,Second,time,noun,basic,The second is important.,,,,4
+,Clock,time,noun,basic,The clock is important.,,,,5
+,Watch,time,noun,basic,The watch is important.,,,,6
+,Morning,time,noun,basic,The morning is important.,,,,7
+,Afternoon,time,noun,basic,The afternoon is important.,,,,8
+,Evening,time,noun,basic,The evening is important.,,,,9
+,Night,time,noun,basic,The night is important.,,,,10
+,Today,time,noun,basic,Today is important.,,,,11
+,Tomorrow,time,noun,basic,Tomorrow is important.,,,,12
+,Yesterday,time,noun,basic,Yesterday is important.,,,,13
+,Now,time,noun,basic,Now is important.,,,,14
+,Later,time,noun,basic,Later is important.,,,,15
+,Early,time,adjective,basic,The early is important.,,,,16
+,Late,time,adjective,basic,The late is important.,,,,17
+,Schedule,time,noun,basic,The schedule is important.,,,,18
+,Appointment,time,noun,basic,The appointment is important.,,,,19
+,Date,time,noun,basic,The date is important.,,,,20

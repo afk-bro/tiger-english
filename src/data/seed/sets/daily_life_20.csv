@@ -1,0 +1,21 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Time,daily_life,noun,basic,Time is important.,,,,1
+,Day,daily_life,noun,basic,This is day.,,,,2
+,Week,daily_life,noun,basic,This is week.,,,,3
+,Today,daily_life,noun,basic,Today is important.,,,,4
+,Tomorrow,daily_life,noun,basic,Tomorrow is important.,,,,5
+,Yesterday,daily_life,noun,basic,Yesterday is important.,,,,6
+,Morning,daily_life,noun,basic,This is morning.,,,,7
+,Afternoon,daily_life,noun,basic,This is afternoon.,,,,8
+,Evening,daily_life,noun,basic,This is evening.,,,,9
+,Night,daily_life,noun,basic,This is night.,,,,10
+,Home,daily_life,noun,basic,This is home.,,,,11
+,House,daily_life,noun,basic,This is house.,,,,12
+,Room,daily_life,noun,basic,This is room.,,,,13
+,Door,daily_life,noun,basic,This is door.,,,,14
+,Window,daily_life,noun,basic,This is window.,,,,15
+,Food,daily_life,noun,basic,This is food.,,,,16
+,Water,daily_life,noun,basic,This is water.,,,,17
+,Clothes,daily_life,noun,basic,This is clothes.,,,,18
+,Phone,daily_life,noun,basic,This is phone.,,,,19
+,Sleep,daily_life,noun,basic,This is sleep.,,,,20

@@ -6,7 +6,7 @@ import type { FlashcardCard, CardProgress } from '../types';
 // without depending on the 3D-flip animation internals.
 vi.mock('@/components/flashcards/Flashcard', () => ({
   Flashcard: ({ data }: { data: FlashcardCard }) => (
-    <div data-testid="flashcard">{data.englishWord}</div>
+    <div data-testid="flashcard">{data.englishText}</div>
   ),
 }));
 
@@ -17,12 +17,17 @@ import { FlashcardViewer } from '../components/FlashcardViewer';
 const makeCard = (overrides?: Partial<FlashcardCard>): FlashcardCard => ({
   id: 'c1',
   setId: 'set-1',
-  nativeWord: 'สวัสดี',
-  englishWord: 'Hello',
+  nativeText: 'สวัสดี',
+  englishText: 'Hello',
   partOfSpeech: 'interjection',
   level: 'basic',
+  category: null,
   exampleSentence: null,
   imageUrl: null,
+  englishAudioUrl: null,
+  nativeAudioUrl: null,
+  notes: null,
+  isPhrase: false,
   sortOrder: 1,
   ...overrides,
 });
@@ -58,7 +63,7 @@ describe('FlashcardViewer — empty state', () => {
 
 describe('FlashcardViewer — card counter', () => {
   it('shows "Card 1 of N" counter', () => {
-    const cards = [makeCard(), makeCard({ id: 'c2', englishWord: 'Water' })];
+    const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} />);
     expect(screen.getByText('Card 1 of 2')).toBeInTheDocument();
   });
@@ -68,7 +73,7 @@ describe('FlashcardViewer — card counter', () => {
 
 describe('FlashcardViewer — button navigation', () => {
   it('Next button advances to the next card', () => {
-    const cards = [makeCard(), makeCard({ id: 'c2', englishWord: 'Water' })];
+    const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} />);
 
     expect(screen.getByTestId('flashcard')).toHaveTextContent('Hello');
@@ -77,7 +82,7 @@ describe('FlashcardViewer — button navigation', () => {
   });
 
   it('Previous button goes back to the previous card', () => {
-    const cards = [makeCard(), makeCard({ id: 'c2', englishWord: 'Water' })];
+    const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} />);
 
     fireEvent.click(screen.getByRole('button', { name: /next/i }));
@@ -90,8 +95,8 @@ describe('FlashcardViewer — button navigation', () => {
   it('dot navigation jumps directly to an arbitrary card', () => {
     const cards = [
       makeCard(),
-      makeCard({ id: 'c2', englishWord: 'Water' }),
-      makeCard({ id: 'c3', englishWord: 'Food' }),
+      makeCard({ id: 'c2', englishText: 'Water' }),
+      makeCard({ id: 'c3', englishText: 'Food' }),
     ];
     render(<FlashcardViewer {...baseProps} cards={cards} />);
 
@@ -111,7 +116,7 @@ describe('FlashcardViewer — button navigation', () => {
 
 describe('FlashcardViewer — keyboard navigation', () => {
   it('ArrowRight advances to the next card', () => {
-    const cards = [makeCard(), makeCard({ id: 'c2', englishWord: 'Water' })];
+    const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} />);
 
     act(() => {
@@ -121,7 +126,7 @@ describe('FlashcardViewer — keyboard navigation', () => {
   });
 
   it('ArrowLeft goes back to the previous card', () => {
-    const cards = [makeCard(), makeCard({ id: 'c2', englishWord: 'Water' })];
+    const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} />);
 
     act(() => {
@@ -176,7 +181,7 @@ describe('FlashcardViewer — auth-gated buttons', () => {
   });
 
   it('"I know this" calls onMarkKnown with card id and advances to next card', () => {
-    const cards = [makeCard(), makeCard({ id: 'c2', englishWord: 'Water' })];
+    const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} isAuthenticated={true} />);
 
     fireEvent.click(screen.getByRole('button', { name: /i know this/i }));
@@ -186,7 +191,7 @@ describe('FlashcardViewer — auth-gated buttons', () => {
   });
 
   it('"Still learning" calls onMarkUnknown with card id and advances to next card', () => {
-    const cards = [makeCard(), makeCard({ id: 'c2', englishWord: 'Water' })];
+    const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} isAuthenticated={true} />);
 
     fireEvent.click(screen.getByRole('button', { name: /still learning/i }));

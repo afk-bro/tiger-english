@@ -1,0 +1,22 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Left,transport,adverb,basic,Left is the direction.,,,,1
+,Right,transport,adverb,basic,Right is the direction.,,,,2
+,Straight,transport,adverb,basic,Straight is the direction.,,,,3
+,Near,transport,adverb,basic,Near is the direction.,,,,4
+,Far,transport,adverb,basic,Far is the direction.,,,,5
+,Here,transport,adverb,basic,Here is the direction.,,,,6
+,There,transport,adverb,basic,There is the direction.,,,,7
+,Map,transport,noun,basic,This is a map.,,,,8
+,Road,transport,noun,basic,This is a road.,,,,9
+,Street,transport,noun,basic,This is a street.,,,,10
+,Taxi,transport,noun,basic,This is a taxi.,,,,11
+,Bus,transport,noun,basic,This is a bus.,,,,12
+,Train,transport,noun,basic,This is a train.,,,,13
+,Subway,transport,noun,basic,This is a subway.,,,,14
+,Station,transport,noun,basic,This is a station.,,,,15
+,Airport,transport,noun,basic,This is a airport.,,,,16
+,Ticket,transport,noun,basic,This is a ticket.,,,,17
+,Stop,transport,noun,basic,This is a stop.,,,,18
+,Driver,transport,noun,basic,This is a driver.,,,,19
+,Ride,transport,noun,basic,This is a ride.,,,,20
+,Turn,transport,noun,basic,"Turn left, please.",,,,21

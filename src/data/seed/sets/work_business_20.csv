@@ -1,0 +1,21 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Work,work,noun,basic,I have work.,,,,1
+,Job,work,noun,basic,I have job.,,,,2
+,Company,work,noun,basic,This is my company.,,,,3
+,Office,work,noun,basic,This is my office.,,,,4
+,Boss,work,noun,basic,This is my boss.,,,,5
+,Manager,work,noun,basic,This is my manager.,,,,6
+,Employee,work,noun,basic,This is my employee.,,,,7
+,Salary,work,noun,basic,This is my salary.,,,,8
+,Meeting,work,noun,basic,This is my meeting.,,,,9
+,Project,work,noun,basic,This is my project.,,,,10
+,Task,work,noun,basic,This is my task.,,,,11
+,Deadline,work,noun,basic,This is my deadline.,,,,12
+,Email,work,noun,basic,This is my email.,,,,13
+,Client,work,noun,basic,This is my client.,,,,14
+,Contract,work,noun,basic,This is my contract.,,,,15
+,Interview,work,noun,basic,This is my interview.,,,,16
+,Resume,work,noun,basic,This is my resume.,,,,17
+,Experience,work,noun,basic,This is my experience.,,,,18
+,Skill,work,noun,basic,This is my skill.,,,,19
+,Promotion,work,noun,basic,This is my promotion.,,,,20

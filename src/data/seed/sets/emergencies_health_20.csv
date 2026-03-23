@@ -1,0 +1,21 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Help,emergency,noun,basic,I need help.,,,,1
+,Emergency,emergency,noun,basic,I need emergency.,,,,2
+,Doctor,emergency,noun,basic,I need doctor.,,,,3
+,Hospital,emergency,noun,basic,I need hospital.,,,,4
+,Clinic,emergency,noun,basic,I need clinic.,,,,5
+,Pharmacy,emergency,noun,basic,I need pharmacy.,,,,6
+,Medicine,emergency,noun,basic,I need medicine.,,,,7
+,Pain,emergency,noun,basic,I need pain.,,,,8
+,Injury,emergency,noun,basic,I need injury.,,,,9
+,Sick,emergency,adjective,basic,I am sick.,,,,10
+,Allergy,emergency,noun,basic,I need allergy.,,,,11
+,Fever,emergency,noun,basic,I need fever.,,,,12
+,Headache,emergency,noun,basic,I need headache.,,,,13
+,Stomachache,emergency,noun,basic,I need stomachache.,,,,14
+,Ambulance,emergency,noun,basic,I need ambulance.,,,,15
+,Police,emergency,noun,basic,I need police.,,,,16
+,Danger,emergency,adjective,basic,I am danger.,,,,17
+,Safe,emergency,adjective,basic,I am safe.,,,,18
+,Call,emergency,verb,basic,I will call for help.,,,,19
+,Insurance,emergency,noun,basic,I need insurance.,,,,20

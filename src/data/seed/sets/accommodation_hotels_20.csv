@@ -1,0 +1,21 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Hotel,accommodation,noun,basic,This is a hotel.,,,,1
+,Hostel,accommodation,noun,basic,This is a hostel.,,,,2
+,Room,accommodation,noun,basic,This is a room.,,,,3
+,Reservation,accommodation,noun,basic,This is the reservation.,,,,4
+,Booking,accommodation,noun,basic,This is the booking.,,,,5
+,Key,accommodation,noun,basic,This is the key.,,,,6
+,Reception,accommodation,noun,basic,This is the reception.,,,,7
+,Lobby,accommodation,noun,basic,This is the lobby.,,,,8
+,Bed,accommodation,noun,basic,This is the bed.,,,,9
+,Bathroom,accommodation,noun,basic,This is the bathroom.,,,,10
+,Shower,accommodation,noun,basic,This is the shower.,,,,11
+,Toilet,accommodation,noun,basic,This is the toilet.,,,,12
+,Towel,accommodation,noun,basic,This is the towel.,,,,13
+,Air conditioning,accommodation,noun,basic,This is the air conditioning.,,,,14
+,Wi-Fi,accommodation,noun,basic,This is the wi-fi.,,,,15
+,Elevator,accommodation,noun,basic,This is the elevator.,,,,16
+,Stairs,accommodation,noun,basic,This is the stairs.,,,,17
+,Check-in,accommodation,noun,basic,This is the check-in.,,,,18
+,Check-out,accommodation,noun,basic,This is the check-out.,,,,19
+,Guest,accommodation,noun,basic,This is the guest.,,,,20

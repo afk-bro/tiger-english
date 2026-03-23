@@ -1,0 +1,21 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Money,shopping,noun,basic,This is money.,,,,1
+,Cash,shopping,noun,basic,This is cash.,,,,2
+,Card,shopping,noun,basic,This is card.,,,,3
+,Price,shopping,noun,basic,This is price.,,,,4
+,Cost,shopping,noun,basic,This is cost.,,,,5
+,Change,shopping,noun,basic,This is change.,,,,6
+,Receipt,shopping,noun,basic,This is receipt.,,,,7
+,Discount,shopping,noun,basic,This is discount.,,,,8
+,Sale,shopping,noun,basic,This is sale.,,,,9
+,Market,shopping,noun,basic,This is market.,,,,10
+,Shop,shopping,noun,basic,This is shop.,,,,11
+,Store,shopping,noun,basic,This is store.,,,,12
+,Wallet,shopping,noun,basic,This is wallet.,,,,13
+,Coin,shopping,noun,basic,This is coin.,,,,14
+,Bill,shopping,noun,basic,This is bill.,,,,15
+,Expensive,shopping,adjective,basic,This is expensive.,,,,16
+,Cheap,shopping,adjective,basic,This is cheap.,,,,17
+,Buy,shopping,verb,basic,I buy items.,,,,18
+,Sell,shopping,verb,basic,I sell items.,,,,19
+,Pay,shopping,verb,basic,I pay items.,,,,20
