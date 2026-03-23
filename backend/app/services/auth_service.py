@@ -41,6 +41,13 @@ class AuthService:
             if not auth_response.user:
                 raise AuthException("Failed to create user account")
 
+            # The DB trigger creates profiles synchronously during create_user.
+            # Write native_language now if provided — null is fine (skipped).
+            if user_data.native_language is not None:
+                self.supabase.table('profiles').update(
+                    {"native_language": user_data.native_language}
+                ).eq('id', auth_response.user.id).execute()
+
         except AuthException:
             raise
         except Exception as e:
