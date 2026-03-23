@@ -104,4 +104,13 @@ describe('validateRows', () => {
     ];
     expect(() => validateRows(rows, 'fruit.csv')).toThrow('duplicate');
   });
+
+  it('does not throw for Apple and apple with different sort_orders (legitimately distinct tuples)', () => {
+    // apple:fruit:1 and apple:fruit:2 are different tuple keys — no duplicate
+    const rows = [
+      { english_text: 'Apple', category: 'fruit', sort_order: 1 },
+      { english_text: 'apple', category: 'fruit', sort_order: 2 },
+    ];
+    expect(() => validateRows(rows, 'fruit.csv')).not.toThrow();
+  });
 });
