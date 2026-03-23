@@ -23,6 +23,7 @@ const LEGACY_REQUIRED = ['English Phrase', 'Category'];
 
 export function detectFormat(headers: string[]): CsvFormat {
   const trimmed = headers.map((h) => h.trim());
+  // Legacy checked first: a CSV with both header sets is conservatively treated as legacy.
   if (LEGACY_REQUIRED.every((h) => trimmed.includes(h))) return 'legacy';
   if (V2_REQUIRED.every((h) => trimmed.includes(h))) return 'v2';
   throw new Error(`Unrecognised CSV headers: ${JSON.stringify(headers)}`);
@@ -44,8 +45,13 @@ export function parseCsv(content: string, filename: string): RawRow[] {
     transformHeader: (h) => h.trim(),
   });
 
-  if (result.errors.length > 0) {
-    throw new Error(`CSV parse error in ${filename}: ${result.errors[0].message}`);
+  const fatalErrors = result.errors.filter((e) => e.type !== 'FieldMismatch');
+  if (fatalErrors.length > 0) {
+    throw new Error(`CSV parse error in ${filename}: ${fatalErrors[0].message}`);
+  }
+  const fieldErrors = result.errors.filter((e) => e.type === 'FieldMismatch');
+  if (fieldErrors.length > 0) {
+    console.warn(`Warning: ${filename} has ${fieldErrors.length} row(s) with mismatched field count — downstream validation will catch bad rows`);
   }
 
   if (result.data.length === 0) {
