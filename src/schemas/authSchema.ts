@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UPPERCASE_RE, SPECIAL_CHAR_RE } from "@/features/auth/passwordRules";
 
 const SUPPORTED_LANGUAGES = ['th', 'zh', 'vi'] as const;
 
@@ -16,8 +17,8 @@ export const registerSchema = z.object({
   password: z.string()
     .min(8, "Password must be at least 8 characters")
     .max(100, "Password must be 100 characters or fewer")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[!@#$%^&*]/, "Password must contain at least one special character (!@#$%^&*)"),
+    .regex(UPPERCASE_RE, "Password must contain at least one uppercase letter")
+    .regex(SPECIAL_CHAR_RE, "Password must contain at least one special character (!@#$%^&*)"),
   confirmPassword: z.string().min(1, "Please confirm your password"),
   username: z.string().min(3, "Username must be at least 3 characters").max(30, "Username must be 30 characters or fewer"),
   native_language: z.enum(SUPPORTED_LANGUAGES).optional(),
