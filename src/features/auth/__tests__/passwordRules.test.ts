@@ -24,6 +24,10 @@ describe('SPECIAL_CHAR_RE', () => {
   it('rejects alphanumeric-only strings', () => {
     expect(SPECIAL_CHAR_RE.test('hello123')).toBe(false);
   });
+  it('rejects characters outside !@#$%^&* (e.g. dash, underscore)', () => {
+    expect(SPECIAL_CHAR_RE.test('hello-world')).toBe(false);
+    expect(SPECIAL_CHAR_RE.test('hello_world')).toBe(false);
+  });
 });
 
 describe('PASSWORD_RULES[0] — minLength', () => {
@@ -65,5 +69,8 @@ describe('isPasswordValid', () => {
   });
   it('returns false when special character fails', () => {
     expect(isPasswordValid('Secure123')).toBe(false);
+  });
+  it('returns false for empty string', () => {
+    expect(isPasswordValid('')).toBe(false);
   });
 });
