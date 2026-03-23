@@ -42,13 +42,15 @@ describe('getVisibleSets', () => {
 });
 
 describe('getCardsBySet', () => {
-  it('returns mapped FlashcardCard array ordered by sort_order', async () => {
+  it('returns mapped FlashcardCard array with translations for the requested language', async () => {
     const fakeRow = {
-      id: 'card-1', set_id: 'set-1', native_text: 'สวัสดี', english_text: 'Hello',
+      id: 'card-1', set_id: 'set-1', english_text: 'Hello',
       part_of_speech: 'interjection', level: 'basic', category: null,
       example_sentence: null, image_url: null, english_audio_url: null,
-      native_audio_url: null, notes: null, is_phrase: false,
-      sort_order: 1, created_at: '2026-01-01T00:00:00Z',
+      notes: null, is_phrase: false, sort_order: 1, created_at: '2026-01-01T00:00:00Z',
+      flashcard_translations: [
+        { language_code: 'th', native_text: 'สวัสดี', native_audio_url: null, is_reviewed: true },
+      ],
     };
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -58,9 +60,30 @@ describe('getCardsBySet', () => {
       }),
     } as any);
 
-    const result = await getCardsBySet('set-1');
+    const result = await getCardsBySet('set-1', 'th');
     expect(result).toHaveLength(1);
     expect(result[0].englishText).toBe('Hello');
+    expect(result[0].nativeText).toBe('สวัสดี');
+  });
+
+  it('returns nativeText null for cards without a reviewed translation', async () => {
+    const fakeRow = {
+      id: 'card-2', set_id: 'set-1', english_text: 'Goodbye',
+      part_of_speech: null, level: null, category: null,
+      example_sentence: null, image_url: null, english_audio_url: null,
+      notes: null, is_phrase: false, sort_order: 2, created_at: '2026-01-01T00:00:00Z',
+      flashcard_translations: [],
+    };
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({ data: [fakeRow], error: null }),
+        }),
+      }),
+    } as any);
+
+    const result = await getCardsBySet('set-1', 'th');
+    expect(result[0].nativeText).toBeNull();
   });
 });
 

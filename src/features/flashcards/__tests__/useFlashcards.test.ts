@@ -9,94 +9,92 @@ const mockGet = vi.mocked(getCardsBySet);
 beforeEach(() => vi.clearAllMocks());
 
 const fakeCard = {
-  id: 'c1',
-  setId: 's1',
-  nativeText: 'สวัสดี',
-  englishText: 'Hello',
-  partOfSpeech: null,
-  level: 'basic' as const,
-  category: null,
-  exampleSentence: null,
-  imageUrl: null,
-  englishAudioUrl: null,
-  nativeAudioUrl: null,
-  notes: null,
-  isPhrase: false,
-  sortOrder: 1,
+  id: 'c1', setId: 's1', nativeText: 'สวัสดี', nativeAudioUrl: null,
+  englishText: 'Hello', partOfSpeech: null, level: 'basic' as const,
+  category: null, exampleSentence: null, imageUrl: null, englishAudioUrl: null,
+  notes: null, isPhrase: false, sortOrder: 1,
 };
 
 describe('useFlashcards', () => {
   it('returns empty cards when setId is null', () => {
-    const { result } = renderHook(() => useFlashcards(null));
+    const { result } = renderHook(() => useFlashcards(null, 'th'));
     expect(result.current.cards).toEqual([]);
     expect(result.current.loading).toBe(false);
     expect(mockGet).not.toHaveBeenCalled();
   });
 
-  it('fetches cards when setId is provided', async () => {
+  it('returns empty cards when languageCode is null', () => {
+    const { result } = renderHook(() => useFlashcards('s1', null));
+    expect(result.current.cards).toEqual([]);
+    expect(result.current.loading).toBe(false);
+    expect(mockGet).not.toHaveBeenCalled();
+  });
+
+  it('fetches cards when both setId and languageCode are provided', async () => {
     mockGet.mockResolvedValue([fakeCard]);
-    const { result } = renderHook(() => useFlashcards('s1'));
+    const { result } = renderHook(() => useFlashcards('s1', 'th'));
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.cards).toHaveLength(1);
-    expect(result.current.cards[0].englishText).toBe('Hello');
+    expect(mockGet).toHaveBeenCalledWith('s1', 'th');
   });
 
   it('refetches when setId changes', async () => {
     mockGet.mockResolvedValue([fakeCard]);
     let setId: string | null = 's1';
-    const { result, rerender } = renderHook(() => useFlashcards(setId));
+    const { result, rerender } = renderHook(() => useFlashcards(setId, 'th'));
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(mockGet).toHaveBeenCalledWith('s1');
 
     const fakeCard2 = { ...fakeCard, id: 'c2', setId: 's2', englishText: 'Water' };
     mockGet.mockResolvedValue([fakeCard2]);
     setId = 's2';
     rerender();
     await waitFor(() => expect(result.current.cards[0].englishText).toBe('Water'));
-    expect(mockGet).toHaveBeenCalledWith('s2');
   });
 
-  it('resets cards, loading and error when setId changes to null', async () => {
+  it('resets state when setId changes to null', async () => {
     mockGet.mockRejectedValue(new Error('oops'));
     let setId: string | null = 's1';
-    const { result, rerender } = renderHook(() => useFlashcards(setId));
+    const { result, rerender } = renderHook(() => useFlashcards(setId, 'th'));
     await waitFor(() => expect(result.current.error).toBe('oops'));
 
     setId = null;
     rerender();
-
     expect(result.current.cards).toEqual([]);
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBeNull();
   });
 
-  it('ignores response from a superseded request when setId changes rapidly', async () => {
-    let resolveStaleRequest!: (cards: typeof fakeCard[]) => void;
-    const firstPromise = new Promise<typeof fakeCard[]>((res) => {
-      resolveStaleRequest = res;
-    });
-    const staleCard = { ...fakeCard, englishText: 'STALE' };
+  it('resets state when languageCode changes to null', async () => {
+    mockGet.mockResolvedValue([fakeCard]);
+    let lang: string | null = 'th';
+    const { result, rerender } = renderHook(() => useFlashcards('s1', lang));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    lang = null;
+    rerender();
+    expect(result.current.cards).toEqual([]);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
+
+  it('ignores stale response when setId changes rapidly', async () => {
+    let resolveStale!: (cards: typeof fakeCard[]) => void;
+    const firstPromise = new Promise<typeof fakeCard[]>((res) => { resolveStale = res; });
     const freshCard = { ...fakeCard, id: 'c2', setId: 's2', englishText: 'Fresh' };
 
     mockGet
-      .mockImplementationOnce(() => firstPromise)   // s1 hangs
-      .mockResolvedValueOnce([freshCard]);           // s2 resolves immediately
+      .mockImplementationOnce(() => firstPromise)
+      .mockResolvedValueOnce([freshCard]);
 
     let setId: string | null = 's1';
-    const { result, rerender } = renderHook(() => useFlashcards(setId));
+    const { result, rerender } = renderHook(() => useFlashcards(setId, 'th'));
 
-    // Switch to s2 before s1 resolves
     setId = 's2';
     rerender();
-
-    // Wait for s2 to finish loading
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.cards[0].englishText).toBe('Fresh');
 
-    // Now resolve the stale s1 request
-    resolveStaleRequest([staleCard]);
-
-    // State must not be overwritten by the stale response
+    resolveStale([{ ...fakeCard, englishText: 'STALE' }]);
     expect(result.current.cards[0].englishText).toBe('Fresh');
   });
 });

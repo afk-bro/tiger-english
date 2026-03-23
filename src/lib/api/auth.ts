@@ -7,6 +7,7 @@ export interface RegisterUserData {
   first_name: string;
   last_name: string;
   username: string;
+  native_language?: string | null;
 }
 
 export interface LoginUserData {
@@ -30,11 +31,24 @@ export interface TokenResponse {
     username: string;
     first_name: string;
     last_name: string;
+    native_language: string | null;
   };
 }
 
 export interface UsernameCheckResponse {
   available: boolean;
+}
+
+export interface UpdateProfileData {
+  native_language: string | null;
+}
+
+export interface ProfileResponse {
+  id: string;
+  username: string;
+  first_name: string;
+  last_name: string;
+  native_language: string | null;
 }
 
 class AuthAPI {
@@ -151,6 +165,25 @@ class AuthAPI {
         success: false,
         message: error instanceof Error ? error.message : 'Logout failed',
       };
+    }
+  }
+
+  async updateProfile(
+    data: UpdateProfileData,
+    accessToken: string,
+  ): Promise<ProfileResponse | ApiResponse> {
+    try {
+      const response = await this.makeRequest<ProfileResponse>('/auth/profile', {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify(data),
+      });
+      return response;
+    } catch (error) {
+      if (error instanceof Error) {
+        return { success: false, message: error.message };
+      }
+      return { success: false, message: 'An unexpected error occurred' };
     }
   }
 }

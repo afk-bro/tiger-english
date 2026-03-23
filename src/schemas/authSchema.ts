@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const SUPPORTED_LANGUAGES = ['th', 'zh', 'vi'] as const;
+
 export const loginSchema = z.object({
   email: z.string().email("Invalid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -18,9 +20,11 @@ export const registerSchema = z.object({
     .regex(/[!@#$%^&*]/, "Password must contain at least one special character (!@#$%^&*)"),
   confirmPassword: z.string().min(1, "Please confirm your password"),
   username: z.string().min(3, "Username must be at least 3 characters").max(30, "Username must be 30 characters or fewer"),
+  native_language: z.enum(SUPPORTED_LANGUAGES).optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
 
 export type RegisterFormData = z.infer<typeof registerSchema>;
+export { SUPPORTED_LANGUAGES };

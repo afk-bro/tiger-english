@@ -17,6 +17,7 @@ const About          = lazy(() => import("@/pages/About"));
 const Contact        = lazy(() => import("@/pages/Contact"));
 const FlashcardsPage = lazy(() => import("./pages/FlashcardsPage"));
 const Dashboard      = lazy(() => import("./pages/Dashboard"));
+const Settings       = lazy(() => import("@/pages/Settings"));
 
 // Stub pages for new authenticated routes
 const StubPage = ({ title }: { title: string }) => (
@@ -57,6 +58,7 @@ function App() {
               <Route path="/study-groups" element={<StubPage title="Study Groups" />} />
               <Route path="/notifications" element={<StubPage title="Notifications" />} />
               <Route path="/flashcards" element={<FlashcardsPage />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/drag-drop" element={<StubPage title="Drag & Drop" />} />
               <Route path="/ad-libs" element={<StubPage title="Ad Libs" />} />
             </Route>

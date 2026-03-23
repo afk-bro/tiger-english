@@ -56,7 +56,9 @@
     "login_link": "Already have an account?",
     "login_cta": "Log in",
     "loading": "Creating account...",
-    "username": "Username"
+    "username": "Username",
+    "native_language": "Your Native Language",
+    "native_language_hint": "Cards will show this language on the front. You can change it in Settings."
   },
   "login": {
     "title": "Welcome back",
@@ -71,5 +73,18 @@
   "logout": {
     "success": "Logout Successful",
     "fail": "Logout failed"
+  },
+  "flashcards": {
+    "choose_native_language": "Choose your native language to see translations:",
+    "translation_coming_soon": "Translation coming soon",
+    "card_not_translated": "Card not yet translated. Press to flip."
+  },
+  "settings": {
+    "title": "Settings",
+    "native_language": "Native Language",
+    "native_language_desc": "Flashcards will show translations in your selected language.",
+    "save": "Save Changes",
+    "saving": "Saving…",
+    "saved": "Saved!"
   }
 }

@@ -11,7 +11,8 @@ export type FlashcardSet = {
 export type FlashcardCard = {
   id: string
   setId: string
-  nativeText: string
+  nativeText: string | null      // null when no reviewed translation exists for this language
+  nativeAudioUrl: string | null  // null when no reviewed translation exists
   englishText: string
   partOfSpeech: string | null
   level: 'basic' | 'intermediate' | 'advanced' | null
@@ -19,7 +20,6 @@ export type FlashcardCard = {
   exampleSentence: string | null
   imageUrl: string | null
   englishAudioUrl: string | null
-  nativeAudioUrl: string | null
   notes: string | null
   isPhrase: boolean
   sortOrder: number
@@ -45,10 +45,16 @@ type SetRow = {
   flashcards?: { count: number }[]   // optional: PostgREST may omit if no rows
 }
 
+type TranslationRow = {
+  native_text: string
+  native_audio_url: string | null
+  language_code: string
+  is_reviewed: boolean
+}
+
 type CardRow = {
   id: string
   set_id: string
-  native_text: string
   english_text: string
   part_of_speech: string | null
   level: string | null
@@ -56,11 +62,11 @@ type CardRow = {
   example_sentence: string | null
   image_url: string | null
   english_audio_url: string | null
-  native_audio_url: string | null
   notes: string | null
   is_phrase: boolean
   sort_order: number
   created_at: string
+  flashcard_translations: TranslationRow[]
 }
 
 type ProgressRow = {
@@ -83,11 +89,17 @@ export function mapSet(row: SetRow): FlashcardSet {
   };
 }
 
-export function mapCard(row: CardRow): FlashcardCard {
+export function mapCard(row: CardRow, languageCode: string): FlashcardCard {
+  const translation =
+    row.flashcard_translations.find(
+      (t) => t.language_code === languageCode && t.is_reviewed,
+    ) ?? null;
+
   return {
     id: row.id,
     setId: row.set_id,
-    nativeText: row.native_text,
+    nativeText: translation?.native_text ?? null,
+    nativeAudioUrl: translation?.native_audio_url ?? null,
     englishText: row.english_text,
     partOfSpeech: row.part_of_speech,
     level: row.level as FlashcardCard['level'],
@@ -95,7 +107,6 @@ export function mapCard(row: CardRow): FlashcardCard {
     exampleSentence: row.example_sentence,
     imageUrl: row.image_url,
     englishAudioUrl: row.english_audio_url,
-    nativeAudioUrl: row.native_audio_url,
     notes: row.notes,
     isPhrase: row.is_phrase,
     sortOrder: row.sort_order,

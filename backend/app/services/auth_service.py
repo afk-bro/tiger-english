@@ -49,6 +49,17 @@ class AuthService:
                 raise AuthException("Email is already registered", field="email")
             raise AuthException(f"Registration failed: {str(e)}")
 
+        # Write native_language if provided. This is a best-effort write;
+        # the user account already exists if we reach here.
+        if user_data.native_language is not None:
+            try:
+                self.supabase.table('profiles').update(
+                    {"native_language": user_data.native_language}
+                ).eq('id', auth_response.user.id).execute()
+            except Exception as e:
+                print(f"Warning: failed to write native_language for {auth_response.user.id}: {e}")
+                # Non-fatal: user can set language later via PATCH /profile
+
         # profiles + user_stats are created synchronously by the handle_new_user
         # trigger during the create_user call above — they exist by the time we return.
         return {
@@ -89,7 +100,8 @@ class AuthService:
                     "email": profile["email"],
                     "username": profile["username"],
                     "first_name": profile["first_name"],
-                    "last_name": profile["last_name"]
+                    "last_name": profile["last_name"],
+                    "native_language": profile.get("native_language")
                 }
             }
             

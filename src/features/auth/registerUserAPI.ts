@@ -8,6 +8,7 @@ type RegisterArgs = {
   firstName: string;
   lastName: string;
   userName: string;
+  nativeLanguage: string | null;
 };
 
 type RegisterResult =
@@ -20,6 +21,7 @@ export async function registerUserAPI({
   firstName,
   lastName,
   userName,
+  nativeLanguage,
 }: RegisterArgs): Promise<RegisterResult> {
   try {
     // Transform the data to match the backend API format
@@ -29,6 +31,7 @@ export async function registerUserAPI({
       first_name: firstName,
       last_name: lastName,
       username: userName,
+      native_language: nativeLanguage,
     };
 
     // Call the backend API

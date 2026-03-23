@@ -9,6 +9,7 @@ export interface UseRegisterFormReturn {
   register: ReturnType<typeof useForm<RegisterFormData>>['register'];
   handleSubmit: ReturnType<typeof useForm<RegisterFormData>>['handleSubmit'];
   watch: ReturnType<typeof useForm<RegisterFormData>>['watch'];
+  setValue: ReturnType<typeof useForm<RegisterFormData>>['setValue'];
   setError: ReturnType<typeof useForm<RegisterFormData>>['setError'];
   clearErrors: ReturnType<typeof useForm<RegisterFormData>>['clearErrors'];
   errors: ReturnType<typeof useForm<RegisterFormData>>['formState']['errors'];
@@ -28,6 +29,7 @@ export function useRegisterForm(): UseRegisterFormReturn {
     register,
     handleSubmit,
     watch,
+    setValue,
     setError,
     clearErrors,
     formState: { errors },
@@ -78,6 +80,7 @@ export function useRegisterForm(): UseRegisterFormReturn {
     register,
     handleSubmit,
     watch,
+    setValue,
     setError,
     clearErrors,
     errors,
