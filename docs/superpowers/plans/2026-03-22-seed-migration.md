@@ -1006,7 +1006,7 @@ npx tsx scripts/generate-seed-migration.ts
 
 Expected output:
 ```
-17 sets, 615 cards, 1 legacy file adapted
+17 sets, 597 cards, 1 legacy file adapted
 Written to supabase/migrations/20260322000001_seed_csv_sets.sql
 ```
 
