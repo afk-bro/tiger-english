@@ -1,0 +1,21 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Friend,social,noun,basic,This is my friend.,,,,1
+,Boyfriend,social,noun,basic,This is my boyfriend.,,,,2
+,Girlfriend,social,noun,basic,This is my girlfriend.,,,,3
+,Date,social,noun,basic,Date is important.,,,,4
+,Love,social,noun,basic,Love is important.,,,,5
+,Like,social,verb,basic,I like with friends.,,,,6
+,Meet,social,verb,basic,I meet with friends.,,,,7
+,Hang out,social,verb,basic,I hang out with friends.,,,,8
+,Party,social,noun,basic,Party is important.,,,,9
+,Drink,social,verb,basic,I drink with friends.,,,,10
+,Conversation,social,noun,basic,Conversation is important.,,,,11
+,Hobby,social,noun,basic,Hobby is important.,,,,12
+,Music,social,noun,basic,Music is important.,,,,13
+,Dance,social,verb,basic,I dance with friends.,,,,14
+,Laugh,social,verb,basic,I laugh with friends.,,,,15
+,Smile,social,verb,basic,I smile with friends.,,,,16
+,Message,social,verb,basic,I message with friends.,,,,17
+,Call,social,verb,basic,I call with friends.,,,,18
+,Invite,social,verb,basic,I invite with friends.,,,,19
+,Relationship,social,noun,basic,Relationship is important.,,,,20

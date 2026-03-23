@@ -1,0 +1,21 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Apple,fruit,noun,basic,I like apple.,,,,1
+,Banana,fruit,noun,basic,I like banana.,,,,2
+,Orange,fruit,noun,basic,I like orange.,,,,3
+,Mango,fruit,noun,basic,I like mango.,,,,4
+,Pineapple,fruit,noun,basic,I like pineapple.,,,,5
+,Grapes,fruit,noun,basic,I like grapes.,,,,6
+,Strawberry,fruit,noun,basic,I like strawberry.,,,,7
+,Blueberry,fruit,noun,basic,I like blueberry.,,,,8
+,Watermelon,fruit,noun,basic,I like watermelon.,,,,9
+,Papaya,fruit,noun,basic,I like papaya.,,,,10
+,Kiwi,fruit,noun,basic,I like kiwi.,,,,11
+,Peach,fruit,noun,basic,I like peach.,,,,12
+,Pear,fruit,noun,basic,I like pear.,,,,13
+,Cherry,fruit,noun,basic,I like cherry.,,,,14
+,Lemon,fruit,noun,basic,I like lemon.,,,,15
+,Lime,fruit,noun,basic,I like lime.,,,,16
+,Coconut,fruit,noun,basic,I like coconut.,,,,17
+,Dragon fruit,fruit,noun,basic,I like dragon fruit.,,,,18
+,Guava,fruit,noun,basic,I like guava.,,,,19
+,Passion fruit,fruit,noun,basic,I like passion fruit.,,,,20

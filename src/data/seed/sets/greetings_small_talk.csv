@@ -1,0 +1,25 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Hello,greetings,phrase,basic,"Hello, how are you?",,,,1
+,Hi,greetings,phrase,basic,"Hi, nice to meet you.",,,,2
+,Good morning,greetings,phrase,basic,"Good morning, everyone.",,,,3
+,Good afternoon,greetings,phrase,basic,"Good afternoon, sir.",,,,4
+,Good evening,greetings,phrase,basic,"Good evening, how was your day?",,,,5
+,How are you?,small_talk,phrase,basic,"Hi, how are you?",,,,6
+,I'm good,small_talk,phrase,basic,"I'm good, thanks.",,,,7
+,"I'm fine, thank you",small_talk,phrase,basic,"I'm fine, thank you. And you?",,,,8
+,Nice to meet you,introductions,phrase,basic,"Nice to meet you, John.",,,,9
+,What's your name?,introductions,phrase,basic,"Hi, what's your name?",,,,10
+,My name is...,introductions,phrase,basic,My name is Anna.,,,,11
+,Where are you from?,small_talk,phrase,basic,Where are you from?,,,,12
+,I'm from Canada,small_talk,phrase,basic,I'm from Canada.,,,,13
+,How old are you?,small_talk,phrase,basic,How old are you?,,,,14
+,I am ___ years old,small_talk,phrase,basic,I am 25 years old.,,,,15
+,What do you do?,small_talk,phrase,intermediate,What do you do for work?,,,,16
+,I work as a ___,small_talk,phrase,intermediate,I work as a teacher.,,,,17
+,Do you live here?,small_talk,phrase,intermediate,Do you live here or are you visiting?,,,,18
+,I'm just visiting,small_talk,phrase,basic,I'm just visiting for a week.,,,,19
+,See you later,farewells,phrase,basic,See you later!,,,,20
+,See you tomorrow,farewells,phrase,basic,See you tomorrow at school.,,,,21
+,Goodbye,farewells,phrase,basic,"Goodbye, have a nice day.",,,,22
+,Have a nice day,farewells,phrase,basic,Have a nice day!,,,,23
+,Take care,farewells,phrase,basic,Take care and travel safely.,,,,24

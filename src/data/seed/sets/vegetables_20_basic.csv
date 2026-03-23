@@ -1,0 +1,21 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Carrot,vegetable,noun,basic,I eat carrot.,,,,1
+,Broccoli,vegetable,noun,basic,I eat broccoli.,,,,2
+,Spinach,vegetable,noun,basic,I eat spinach.,,,,3
+,Cabbage,vegetable,noun,basic,I eat cabbage.,,,,4
+,Lettuce,vegetable,noun,basic,I eat lettuce.,,,,5
+,Tomato,vegetable,noun,basic,I eat tomato.,,,,6
+,Cucumber,vegetable,noun,basic,I eat cucumber.,,,,7
+,Onion,vegetable,noun,basic,I eat onion.,,,,8
+,Garlic,vegetable,noun,basic,I eat garlic.,,,,9
+,Potato,vegetable,noun,basic,I eat potato.,,,,10
+,Sweet potato,vegetable,noun,basic,I eat sweet potato.,,,,11
+,Eggplant,vegetable,noun,basic,I eat eggplant.,,,,12
+,Bell pepper,vegetable,noun,basic,I eat bell pepper.,,,,13
+,Chili pepper,vegetable,noun,basic,I eat chili pepper.,,,,14
+,Pumpkin,vegetable,noun,basic,I eat pumpkin.,,,,15
+,Zucchini,vegetable,noun,basic,I eat zucchini.,,,,16
+,Mushroom,vegetable,noun,basic,I eat mushroom.,,,,17
+,Corn,vegetable,noun,basic,I eat corn.,,,,18
+,Peas,vegetable,noun,basic,I eat peas.,,,,19
+,Green beans,vegetable,noun,basic,I eat green beans.,,,,20

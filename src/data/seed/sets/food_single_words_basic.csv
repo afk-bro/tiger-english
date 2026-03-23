@@ -1,0 +1,30 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,Rice,food,noun,basic,I eat rice every day.,,,,1
+,Noodles,food,noun,basic,I like noodles.,,,,2
+,Chicken,food,noun,basic,I eat chicken.,,,,3
+,Beef,food,noun,basic,This is beef.,,,,4
+,Pork,food,noun,basic,I don't eat pork.,,,,5
+,Fish,food,noun,basic,Fish is healthy.,,,,6
+,Shrimp,food,noun,basic,I like shrimp.,,,,7
+,Egg,food,noun,basic,I eat eggs.,,,,8
+,Bread,food,noun,basic,I eat bread.,,,,9
+,Soup,food,noun,basic,This soup is hot.,,,,10
+,Salad,food,noun,basic,I want a salad.,,,,11
+,Vegetables,food,noun,basic,Vegetables are healthy.,,,,12
+,Fruit,food,noun,basic,I eat fruit.,,,,13
+,Apple,food,noun,basic,I eat an apple.,,,,14
+,Banana,food,noun,basic,I eat a banana.,,,,15
+,Mango,food,noun,basic,Mango is sweet.,,,,16
+,Water,drinks,noun,basic,Drink water.,,,,17
+,Coffee,drinks,noun,basic,I drink coffee.,,,,18
+,Tea,drinks,noun,basic,I drink tea.,,,,19
+,Beer,drinks,noun,basic,He drinks beer.,,,,20
+,Juice,drinks,noun,basic,I drink juice.,,,,21
+,Milk,drinks,noun,basic,Milk is healthy.,,,,22
+,Toast,food,noun,basic,I like toast.,,,,23
+,Jam,food,noun,basic,Jam on toast is good.,,,,24
+,Butter,food,noun,basic,Butter for my toast.,,,,25
+,Peanuts,food,noun,basic,I eat peanuts. ,,,,26
+,Pea ,food,noun,basic,I like pea soup. ,,,,27
+,Broccoli,food,noun,basic,I like broccoli. ,,,,28
+,Potato,food,noun,basic,Potato is good.,,,,29

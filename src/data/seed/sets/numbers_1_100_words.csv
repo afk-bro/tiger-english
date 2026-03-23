@@ -1,0 +1,101 @@
+native_text,english_text,category,part_of_speech,level,example_sentence,english_audio_url,native_audio_url,image_url,sort_order
+,one,numbers,number,basic,The number is one.,,,,1
+,two,numbers,number,basic,The number is two.,,,,2
+,three,numbers,number,basic,The number is three.,,,,3
+,four,numbers,number,basic,The number is four.,,,,4
+,five,numbers,number,basic,The number is five.,,,,5
+,six,numbers,number,basic,The number is six.,,,,6
+,seven,numbers,number,basic,The number is seven.,,,,7
+,eight,numbers,number,basic,The number is eight.,,,,8
+,nine,numbers,number,basic,The number is nine.,,,,9
+,ten,numbers,number,basic,The number is ten.,,,,10
+,eleven,numbers,number,basic,The number is eleven.,,,,11
+,twelve,numbers,number,basic,The number is twelve.,,,,12
+,thirteen,numbers,number,basic,The number is thirteen.,,,,13
+,fourteen,numbers,number,basic,The number is fourteen.,,,,14
+,fifteen,numbers,number,basic,The number is fifteen.,,,,15
+,sixteen,numbers,number,basic,The number is sixteen.,,,,16
+,seventeen,numbers,number,basic,The number is seventeen.,,,,17
+,eighteen,numbers,number,basic,The number is eighteen.,,,,18
+,nineteen,numbers,number,basic,The number is nineteen.,,,,19
+,twenty,numbers,number,basic,The number is twenty.,,,,20
+,twenty one,numbers,number,basic,The number is twenty one.,,,,21
+,twenty two,numbers,number,basic,The number is twenty two.,,,,22
+,twenty three,numbers,number,basic,The number is twenty three.,,,,23
+,twenty four,numbers,number,basic,The number is twenty four.,,,,24
+,twenty five,numbers,number,basic,The number is twenty five.,,,,25
+,twenty six,numbers,number,basic,The number is twenty six.,,,,26
+,twenty seven,numbers,number,basic,The number is twenty seven.,,,,27
+,twenty eight,numbers,number,basic,The number is twenty eight.,,,,28
+,twenty nine,numbers,number,basic,The number is twenty nine.,,,,29
+,thirty,numbers,number,basic,The number is thirty.,,,,30
+,thirty one,numbers,number,basic,The number is thirty one.,,,,31
+,thirty two,numbers,number,basic,The number is thirty two.,,,,32
+,thirty three,numbers,number,basic,The number is thirty three.,,,,33
+,thirty four,numbers,number,basic,The number is thirty four.,,,,34
+,thirty five,numbers,number,basic,The number is thirty five.,,,,35
+,thirty six,numbers,number,basic,The number is thirty six.,,,,36
+,thirty seven,numbers,number,basic,The number is thirty seven.,,,,37
+,thirty eight,numbers,number,basic,The number is thirty eight.,,,,38
+,thirty nine,numbers,number,basic,The number is thirty nine.,,,,39
+,forty,numbers,number,basic,The number is forty.,,,,40
+,forty one,numbers,number,basic,The number is forty one.,,,,41
+,forty two,numbers,number,basic,The number is forty two.,,,,42
+,forty three,numbers,number,basic,The number is forty three.,,,,43
+,forty four,numbers,number,basic,The number is forty four.,,,,44
+,forty five,numbers,number,basic,The number is forty five.,,,,45
+,forty six,numbers,number,basic,The number is forty six.,,,,46
+,forty seven,numbers,number,basic,The number is forty seven.,,,,47
+,forty eight,numbers,number,basic,The number is forty eight.,,,,48
+,forty nine,numbers,number,basic,The number is forty nine.,,,,49
+,fifty,numbers,number,basic,The number is fifty.,,,,50
+,fifty one,numbers,number,basic,The number is fifty one.,,,,51
+,fifty two,numbers,number,basic,The number is fifty two.,,,,52
+,fifty three,numbers,number,basic,The number is fifty three.,,,,53
+,fifty four,numbers,number,basic,The number is fifty four.,,,,54
+,fifty five,numbers,number,basic,The number is fifty five.,,,,55
+,fifty six,numbers,number,basic,The number is fifty six.,,,,56
+,fifty seven,numbers,number,basic,The number is fifty seven.,,,,57
+,fifty eight,numbers,number,basic,The number is fifty eight.,,,,58
+,fifty nine,numbers,number,basic,The number is fifty nine.,,,,59
+,sixty,numbers,number,basic,The number is sixty.,,,,60
+,sixty one,numbers,number,basic,The number is sixty one.,,,,61
+,sixty two,numbers,number,basic,The number is sixty two.,,,,62
+,sixty three,numbers,number,basic,The number is sixty three.,,,,63
+,sixty four,numbers,number,basic,The number is sixty four.,,,,64
+,sixty five,numbers,number,basic,The number is sixty five.,,,,65
+,sixty six,numbers,number,basic,The number is sixty six.,,,,66
+,sixty seven,numbers,number,basic,The number is sixty seven.,,,,67
+,sixty eight,numbers,number,basic,The number is sixty eight.,,,,68
+,sixty nine,numbers,number,basic,The number is sixty nine.,,,,69
+,seventy,numbers,number,basic,The number is seventy.,,,,70
+,seventy one,numbers,number,basic,The number is seventy one.,,,,71
+,seventy two,numbers,number,basic,The number is seventy two.,,,,72
+,seventy three,numbers,number,basic,The number is seventy three.,,,,73
+,seventy four,numbers,number,basic,The number is seventy four.,,,,74
+,seventy five,numbers,number,basic,The number is seventy five.,,,,75
+,seventy six,numbers,number,basic,The number is seventy six.,,,,76
+,seventy seven,numbers,number,basic,The number is seventy seven.,,,,77
+,seventy eight,numbers,number,basic,The number is seventy eight.,,,,78
+,seventy nine,numbers,number,basic,The number is seventy nine.,,,,79
+,eighty,numbers,number,basic,The number is eighty.,,,,80
+,eighty one,numbers,number,basic,The number is eighty one.,,,,81
+,eighty two,numbers,number,basic,The number is eighty two.,,,,82
+,eighty three,numbers,number,basic,The number is eighty three.,,,,83
+,eighty four,numbers,number,basic,The number is eighty four.,,,,84
+,eighty five,numbers,number,basic,The number is eighty five.,,,,85
+,eighty six,numbers,number,basic,The number is eighty six.,,,,86
+,eighty seven,numbers,number,basic,The number is eighty seven.,,,,87
+,eighty eight,numbers,number,basic,The number is eighty eight.,,,,88
+,eighty nine,numbers,number,basic,The number is eighty nine.,,,,89
+,ninety,numbers,number,basic,The number is ninety.,,,,90
+,ninety one,numbers,number,basic,The number is ninety one.,,,,91
+,ninety two,numbers,number,basic,The number is ninety two.,,,,92
+,ninety three,numbers,number,basic,The number is ninety three.,,,,93
+,ninety four,numbers,number,basic,The number is ninety four.,,,,94
+,ninety five,numbers,number,basic,The number is ninety five.,,,,95
+,ninety six,numbers,number,basic,The number is ninety six.,,,,96
+,ninety seven,numbers,number,basic,The number is ninety seven.,,,,97
+,ninety eight,numbers,number,basic,The number is ninety eight.,,,,98
+,ninety nine,numbers,number,basic,The number is ninety nine.,,,,99
+,one hundred,numbers,number,basic,The number is one hundred.,,,,100
