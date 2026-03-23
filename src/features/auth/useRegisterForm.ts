@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, X } from "lucide-react";
 import { registerSchema, RegisterFormData } from "@/schemas/authSchema";
+import { isPasswordValid } from "@/features/auth/passwordRules";
 
 export interface UseRegisterFormReturn {
   // Form methods
@@ -13,14 +14,9 @@ export interface UseRegisterFormReturn {
   setError: ReturnType<typeof useForm<RegisterFormData>>['setError'];
   clearErrors: ReturnType<typeof useForm<RegisterFormData>>['clearErrors'];
   errors: ReturnType<typeof useForm<RegisterFormData>>['formState']['errors'];
-  
-  // Watched values
-  password: string;
-  confirmPassword: string;
-  
-  // Helper functions
+
+  // Helpers
   handleFieldChange: (fieldName: keyof RegisterFormData) => (e: React.ChangeEvent<HTMLInputElement>) => void;
-  getPasswordValidationIcon: () => React.ReactNode | null;
   getConfirmPasswordValidationIcon: () => React.ReactNode | null;
 }
 
@@ -35,43 +31,27 @@ export function useRegisterForm(): UseRegisterFormReturn {
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
   });
 
-  // Watch password fields for real-time validation
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
 
-  // Validation helper functions
-  const isPasswordValid = (pwd: string) => {
-    return pwd && pwd.length >= 6;
-  };
-
-  const isConfirmPasswordValid = (pwd: string, confirmPwd: string) => {
-    return confirmPwd && pwd && confirmPwd === pwd;
-  };
-
-  // Function to clear server errors when user starts typing
+  // Only clears server errors — Zod errors are cleared by reValidateMode:'onChange'.
   const handleFieldChange = (fieldName: keyof RegisterFormData) => {
     return (_e: React.ChangeEvent<HTMLInputElement>) => {
-      // Clear server error for this field when user starts typing
       if (errors[fieldName]?.type === 'server') {
         clearErrors(fieldName);
       }
-      // RHF's internal onChange is already called by the register() onChange option mechanism
     };
   };
 
-  // Validation icon components
-  const getPasswordValidationIcon = (): React.ReactNode | null => {
-    if (!password) return null;
-    return isPasswordValid(password) 
-      ? React.createElement(Check, { className: "w-5 h-5 text-green-500" })
-      : React.createElement(X, { className: "w-5 h-5 text-red-500" });
-  };
-
+  // ✓ only when the base password fully satisfies all rules AND both fields match.
   const getConfirmPasswordValidationIcon = (): React.ReactNode | null => {
     if (!confirmPassword) return null;
-    return isConfirmPasswordValid(password, confirmPassword)
+    const valid = isPasswordValid(password) && confirmPassword === password;
+    return valid
       ? React.createElement(Check, { className: "w-5 h-5 text-green-500" })
       : React.createElement(X, { className: "w-5 h-5 text-red-500" });
   };
@@ -84,10 +64,7 @@ export function useRegisterForm(): UseRegisterFormReturn {
     setError,
     clearErrors,
     errors,
-    password,
-    confirmPassword,
     handleFieldChange,
-    getPasswordValidationIcon,
     getConfirmPasswordValidationIcon,
   };
 }

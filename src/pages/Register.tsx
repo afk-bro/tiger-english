@@ -23,7 +23,6 @@ export default function Register() {
     clearErrors,
     errors,
     handleFieldChange,
-    getPasswordValidationIcon,
     getConfirmPasswordValidationIcon,
     setValue,
     watch,
@@ -167,7 +166,6 @@ export default function Register() {
           <FormInput
             label={t("register.password")}
             icon={<Lock className="w-5 h-5 text-gray-400 dark:text-gray-500" />}
-            validationIcon={getPasswordValidationIcon()}
             type="password"
             placeholder="••••••••"
             hasError={!!errors.password}
