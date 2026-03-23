@@ -73,6 +73,11 @@
     "success": "ออกจากระบบสำเร็จ",
     "fail": "ออกจากระบบล้มเหลว"
   },
+  "flashcards": {
+    "choose_native_language": "เลือกภาษาแม่เพื่อดูคำแปล:",
+    "translation_coming_soon": "คำแปลกำลังจะมา",
+    "card_not_translated": "การ์ดนี้ยังไม่มีคำแปล กดเพื่อพลิก"
+  },
   "settings": {
     "title": "การตั้งค่า",
     "native_language": "ภาษาแม่",

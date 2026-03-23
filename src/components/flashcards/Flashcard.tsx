@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { FlashcardCard } from "@/features/flashcards/types";
 import Button from "@/components/ui/Button";
 
@@ -7,6 +8,7 @@ export interface FlashcardProps {
 }
 
 export function Flashcard({ data }: FlashcardProps) {
+  const { t } = useTranslation();
   const { nativeText, englishText, partOfSpeech, level, exampleSentence } = data;
   const [isFlipped, setIsFlipped] = useState(false);
   const [showExample, setShowExample] = useState(false);
@@ -41,7 +43,7 @@ export function Flashcard({ data }: FlashcardProps) {
           ? `Showing English: ${englishText}. Press to flip back.`
           : nativeText
           ? `Showing native text: ${nativeText}. Press to flip.`
-          : `Card not yet translated. Press to flip.`
+          : t('flashcards.card_not_translated')
       }
       className="w-full h-52 sm:w-[500px] sm:h-72 lg:w-[800px] lg:h-[480px] mx-auto perspective cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40 rounded-xl"
       onClick={handleFlip}
@@ -84,7 +86,7 @@ export function Flashcard({ data }: FlashcardProps) {
                   </>
                 ) : (
                   <>
-                    <p className="text-lg text-gray-400 italic mb-2">Translation coming soon</p>
+                    <p className="text-lg text-gray-400 italic mb-2">{t('flashcards.translation_coming_soon')}</p>
                     <div className="w-16 h-1 bg-gray-200 mx-auto rounded-full" />
                   </>
                 )}

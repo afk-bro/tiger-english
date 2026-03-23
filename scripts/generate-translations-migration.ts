@@ -53,7 +53,7 @@ if (result.errors.length > 0) {
 
 const rows = result.data;
 
-// ─── Guard: no unflagged rows ─────────────────────────────────────────────────
+// ─── Guard: no flagged rows remain ────────────────────────────────────────────
 
 const flagged = rows.filter((r) => r.flagged === 'true');
 if (flagged.length > 0) {

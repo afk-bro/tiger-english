@@ -1,5 +1,6 @@
 // src/pages/FlashcardsPage.tsx
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/stores/useUserStore';
 import { useFlashcardSets } from '@/features/flashcards/hooks/useFlashcardSets';
 import { useFlashcards } from '@/features/flashcards/hooks/useFlashcards';
@@ -16,6 +17,7 @@ const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = {
 };
 
 export default function FlashcardsPage() {
+  const { t } = useTranslation();
   const { profile } = useUserStore();
   const isAuthenticated = profile !== null;
 
@@ -40,7 +42,7 @@ export default function FlashcardsPage() {
         {!languageCode && (
           <div className="mb-6 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Choose your native language to see translations:
+              {t('flashcards.choose_native_language')}
             </p>
             <div className="flex gap-2 flex-wrap">
               {SUPPORTED_LANGUAGES.map((code) => (

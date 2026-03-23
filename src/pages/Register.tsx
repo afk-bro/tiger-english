@@ -101,6 +101,7 @@ export default function Register() {
                 <button
                   key={code}
                   type="button"
+                  aria-pressed={selectedLanguage === code}
                   onClick={() => setValue('native_language', code)}
                   className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
                     selectedLanguage === code
