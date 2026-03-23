@@ -10,6 +10,8 @@ import { useRegisterSubmit } from "../features/auth/useRegisterSubmit";
 import { SUPPORTED_LANGUAGES } from "@/schemas/authSchema";
 import { useEffect } from "react";
 
+const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = { th: 'Thai', zh: 'Chinese', vi: 'Vietnamese' };
+
 export default function Register() {
   const { t } = useTranslation();
 
@@ -38,7 +40,6 @@ export default function Register() {
   }, [setValue]);
 
   const selectedLanguage = watch('native_language');
-  const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = { th: 'Thai', zh: 'Chinese', vi: 'Vietnamese' };
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-semantic-bg dark:bg-semantic-bg px-4 md:px-6 py-12 md:py-16">
@@ -91,6 +92,7 @@ export default function Register() {
 
           {/* Language selector */}
           <div>
+            <input type="hidden" {...register('native_language')} />
             <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-1">
               <Globe className="inline w-4 h-4 mr-1" />
               {t("register.native_language")}

@@ -40,11 +40,22 @@ export function useRegisterSubmit(
     } else {
       // If there's a specific field error, highlight that field
       if (result.field) {
-        setError(result.field as keyof RegisterFormData, {
-          type: 'server',
-          message: result.error,
-        });
-        
+        const FIELD_MAP: Record<string, keyof RegisterFormData> = {
+          first_name: 'firstName',
+          last_name: 'lastName',
+          email: 'email',
+          username: 'username',
+          password: 'password',
+          native_language: 'native_language',
+        };
+
+        const formField = result.field ? FIELD_MAP[result.field] : undefined;
+        if (formField) {
+          setError(formField, { type: 'server', message: result.error });
+        } else {
+          setError('root', { type: 'server', message: result.error });
+        }
+
         // Scroll to the field with error
         const fieldElement = document.getElementById(result.field);
         if (fieldElement) {
