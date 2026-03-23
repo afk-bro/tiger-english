@@ -88,7 +88,7 @@ export function parseCsv(content: string, filename: string): RawRow[] {
       english_audio_url: str(row['english_audio_url']),
       native_audio_url: str(row['native_audio_url']),
       image_url: str(row['image_url']),
-      sort_order: Number(row['sort_order']) || i + 1,
+      sort_order: (Number.isFinite(Number(row['sort_order'])) && row['sort_order'].trim() !== '') ? Number(row['sort_order']) : i + 1,
     };
   });
 }
