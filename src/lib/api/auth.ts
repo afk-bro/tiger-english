@@ -31,6 +31,7 @@ export interface TokenResponse {
     username: string;
     first_name: string;
     last_name: string;
+    native_language: string | null;
   };
 }
 
