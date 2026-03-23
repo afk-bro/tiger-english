@@ -28,15 +28,22 @@ export async function createSet(
   return mapSet(data);
 }
 
-export async function getCardsBySet(setId: string): Promise<FlashcardCard[]> {
+export async function getCardsBySet(setId: string, languageCode: string): Promise<FlashcardCard[]> {
   const { data, error } = await supabase
     .from('flashcards')
-    .select('*')
+    .select(`
+      id, set_id, english_text, part_of_speech, level, category,
+      example_sentence, english_audio_url, image_url,
+      notes, is_phrase, sort_order,
+      flashcard_translations(native_text, native_audio_url, language_code, is_reviewed)
+    `)
     .eq('set_id', setId)
     .order('sort_order', { ascending: true });
+  // No filter on flashcard_translations.language_code — adding .eq on an embedded
+  // resource converts the implicit LEFT JOIN to INNER JOIN, dropping untranslated cards.
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map(mapCard);
+  return (data ?? []).map((row) => mapCard(row as any, languageCode));
 }
 
 export async function getProgressByCards(
