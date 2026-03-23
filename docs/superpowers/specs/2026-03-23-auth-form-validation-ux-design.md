@@ -19,8 +19,12 @@ Single source of truth for all password constraints. Must be created before `aut
 ```ts
 export const UPPERCASE_RE    = /[A-Z]/;
 export const SPECIAL_CHAR_RE = /[!@#$%^&*]/;
+// SPECIAL_CHAR_RE is intentionally scoped to !@#$%^&* — matches the UI copy exactly.
+// If the accepted set changes, update the regex, the label, and the authSchema error message together.
 
-export const PASSWORD_RULES = [
+export type PasswordRule = { key: string; label: string; test: (v: string) => boolean };
+
+export const PASSWORD_RULES: PasswordRule[] = [
   { key: 'minLength', label: 'At least 8 characters',            test: (v: string) => v.length >= 8 },
   { key: 'uppercase', label: 'One uppercase letter',              test: (v: string) => UPPERCASE_RE.test(v) },
   { key: 'special',   label: 'One special character (!@#$%^&*)', test: (v: string) => SPECIAL_CHAR_RE.test(v) },
@@ -29,7 +33,7 @@ export const PASSWORD_RULES = [
 export const isPasswordValid = (v: string) => PASSWORD_RULES.every((r) => r.test(v));
 ```
 
-`authSchema.ts` imports `UPPERCASE_RE` and `SPECIAL_CHAR_RE` into the `registerSchema` `.regex()` calls only. `loginSchema` password validation is left unchanged (`min(8)` only). `SUPPORTED_LANGUAGES` stays in `authSchema.ts`. `PasswordChecklist` maps over `PASSWORD_RULES`. Both hooks import `isPasswordValid`.
+`authSchema.ts` imports `UPPERCASE_RE` and `SPECIAL_CHAR_RE` into the `registerSchema` `.regex()` calls only. `loginSchema` password validation is left unchanged (`min(8)` only). `SUPPORTED_LANGUAGES` stays in `authSchema.ts`. `PasswordChecklist` imports `PasswordRule` and `PASSWORD_RULES`. Both hooks import `isPasswordValid`.
 
 ### New: `src/components/auth/PasswordChecklist.tsx`
 
@@ -88,6 +92,7 @@ getEmailValidationIcon: () => React.ReactNode | null
 - `isSubmitting` comes from RHF's `formState.isSubmitting` — replaces `useState(false)` in `Login.tsx`
 - `getEmailValidationIcon()`: returns `null` when `!touchedFields.email`; returns ✓ (`<Check>`) when `touchedFields.email && !errors.email`; returns ✗ (`<X>`) when `touchedFields.email && !!errors.email`. Icon visibility is driven by `touchedFields` (set by RHF on blur with `mode: 'onBlur'`), not by `trigger()`.
 - No password icon exposed
+- **Server-error clearing on retype:** expose `handlePasswordChange` — a function that clears `errors.password` when its type is `'server'`. Wire it as `onChange` on the password field registration: `register('password', { onChange: handlePasswordChange })`. This mirrors `useRegisterForm`'s `handleFieldChange` pattern so that after an invalid-credentials error appears, typing immediately clears it. The email field gets the same treatment via `handleEmailChange` for symmetry (email can receive server errors from the backend too).
 - `onSubmit` handler:
   - Calls `loginUser(data)`
   - On `{ success: false, message }`: calls `setError('password', { type: 'server', message })` — **removes the existing `toast.error` call for credential failures; replaced entirely by the inline `errors.password` display**
@@ -112,7 +117,7 @@ getEmailValidationIcon: () => React.ReactNode | null
 | Username, email, names, password | Blur → live once errored (Zod via RHF); server errors cleared on retype via `handleFieldChange` | Inline error; ErrorGuidanceCard for server errors on username/email |
 | Password | First keystroke → live | PasswordChecklist appears; **before first blur `errors.password` is undefined and the border is neutral — the checklist alone provides guidance**; after blur with unmet rules: border red via `hasError={!!errors.password}`; clears live as rules are satisfied |
 | Confirm password | Blur → live once errored | ✓/✗ icon; ✓ only when base password is fully valid AND fields match |
-| All fields | Submit | Full RHF validation triggers regardless of blur state |
+| All fields | Submit | Full RHF validation triggers regardless of blur state. **If the password field was never blurred but submit fails validation, the border goes red** — `errors.password` is set by RHF on submit just as it would be after blur. "Blur-gated" applies only to the initial trigger, not to submit. |
 
 ## Behavior: Login Form
 
@@ -121,7 +126,9 @@ getEmailValidationIcon: () => React.ReactNode | null
 | Email | After first blur (RHF sets `touchedFields.email`) | ✓ if valid; ✗ if invalid; `null` if untouched |
 | Email (once touched) | Live | Updates as user corrects |
 | Password | Blur → live once errored | Red border only; no green state |
-| All fields | Submit | Full validation triggers |
+| Password (server error) | Retype after server error | Server error (`type: 'server'`) clears immediately on keystroke via `handlePasswordChange` — mirrors register behavior |
+| Email (server error) | Retype after server error | Server error on email clears on keystroke via `handleEmailChange` |
+| All fields | Submit | Full validation triggers; password border goes red if invalid even if field was never blurred |
 
 Invalid credentials → `errors.password` with `type: 'server'`, displayed by the existing inline `<p>` below the password field. No toast for credential errors.
 
@@ -185,6 +192,7 @@ Test cases:
 - Email field: no icon before blur; after blur with valid email → ✓ icon; after blur with invalid email → ✗ icon. Use `userEvent.type` + `userEvent.tab()` to trigger real blur events (which set `touchedFields.email` via RHF's `mode: 'onBlur'`).
 - Password field: no Check or X icon at any point
 - `loginUser` resolves `{ success: false, message: 'Invalid email or password' }` → inline error appears below password field; `toast.error` not called
+- After the server error appears on the password field: type one character into the password field → error message clears (server error cleared on retype)
 
 ### `src/features/auth/__tests__/useLoginForm.test.ts` (create)
 
