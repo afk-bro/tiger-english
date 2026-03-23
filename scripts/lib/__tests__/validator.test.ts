@@ -97,12 +97,7 @@ describe('validateRows', () => {
     expect(() => validateRows(rows, 'fruit.csv')).toThrow();
   });
 
-  it('detects near-duplicates differing only by case — different sort_orders', () => {
-    // sort_order differs so sort_order guard does NOT fire;
-    // tuple key is (english_text.toLowerCase() + ':' + category + ':' + sort_order)
-    // apple:fruit:1 !== apple:fruit:2, so these two rows are legitimately distinct
-    // This test verifies that case-folding happens and that Apple/apple with
-    // SAME sort_order is caught regardless of which fires first
+  it('detects near-duplicates differing only by case — tuple key is case-insensitive', () => {
     const rows = [
       { english_text: 'Apple', category: 'fruit', sort_order: 1 },
       { english_text: 'apple', category: 'fruit', sort_order: 1 },
