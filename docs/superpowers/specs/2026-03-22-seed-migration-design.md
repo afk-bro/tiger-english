@@ -41,7 +41,7 @@ export const SET_META: Record<string, {
 };
 ```
 
-The filename is the stable source key. `sort_order` controls the order sets appear in the generated SQL file — it is generator-internal only and is **not** written to the database (`flashcard_sets` has no `sort_order` column).
+The filename is the stable source key. `sort_order` controls the order sets appear in the generated SQL file — it is generator-internal only and is **not** written to the database (`flashcard_sets` has no `sort_order` column). The generator throws if `title` is missing or blank after trimming.
 
 ## Generator (`generate-seed-migration.ts`)
 
@@ -49,7 +49,7 @@ Runs with `npx tsx scripts/generate-seed-migration.ts`.
 
 ### Steps
 
-1. Import `SET_META`, sort entries by `sort_order`
+1. Import `SET_META`, sort entries **explicitly by `sort_order`** — do not rely on filesystem or object key order
 2. Run metadata integrity checks (see Validation)
 3. For each entry:
    - Read CSV from `src/data/seed/sets/<filename>`
@@ -59,7 +59,8 @@ Runs with `npx tsx scripts/generate-seed-migration.ts`.
    - Validate row-level constraints (see Validation)
    - Compute UUIDs using normalized values (see UUID Scheme)
    - Emit SQL blocks
-4. Write output to `supabase/migrations/20260322000001_seed_csv_sets.sql`
+4. Print summary to stdout: e.g. `17 sets, 615 cards, 1 legacy file adapted`
+5. Write output to `supabase/migrations/20260322000001_seed_csv_sets.sql`
 
 ### CSV Formats
 
@@ -71,6 +72,8 @@ Runs with `npx tsx scripts/generate-seed-migration.ts`.
 - `category` ← `Category`
 - `sort_order` ← 1-based row position (used in UUID hash and INSERT)
 - All other fields → `null`
+
+**Product note:** Legacy rows will display with `native_text = english_text`, meaning they look untranslated (no native-language equivalent). This is acceptable as a structural placeholder; replace with a properly translated CSV and a new migration when ready.
 
 ### Normalization
 
@@ -101,7 +104,7 @@ The CSV parser must handle:
 **Per-file row validation (after normalization):**
 
 - `english_text` is null or empty → throw
-- Duplicate `(english_text, category, sort_order)` tuples within a file → throw
+- Duplicate `(english_text, category, sort_order)` tuples within a file → throw (comparison uses normalized, case-lowercased values to prevent near-duplicates like `Apple`/`apple` slipping through)
 - Duplicate `sort_order` values within a file → throw
 
 ### DB Column Constraints
@@ -134,7 +137,12 @@ card_id = sha256(filename + ':' + english_text + ':' + category + ':' + sort_ord
 
 ### SQL Escaping
 
-All string values are escaped by replacing `'` with `''` (standard SQL single-quote doubling). Dollar quoting (`$$`) is not used. The generator must apply this to every string field before interpolating into SQL literals.
+All string values must be safe to emit as SQL literals:
+
+- Single quotes: replace `'` with `''`
+- Embedded newlines in field values: replace `\n` with `\n` (escaped literal, not a real newline in the SQL)
+- `null` values: emit as the SQL keyword `NULL` (unquoted), not as the string `'null'`
+- The escaping function must be applied to every string field before interpolation; there is no safe shortcut for any field
 
 ## SQL Output Structure
 
