@@ -7,6 +7,18 @@ from ..core.languages import validate_native_language
 class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=100)
+<<<<<<< feat/flashcard-schema-v2
+=======
+
+    @field_validator('password')
+    @classmethod
+    def password_complexity(cls, v: str) -> str:
+        if not re.search(r'[A-Z]', v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not re.search(r'[!@#$%^&*]', v):
+            raise ValueError('Password must contain at least one special character (!@#$%^&*)')
+        return v
+>>>>>>> main
     first_name: str = Field(min_length=1, max_length=50)
     last_name: str = Field(min_length=1, max_length=50)
     username: str = Field(min_length=3, max_length=30)
