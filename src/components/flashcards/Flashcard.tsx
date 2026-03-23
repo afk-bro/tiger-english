@@ -36,7 +36,7 @@ export function Flashcard({ data }: FlashcardProps) {
   return (
     <button
       type="button"
-      aria-label={isFlipped ? `Showing English: ${englishText}. Press to flip back.` : `Showing Thai: ${nativeText}. Press to flip.`}
+      aria-label={isFlipped ? `Showing English: ${englishText}. Press to flip back.` : `Showing native text: ${nativeText}. Press to flip.`}
       className="w-full h-52 sm:w-[500px] sm:h-72 lg:w-[800px] lg:h-[480px] mx-auto perspective cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40 rounded-xl"
       onClick={handleFlip}
     >
