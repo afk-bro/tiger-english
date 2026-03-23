@@ -28,6 +28,7 @@ export function useRegisterForm(): UseRegisterFormReturn {
     setValue,
     setError,
     clearErrors,
+    trigger,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -38,11 +39,14 @@ export function useRegisterForm(): UseRegisterFormReturn {
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
 
-  // Only clears server errors — Zod errors are cleared by reValidateMode:'onChange'.
+  // Clears server errors immediately; re-validates Zod errors on change once the
+  // field has already been validated (i.e. it currently has an error).
   const handleFieldChange = (fieldName: keyof RegisterFormData) => {
     return (_e: React.ChangeEvent<HTMLInputElement>) => {
       if (errors[fieldName]?.type === 'server') {
         clearErrors(fieldName);
+      } else if (errors[fieldName]) {
+        trigger(fieldName);
       }
     };
   };

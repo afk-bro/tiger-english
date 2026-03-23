@@ -1,6 +1,7 @@
 import Button from "../components/ui/Button";
 import FormInput from "../components/ui/FormInput";
 import ErrorGuidanceCard from "../components/auth/ErrorGuidanceCard";
+import { PasswordChecklist } from '@/components/auth/PasswordChecklist';
 import GoogleAuthButton from "@/components/ui/GoogleAuthButton";
 import { Mail, Lock, User, ArrowRight, UserPlus, AtSign, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -173,6 +174,7 @@ export default function Register() {
               onChange: handleFieldChange("password")
             })}
           />
+          <PasswordChecklist value={watch('password') ?? ''} />
           {errors.password && (
             <p className="text-sm text-red-500 mt-1">
               {errors.password.message}
