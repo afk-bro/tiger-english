@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from ...models.auth import UserRegister, UserLogin, MessageResponse, TokenResponse, UsernameCheckResponse
+from fastapi import APIRouter, Depends, HTTPException, status, Header
+from ...models.auth import UserRegister, UserLogin, MessageResponse, TokenResponse, UsernameCheckResponse, UpdateProfile, ProfileResponse
 from ...services.auth_service import AuthService
 from ...core.supabase import get_supabase_admin
 from ...utils.exceptions import AuthException
@@ -88,3 +88,59 @@ async def check_username_availability(
 async def logout_user():
     """Logout user (client-side token removal)"""
     return {"success": True, "message": "Logged out successfully"}
+
+
+async def _get_user_id_from_token(
+    authorization: str = Header(..., alias="Authorization"),
+    supabase=Depends(get_supabase_admin),
+) -> str:
+    """Verify Supabase JWT and return user_id. Raises 401 on failure."""
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"success": False, "message": "Invalid authorization header"},
+        )
+    token = authorization.removeprefix("Bearer ")
+    try:
+        user_response = supabase.auth.get_user(token)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"success": False, "message": "Invalid or expired token"},
+        )
+    if not user_response.user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"success": False, "message": "Invalid or expired token"},
+        )
+    return user_response.user.id
+
+
+@router.patch("/profile", response_model=ProfileResponse)
+async def update_profile(
+    profile_data: UpdateProfile,
+    user_id: str = Depends(_get_user_id_from_token),
+    supabase=Depends(get_supabase_admin),
+):
+    """Update the authenticated user's profile."""
+    try:
+        result = supabase.table('profiles').update(
+            {"native_language": profile_data.native_language}
+        ).eq('id', user_id).select('id, username, first_name, last_name, native_language').single().execute()
+
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"success": False, "message": "Profile not found"},
+            )
+
+        return ProfileResponse(**result.data)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Unexpected error in update_profile: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "message": "An unexpected error occurred"},
+        )
