@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Volume2 } from "lucide-react";
 import type { FlashcardCard } from "@/features/flashcards/types";
 import Button from "@/components/ui/Button";
 
@@ -20,6 +21,15 @@ export function Flashcard({ data }: FlashcardProps) {
   const handleExampleToggle = (e?: React.MouseEvent) => {
     e?.stopPropagation(); // Prevent card flip when clicking example button
     setShowExample((prev) => !prev);
+  };
+
+  const handleSpeak = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!englishText || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(englishText);
+    utterance.lang = 'en-US';
+    window.speechSynthesis.speak(utterance);
   };
 
   const getDifficultyColor = (difficulty?: string) => {
@@ -137,9 +147,19 @@ export function Flashcard({ data }: FlashcardProps) {
             {/* Main Content - Perfectly Centered */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-4xl sm:text-5xl font-semibold text-primary-800 mb-4">
-                  {englishText}
-                </p>
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <p className="text-4xl sm:text-5xl font-semibold text-primary-800">
+                    {englishText}
+                  </p>
+                  <button
+                    type="button"
+                    aria-label={`Hear pronunciation of ${englishText}`}
+                    onClick={handleSpeak}
+                    className="flex-shrink-0 p-2 rounded-full text-primary-500 hover:text-primary-700 hover:bg-primary-200 transition-colors"
+                  >
+                    <Volume2 className="w-6 h-6 sm:w-7 sm:h-7" />
+                  </button>
+                </div>
                 <div className="w-16 h-1 bg-primary-400 mx-auto rounded-full"></div>
               </div>
             </div>
