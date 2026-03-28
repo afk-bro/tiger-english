@@ -157,4 +157,28 @@ describe('Register.tsx', () => {
       });
     });
   });
+
+  it('shows password checklist on type, red border on blur, clears when rules satisfied', async () => {
+    const user = userEvent.setup();
+    render(<Register />, { wrapper: Wrapper });
+
+    const passwordInput = screen.getByLabelText(/^password$/i);
+
+    // Step 1: type one character — checklist appears, no red border yet
+    await user.type(passwordInput, 'a');
+    expect(screen.getByTestId('password-checklist')).toBeInTheDocument();
+    expect(passwordInput).not.toHaveClass('border-red-300');
+
+    // Step 2: blur the field — red border appears
+    await user.tab();
+    expect(passwordInput).toHaveClass('border-red-300');
+
+    // Step 3: type a valid password — checklist goes all green, red border clears
+    await user.type(passwordInput, 'Secure1!');
+    expect(passwordInput).not.toHaveClass('border-red-300');
+    const spans = screen.getByTestId('password-checklist').querySelectorAll('span');
+    spans.forEach((span) => {
+      expect(span).toHaveClass('text-green-600');
+    });
+  });
 });
