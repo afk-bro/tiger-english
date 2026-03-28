@@ -36,7 +36,7 @@ export function useRegisterForm(): UseRegisterFormReturn {
     reValidateMode: 'onChange',
   });
 
-  const password = watch("password");
+  const password = watch("password") ?? "";
   const confirmPassword = watch("confirmPassword");
 
   // Clears server errors on retype. Also explicitly triggers re-validation when a Zod
