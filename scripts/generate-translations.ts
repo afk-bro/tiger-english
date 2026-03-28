@@ -1,11 +1,15 @@
 /**
  * Generate translation review CSVs for flashcard sets.
  *
- * Usage:
- *   ANTHROPIC_API_KEY=sk-ant-... \
- *   SUPABASE_URL=https://... \
- *   SUPABASE_SERVICE_ROLE_KEY=... \
+ * Usage (Claude Code OAuth — no API key needed):
+ *   npx tsx scripts/generate-translations.ts --lang th --cards-file src/data/translations/cards.json
+ *
+ * Or with Supabase credentials to fetch cards directly:
+ *   SUPABASE_URL=https://... SUPABASE_SERVICE_ROLE_KEY=... \
  *   npx tsx scripts/generate-translations.ts --lang th
+ *
+ * Uses ANTHROPIC_CODE_OAUTH_TOKEN if present (Claude Code sessions),
+ * falls back to ANTHROPIC_API_KEY for standalone use.
  *
  * Output: src/data/translations/<lang>_review.csv
  * Flagged rows (low confidence) are sorted to the top for fast human review.
@@ -14,7 +18,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync, mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
@@ -34,42 +38,54 @@ const langArg = process.argv.find((a) => a.startsWith('--lang='))?.split('=')[1]
   ?? process.argv[process.argv.indexOf('--lang') + 1];
 
 if (!langArg || !SUPPORTED_LANGUAGES[langArg]) {
-  console.error(`Usage: npx tsx scripts/generate-translations.ts --lang <${Object.keys(SUPPORTED_LANGUAGES).join('|')}>`);
+  console.error(`Usage: npx tsx scripts/generate-translations.ts --lang <${Object.keys(SUPPORTED_LANGUAGES).join('|')}> [--cards-file <path>]`);
   process.exit(1);
 }
 
 const lang = langArg;
 const langName = SUPPORTED_LANGUAGES[lang];
 
+const cardsFileIdx = process.argv.indexOf('--cards-file');
+const cardsFilePath = cardsFileIdx !== -1 ? process.argv[cardsFileIdx + 1] : null;
+
 // ─── Clients ─────────────────────────────────────────────────────────────────
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  // Note: ANTHROPIC_CODE_OAUTH_TOKEN is a Claude Code OAuth credential and is NOT
-  // accepted by the SDK's apiKey parameter. Use a standard sk-ant-... API key.
-});
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+const anthropic = process.env.ANTHROPIC_CODE_OAUTH_TOKEN
+  ? new Anthropic({ authToken: process.env.ANTHROPIC_CODE_OAUTH_TOKEN })
+  : new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ─── Fetch untranslated cards ─────────────────────────────────────────────────
 
-console.log(`Fetching cards without a reviewed ${langName} translation...`);
+type CardRow = { id: string; english_text: string; category: string | null };
 
-const { data: cards, error } = await supabase
-  .from('flashcards')
-  .select('id, english_text, category')
-  .not(
-    'id',
-    'in',
-    `(SELECT flashcard_id FROM flashcard_translations WHERE language_code = '${lang}' AND is_reviewed = true)`,
+let cards: CardRow[];
+
+if (cardsFilePath) {
+  console.log(`Reading cards from ${cardsFilePath}...`);
+  cards = JSON.parse(readFileSync(cardsFilePath, 'utf-8')) as CardRow[];
+  console.log(`Loaded ${cards.length} card(s) from file.`);
+} else {
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-if (error) {
-  console.error('Supabase error:', error.message);
-  process.exit(1);
+  console.log(`Fetching cards without a reviewed ${langName} translation...`);
+
+  const { data, error } = await supabase
+    .from('flashcards')
+    .select('id, english_text, category')
+    .not(
+      'id',
+      'in',
+      `(SELECT flashcard_id FROM flashcard_translations WHERE language_code = '${lang}' AND is_reviewed = true)`,
+    );
+
+  if (error) {
+    console.error('Supabase error:', error.message);
+    process.exit(1);
+  }
+  cards = data ?? [];
 }
 
 if (!cards || cards.length === 0) {
