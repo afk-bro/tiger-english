@@ -93,27 +93,6 @@ export function Flashcard({ data }: FlashcardProps) {
               </div>
             </div>
 
-            {/* Example Section - Bottom Positioned */}
-            {exampleSentence && (
-              <div className="absolute bottom-8 left-0 right-0 text-center">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleExampleToggle}
-                  className="mb-4 border-2 border-gray-400 bg-white text-gray-700 hover:bg-gray-100"
-                >
-                  {showExample ? 'Hide Example' : 'Show Example'}
-                </Button>
-                
-                <div className={`transition-all duration-300 overflow-hidden ${
-                  showExample ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
-                }`}>
-                  <p className="text-lg text-gray-600 italic text-center px-4">
-                    "{exampleSentence}"
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
