@@ -5,6 +5,7 @@ import { useState } from "react";
 import { contactFormSchema, type ContactFormData } from "@/schemas/contactSchema";
 import FormInput from "@/components/ui/FormInput";
 import Button from "@/components/ui/Button";
+import { SITE_GITHUB_URL, SITE_CONTACT_EMAIL } from "@/lib/siteConfig";
 
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,7 +40,7 @@ export default function Contact() {
   };
 
   const socialLinks = [
-    { name: "GitHub", icon: "🐙", href: "https://github.com/afk-bro" },
+    { name: "GitHub", icon: "🐙", href: SITE_GITHUB_URL },
     { name: "LinkedIn", icon: "💼", href: "#", comingSoon: true },
     { name: "Twitter", icon: "🐦", href: "#", comingSoon: true },
   ];
@@ -175,10 +176,10 @@ export default function Contact() {
                 </div>
                 <div className="ml-3">
                   <a
-                    href="mailto:admin.tigerenglish@gmail.com"
+                    href={`mailto:${SITE_CONTACT_EMAIL}`}
                     className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
                   >
-                    admin.tigerenglish@gmail.com
+                    {SITE_CONTACT_EMAIL}
                   </a>
                 </div>
               </div>
@@ -194,24 +195,18 @@ export default function Contact() {
               {socialLinks.map((social) => (
                 <div key={social.name} className="relative group">
                   {social.comingSoon ? (
-                    <>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`${social.name} profile (coming soon)`}
-                        className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed"
-                      >
-                        <span className="text-sm" role="img" aria-hidden="true">
-                          {social.icon}
-                        </span>
-                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                          {social.name}
-                        </span>
-                      </div>
-                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                        Coming Soon
-                      </div>
-                    </>
+                    <div
+                      aria-disabled="true"
+                      title="Coming soon"
+                      className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed"
+                    >
+                      <span className="text-sm" role="img" aria-hidden="true">
+                        {social.icon}
+                      </span>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                        {social.name}
+                      </span>
+                    </div>
                   ) : (
                     <a
                       href={social.href}
