@@ -11,7 +11,7 @@ export default function About() {
   ];
 
   const socialLinks = [
-    { name: "GitHub", icon: "🐙", href: "#", comingSoon: true },
+    { name: "GitHub", icon: "🐙", href: "https://github.com/afk-bro" },
     { name: "LinkedIn", icon: "💼", href: "#", comingSoon: true },
     { name: "Twitter", icon: "🐦", href: "#", comingSoon: true },
   ];
@@ -93,24 +93,42 @@ export default function About() {
           </h2>
           <div className="flex flex-wrap gap-4 justify-center sm:justify-start mb-6">
             {socialLinks.map((social) => (
-              <div
-                key={social.name}
-                className="relative group"
-                role="button"
-                tabIndex={0}
-                aria-label={`${social.name} profile (coming soon)`}
-              >
-                <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed">
-                  <span className="text-lg" role="img" aria-hidden="true">
-                    {social.icon}
-                  </span>
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    {social.name}
-                  </span>
-                </div>
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                  Coming Soon
-                </div>
+              <div key={social.name} className="relative group">
+                {social.comingSoon ? (
+                  <>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${social.name} profile (coming soon)`}
+                      className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed"
+                    >
+                      <span className="text-lg" role="img" aria-hidden="true">
+                        {social.icon}
+                      </span>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {social.name}
+                      </span>
+                    </div>
+                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                      Coming Soon
+                    </div>
+                  </>
+                ) : (
+                  <a
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${social.name} profile`}
+                    className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+                  >
+                    <span className="text-lg" role="img" aria-hidden="true">
+                      {social.icon}
+                    </span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {social.name}
+                    </span>
+                  </a>
+                )}
               </div>
             ))}
           </div>
@@ -125,7 +143,7 @@ export default function About() {
             Want to share feedback, ideas, or just say hi?
           </p>
           <a
-            href="mailto:youremail@example.com"
+            href="mailto:admin.tigerenglish@gmail.com"
             className="inline-block bg-primary-600 hover:bg-primary-700 focus:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105"
             aria-label="Send email to the creator of Tiger English"
           >
