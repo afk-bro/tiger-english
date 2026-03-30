@@ -42,6 +42,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/flashcards" element={<FlashcardsPage />} />
               <Route path="/u/:username" element={<StubPage title="Public Profile" />} />
               <Route path="/login" element={<RequireGuest><Login /></RequireGuest>} />
               <Route path="/register" element={<RequireGuest><Register /></RequireGuest>} />
@@ -57,7 +58,6 @@ function App() {
               <Route path="/library" element={<StubPage title="Library" />} />
               <Route path="/study-groups" element={<StubPage title="Study Groups" />} />
               <Route path="/notifications" element={<StubPage title="Notifications" />} />
-              <Route path="/flashcards" element={<FlashcardsPage />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/drag-drop" element={<StubPage title="Drag & Drop" />} />
               <Route path="/ad-libs" element={<StubPage title="Ad Libs" />} />
