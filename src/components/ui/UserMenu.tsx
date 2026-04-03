@@ -20,7 +20,7 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ mobile = false }: UserMenuProps) {
-  const { profile, clearProfile } = useUserStore();
+  const { profile, profileLoading, session, clearProfile } = useUserStore();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -34,7 +34,19 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
     }
   };
 
-  // Logged-out state: show Login + Register buttons
+  // Show spinner while loading OR when a session exists but profile hasn't resolved yet
+  // (e.g. transient DB error returning null). Prevents flashing unauthenticated UI.
+  if (profileLoading || (session && !profile)) {
+    return (
+      <div
+        role="status"
+        aria-label="Loading"
+        className="w-9 h-9 rounded-full border-2 border-primary-200 border-t-primary-500 animate-spin"
+      />
+    );
+  }
+
+  // Logged-out state (no session, no profile): show Login + Register buttons
   if (!profile) {
     return (
       <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:justify-end">

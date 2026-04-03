@@ -1,4 +1,4 @@
-// src/features/flashcards/useFlashcardNavigation.ts
+// src/features/flashcards/hooks/useFlashcardNavigation.ts
 import { useState, useEffect, useCallback } from "react";
 
 // resetKey defaults to '' for backward compatibility with any existing callers.

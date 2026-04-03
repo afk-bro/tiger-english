@@ -1,6 +1,6 @@
 import { Flashcard } from '@/components/flashcards/Flashcard';
 import Button from '@/components/ui/Button';
-import { useFlashcardNavigation } from '../useFlashcardNavigation';
+import { useFlashcardNavigation } from '../hooks/useFlashcardNavigation';
 import type { FlashcardCard, CardProgress } from '../types';
 
 interface FlashcardViewerProps {
