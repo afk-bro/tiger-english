@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { loginSchema, LoginFormData } from '@/schemas/authSchema';
 import { loginUser } from '@/features/auth/loginUser';
-import { useUserStore } from '@/stores/useUserStore';
 
 export interface UseLoginFormReturn {
   register: ReturnType<typeof useForm<LoginFormData>>['register'];
@@ -67,13 +66,8 @@ export function useLoginForm(): UseLoginFormReturn {
       return;
     }
 
-    const updatedProfile = useUserStore.getState().profile;
-    if (updatedProfile) {
-      toast.success('Login successful');
-      navigate('/home');
-    } else {
-      toast.error('Profile not found after login');
-    }
+    toast.success('Login successful');
+    navigate('/home');
   };
 
   return {
