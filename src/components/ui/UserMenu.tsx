@@ -20,7 +20,7 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ mobile = false }: UserMenuProps) {
-  const { profile, profileLoading, clearProfile } = useUserStore();
+  const { profile, profileLoading, session, clearProfile } = useUserStore();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -34,8 +34,9 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
     }
   };
 
-  // Profile is being fetched after login navigation — avoid flashing unauthenticated UI.
-  if (profileLoading && !profile) {
+  // Show spinner while loading OR when a session exists but profile hasn't resolved yet
+  // (e.g. transient DB error returning null). Prevents flashing unauthenticated UI.
+  if (profileLoading || (session && !profile)) {
     return (
       <div
         role="status"
@@ -45,7 +46,7 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
     );
   }
 
-  // Logged-out state: show Login + Register buttons
+  // Logged-out state (no session, no profile): show Login + Register buttons
   if (!profile) {
     return (
       <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:justify-end">

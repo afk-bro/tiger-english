@@ -29,6 +29,22 @@ describe('UserMenu — loading state', () => {
     mockUseUserStore.mockReturnValue({
       profile: null,
       profileLoading: true,
+      session: null,
+      clearProfile: vi.fn(),
+    } as any);
+
+    render(<MemoryRouter><UserMenu /></MemoryRouter>);
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByText('header.nav.login')).not.toBeInTheDocument();
+    expect(screen.queryByText('header.nav.register')).not.toBeInTheDocument();
+  });
+
+  it('shows a spinner and hides Login/Register when session exists but profile is null and not loading', () => {
+    mockUseUserStore.mockReturnValue({
+      profile: null,
+      profileLoading: false,
+      session: { user: { id: 'user-1' } },
       clearProfile: vi.fn(),
     } as any);
 
@@ -41,10 +57,11 @@ describe('UserMenu — loading state', () => {
 });
 
 describe('UserMenu — unauthenticated state', () => {
-  it('shows Login and Register buttons when profile is null and not loading', () => {
+  it('shows Login and Register buttons when session is null, profile is null, and not loading', () => {
     mockUseUserStore.mockReturnValue({
       profile: null,
       profileLoading: false,
+      session: null,
       clearProfile: vi.fn(),
     } as any);
 
