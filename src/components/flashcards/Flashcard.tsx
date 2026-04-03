@@ -121,7 +121,7 @@ export function Flashcard({ data }: FlashcardProps) {
         <div className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 transition-opacity duration-300 ${
             isFlipped ? 'opacity-100' : 'opacity-0'
           }`}>
-          <div className="w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow relative p-8">
+          <div className="w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow relative p-8 flex flex-col">
             {/* Corner Badges */}
             {level && (
               <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-medium border ${getDifficultyColor(level)}`}>
@@ -134,8 +134,8 @@ export function Flashcard({ data }: FlashcardProps) {
               </div>
             )}
 
-            {/* Main Content - Perfectly Centered */}
-            <div className="absolute inset-0 flex items-center justify-center">
+            {/* Main Content - Centered in remaining space */}
+            <div className="flex-1 flex items-center justify-center pt-4">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <p className="text-4xl sm:text-5xl font-semibold text-primary-800">
@@ -156,20 +156,20 @@ export function Flashcard({ data }: FlashcardProps) {
               </div>
             </div>
 
-            {/* Example Section - Bottom Positioned */}
+            {/* Example Section - sits below the word in normal flow */}
             {exampleSentence && (
-              <div className="absolute bottom-8 left-0 right-0 text-center">
+              <div className="text-center pt-2">
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={handleExampleToggle}
-                  className="mb-4 border-2 border-primary-400 bg-white text-primary-700 hover:bg-primary-50"
+                  className="border-2 border-primary-400 bg-white text-primary-700 hover:bg-primary-50"
                 >
                   {showExample ? 'Hide Example' : 'Show Example'}
                 </Button>
-                
+
                 <div className={`transition-all duration-300 overflow-hidden ${
-                  showExample ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
+                  showExample ? 'max-h-32 opacity-100 mt-3' : 'max-h-0 opacity-0'
                 }`}>
                   <p className="text-lg text-primary-700 italic text-center px-4">
                     "{exampleSentence}"
