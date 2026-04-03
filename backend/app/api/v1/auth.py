@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Header
-from ...models.auth import UserRegister, UserLogin, MessageResponse, TokenResponse, UsernameCheckResponse, UpdateProfile, ProfileResponse
+from ...models.auth import UserRegister, MessageResponse, UsernameCheckResponse, UpdateProfile, ProfileResponse
 from ...services.auth_service import AuthService
 from ...core.supabase import get_supabase_admin
 from ...utils.exceptions import AuthException
@@ -9,17 +9,21 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
+
+def get_auth_service(supabase=Depends(get_supabase_admin)) -> AuthService:
+    return AuthService(supabase)
+
+
 @router.post("/register", response_model=MessageResponse)
 async def register_user(
     user_data: UserRegister,
-    supabase = Depends(get_supabase_admin)
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Register a new user account"""
     try:
-        auth_service = AuthService(supabase)
         result = await auth_service.register_user(user_data)
         return MessageResponse(**result)
-        
+
     except AuthException as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -39,53 +43,32 @@ async def register_user(
             }
         )
 
-@router.post("/login", response_model=TokenResponse)
+
+@router.post("/login", response_model=None)
 async def login_user(
-    login_data: UserLogin,
     supabase = Depends(get_supabase_admin)
 ):
-    """Login user and return access token"""
-    try:
-        auth_service = AuthService(supabase)
-        result = await auth_service.login_user(login_data)
-        return TokenResponse(**result)
-        
-    except AuthException as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "success": False,
-                "message": e.message,
-                "field": e.field
-            }
-        )
-    except Exception as e:
-        print(f"Unexpected error in login_user: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "success": False,
-                "message": "An unexpected error occurred"
-            }
-        )
+    """Login endpoint placeholder — removed in next task"""
+    pass
+
 
 @router.get("/check-username/{username}", response_model=UsernameCheckResponse)
 async def check_username_availability(
     username: str,
-    supabase = Depends(get_supabase_admin)
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Check if username is available"""
     try:
-        auth_service = AuthService(supabase)
         is_available = await auth_service.check_username_availability(username)
         return UsernameCheckResponse(available=is_available)
-        
+
     except Exception as e:
         logger.error("Error checking username availability: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"message": "Error checking username availability"}
         )
+
 
 @router.post("/logout")
 async def logout_user():
