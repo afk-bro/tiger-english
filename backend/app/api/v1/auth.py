@@ -44,7 +44,6 @@ async def register_user(
         )
 
 
-
 @router.get("/check-username/{username}", response_model=UsernameCheckResponse)
 async def check_username_availability(
     username: str,
