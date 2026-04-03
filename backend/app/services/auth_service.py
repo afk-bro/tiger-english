@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from supabase import Client
 from ..models.auth import UserRegister, UserLogin
 from ..utils.exceptions import AuthException
@@ -89,7 +89,7 @@ class AuthService:
             
             # Update last login
             self.supabase.table('user_stats').update({
-                "last_login": datetime.utcnow().isoformat()
+                "last_login": datetime.now(timezone.utc).isoformat()
             }).eq('user_id', auth_response.user.id).execute()
             
             return {
