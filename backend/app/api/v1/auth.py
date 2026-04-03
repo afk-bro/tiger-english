@@ -34,7 +34,7 @@ async def register_user(
             }
         )
     except Exception as e:
-        logger.error("Unexpected error in register_user: %s", e)
+        logger.exception("Unexpected error in register_user: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
@@ -55,7 +55,7 @@ async def check_username_availability(
         return UsernameCheckResponse(available=is_available)
 
     except Exception as e:
-        logger.error("Error checking username availability: %s", e)
+        logger.exception("Error checking username availability: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"message": "Error checking username availability"}
@@ -117,7 +117,7 @@ async def update_profile(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Unexpected error in update_profile: %s", e)
+        logger.exception("Unexpected error in update_profile: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"success": False, "message": "An unexpected error occurred"},
