@@ -20,7 +20,7 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ mobile = false }: UserMenuProps) {
-  const { profile, clearProfile } = useUserStore();
+  const { profile, profileLoading, clearProfile } = useUserStore();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -33,6 +33,17 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
       navigate("/login");
     }
   };
+
+  // Profile is being fetched after login navigation — avoid flashing unauthenticated UI.
+  if (profileLoading && !profile) {
+    return (
+      <div
+        role="status"
+        aria-label="Loading"
+        className="w-9 h-9 rounded-full border-2 border-primary-200 border-t-primary-500 animate-spin"
+      />
+    );
+  }
 
   // Logged-out state: show Login + Register buttons
   if (!profile) {
