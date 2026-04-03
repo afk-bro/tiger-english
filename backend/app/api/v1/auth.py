@@ -3,6 +3,9 @@ from ...models.auth import UserRegister, UserLogin, MessageResponse, TokenRespon
 from ...services.auth_service import AuthService
 from ...core.supabase import get_supabase_admin
 from ...utils.exceptions import AuthException
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -27,7 +30,7 @@ async def register_user(
             }
         )
     except Exception as e:
-        print(f"Unexpected error in register_user: {e}")
+        logger.error("Unexpected error in register_user: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
@@ -78,7 +81,7 @@ async def check_username_availability(
         return UsernameCheckResponse(available=is_available)
         
     except Exception as e:
-        print(f"Error checking username availability: {e}")
+        logger.error("Error checking username availability: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"message": "Error checking username availability"}
@@ -139,7 +142,7 @@ async def update_profile(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Unexpected error in update_profile: {e}")
+        logger.error("Unexpected error in update_profile: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"success": False, "message": "An unexpected error occurred"},

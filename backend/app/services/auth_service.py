@@ -2,6 +2,10 @@ from datetime import datetime, timezone
 from supabase import Client
 from ..models.auth import UserRegister, UserLogin
 from ..utils.exceptions import AuthException
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class AuthService:
     def __init__(self, supabase: Client):
@@ -13,7 +17,7 @@ class AuthService:
             response = self.supabase.table('profiles').select('username').eq('username', username).execute()
             return len(response.data) == 0
         except Exception as e:
-            print(f"Error checking username availability: {e}")
+            logger.warning("Error checking username availability: %s", e)
             # For safety, assume unavailable if we can't check
             return False
     
@@ -57,7 +61,7 @@ class AuthService:
                     {"native_language": user_data.native_language}
                 ).eq('id', auth_response.user.id).execute()
             except Exception as e:
-                print(f"Warning: failed to write native_language for {auth_response.user.id}: {e}")
+                logger.warning("Failed to write native_language for %s: %s", auth_response.user.id, e)
                 # Non-fatal: user can set language later via PATCH /profile
 
         # profiles + user_stats are created synchronously by the handle_new_user
@@ -67,6 +71,9 @@ class AuthService:
             "message": "Account created successfully! Please log in to continue.",
         }
     
+    # NOTE: login_user() is not currently wired to an HTTP endpoint.
+    # A /auth/login route is planned for server-mediated flows:
+    # org membership enforcement, invite-only access, and admin tooling.
     async def login_user(self, login_data: UserLogin) -> dict:
         """Login user and return JWT token"""
         try:
