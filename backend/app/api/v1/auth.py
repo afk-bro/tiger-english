@@ -44,13 +44,6 @@ async def register_user(
         )
 
 
-@router.post("/login", response_model=None)
-async def login_user(
-    supabase = Depends(get_supabase_admin)
-):
-    """Login endpoint placeholder — removed in next task"""
-    pass
-
 
 @router.get("/check-username/{username}", response_model=UsernameCheckResponse)
 async def check_username_availability(
