@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Check, Circle } from 'lucide-react';
 import { PASSWORD_RULES, PasswordRule } from '@/features/auth/passwordRules';
 
@@ -6,6 +7,8 @@ interface PasswordChecklistProps {
 }
 
 export function PasswordChecklist({ value }: PasswordChecklistProps) {
+  const { t } = useTranslation();
+
   if (value === '') return null;
 
   return (
@@ -20,7 +23,7 @@ export function PasswordChecklist({ value }: PasswordChecklistProps) {
               <Circle className="w-4 h-4 text-gray-400 shrink-0" />
             )}
             <span className={met ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>
-              {rule.label}
+              {t(rule.labelKey)}
             </span>
           </li>
         );

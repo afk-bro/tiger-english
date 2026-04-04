@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/stores/useUserStore';
 
@@ -8,6 +9,7 @@ type CallbackState = 'checking' | 'waiting_profile' | 'auth_error' | 'timeout';
 export default function AuthCallback() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const profile = useUserStore((s) => s.profile);
   const storeError = useUserStore((s) => s.error);
 
@@ -51,7 +53,7 @@ export default function AuthCallback() {
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       setState('auth_error');
-      setErrorMessage('Your session has expired. Please sign in again.');
+      setErrorMessage(t('auth.callback.session_expired'));
       return;
     }
     startProfilePolling();
@@ -88,7 +90,7 @@ export default function AuthCallback() {
       if (!handled) {
         subscription.unsubscribe();
         setState('auth_error');
-        setErrorMessage('Authentication timed out. Please try again.');
+        setErrorMessage(t('auth.callback.timed_out'));
       }
     }, 3_000);
 
@@ -123,7 +125,7 @@ export default function AuthCallback() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-semantic-bg dark:bg-semantic-bg">
         <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
         <p className="text-sm text-semantic-muted dark:text-semantic-muted">
-          {state === 'checking' ? 'Signing you in\u2026' : 'Setting up your account\u2026'}
+          {state === 'checking' ? t('auth.callback.checking') : t('auth.callback.waiting')}
         </p>
       </div>
     );
@@ -133,19 +135,19 @@ export default function AuthCallback() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 bg-semantic-bg dark:bg-semantic-bg">
         <p className="text-base font-medium text-semantic-text dark:text-semantic-text">
-          Taking longer than expected
+          {t('auth.callback.timeout_title')}
         </p>
         <p className="text-sm text-semantic-muted dark:text-semantic-muted text-center max-w-sm">
-          Your account is being set up. This usually takes just a moment.
+          {t('auth.callback.timeout_message')}
         </p>
         <button
           onClick={handleRetry}
           className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-sm font-medium transition-colors"
         >
-          Try again
+          {t('auth.callback.try_again')}
         </button>
         <Link to="/login" className="text-sm text-primary-600 dark:text-primary-400 hover:underline">
-          Back to login
+          {t('auth.callback.back_to_login')}
         </Link>
       </div>
     );
@@ -155,16 +157,16 @@ export default function AuthCallback() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 bg-semantic-bg dark:bg-semantic-bg">
       <p className="text-base font-medium text-semantic-text dark:text-semantic-text">
-        Authentication failed
+        {t('auth.callback.error_title')}
       </p>
       <p className="text-sm text-semantic-muted dark:text-semantic-muted text-center max-w-sm">
-        {errorMessage ?? 'Something went wrong during sign-in. Please try again.'}
+        {errorMessage ?? t('auth.callback.error_default')}
       </p>
       <Link
         to="/login"
         className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-sm font-medium transition-colors"
       >
-        Back to login
+        {t('auth.callback.back_to_login')}
       </Link>
     </div>
   );

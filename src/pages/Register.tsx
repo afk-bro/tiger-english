@@ -11,10 +11,14 @@ import { useRegisterSubmit } from "../features/auth/useRegisterSubmit";
 import { SUPPORTED_LANGUAGES } from "@/schemas/authSchema";
 import { useEffect } from "react";
 
-const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = { th: 'Thai', zh: 'Chinese', vi: 'Vietnamese' };
-
 export default function Register() {
   const { t } = useTranslation();
+
+  const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = {
+    th: t('flashcards.language.th'),
+    zh: t('flashcards.language.zh'),
+    vi: t('flashcards.language.vi'),
+  };
 
   // Use extracted hooks
   const {
@@ -65,7 +69,7 @@ export default function Register() {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-white dark:bg-gray-900 px-2 text-gray-400 dark:text-gray-500">
-              or
+              {t('auth.separator')}
             </span>
           </div>
         </div>
