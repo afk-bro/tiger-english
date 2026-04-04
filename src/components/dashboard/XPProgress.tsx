@@ -1,4 +1,4 @@
-// src/components/dashboard/XPProgress.tsx
+import { useTranslation } from 'react-i18next';
 import { XPData } from "@/types/dashboard";
 
 type TierKey = keyof XPData["xpBreakdown"];
@@ -30,18 +30,20 @@ interface XPProgressProps {
 }
 
 export default function XPProgress({ xp, progressColorClass }: XPProgressProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="card mb-8">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-display heading-accent">
-          XP Progress
+          {t('dashboard.xp.heading')}
         </h2>
         <div className="text-right">
           <div className="text-lg sm:text-xl font-semibold text-text-light dark:text-text-dark">
             {xp.currentXP.toLocaleString()} / {xp.totalXPForNextLevel.toLocaleString()} XP
           </div>
           <div className="text-sm text-text-light/70 dark:text-text-dark/70">
-            {Math.round(xp.progressPercentage)}% to next level
+            {t('dashboard.xp.to_next_level', { percent: Math.round(xp.progressPercentage) })}
           </div>
         </div>
       </div>
@@ -66,20 +68,24 @@ export default function XPProgress({ xp, progressColorClass }: XPProgressProps) 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {(Object.entries(xp.xpBreakdown) as [TierKey, (typeof xp.xpBreakdown)[TierKey]][]).map(([tier, data]) => {
           const styles = tierStyles[tier];
-
           return (
-            <div
-              key={tier}
-              className={`${styles.card} rounded-xl p-4 border`}
-            >
+            <div key={tier} className={`${styles.card} rounded-xl p-4 border`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className={`text-sm font-medium ${styles.label}`}>{tier.charAt(0).toUpperCase() + tier.slice(1)}</div>
-                  <div className={`text-lg font-bold ${styles.xp}`}>+{data.totalXP} XP</div>
+                  <div className={`text-sm font-medium ${styles.label}`}>
+                    {t(`dashboard.xp.tiers.${tier}`)}
+                  </div>
+                  <div className={`text-lg font-bold ${styles.xp}`}>
+                    {t('dashboard.xp.xp_per_word', { xp: data.totalXP })}
+                  </div>
                 </div>
                 <div className={`${styles.meta} text-right`}>
-                  <div className="text-xs">+{data.xpPerWord} XP per word</div>
-                  <div className="text-sm font-medium">{data.wordsCompleted} words</div>
+                  <div className="text-xs">
+                    {t('dashboard.xp.xp_per_word', { xp: data.xpPerWord })}
+                  </div>
+                  <div className="text-sm font-medium">
+                    {t('dashboard.xp.words', { count: data.wordsCompleted })}
+                  </div>
                 </div>
               </div>
             </div>
