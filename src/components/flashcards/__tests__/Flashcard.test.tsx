@@ -54,7 +54,7 @@ describe('Flashcard — flip button accessible labels', () => {
     ).toBeInTheDocument();
   });
 
-  it('back flip button always has label "Flip card back"', () => {
+  it('back flip button always has an accessible label', () => {
     render(<Flashcard data={makeCard()} />);
     expect(
       screen.getByRole('button', { name: 'flashcards.flip.back' })
