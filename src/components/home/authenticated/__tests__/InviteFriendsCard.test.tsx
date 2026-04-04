@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 import { toast } from 'sonner';
 
@@ -21,7 +25,7 @@ describe('InviteFriendsCard', () => {
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
 
     render(<InviteFriendsCard data={mockData} isLoading={false} />);
-    fireEvent.click(screen.getByRole('button', { name: /copy invite link/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'authhome.invite.copy' }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(mockData.inviteUrl));
   });
@@ -31,9 +35,9 @@ describe('InviteFriendsCard', () => {
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
 
     render(<InviteFriendsCard data={mockData} isLoading={false} />);
-    fireEvent.click(screen.getByRole('button', { name: /copy invite link/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'authhome.invite.copy' }));
 
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Invite link copied!'));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('authhome.invite.toast.copied'));
   });
 
   it('shows error toast when clipboard.writeText rejects', async () => {
@@ -41,17 +45,17 @@ describe('InviteFriendsCard', () => {
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
 
     render(<InviteFriendsCard data={mockData} isLoading={false} />);
-    fireEvent.click(screen.getByRole('button', { name: /copy invite link/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'authhome.invite.copy' }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to copy link. Please copy it manually.'));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('authhome.invite.toast.copy_failed'));
   });
 
   it('shows error toast when clipboard API is unavailable', async () => {
     Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
 
     render(<InviteFriendsCard data={mockData} isLoading={false} />);
-    fireEvent.click(screen.getByRole('button', { name: /copy invite link/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'authhome.invite.copy' }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Clipboard not available. Please copy the link manually.'));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('authhome.invite.toast.no_clipboard'));
   });
 });

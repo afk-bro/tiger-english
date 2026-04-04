@@ -1,4 +1,5 @@
 // src/components/home/authenticated/StudyGroupsCard.tsx
+import { useTranslation } from 'react-i18next';
 import { Users } from "lucide-react";
 import type { StudyGroupsData } from "./types";
 
@@ -8,6 +9,8 @@ interface Props {
 }
 
 export default function StudyGroupsCard({ data, isLoading }: Props) {
+  const { t } = useTranslation();
+
   if (isLoading) {
     return <div data-testid="skeleton" className="rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse h-40" />;
   }
@@ -19,7 +22,9 @@ export default function StudyGroupsCard({ data, isLoading }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-primary-500" />
-          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">Study Groups</h2>
+          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">
+            {t('authhome.study_groups.heading')}
+          </h2>
         </div>
         {data.pendingInviteCount > 0 && (
           <span
@@ -33,7 +38,7 @@ export default function StudyGroupsCard({ data, isLoading }: Props) {
 
       {!hasGroups && (
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          No study groups yet. Create one to study with friends.
+          {t('authhome.study_groups.empty')}
         </p>
       )}
 
@@ -42,17 +47,17 @@ export default function StudyGroupsCard({ data, isLoading }: Props) {
           {data.groups.map((group) => (
             <div key={group.id} className="flex items-center justify-between text-sm">
               <span className="font-medium text-gray-800 dark:text-gray-100">{group.name}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{group.memberCount} members</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('authhome.study_groups.members', { count: group.memberCount })}
+              </span>
             </div>
           ))}
         </div>
       )}
 
       <div className="flex gap-2">
-        <button
-          className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors"
-        >
-          Create Study Group
+        <button className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors">
+          {t('authhome.study_groups.create')}
         </button>
         <button
           disabled={!hasGroups}
@@ -63,7 +68,7 @@ export default function StudyGroupsCard({ data, isLoading }: Props) {
               : "border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed",
           ].join(" ")}
         >
-          Invite to Group
+          {t('authhome.study_groups.invite')}
         </button>
       </div>
     </div>

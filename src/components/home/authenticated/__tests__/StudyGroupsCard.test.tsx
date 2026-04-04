@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 import StudyGroupsCard from '../StudyGroupsCard';
 import type { StudyGroupsData } from '../types';
 
@@ -17,13 +22,13 @@ describe('StudyGroupsCard', () => {
 
   it('renders empty state with Create Study Group CTA when groups is empty', () => {
     render(<StudyGroupsCard data={emptyData} isLoading={false} />);
-    expect(screen.getByText(/no study groups yet/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create study group/i })).toBeInTheDocument();
+    expect(screen.getByText('authhome.study_groups.empty')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'authhome.study_groups.create' })).toBeInTheDocument();
   });
 
   it('disables Invite to Group when groups array is empty', () => {
     render(<StudyGroupsCard data={emptyData} isLoading={false} />);
-    expect(screen.getByRole('button', { name: /invite to group/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'authhome.study_groups.invite' })).toBeDisabled();
   });
 
   it('renders pending invites badge with correct count', () => {
@@ -39,6 +44,6 @@ describe('StudyGroupsCard', () => {
   it('renders group names and member counts in populated state', () => {
     render(<StudyGroupsCard data={populatedData} isLoading={false} />);
     expect(screen.getByText('English Beginners')).toBeInTheDocument();
-    expect(screen.getByText('4 members')).toBeInTheDocument();
+    expect(screen.getByText('authhome.study_groups.members')).toBeInTheDocument();
   });
 });
