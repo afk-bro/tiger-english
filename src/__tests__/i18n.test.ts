@@ -1,9 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import i18n from '@/lib/i18n';
 import en from '@/locales/en/en.json';
 import vi from '@/locales/vi/vi.json';
 
 describe('i18n config', () => {
+  afterEach(() => {
+    i18n.changeLanguage('en');
+  });
+
   it('supports Vietnamese', () => {
     expect(i18n.options.supportedLngs).toContain('vi');
   });
@@ -12,7 +16,7 @@ describe('i18n config', () => {
     expect((i18n.options as Record<string, unknown>).nonExplicitSupportedLngs).toBe(true);
   });
 
-  it('vi locale has all keys that en locale has at top level', () => {
+  it('vi locale has all top-level keys that en locale has (top-level check only)', () => {
     const enKeys = Object.keys(en);
     const viKeys = Object.keys(vi);
     for (const key of enKeys) {
