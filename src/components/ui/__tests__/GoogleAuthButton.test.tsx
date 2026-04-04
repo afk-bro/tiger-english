@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
@@ -22,7 +26,7 @@ beforeEach(() => {
 describe('GoogleAuthButton', () => {
   it('renders "Continue with Google" text', () => {
     render(<GoogleAuthButton />);
-    expect(screen.getByText('Continue with Google')).toBeInTheDocument();
+    expect(screen.getByText('auth.google.button')).toBeInTheDocument();
   });
 
   it('calls signInWithOAuth with google provider on click', async () => {
@@ -49,7 +53,7 @@ describe('GoogleAuthButton', () => {
     mockSignIn.mockImplementation(() => new Promise(() => {}));
     render(<GoogleAuthButton />);
     fireEvent.click(screen.getByRole('button'));
-    expect(await screen.findByText('Connecting…')).toBeInTheDocument();
+    expect(await screen.findByText('auth.google.connecting')).toBeInTheDocument();
   });
 
   it('shows error message when signInWithOAuth fails', async () => {
