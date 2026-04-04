@@ -51,10 +51,11 @@ Frontend API client: `src/lib/api/auth.ts` — `AuthAPI` singleton class with ty
 
 ### Auth Flow
 
-1. **AppInitializer** (`src/components/AppInitializer.tsx`) restores Supabase session on app start
+1. **AppInitializer** (`src/components/AppInitializer.tsx`) restores Supabase session on app start — its `onAuthStateChange` handler is the single trigger for `fetchProfile()` on `SIGNED_IN`
 2. **Zustand store** (`src/stores/useUserStore.ts`) holds global user profile/auth state
 3. **UserLayout** (`src/routes/UserLayout.tsx`) guards `/u/:username` routes — redirects unauthenticated users
-4. Registration/login go through FastAPI → backend creates Supabase user + `profiles` + `user_stats` rows
+4. Registration goes through FastAPI → backend creates Supabase user + `profiles` + `user_stats` rows
+5. Login calls `supabase.auth.signInWithPassword()` directly and navigates on success — profile hydration happens asynchronously via `onAuthStateChange`; `UserMenu` shows a spinner during that window
 
 ### State Management
 
@@ -86,13 +87,16 @@ Tailwind CSS with dark mode (class-based). Custom colors defined in `tailwind.co
 
 ```
 backend/app/
-├── api/v1/auth.py       # Auth endpoints (register, login, check-username, logout)
+├── api/v1/auth.py       # Auth endpoints: /register, /check-username, /logout (injected via Depends)
 ├── core/
 │   ├── config.py        # Pydantic BaseSettings (reads .env)
+│   ├── security.py      # JWT helpers, password hashing
 │   └── supabase.py      # Supabase client (uses service role key)
 ├── models/auth.py       # Pydantic request/response models
-└── services/auth_service.py  # Business logic: create user, verify credentials
+└── services/auth_service.py  # Business logic: create user, verify credentials; AuthService injected via FastAPI Depends()
 ```
+
+Note: there is no `/auth/login` HTTP endpoint. `login_user()` exists on `AuthService` for future internal use (org membership checks, invite-only flows, admin tooling) but is not exposed as a route.
 
 ### Database Schema (Supabase)
 
