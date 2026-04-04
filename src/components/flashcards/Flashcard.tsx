@@ -35,8 +35,8 @@ export function Flashcard({ data }: FlashcardProps) {
   };
 
   const frontFlipLabel = englishText
-    ? `Flip card for ${englishText}`
-    : 'Flip card to see translation';
+    ? t('flashcards.flip.front_with_word', { word: englishText })
+    : t('flashcards.flip.front_no_word');
 
   return (
     <div className="w-full h-52 sm:w-[500px] sm:h-72 lg:w-[800px] lg:h-[480px] mx-auto perspective">
@@ -105,7 +105,7 @@ export function Flashcard({ data }: FlashcardProps) {
               className="flip-btn absolute inset-0 rounded-xl focus:outline-none"
               onClick={handleFlip}
               tabIndex={isFlipped ? 0 : -1}
-              aria-label="Flip card back"
+              aria-label={t('flashcards.flip.back')}
             />
             {/* Corner Badges */}
             {level && (
@@ -129,7 +129,7 @@ export function Flashcard({ data }: FlashcardProps) {
                   {ttsSupported && (
                     <button
                       type="button"
-                      aria-label={`Hear pronunciation of ${englishText}`}
+                      aria-label={t('flashcards.tts.speak_label', { word: englishText })}
                       onClick={handleSpeak}
                       tabIndex={isFlipped ? 0 : -1}
                       className="flex-shrink-0 p-2 rounded-full text-primary-500 hover:text-primary-700 hover:bg-primary-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40"
@@ -151,7 +151,7 @@ export function Flashcard({ data }: FlashcardProps) {
                   tabIndex={isFlipped ? 0 : -1}
                   className="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ease-out active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40 border-2 border-primary-400 bg-white text-primary-700 hover:bg-primary-50"
                 >
-                  {showExample ? 'Hide Example' : 'Show Example'}
+                  {showExample ? t('flashcards.example.hide') : t('flashcards.example.show')}
                 </button>
 
                 <div className={`transition-all duration-300 overflow-hidden ${
