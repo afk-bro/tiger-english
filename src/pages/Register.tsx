@@ -79,7 +79,7 @@ export default function Register() {
             label={t("register.username")}
             icon={<AtSign className="w-5 h-5 text-gray-400 dark:text-gray-500" />}
             type="text"
-            placeholder="Username"
+            placeholder={t("register.username_placeholder")}
             hasError={!!errors.username}
             {...register("username", {
               onChange: handleFieldChange("username")
@@ -125,7 +125,7 @@ export default function Register() {
           <FormInput
             label={t("register.first_name")}
             icon={<User className="w-5 h-5 text-gray-400 dark:text-gray-500" />}
-            placeholder="John"
+            placeholder={t("register.first_name_placeholder")}
             hasError={!!errors.firstName}
             {...register("firstName", {
               onChange: handleFieldChange("firstName")
@@ -139,7 +139,7 @@ export default function Register() {
           <FormInput
             label={t("register.last_name")}
             icon={<User className="w-5 h-5 text-gray-400 dark:text-gray-500" />}
-            placeholder="Doe"
+            placeholder={t("register.last_name_placeholder")}
             hasError={!!errors.lastName}
             {...register("lastName", {
               onChange: handleFieldChange("lastName")

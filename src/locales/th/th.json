@@ -57,6 +57,9 @@
     "login_cta": "เข้าสู่ระบบ",
     "loading": "กำลังสร้างบัญชี...",
     "username": "ชื่อผู้ใช้",
+    "username_placeholder": "ชื่อผู้ใช้",
+    "first_name_placeholder": "สมชาย",
+    "last_name_placeholder": "ใจดี",
     "native_language": "ภาษาแม่ของคุณ",
     "native_language_hint": "การ์ดจะแสดงภาษานี้ด้านหน้า สามารถเปลี่ยนได้ในการตั้งค่า"
   },

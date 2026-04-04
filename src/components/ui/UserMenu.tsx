@@ -40,7 +40,7 @@ export default function UserMenu({ mobile = false }: UserMenuProps) {
     return (
       <div
         role="status"
-        aria-label="Loading"
+        aria-label={t("common.loading")}
         className="w-9 h-9 rounded-full border-2 border-primary-200 border-t-primary-500 animate-spin"
       />
     );

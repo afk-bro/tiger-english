@@ -57,6 +57,9 @@
     "login_cta": "Đăng nhập",
     "loading": "Đang tạo tài khoản...",
     "username": "Tên người dùng",
+    "username_placeholder": "Tên người dùng",
+    "first_name_placeholder": "Minh",
+    "last_name_placeholder": "Nguyễn",
     "native_language": "Ngôn ngữ mẹ đẻ của bạn",
     "native_language_hint": "Thẻ sẽ hiển thị ngôn ngữ này ở mặt trước. Bạn có thể thay đổi trong Cài đặt."
   },

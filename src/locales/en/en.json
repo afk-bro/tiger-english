@@ -57,6 +57,9 @@
     "login_cta": "Log in",
     "loading": "Creating account...",
     "username": "Username",
+    "username_placeholder": "Username",
+    "first_name_placeholder": "John",
+    "last_name_placeholder": "Doe",
     "native_language": "Your Native Language",
     "native_language_hint": "Cards will show this language on the front. You can change it in Settings."
   },
