@@ -165,6 +165,7 @@
       "heading": "Tiến độ XP",
       "to_next_level": "{{percent}}% đến cấp độ tiếp theo",
       "xp_per_word": "+{{xp}} XP mỗi từ",
+      "total_xp": "+{{xp}} XP",
       "words": "{{count}} từ",
       "tiers": {
         "beginner": "Người mới",

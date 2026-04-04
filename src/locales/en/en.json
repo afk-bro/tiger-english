@@ -165,6 +165,7 @@
       "heading": "XP Progress",
       "to_next_level": "{{percent}}% to next level",
       "xp_per_word": "+{{xp}} XP per word",
+      "total_xp": "+{{xp}} XP",
       "words": "{{count}} words",
       "tiers": {
         "beginner": "Beginner",

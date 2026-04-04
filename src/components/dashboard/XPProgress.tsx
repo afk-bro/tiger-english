@@ -76,7 +76,7 @@ export default function XPProgress({ xp, progressColorClass }: XPProgressProps) 
                     {t(`dashboard.xp.tiers.${tier}`)}
                   </div>
                   <div className={`text-lg font-bold ${styles.xp}`}>
-                    {t('dashboard.xp.xp_per_word', { xp: data.totalXP })}
+                    {t('dashboard.xp.total_xp', { xp: data.totalXP })}
                   </div>
                 </div>
                 <div className={`${styles.meta} text-right`}>

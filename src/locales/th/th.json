@@ -165,6 +165,7 @@
       "heading": "ความคืบหน้า XP",
       "to_next_level": "{{percent}}% ถึงเลเวลถัดไป",
       "xp_per_word": "+{{xp}} XP ต่อคำ",
+      "total_xp": "+{{xp}} XP",
       "words": "{{count}} คำ",
       "tiers": {
         "beginner": "ผู้เริ่มต้น",
