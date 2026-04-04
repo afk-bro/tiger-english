@@ -370,7 +370,8 @@
       }
     },
     "stub": {
-      "coming_soon": "{{title}} — sắp ra mắt"
+      "coming_soon": "{{title}} — sắp ra mắt",
+      "public_profile": "Hồ sơ công khai"
     }
   }
 }

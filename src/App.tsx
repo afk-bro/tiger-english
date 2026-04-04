@@ -49,7 +49,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/flashcards" element={<FlashcardsPage />} />
-              <Route path="/u/:username" element={<StubPage titleKey="common.sidebar.nav.home" />} />
+              <Route path="/u/:username" element={<StubPage titleKey="common.stub.public_profile" />} />
               <Route path="/login" element={<RequireGuest><Login /></RequireGuest>} />
               <Route path="/register" element={<RequireGuest><Register /></RequireGuest>} />
             </Route>

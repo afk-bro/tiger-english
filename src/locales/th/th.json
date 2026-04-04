@@ -370,7 +370,8 @@
       }
     },
     "stub": {
-      "coming_soon": "{{title}} — เร็วๆ นี้"
+      "coming_soon": "{{title}} — เร็วๆ นี้",
+      "public_profile": "โปรไฟล์สาธารณะ"
     }
   }
 }
