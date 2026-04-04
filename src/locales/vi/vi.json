@@ -1,0 +1,375 @@
+{
+  "hero": {
+    "badge": "Học tiếng Anh với AI",
+    "title": "Học tiếng Anh tự tin hơn",
+    "subtitle": "Được thiết kế cho học sinh và người đi làm. Xây dựng vốn từ, cải thiện sự lưu loát và phát triển kỹ năng với các công cụ AI và gia sư cá nhân.",
+    "cta": "Bắt đầu học ngay hôm nay",
+    "try_flashcards": "Thử thẻ học",
+    "learn_more": "Tìm hiểu thêm"
+  },
+  "features": {
+    "heading": "Mọi thứ bạn cần để thành thạo tiếng Anh",
+    "subheading": "Nền tảng toàn diện của chúng tôi kết hợp AI tiên tiến với các phương pháp giảng dạy đã được chứng minh",
+    "cards": {
+      "flashcards": {
+        "title": "Thẻ học tương tác",
+        "desc": "Tạo thẻ từ vựng hỗ trợ AI với hình ảnh theo ngữ cảnh, phát âm và định nghĩa cá nhân hóa phù hợp với phong cách học của bạn."
+      },
+      "tutoring": {
+        "title": "Gia sư cá nhân",
+        "desc": "Nhận hỗ trợ 1-1 từ các gia sư giàu kinh nghiệm, hiểu những thách thức đặc thù của người học và thích nghi với tốc độ cũng như mục tiêu của bạn."
+      },
+      "ai": {
+        "title": "Học tập với AI",
+        "desc": "Trải nghiệm nội dung thông minh thích nghi với tiến trình của bạn, xác định điểm yếu và cung cấp bài tập có mục tiêu để cải thiện tối đa."
+      }
+    }
+  },
+  "cta": {
+    "heading": "Sẵn sàng nâng cao kỹ năng tiếng Anh?",
+    "desc": "Tiếng Anh tự tin cho học sinh, người đi làm và các nhà lãnh đạo tương lai.",
+    "button": "Tạo tài khoản",
+    "contact": "Liên hệ chúng tôi"
+  },
+  "header": {
+    "logo": "Tiger English",
+    "tagline": "Thắp sáng con đường đến tiếng Anh tự tin",
+    "nav": {
+      "flashcards": "Thẻ học",
+      "about": "Giới thiệu",
+      "contact": "Liên hệ",
+      "login": "Đăng nhập",
+      "register": "Đăng ký",
+      "dashboard": "Bảng điều khiển",
+      "logout": "Đăng xuất"
+    }
+  },
+  "register": {
+    "title": "Tạo tài khoản",
+    "subtitle": "Tham gia Tiger English và bắt đầu học tiếng Anh với các công cụ AI và gia sư thực tế.",
+    "first_name": "Tên",
+    "last_name": "Họ",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "confirm_password": "Xác nhận mật khẩu",
+    "submit": "Đăng ký",
+    "login_link": "Đã có tài khoản?",
+    "login_cta": "Đăng nhập",
+    "loading": "Đang tạo tài khoản...",
+    "username": "Tên người dùng",
+    "native_language": "Ngôn ngữ mẹ đẻ của bạn",
+    "native_language_hint": "Thẻ sẽ hiển thị ngôn ngữ này ở mặt trước. Bạn có thể thay đổi trong Cài đặt."
+  },
+  "login": {
+    "title": "Chào mừng trở lại",
+    "subtitle": "Đăng nhập để tiếp tục học",
+    "email": "Địa chỉ email",
+    "password": "Mật khẩu",
+    "submit": "Đăng nhập",
+    "loading": "Đang đăng nhập...",
+    "no_account": "Chưa có tài khoản?",
+    "create_account": "Đăng ký"
+  },
+  "logout": {
+    "success": "Đăng xuất thành công",
+    "fail": "Đăng xuất thất bại"
+  },
+  "flashcards": {
+    "choose_native_language": "Chọn ngôn ngữ mẹ đẻ để xem bản dịch:",
+    "translation_coming_soon": "Bản dịch sắp có",
+    "card_not_translated": "Thẻ này chưa có bản dịch. Nhấn để lật.",
+    "flip": {
+      "front_with_word": "Lật thẻ cho {{word}}",
+      "front_no_word": "Lật thẻ để xem bản dịch",
+      "back": "Lật thẻ lại"
+    },
+    "tts": {
+      "speak_label": "Nghe cách phát âm {{word}}"
+    },
+    "example": {
+      "show": "Xem ví dụ",
+      "hide": "Ẩn ví dụ"
+    },
+    "viewer": {
+      "no_cards": "Chưa có thẻ nào trong bộ này.",
+      "back_to_sets": "← Quay lại bộ thẻ",
+      "back": "← Quay lại",
+      "card_count": "Thẻ {{current}} / {{total}}",
+      "previous": "← Trước",
+      "next": "Tiếp →",
+      "go_to_card": "Đi đến thẻ {{number}}",
+      "still_learning": "Vẫn đang học",
+      "i_know_this": "Tôi đã biết",
+      "keyboard_hint": "Dùng phím ← → để điều hướng"
+    },
+    "sets": {
+      "heading": "Bộ thẻ học",
+      "create": "+ Tạo bộ thẻ",
+      "loading": "Đang tải bộ thẻ…",
+      "load_error": "Không tải được bộ thẻ: {{error}}",
+      "empty": "Chưa có bộ thẻ nào.",
+      "card_singular": "thẻ",
+      "card_plural": "thẻ"
+    },
+    "create_modal": {
+      "heading": "Tạo bộ thẻ học",
+      "title_label": "Tiêu đề",
+      "title_placeholder": "vd: Business English",
+      "description_label": "Mô tả",
+      "description_placeholder": "Mô tả (không bắt buộc)",
+      "submit_loading": "Đang tạo…",
+      "submit": "Tạo bộ thẻ",
+      "cancel": "Hủy",
+      "error_default": "Không thể tạo bộ thẻ"
+    },
+    "welcome": {
+      "title": "Thành thạo tiếng Anh với",
+      "title_highlight": "Thẻ học",
+      "subtitle": "Luyện từ vựng, cải thiện phát âm và xây dựng sự tự tin trong hành trình học tiếng Anh."
+    },
+    "action_bar": {
+      "play_audio": "Phát âm thanh",
+      "play_audio_tooltip": "Phát cách phát âm",
+      "show_image": "Xem hình ảnh",
+      "image_tooltip": "Xem hình ảnh liên quan",
+      "no_image_tooltip": "Không có hình ảnh",
+      "study_mode": "Chế độ học",
+      "study_mode_tooltip": "Bật/tắt chế độ học",
+      "add_word": "Thêm từ",
+      "add_word_tooltip": "Thêm vào bộ thẻ cá nhân",
+      "add_word_login_tooltip": "Đăng nhập để thêm từ"
+    },
+    "loading_cards": "Đang tải thẻ…",
+    "language": {
+      "th": "Tiếng Thái",
+      "zh": "Tiếng Trung",
+      "vi": "Tiếng Việt"
+    }
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "native_language": "Ngôn ngữ mẹ đẻ",
+    "native_language_desc": "Thẻ học sẽ hiển thị bản dịch theo ngôn ngữ bạn chọn.",
+    "save": "Lưu thay đổi",
+    "saving": "Đang lưu…",
+    "saved": "Đã lưu!"
+  },
+  "dashboard": {
+    "welcome": {
+      "greeting": "Chào mừng trở lại, {{name}}!",
+      "journey": "Sẵn sàng tiếp tục hành trình học tiếng Anh chưa?",
+      "level": "Cấp độ {{level}}",
+      "streak": "Chuỗi {{streak}} ngày"
+    },
+    "xp": {
+      "heading": "Tiến độ XP",
+      "to_next_level": "{{percent}}% đến cấp độ tiếp theo",
+      "xp_per_word": "+{{xp}} XP mỗi từ",
+      "words": "{{count}} từ",
+      "tiers": {
+        "beginner": "Người mới",
+        "intermediate": "Trung cấp",
+        "expert": "Chuyên gia"
+      }
+    },
+    "groups": {
+      "heading": "Bộ thẻ của bạn",
+      "progress": "Tiến độ",
+      "cards": "{{completed}}/{{total}} thẻ",
+      "today": "Hôm nay",
+      "yesterday": "Hôm qua"
+    },
+    "stats": {
+      "words_learned": "Từ đã học",
+      "today": "Hôm nay",
+      "accuracy": "Độ chính xác",
+      "day_streak": "Chuỗi ngày"
+    },
+    "logout": "Đăng xuất",
+    "loading": "Đang tải..."
+  },
+  "about": {
+    "title": "Giới thiệu Tiger English",
+    "tagline": "Xây dựng công cụ cho người học ngôn ngữ",
+    "story": {
+      "p1": "Tiger English được tạo ra bởi người hiểu cả thách thức học ngôn ngữ lẫn giá trị của công cụ tốt. Tôi có nền tảng phát triển web, chứng chỉ TEFL và niềm đam mê xây dựng trải nghiệm học tập tương tác.",
+      "p2": "Nền tảng này bắt đầu như một dự án cá nhân — kết hợp kỹ năng kỹ thuật với niềm yêu thích giáo dục. Mục tiêu của tôi là giúp người học tiếng Anh phát triển vốn từ vựng và sự tự tin thông qua việc luyện tập vui vẻ và hiệu quả.",
+      "p3": "Tôi đang chuẩn bị sống và dạy học ở nước ngoài, và Tiger English là một phần của hành trình đó. Tôi liên tục cải thiện trang web, học hỏi theo từng bước và xây dựng nó thành điều gì đó thực sự hữu ích cho mọi người."
+    },
+    "skills": {
+      "heading": "Kỹ năng & Công nghệ",
+      "intro": "Nền tảng này được xây dựng với các công nghệ web hiện đại để đảm bảo trải nghiệm học tập nhanh, dễ tiếp cận và hấp dẫn:",
+      "categories": {
+        "Frontend": "Giao diện",
+        "Styling": "Kiểu dáng",
+        "Build Tool": "Công cụ build",
+        "Backend": "Backend",
+        "Internationalization": "Đa ngôn ngữ"
+      }
+    },
+    "connect": {
+      "heading": "Kết nối với tôi",
+      "contact_heading": "Liên hệ",
+      "contact_desc": "Muốn chia sẻ phản hồi, ý tưởng hoặc chỉ nói xin chào?",
+      "contact_button": "Liên hệ ngay",
+      "coming_soon": "Sắp ra mắt",
+      "social_aria": "Hồ sơ {{name}}",
+      "avatar_alt": "Ảnh đại diện của người tạo Tiger English"
+    }
+  },
+  "contact": {
+    "heading": "Liên hệ",
+    "intro": "Bạn có câu hỏi, phản hồi hoặc chỉ muốn chào hỏi? Tôi rất vui được nghe từ bạn!",
+    "form": {
+      "name_label": "Họ tên",
+      "name_placeholder": "Họ và tên đầy đủ",
+      "email_label": "Email",
+      "email_placeholder": "your.email@example.com",
+      "message_label": "Tin nhắn",
+      "message_placeholder": "Hãy chia sẻ câu hỏi, phản hồi hoặc chỉ chào hỏi...",
+      "submit": "Gửi tin nhắn",
+      "sending": "Đang gửi...",
+      "success": "Gửi tin nhắn thành công! Tôi sẽ liên hệ lại sớm.",
+      "error": "Gửi tin nhắn thất bại. Vui lòng thử lại."
+    },
+    "info": {
+      "heading": "Hãy kết nối",
+      "intro": "Tôi luôn hứng thú kết nối với những người học ngôn ngữ, nhà giáo dục và nhà phát triển.",
+      "direct_heading": "Liên hệ trực tiếp",
+      "social_heading": "Mạng xã hội",
+      "coming_soon": "Sắp ra mắt",
+      "social_aria": "Hồ sơ {{name}}"
+    },
+    "faq": {
+      "heading": "Câu hỏi nhanh",
+      "q1": "Cách tốt nhất để liên hệ với bạn là gì?",
+      "a1": "Email là cách đáng tin cậy nhất để liên hệ. Tôi thường trả lời trong vòng 24-48 giờ.",
+      "q2": "Bạn có thể giúp tôi học tiếng Anh không?",
+      "a2": "Hoàn toàn có thể! Tôi thích giúp đỡ người học. Hãy thoải mái chia sẻ câu hỏi hoặc thách thức của bạn.",
+      "q3": "Bạn có sẵn sàng hợp tác không?",
+      "a3": "Tôi luôn sẵn lòng với các dự án và sự hợp tác thú vị. Hãy thảo luận về ý tưởng của bạn!"
+    }
+  },
+  "authhome": {
+    "continue_studying": {
+      "heading": "Tiếp tục học",
+      "empty": "Bạn chưa học bộ thẻ nào.",
+      "start": "Bắt đầu bộ thẻ đầu tiên",
+      "reviewed": "Đã ôn {{reviewed}} / {{total}} thẻ",
+      "completed": "Hoàn thành ✓",
+      "continue": "Tiếp tục học",
+      "streak_badge": "Chuỗi {{streak}} ngày",
+      "accuracy_badge": "Độ chính xác {{accuracy}}%",
+      "time": {
+        "less_than_hour": "Dưới một giờ trước",
+        "one_hour": "1 giờ trước",
+        "hours": "{{hours}} giờ trước",
+        "one_day": "1 ngày trước",
+        "days": "{{days}} ngày trước"
+      }
+    },
+    "recommended": {
+      "heading": "Đề xuất tiếp theo",
+      "empty": "Hoàn thành một bộ thẻ để nhận đề xuất.",
+      "reasons": {
+        "review": "Cần ôn lại",
+        "sequence": "Tiếp theo trong chuỗi",
+        "related": "Liên quan đến bài học gần đây"
+      },
+      "study": "Học"
+    },
+    "invite": {
+      "heading": "Mời bạn bè",
+      "desc": "Bạn có biết ai muốn học tiếng Anh không? Hãy mời họ đến Tiger English.",
+      "copy": "Sao chép liên kết mời",
+      "invite": "Mời bạn bè",
+      "toast": {
+        "no_clipboard": "Không thể dùng clipboard. Vui lòng sao chép liên kết thủ công.",
+        "copied": "Đã sao chép liên kết mời!",
+        "copy_failed": "Sao chép liên kết thất bại. Vui lòng sao chép thủ công."
+      }
+    },
+    "study_groups": {
+      "heading": "Nhóm học",
+      "empty": "Chưa có nhóm học. Tạo nhóm để học cùng bạn bè.",
+      "members": "{{count}} thành viên",
+      "create": "Tạo nhóm học",
+      "invite": "Mời vào nhóm"
+    }
+  },
+  "auth": {
+    "errors": {
+      "email_registered": "Có vẻ như bạn đã có tài khoản với email này.",
+      "login_instead": "Đăng nhập thay vì →",
+      "username_taken": "Vui lòng thử tên người dùng khác. Bạn có thể dùng chữ cái, số và dấu gạch dưới.",
+      "general": "Vui lòng kiểm tra thông tin và thử lại.",
+      "invalid_credentials": "Email hoặc mật khẩu không đúng"
+    },
+    "google": {
+      "button": "Tiếp tục với Google",
+      "connecting": "Đang kết nối…"
+    },
+    "separator": "hoặc",
+    "toast": {
+      "login_success": "Đăng nhập thành công"
+    },
+    "password_rules": {
+      "min_length": "Ít nhất 8 ký tự",
+      "uppercase": "Một chữ hoa",
+      "special": "Một ký tự đặc biệt (!@#$%^&*)"
+    },
+    "callback": {
+      "checking": "Đang đăng nhập…",
+      "waiting": "Đang thiết lập tài khoản…",
+      "timeout_title": "Mất nhiều thời gian hơn dự kiến",
+      "timeout_message": "Tài khoản của bạn đang được thiết lập. Thường chỉ mất một lúc.",
+      "try_again": "Thử lại",
+      "back_to_login": "Quay lại đăng nhập",
+      "error_title": "Xác thực thất bại",
+      "error_default": "Đã xảy ra sự cố trong quá trình đăng nhập. Vui lòng thử lại.",
+      "session_expired": "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại.",
+      "timed_out": "Xác thực đã hết thời gian. Vui lòng thử lại."
+    }
+  },
+  "common": {
+    "loading": "Đang tải...",
+    "error": {
+      "title": "Có gì đó không ổn",
+      "message": "Xin lỗi, đã xảy ra sự cố ngoài mong đợi. Vui lòng thử tải lại trang.",
+      "refresh": "Tải lại trang",
+      "dev_details": "Chi tiết lỗi (Phát triển)"
+    },
+    "nav": {
+      "open_menu": "Mở menu",
+      "close_menu": "Đóng menu",
+      "open_nav": "Mở điều hướng",
+      "close_nav": "Đóng điều hướng",
+      "expand_sidebar": "Mở rộng thanh bên",
+      "collapse_sidebar": "Thu nhỏ thanh bên"
+    },
+    "footer": "© {{year}} Tiger English — Bảo lưu mọi quyền",
+    "coming_soon": "sắp ra mắt",
+    "sidebar": {
+      "title": "Tiger English",
+      "nav": {
+        "home": "Trang chủ",
+        "dashboard": "Bảng điều khiển",
+        "library": "Thư viện",
+        "study_groups": "Nhóm học",
+        "notifications": "Thông báo",
+        "flashcards": "Thẻ học",
+        "drag_drop": "Kéo & Thả",
+        "ad_libs": "Điền từ"
+      },
+      "utility": {
+        "settings": "Cài đặt",
+        "help": "Trợ giúp",
+        "profile": "Hồ sơ",
+        "logout": "Đăng xuất"
+      }
+    },
+    "stub": {
+      "coming_soon": "{{title}} — sắp ra mắt"
+    }
+  }
+}
