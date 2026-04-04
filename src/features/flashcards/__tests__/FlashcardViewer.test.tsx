@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import type { FlashcardCard, CardProgress } from '../types';
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 // Render Flashcard as a simple stub so we can assert on displayed english word
 // without depending on the 3D-flip animation internals.
 vi.mock('@/components/flashcards/Flashcard', () => ({
@@ -49,12 +53,12 @@ beforeEach(() => vi.clearAllMocks());
 describe('FlashcardViewer — empty state', () => {
   it('shows "No cards" message when cards is empty', () => {
     render(<FlashcardViewer {...baseProps} cards={[]} />);
-    expect(screen.getByText('No cards in this set yet.')).toBeInTheDocument();
+    expect(screen.getByText('flashcards.viewer.no_cards')).toBeInTheDocument();
   });
 
   it('"Back to sets" button calls onBack when cards is empty', () => {
     render(<FlashcardViewer {...baseProps} cards={[]} />);
-    fireEvent.click(screen.getByRole('button', { name: /back to sets/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'flashcards.viewer.back_to_sets' }));
     expect(baseProps.onBack).toHaveBeenCalledTimes(1);
   });
 });
@@ -65,7 +69,7 @@ describe('FlashcardViewer — card counter', () => {
   it('shows "Card 1 of N" counter', () => {
     const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} />);
-    expect(screen.getByText('Card 1 of 2')).toBeInTheDocument();
+    expect(screen.getByText('flashcards.viewer.card_count')).toBeInTheDocument();
   });
 });
 
@@ -77,7 +81,7 @@ describe('FlashcardViewer — button navigation', () => {
     render(<FlashcardViewer {...baseProps} cards={cards} />);
 
     expect(screen.getByTestId('flashcard')).toHaveTextContent('Hello');
-    fireEvent.click(screen.getByRole('button', { name: /next/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'flashcards.viewer.next' }));
     expect(screen.getByTestId('flashcard')).toHaveTextContent('Water');
   });
 
@@ -85,10 +89,10 @@ describe('FlashcardViewer — button navigation', () => {
     const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /next/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'flashcards.viewer.next' }));
     expect(screen.getByTestId('flashcard')).toHaveTextContent('Water');
 
-    fireEvent.click(screen.getByRole('button', { name: /previous/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'flashcards.viewer.previous' }));
     expect(screen.getByTestId('flashcard')).toHaveTextContent('Hello');
   });
 
@@ -100,14 +104,16 @@ describe('FlashcardViewer — button navigation', () => {
     ];
     render(<FlashcardViewer {...baseProps} cards={cards} />);
 
-    fireEvent.click(screen.getByLabelText('Go to card 3'));
+    // With the i18n mock, all dots share the same aria-label key; pick the third (index 2)
+    const dots = screen.getAllByLabelText('flashcards.viewer.go_to_card');
+    fireEvent.click(dots[2]);
     expect(screen.getByTestId('flashcard')).toHaveTextContent('Food');
   });
 
   it('Back button calls onBack', () => {
     render(<FlashcardViewer {...baseProps} />);
     // The back button text is "← Back" (not "← Back to sets" which appears on empty state)
-    fireEvent.click(screen.getByRole('button', { name: /^← back$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'flashcards.viewer.back' }));
     expect(baseProps.onBack).toHaveBeenCalledTimes(1);
   });
 });
@@ -170,21 +176,21 @@ describe('FlashcardViewer — progress badge', () => {
 describe('FlashcardViewer — auth-gated buttons', () => {
   it('hides known/unknown buttons for guests', () => {
     render(<FlashcardViewer {...baseProps} isAuthenticated={false} />);
-    expect(screen.queryByRole('button', { name: /i know this/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /still learning/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'flashcards.viewer.i_know_this' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'flashcards.viewer.still_learning' })).not.toBeInTheDocument();
   });
 
   it('shows known/unknown buttons for authenticated users', () => {
     render(<FlashcardViewer {...baseProps} isAuthenticated={true} />);
-    expect(screen.getByRole('button', { name: /i know this/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /still learning/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'flashcards.viewer.i_know_this' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'flashcards.viewer.still_learning' })).toBeInTheDocument();
   });
 
   it('"I know this" calls onMarkKnown with card id and advances to next card', () => {
     const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} isAuthenticated={true} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /i know this/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'flashcards.viewer.i_know_this' }));
 
     expect(baseProps.onMarkKnown).toHaveBeenCalledWith('c1');
     expect(screen.getByTestId('flashcard')).toHaveTextContent('Water');
@@ -194,7 +200,7 @@ describe('FlashcardViewer — auth-gated buttons', () => {
     const cards = [makeCard(), makeCard({ id: 'c2', englishText: 'Water' })];
     render(<FlashcardViewer {...baseProps} cards={cards} isAuthenticated={true} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /still learning/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'flashcards.viewer.still_learning' }));
 
     expect(baseProps.onMarkUnknown).toHaveBeenCalledWith('c1');
     expect(screen.getByTestId('flashcard')).toHaveTextContent('Water');

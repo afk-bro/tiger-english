@@ -10,12 +10,6 @@ import { FlashcardViewer } from '@/features/flashcards/components/FlashcardViewe
 import { CreateSetModal } from '@/features/flashcards/components/CreateSetModal';
 import { SUPPORTED_LANGUAGES } from '@/schemas/authSchema';
 
-const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = {
-  th: 'Thai',
-  zh: 'Chinese',
-  vi: 'Vietnamese',
-};
-
 export default function FlashcardsPage() {
   const { t } = useTranslation();
   const { profile } = useUserStore();
@@ -27,6 +21,12 @@ export default function FlashcardsPage() {
 
   // Language resolution: profile (authoritative) → local selection → null (blocked)
   const languageCode = profile?.native_language ?? localLanguage;
+
+  const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = {
+    th: t('flashcards.language.th'),
+    zh: t('flashcards.language.zh'),
+    vi: t('flashcards.language.vi'),
+  };
 
   const { sets, loading: setsLoading, error: setsError, createSet } = useFlashcardSets(profile?.id);
   const { cards, loading: cardsLoading } = useFlashcards(selectedSetId, languageCode ?? null);
@@ -70,7 +70,7 @@ export default function FlashcardsPage() {
           />
         ) : cardsLoading ? (
           <div className="flex items-center justify-center py-16">
-            <p className="text-primary-600">Loading cards…</p>
+            <p className="text-primary-600">{t('flashcards.loading_cards')}</p>
           </div>
         ) : (
           <FlashcardViewer

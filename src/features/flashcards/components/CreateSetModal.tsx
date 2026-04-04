@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,6 +18,7 @@ interface CreateSetModalProps {
 }
 
 export function CreateSetModal({ onClose, onSubmit }: CreateSetModalProps) {
+  const { t } = useTranslation();
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -82,7 +84,7 @@ export function CreateSetModal({ onClose, onSubmit }: CreateSetModalProps) {
       onClose();
     } catch (err) {
       setError('root', {
-        message: err instanceof Error ? err.message : 'Failed to create set',
+        message: err instanceof Error ? err.message : t('flashcards.create_modal.error_default'),
       });
     }
   };
@@ -97,18 +99,18 @@ export function CreateSetModal({ onClose, onSubmit }: CreateSetModalProps) {
         className="card card-lg w-full max-w-md"
       >
         <h2 id="create-set-modal-title" className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          Create flashcard set
+          {t('flashcards.create_modal.heading')}
         </h2>
 
         <form onSubmit={handleSubmit(submit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Title <span className="text-red-500">*</span>
+              {t('flashcards.create_modal.title_label')} <span className="text-red-500">*</span>
             </label>
             <input
               {...register('title')}
               className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 dark:bg-gray-700 dark:text-gray-100"
-              placeholder="e.g. Business English"
+              placeholder={t('flashcards.create_modal.title_placeholder')}
             />
             {errors.title && (
               <p className="text-xs text-red-600 mt-1">{errors.title.message}</p>
@@ -117,13 +119,13 @@ export function CreateSetModal({ onClose, onSubmit }: CreateSetModalProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Description
+              {t('flashcards.create_modal.description_label')}
             </label>
             <textarea
               {...register('description')}
               rows={3}
               className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 dark:bg-gray-700 dark:text-gray-100 resize-none"
-              placeholder="Optional description"
+              placeholder={t('flashcards.create_modal.description_placeholder')}
             />
             {errors.description && (
               <p className="text-xs text-red-600 mt-1">{errors.description.message}</p>
@@ -136,10 +138,10 @@ export function CreateSetModal({ onClose, onSubmit }: CreateSetModalProps) {
 
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
             <Button type="button" variant="secondary" size="sm" onClick={onClose} disabled={isSubmitting} className="w-full sm:w-auto">
-              Cancel
+              {t('flashcards.create_modal.cancel')}
             </Button>
             <Button type="submit" variant="primary" size="sm" disabled={isSubmitting} className="w-full sm:w-auto">
-              {isSubmitting ? 'Creating…' : 'Create set'}
+              {isSubmitting ? t('flashcards.create_modal.submit_loading') : t('flashcards.create_modal.submit')}
             </Button>
           </div>
         </form>

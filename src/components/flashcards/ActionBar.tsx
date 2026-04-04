@@ -1,4 +1,5 @@
 // src/components/flashcards/ActionBar.tsx
+import { useTranslation } from 'react-i18next';
 import { FlashcardActionButton } from "./FlashcardActionButton";
 import clsx from "clsx";
 
@@ -48,46 +49,41 @@ export function ActionBar({
   imageAvailable = true,
   className = ""
 }: ActionBarProps) {
+  const { t } = useTranslation();
+
   return (
-    <div 
+    <div
       className={clsx(
         "flex items-center justify-center gap-6 p-4",
         "bg-white border border-gray-200 rounded-lg shadow-sm",
-        "sm:gap-8", // More spacing on larger screens
+        "sm:gap-8",
         className
       )}
     >
-      {/* Play Audio Button */}
       <FlashcardActionButton
         icon={<SpeakerIcon />}
-        label="Play Audio"
-        tooltip="Play pronunciation"
+        label={t('flashcards.action_bar.play_audio')}
+        tooltip={t('flashcards.action_bar.play_audio_tooltip')}
         onClick={onPlayAudio}
       />
-
-      {/* Show Image Button */}
       <FlashcardActionButton
         icon={<ImageIcon />}
-        label="Show Image"
-        tooltip={imageAvailable ? "View related image" : "No image available"}
+        label={t('flashcards.action_bar.show_image')}
+        tooltip={imageAvailable ? t('flashcards.action_bar.image_tooltip') : t('flashcards.action_bar.no_image_tooltip')}
         onClick={onShowImage}
         disabled={!imageAvailable}
       />
-
-      {/* Study Mode Toggle Button */}
       <FlashcardActionButton
         icon={<BookIcon />}
-        label="Study Mode"
-        tooltip="Toggle study mode"
+        label={t('flashcards.action_bar.study_mode')}
+        tooltip={t('flashcards.action_bar.study_mode_tooltip')}
         onClick={onToggleStudyMode}
         active={studyModeActive}
       />
-
-      {/* Add Word Button */}
       <FlashcardActionButton
         icon={<PlusIcon />}
-        label="Add Word"
-        tooltip={isAuthenticated ? "Add to personal deck" : "Login to add words"}
+        label={t('flashcards.action_bar.add_word')}
+        tooltip={isAuthenticated ? t('flashcards.action_bar.add_word_tooltip') : t('flashcards.action_bar.add_word_login_tooltip')}
         onClick={onAddWord}
         disabled={!isAuthenticated}
       />
