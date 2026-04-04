@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import Button from "@/components/ui/Button";
 import { SITE_GITHUB_URL, SITE_CONTACT_EMAIL } from "@/lib/siteConfig";
 
 export default function Contact() {
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -21,18 +23,13 @@ export default function Contact() {
 
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
-    
     try {
-      // Simulate API call - replace with actual backend integration
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // For now, just log the data (replace with actual submission)
       console.log("Contact form data:", data);
-      
-      toast.success("Message sent successfully! I'll get back to you soon.");
+      toast.success(t('contact.form.success'));
       reset();
     } catch (error) {
-      toast.error("Failed to send message. Please try again.");
+      toast.error(t('contact.form.error'));
       console.error("Contact form error:", error);
     } finally {
       setIsSubmitting(false);
@@ -48,14 +45,13 @@ export default function Contact() {
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-6 py-12 md:py-16">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Contact Form Section */}
         <section className="card card-lg">
           <header className="mb-8">
             <h1 className="text-display heading-accent mb-2">
-              Get In Touch
+              {t('contact.heading')}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Have questions, feedback, or just want to say hello? I'd love to hear from you!
+              {t('contact.intro')}
             </p>
           </header>
 
@@ -64,8 +60,8 @@ export default function Contact() {
               <FormInput
                 {...register("name")}
                 name="name"
-                label="Name"
-                placeholder="Your full name"
+                label={t('contact.form.name_label')}
+                placeholder={t('contact.form.name_placeholder')}
                 disabled={isSubmitting}
                 icon={
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,9 +80,9 @@ export default function Contact() {
               <FormInput
                 {...register("email")}
                 name="email"
-                label="Email"
+                label={t('contact.form.email_label')}
                 type="email"
-                placeholder="your.email@example.com"
+                placeholder={t('contact.form.email_placeholder')}
                 disabled={isSubmitting}
                 icon={
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +102,7 @@ export default function Contact() {
                 htmlFor="message"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Message
+                {t('contact.form.message_label')}
               </label>
               <div className="relative">
                 <div className="absolute top-3 left-3 flex items-start">
@@ -119,7 +115,7 @@ export default function Contact() {
                   id="message"
                   name="message"
                   rows={5}
-                  placeholder="Tell me about your question, feedback, or just say hello..."
+                  placeholder={t('contact.form.message_placeholder')}
                   disabled={isSubmitting}
                   className="w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-900 dark:text-white dark:border-gray-700 dark:placeholder-gray-500 resize-none"
                 />
@@ -142,30 +138,28 @@ export default function Contact() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Sending...
+                  {t('contact.form.sending')}
                 </div>
               ) : (
-                "Send Message"
+                t('contact.form.submit')
               )}
             </Button>
           </form>
         </section>
 
-        {/* Contact Information Section */}
         <section className="card card-lg">
           <header className="mb-8">
             <h2 className="text-display heading-accent mb-4">
-              Let's Connect
+              {t('contact.info.heading')}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              I'm always excited to connect with fellow language learners, educators, and developers.
+              {t('contact.info.intro')}
             </p>
           </header>
 
-          {/* Direct Contact */}
           <div className="mb-8">
             <h3 className="text-base md:text-lg font-semibold text-semantic-text dark:text-semantic-text mb-4">
-              Direct Contact
+              {t('contact.info.direct_heading')}
             </h3>
             <div className="space-y-3">
               <div className="flex items-center">
@@ -186,10 +180,9 @@ export default function Contact() {
             </div>
           </div>
 
-          {/* Social Media */}
           <div className="mb-8">
             <h3 className="text-base md:text-lg font-semibold text-semantic-text dark:text-semantic-text mb-4">
-              Social Media
+              {t('contact.info.social_heading')}
             </h3>
             <div className="flex flex-wrap gap-3">
               {socialLinks.map((social) => (
@@ -197,30 +190,22 @@ export default function Contact() {
                   {social.comingSoon ? (
                     <div
                       aria-disabled="true"
-                      title="Coming soon"
+                      title={t('contact.info.coming_soon')}
                       className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed"
                     >
-                      <span className="text-sm" role="img" aria-hidden="true">
-                        {social.icon}
-                      </span>
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                        {social.name}
-                      </span>
+                      <span className="text-sm" role="img" aria-hidden="true">{social.icon}</span>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{social.name}</span>
                     </div>
                   ) : (
                     <a
                       href={social.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={`${social.name} profile`}
+                      aria-label={t('contact.info.social_aria', { name: social.name })}
                       className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                     >
-                      <span className="text-sm" role="img" aria-hidden="true">
-                        {social.icon}
-                      </span>
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                        {social.name}
-                      </span>
+                      <span className="text-sm" role="img" aria-hidden="true">{social.icon}</span>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{social.name}</span>
                     </a>
                   )}
                 </div>
@@ -228,35 +213,22 @@ export default function Contact() {
             </div>
           </div>
 
-          {/* FAQ */}
           <div>
             <h3 className="text-base md:text-lg font-semibold text-semantic-text dark:text-semantic-text mb-4">
-              Quick Questions?
+              {t('contact.faq.heading')}
             </h3>
             <div className="space-y-3 text-sm">
               <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100">
-                  What's the best way to reach you?
-                </p>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Email is the most reliable way to get in touch. I typically respond within 24-48 hours.
-                </p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{t('contact.faq.q1')}</p>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">{t('contact.faq.a1')}</p>
               </div>
               <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100">
-                  Can you help with my English learning?
-                </p>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Absolutely! I love helping learners. Feel free to share your questions or challenges.
-                </p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{t('contact.faq.q2')}</p>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">{t('contact.faq.a2')}</p>
               </div>
               <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100">
-                  Are you available for collaboration?
-                </p>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  I'm always open to interesting projects and collaborations. Let's discuss your ideas!
-                </p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{t('contact.faq.q3')}</p>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">{t('contact.faq.a3')}</p>
               </div>
             </div>
           </div>
