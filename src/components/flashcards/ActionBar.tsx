@@ -56,16 +56,19 @@ export function ActionBar({
       className={clsx(
         "flex items-center justify-center gap-6 p-4",
         "bg-white border border-gray-200 rounded-lg shadow-sm",
-        "sm:gap-8",
+        "sm:gap-8", // More spacing on larger screens
         className
       )}
     >
+      {/* Play Audio Button */}
       <FlashcardActionButton
         icon={<SpeakerIcon />}
         label={t('flashcards.action_bar.play_audio')}
         tooltip={t('flashcards.action_bar.play_audio_tooltip')}
         onClick={onPlayAudio}
       />
+
+      {/* Show Image Button */}
       <FlashcardActionButton
         icon={<ImageIcon />}
         label={t('flashcards.action_bar.show_image')}
@@ -73,6 +76,8 @@ export function ActionBar({
         onClick={onShowImage}
         disabled={!imageAvailable}
       />
+
+      {/* Study Mode Toggle Button */}
       <FlashcardActionButton
         icon={<BookIcon />}
         label={t('flashcards.action_bar.study_mode')}
@@ -80,6 +85,8 @@ export function ActionBar({
         onClick={onToggleStudyMode}
         active={studyModeActive}
       />
+
+      {/* Add Word Button */}
       <FlashcardActionButton
         icon={<PlusIcon />}
         label={t('flashcards.action_bar.add_word')}
