@@ -56,16 +56,20 @@ resources: {
 | Domain | Covers |
 |--------|--------|
 | `flashcards` | Extend existing — flip labels, TTS aria-label, example toggle |
-| `dashboard` | Dashboard page headings, stats labels, nav sidebar |
+| `dashboard` | Dashboard page headings and stats labels only |
 | `profile` | Profile page labels and values |
 | `about` | About page content |
 | `contact` | Contact page form labels, success/error messages |
-| `common` | Loading states, 404, generic error messages, shared button labels |
+| `common` | Loading states, 404, generic error messages, shared button labels, nav/layout strings shared across authenticated and public areas |
 | `auth` | Extend existing — form validation errors, username availability messages |
 
 Existing top-level keys (`hero`, `features`, `cta`, `header`, `register`, `login`, `logout`, `settings`) are untouched.
 
+Nav/layout strings that appear in shared components (navbar, sidebar, breadcrumbs) go under `header.*` or `common.*`, not `dashboard.*`, even if those components are primarily rendered in the authenticated area.
+
 ## Component Migration Pattern
+
+Before finalising the key list, do a grep pass for missed literals across all JSX — pay particular attention to button text, toast messages, empty states, validation error strings, and `aria-label` / `placeholder` attributes. These are the categories most likely to be overlooked in a bulk migration.
 
 Each component that has hardcoded strings adds `useTranslation()` if not already present and replaces literals:
 
@@ -115,6 +119,10 @@ All translations for Thai and Vietnamese are generated. The Vietnamese translati
 | `src/components/layout/` (navbar, footer) | Any remaining hardcoded nav/layout strings |
 | `src/components/ui/` (shared components) | Loading, error, empty-state text |
 | Protected route pages (`/u/:username/*`) | Dashboard, profile, settings content |
+
+## Key Stability
+
+Existing keys are preserved exactly as-is. This migration does not rename, restructure, or consolidate any key that already exists in `en.json` or `th.json`. Opportunistic cleanup of existing keys is out of scope — it would widen the diff and increase regression risk with no user-facing benefit.
 
 ## Out of Scope
 
