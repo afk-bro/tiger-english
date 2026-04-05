@@ -72,6 +72,15 @@ All nine tests map directly to bugs that slipped past the Vitest layer:
 
 The e2e suite is intentionally narrow. Before adding a new Playwright test, ask: **"Would JSDOM miss this?"** If a unit test can cover it adequately, write a Vitest test instead. Playwright tests are slower, have higher maintenance cost, and should be reserved for browser-only behaviour.
 
+### Commit conventions
+
+Split e2e work into two commits:
+
+1. **Infrastructure** (`feat(e2e): ...`) — changes to `playwright.config.ts`, `e2e/fixtures.ts`, `package.json` scripts, or shared helpers.
+2. **Tests** (`test(e2e): ...`) — the spec file(s) themselves.
+
+This keeps the "how we set up Playwright" context separate from "what we're testing and why", and makes individual test regressions easier to bisect.
+
 ---
 
 ## Rule of thumb
