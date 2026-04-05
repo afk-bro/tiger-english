@@ -147,6 +147,10 @@
       "th": "Thai",
       "zh": "Chinese",
       "vi": "Vietnamese"
+    },
+    "language_required": {
+      "heading": "Choose your native language",
+      "subtext": "We'll show you translations in your language so you can learn English."
     }
   },
   "settings": {
