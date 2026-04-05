@@ -1,4 +1,4 @@
-// src/components/dashboard/StudyStats.tsx
+import { useTranslation } from 'react-i18next';
 import { StudyStats as StudyStatsType } from "@/types/dashboard";
 
 interface StudyStatsProps {
@@ -6,6 +6,8 @@ interface StudyStatsProps {
 }
 
 export default function StudyStats({ studyStats }: StudyStatsProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <div className="card">
@@ -17,7 +19,9 @@ export default function StudyStats({ studyStats }: StudyStatsProps) {
             <div className="text-2xl font-bold text-text-light dark:text-text-dark">
               {studyStats.totalWordsLearned}
             </div>
-            <div className="text-sm text-text-light/70 dark:text-text-dark/70">Words Learned</div>
+            <div className="text-sm text-text-light/70 dark:text-text-dark/70">
+              {t('dashboard.stats.words_learned')}
+            </div>
           </div>
         </div>
       </div>
@@ -31,7 +35,9 @@ export default function StudyStats({ studyStats }: StudyStatsProps) {
             <div className="text-2xl font-bold text-text-light dark:text-text-dark">
               {studyStats.studyTimeToday}m
             </div>
-            <div className="text-sm text-text-light/70 dark:text-text-dark/70">Today</div>
+            <div className="text-sm text-text-light/70 dark:text-text-dark/70">
+              {t('dashboard.stats.today')}
+            </div>
           </div>
         </div>
       </div>
@@ -45,7 +51,9 @@ export default function StudyStats({ studyStats }: StudyStatsProps) {
             <div className="text-2xl font-bold text-text-light dark:text-text-dark">
               {studyStats.accuracyRate}%
             </div>
-            <div className="text-sm text-text-light/70 dark:text-text-dark/70">Accuracy</div>
+            <div className="text-sm text-text-light/70 dark:text-text-dark/70">
+              {t('dashboard.stats.accuracy')}
+            </div>
           </div>
         </div>
       </div>
@@ -59,7 +67,9 @@ export default function StudyStats({ studyStats }: StudyStatsProps) {
             <div className="text-2xl font-bold text-text-light dark:text-text-dark">
               {studyStats.currentStreak}
             </div>
-            <div className="text-sm text-text-light/70 dark:text-text-dark/70">Day Streak</div>
+            <div className="text-sm text-text-light/70 dark:text-text-dark/70">
+              {t('dashboard.stats.day_streak')}
+            </div>
           </div>
         </div>
       </div>

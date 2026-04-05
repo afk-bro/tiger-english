@@ -1,6 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 import RecommendedNextCard from '../RecommendedNextCard';
 import type { RecommendedItem } from '../types';
 
@@ -26,12 +31,12 @@ describe('RecommendedNextCard', () => {
 
   it('renders empty state when data is empty array', () => {
     renderCard({ data: [] });
-    expect(screen.getByText(/complete a set/i)).toBeInTheDocument();
+    expect(screen.getByText('authhome.recommended.empty')).toBeInTheDocument();
   });
 
   it('renders empty state when data is null', () => {
     renderCard({ data: null });
-    expect(screen.getByText(/complete a set/i)).toBeInTheDocument();
+    expect(screen.getByText('authhome.recommended.empty')).toBeInTheDocument();
   });
 
   it('renders up to 3 items', () => {
@@ -46,15 +51,15 @@ describe('RecommendedNextCard', () => {
     expect(screen.getByText('Because you studied Travel Basics')).toBeInTheDocument();
   });
 
-  it('falls back to default label for sequence when reasonLabel absent', () => {
+  it('falls back to translated reason key for sequence when reasonLabel absent', () => {
     renderCard();
-    expect(screen.getByText('Next in sequence')).toBeInTheDocument();
+    expect(screen.getByText('authhome.recommended.reasons.sequence')).toBeInTheDocument();
   });
 
-  it('falls back to default label for review', () => {
+  it('falls back to translated reason key for review', () => {
     const reviewOnly: RecommendedItem[] = [{ setId: 'x', title: 'Test', reasonType: 'review', priority: 1 }];
     renderCard({ data: reviewOnly });
-    expect(screen.getByText('Needs review')).toBeInTheDocument();
+    expect(screen.getByText('authhome.recommended.reasons.review')).toBeInTheDocument();
   });
 
   it('sorts items by priority before display', () => {

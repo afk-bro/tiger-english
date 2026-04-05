@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Home, LayoutDashboard, BookOpen, Users, Bell,
   Layers, MousePointer2, FileText,
@@ -17,24 +18,25 @@ interface AppSidebarProps {
 }
 
 const NAV_ITEMS = [
-  { to: "/home",          label: "Home",         icon: Home,           end: true },
-  { to: "/dashboard",     label: "Dashboard",    icon: LayoutDashboard },
-  { to: "/library",       label: "Library",      icon: BookOpen },
-  { to: "/study-groups",  label: "Study Groups", icon: Users },
-  { to: "/notifications", label: "Notifications",icon: Bell },
-  { to: "/flashcards",    label: "Flashcards",   icon: Layers },
-  { to: "/drag-drop",     label: "Drag & Drop",  icon: MousePointer2 },
-  { to: "/ad-libs",       label: "Ad Libs",      icon: FileText },
+  { to: "/home",          labelKey: "common.sidebar.nav.home",           icon: Home,           end: true },
+  { to: "/dashboard",     labelKey: "common.sidebar.nav.dashboard",      icon: LayoutDashboard },
+  { to: "/library",       labelKey: "common.sidebar.nav.library",        icon: BookOpen },
+  { to: "/study-groups",  labelKey: "common.sidebar.nav.study_groups",   icon: Users },
+  { to: "/notifications", labelKey: "common.sidebar.nav.notifications",  icon: Bell },
+  { to: "/flashcards",    labelKey: "common.sidebar.nav.flashcards",     icon: Layers },
+  { to: "/drag-drop",     labelKey: "common.sidebar.nav.drag_drop",      icon: MousePointer2 },
+  { to: "/ad-libs",       labelKey: "common.sidebar.nav.ad_libs",        icon: FileText },
 ] as const;
 
 const UTILITY_ITEMS = [
-  { label: "Settings",  icon: Settings },
-  { label: "Help",      icon: HelpCircle },
-  { label: "Profile",   icon: User },
-  { label: "Logout",    icon: LogOut },
+  { labelKey: "common.sidebar.utility.settings", icon: Settings },
+  { labelKey: "common.sidebar.utility.help",     icon: HelpCircle },
+  { labelKey: "common.sidebar.utility.profile",  icon: User },
+  { labelKey: "common.sidebar.utility.logout",   icon: LogOut },
 ] as const;
 
 export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClose, triggerRef }: AppSidebarProps) {
+  const { t } = useTranslation();
   // Return focus to the trigger (hamburger) button on drawer close
   const prevIsOpen = useRef(isOpen);
   useEffect(() => {
@@ -57,18 +59,18 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
         <div className="flex items-center gap-2 min-w-0">
           <img
             src={Logo}
-            alt="Tiger English"
+            alt={t('common.sidebar.title')}
             className="w-7 h-7 flex-shrink-0 rounded"
           />
           {!collapsed && (
             <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-              Tiger English
+              {t('common.sidebar.title')}
             </span>
           )}
         </div>
         <button
           onClick={onToggleCollapsed}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? t('common.nav.expand_sidebar') : t('common.nav.collapse_sidebar')}
           className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 flex-shrink-0"
         >
           {collapsed ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -81,7 +83,7 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
           <SidebarNavItem
             key={item.to}
             to={item.to}
-            label={item.label}
+            label={t(item.labelKey)}
             icon={item.icon}
             collapsed={collapsed}
             end={'end' in item ? item.end : false}
@@ -91,18 +93,21 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
 
       {/* Bottom utility zone */}
       <div className="px-2 py-3 border-t border-gray-200 dark:border-gray-700 space-y-1">
-        {UTILITY_ITEMS.map((item) => (
-          <button
-            key={item.label}
-            aria-label={collapsed ? item.label : undefined}
-            title={collapsed ? item.label : undefined}
-            disabled
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 dark:text-gray-600 cursor-not-allowed"
-          >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span>{item.label}</span>}
-          </button>
-        ))}
+        {UTILITY_ITEMS.map((item) => {
+          const label = t(item.labelKey);
+          return (
+            <button
+              key={item.labelKey}
+              aria-label={collapsed ? label : undefined}
+              title={collapsed ? label : undefined}
+              disabled
+              className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 dark:text-gray-600 cursor-not-allowed"
+            >
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              {!collapsed && <span>{label}</span>}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -130,7 +135,7 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Navigation"
+        aria-label={t('common.nav.open_nav')}
         className={[
           "fixed right-0 top-0 h-full z-50 transition-transform duration-200",
           isOpen ? "translate-x-0" : "translate-x-full",
@@ -139,7 +144,7 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
         <div className="flex items-start h-full">
           <button
             onClick={onClose}
-            aria-label="Close navigation"
+            aria-label={t('common.nav.close_nav')}
             className="m-2 p-2 rounded-full bg-white dark:bg-gray-800 shadow flex-shrink-0 mt-2"
           >
             <X className="w-4 h-4" />

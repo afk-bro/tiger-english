@@ -2,6 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -39,7 +43,7 @@ describe('ContinueStudyingCard', () => {
 
   it('renders empty state when data is null', () => {
     renderCard({ data: null });
-    expect(screen.getByText(/start your first set/i)).toBeInTheDocument();
+    expect(screen.getByText('authhome.continue_studying.start')).toBeInTheDocument();
   });
 
   it('renders set title in populated state', () => {
@@ -47,9 +51,9 @@ describe('ContinueStudyingCard', () => {
     expect(screen.getByText('Travel Basics')).toBeInTheDocument();
   });
 
-  it('renders "Reviewed 18 of 30 cards"', () => {
+  it('renders reviewed card count key in populated state', () => {
     renderCard();
-    expect(screen.getByText(/reviewed 18 of 30 cards/i)).toBeInTheDocument();
+    expect(screen.getByText('authhome.continue_studying.reviewed')).toBeInTheDocument();
   });
 
   it('renders progress bar at 0% when totalCards is 0', () => {
@@ -60,12 +64,12 @@ describe('ContinueStudyingCard', () => {
 
   it('shows completed indicator when reviewedCount equals totalCards', () => {
     renderCard({ data: { ...mockData, reviewedCount: 30, totalCards: 30 } });
-    expect(screen.getByText(/completed/i)).toBeInTheDocument();
+    expect(screen.getByText('authhome.continue_studying.completed')).toBeInTheDocument();
   });
 
   it('navigates to /flashcards with setId state on Continue Studying click', () => {
     renderCard();
-    fireEvent.click(screen.getByRole('button', { name: /continue studying/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'authhome.continue_studying.continue' }));
     expect(mockNavigate).toHaveBeenCalledWith('/flashcards', { state: { setId: 'set-1' } });
   });
 });

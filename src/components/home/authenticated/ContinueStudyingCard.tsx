@@ -1,4 +1,5 @@
 // src/components/home/authenticated/ContinueStudyingCard.tsx
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from "react-router-dom";
 import type { ContinueStudyingData } from "./types";
 
@@ -7,17 +8,8 @@ interface Props {
   isLoading: boolean;
 }
 
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  if (hours < 1) return "Less than an hour ago";
-  if (hours === 1) return "1 hour ago";
-  if (hours < 24) return `${hours} hours ago`;
-  const days = Math.floor(hours / 24);
-  return days === 1 ? "1 day ago" : `${days} days ago`;
-}
-
 export default function ContinueStudyingCard({ data, isLoading }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   if (isLoading) {
@@ -29,13 +21,17 @@ export default function ContinueStudyingCard({ data, isLoading }: Props) {
   if (!data) {
     return (
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Continue Studying</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">You haven't studied any sets yet.</p>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+          {t('authhome.continue_studying.heading')}
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {t('authhome.continue_studying.empty')}
+        </p>
         <button
           onClick={() => navigate("/flashcards")}
           className="self-start px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"
         >
-          Start your first set
+          {t('authhome.continue_studying.start')}
         </button>
       </div>
     );
@@ -43,6 +39,18 @@ export default function ContinueStudyingCard({ data, isLoading }: Props) {
 
   const progress = data.totalCards === 0 ? 0 : Math.round((data.reviewedCount / data.totalCards) * 100);
   const isComplete = data.totalCards > 0 && data.reviewedCount === data.totalCards;
+
+  const timeAgo = (iso: string): string => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    if (hours < 1) return t('authhome.continue_studying.time.less_than_hour');
+    if (hours === 1) return t('authhome.continue_studying.time.one_hour');
+    if (hours < 24) return t('authhome.continue_studying.time.hours', { hours });
+    const days = Math.floor(hours / 24);
+    return days === 1
+      ? t('authhome.continue_studying.time.one_day')
+      : t('authhome.continue_studying.time.days', { days });
+  };
 
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col gap-4 bg-white dark:bg-gray-900">
@@ -54,12 +62,12 @@ export default function ContinueStudyingCard({ data, isLoading }: Props) {
         <div className="flex gap-2">
           {data.streak !== undefined && (
             <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full">
-              🔥 {data.streak} day streak
+              🔥 {t('authhome.continue_studying.streak_badge', { streak: data.streak })}
             </span>
           )}
           {data.accuracy !== undefined && (
             <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
-              {data.accuracy}% accuracy
+              {t('authhome.continue_studying.accuracy_badge', { accuracy: data.accuracy })}
             </span>
           )}
         </div>
@@ -67,8 +75,14 @@ export default function ContinueStudyingCard({ data, isLoading }: Props) {
 
       <div className="space-y-1">
         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-          <span>Reviewed {data.reviewedCount} of {data.totalCards} cards</span>
-          {isComplete && <span className="text-green-600 dark:text-green-400 font-medium">Completed ✓</span>}
+          <span>
+            {t('authhome.continue_studying.reviewed', { reviewed: data.reviewedCount, total: data.totalCards })}
+          </span>
+          {isComplete && (
+            <span className="text-green-600 dark:text-green-400 font-medium">
+              {t('authhome.continue_studying.completed')}
+            </span>
+          )}
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
@@ -88,7 +102,7 @@ export default function ContinueStudyingCard({ data, isLoading }: Props) {
           onClick={() => navigate("/flashcards", { state: { setId: data.setId } })}
           className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors"
         >
-          Continue Studying
+          {t('authhome.continue_studying.continue')}
         </button>
       </div>
     </div>

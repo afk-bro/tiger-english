@@ -1,6 +1,11 @@
 /// <reference types="vitest/globals" />
+import { vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { PasswordChecklist } from '../PasswordChecklist';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
 
 describe('PasswordChecklist', () => {
   it('renders nothing when value is empty string', () => {

@@ -5,16 +5,19 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 
 import en from '../locales/en/en.json';
 import th from '../locales/th/th.json';
+import vi from '../locales/vi/vi.json';
 
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
-    supportedLngs: ['en', 'th'],
+    supportedLngs: ['en', 'th', 'vi'],
+    nonExplicitSupportedLngs: true,
     resources: {
       en: { translation: en },
       th: { translation: th },
+      vi: { translation: vi },
     },
     interpolation: {
       escapeValue: false,

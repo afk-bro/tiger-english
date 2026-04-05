@@ -5,24 +5,24 @@ export const SPECIAL_CHAR_RE = /[!@#$%^&*]/;
 
 export type PasswordRule = {
   key: string;
-  label: string;
+  labelKey: string;
   test: (v: string) => boolean;
 };
 
 export const PASSWORD_RULES: PasswordRule[] = [
   {
     key: "minLength",
-    label: "At least 8 characters",
+    labelKey: "auth.password_rules.min_length",
     test: (v: string) => v.length >= 8,
   },
   {
     key: "uppercase",
-    label: "One uppercase letter",
+    labelKey: "auth.password_rules.uppercase",
     test: (v: string) => UPPERCASE_RE.test(v),
   },
   {
     key: "special",
-    label: "One special character (!@#$%^&*)",
+    labelKey: "auth.password_rules.special",
     test: (v: string) => SPECIAL_CHAR_RE.test(v),
   },
 ];

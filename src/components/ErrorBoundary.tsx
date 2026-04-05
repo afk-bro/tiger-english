@@ -1,5 +1,6 @@
 // src/components/ErrorBoundary.tsx
 import { Component, ErrorInfo, ReactNode } from 'react';
+import i18n from '@/lib/i18n';
 
 interface Props {
   children: ReactNode;
@@ -43,21 +44,21 @@ class ErrorBoundary extends Component<Props, State> {
               </svg>
             </div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Something went wrong
+              {i18n.t('common.error.title')}
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              We're sorry, but something unexpected happened. Please try refreshing the page.
+              {i18n.t('common.error.message')}
             </p>
             <button
               onClick={() => window.location.reload()}
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
             >
-              Refresh Page
+              {i18n.t('common.error.refresh')}
             </button>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-4 text-left">
                 <summary className="cursor-pointer text-sm text-gray-500 dark:text-gray-400">
-                  Error Details (Development)
+                  {i18n.t('common.error.dev_details')}
                 </summary>
                 <pre className="mt-2 text-xs text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded overflow-auto">
                   {this.state.error.toString()}

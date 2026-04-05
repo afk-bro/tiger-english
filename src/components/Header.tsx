@@ -22,7 +22,7 @@ export default function Header() {
           <Link to="/" className="flex items-center gap-1 group">
             <img
               src={Logo}
-              alt="Tiger English"
+              alt={t("header.logo")}
               className="h-12 w-auto" // adjust height/width as needed
             />
             <div className="flex flex-col">
@@ -64,7 +64,7 @@ export default function Header() {
           <div className="md:hidden flex items-center gap-3">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+              aria-label={isMenuOpen ? t("common.nav.close_menu") : t("common.nav.open_menu")}
               aria-expanded={isMenuOpen}
               className="p-3 text-text-light dark:text-text-dark hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
             >

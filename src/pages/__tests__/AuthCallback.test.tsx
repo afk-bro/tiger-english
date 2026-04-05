@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 // Mock react-router navigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -69,14 +73,14 @@ describe('AuthCallback', () => {
     setupSubscription();
     mockUseUserStore.mockReturnValue(null);
     renderCallback('?error=access_denied&error_description=User+cancelled');
-    expect(screen.getByText(/authentication failed/i)).toBeInTheDocument();
+    expect(screen.getByText('auth.callback.error_title')).toBeInTheDocument();
   });
 
   it('shows checking state on mount', () => {
     setupSubscription();
     mockUseUserStore.mockReturnValue(null);
     renderCallback();
-    expect(screen.getByText(/signing you in/i)).toBeInTheDocument();
+    expect(screen.getByText('auth.callback.checking')).toBeInTheDocument();
   });
 
   it('transitions to auth_error when no SIGNED_IN event within 3s', async () => {
@@ -89,7 +93,7 @@ describe('AuthCallback', () => {
       vi.advanceTimersByTime(3001);
     });
 
-    expect(screen.getByText(/authentication failed/i)).toBeInTheDocument();
+    expect(screen.getByText('auth.callback.error_title')).toBeInTheDocument();
   });
 
   it('transitions to waiting_profile after SIGNED_IN event', async () => {
@@ -101,7 +105,7 @@ describe('AuthCallback', () => {
       sub.fire('SIGNED_IN', { user: { id: '123' } });
     });
 
-    expect(screen.getByText(/setting up your account/i)).toBeInTheDocument();
+    expect(screen.getByText('auth.callback.waiting')).toBeInTheDocument();
   });
 
   it('transitions to waiting_profile after INITIAL_SESSION event with a session', async () => {
@@ -114,7 +118,7 @@ describe('AuthCallback', () => {
       sub.fire('INITIAL_SESSION', { user: { id: '123' } });
     });
 
-    expect(screen.getByText(/setting up your account/i)).toBeInTheDocument();
+    expect(screen.getByText('auth.callback.waiting')).toBeInTheDocument();
   });
 
   it('does not transition on INITIAL_SESSION with null session', async () => {
@@ -128,7 +132,7 @@ describe('AuthCallback', () => {
     });
 
     // Should still be in checking state, not waiting_profile
-    expect(screen.getByText(/signing you in/i)).toBeInTheDocument();
+    expect(screen.getByText('auth.callback.checking')).toBeInTheDocument();
   });
 
   it('redirects to /home when profile is ready', async () => {
@@ -157,7 +161,7 @@ describe('AuthCallback', () => {
       sub.fire('SIGNED_IN', { user: { id: '123' } });
     });
 
-    expect(screen.getByText(/authentication failed/i)).toBeInTheDocument();
+    expect(screen.getByText('auth.callback.error_title')).toBeInTheDocument();
   });
 
   it('shows timeout state after 10s in waiting_profile', async () => {
@@ -170,8 +174,8 @@ describe('AuthCallback', () => {
       vi.advanceTimersByTime(10001);
     });
 
-    expect(screen.getByText(/taking longer than expected/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+    expect(screen.getByText('auth.callback.timeout_title')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'auth.callback.try_again' })).toBeInTheDocument();
   });
 
   it('calls fetchProfile on interval while in waiting_profile', async () => {

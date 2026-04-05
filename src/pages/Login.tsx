@@ -43,7 +43,7 @@ export default function Login() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white dark:bg-gray-900 px-2 text-gray-400 dark:text-gray-500">
-                or
+                {t('auth.separator')}
               </span>
             </div>
           </div>

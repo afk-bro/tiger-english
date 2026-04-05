@@ -7,14 +7,14 @@ import { SUPPORTED_LANGUAGES } from '@/schemas/authSchema';
 import { useTranslation } from 'react-i18next';
 import Button from '@/components/ui/Button';
 
-const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = {
-  th: 'Thai',
-  zh: 'Chinese',
-  vi: 'Vietnamese',
-};
-
 export default function Settings() {
   const { t } = useTranslation();
+
+  const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = {
+    th: t('flashcards.language.th'),
+    zh: t('flashcards.language.zh'),
+    vi: t('flashcards.language.vi'),
+  };
   const { profile, setNativeLanguage } = useUserStore();
   const [selected, setSelected] = useState<string | null>(profile?.native_language ?? null);
   const [saving, setSaving] = useState(false);
@@ -48,7 +48,7 @@ export default function Settings() {
       setNativeLanguage(selected);
       setSaved(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : t('common.error.message'));
     } finally {
       setSaving(false);
     }

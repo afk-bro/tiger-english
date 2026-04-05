@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export interface ErrorGuidanceCardProps {
   errorType: 'email-registered' | 'username-taken' | 'general';
@@ -6,29 +7,31 @@ export interface ErrorGuidanceCardProps {
   showLoginLink?: boolean;
 }
 
-export default function ErrorGuidanceCard({ 
-  errorType, 
-  message, 
-  showLoginLink = false 
+export default function ErrorGuidanceCard({
+  errorType,
+  message,
+  showLoginLink = false
 }: ErrorGuidanceCardProps) {
+  const { t } = useTranslation();
+
   const getGuidanceContent = () => {
     switch (errorType) {
       case 'email-registered':
         return {
-          text: "It looks like you already have an account with this email.",
-          actionText: "Log in instead →",
+          text: t('auth.errors.email_registered'),
+          actionText: t('auth.errors.login_instead'),
           actionLink: "/login"
         };
       case 'username-taken':
         return {
-          text: "Please try a different username. You can use letters, numbers, and underscores.",
+          text: t('auth.errors.username_taken'),
           actionText: null,
           actionLink: null
         };
       case 'general':
       default:
         return {
-          text: message || "Please check your information and try again.",
+          text: message || t('auth.errors.general'),
           actionText: null,
           actionLink: null
         };

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { loginSchema, LoginFormData } from '@/schemas/authSchema';
 import { loginUser } from '@/features/auth/loginUser';
 
@@ -24,6 +25,7 @@ export interface UseLoginFormReturn {
 
 export function useLoginForm(): UseLoginFormReturn {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -61,12 +63,12 @@ export function useLoginForm(): UseLoginFormReturn {
       // Server credential errors surface inline below the password field — no toast.
       setError('password', {
         type: 'server',
-        message: result.message || 'Invalid email or password',
+        message: result.message || t('auth.errors.invalid_credentials'),
       });
       return;
     }
 
-    toast.success('Login successful');
+    toast.success(t('auth.toast.login_success'));
     navigate('/home');
   };
 

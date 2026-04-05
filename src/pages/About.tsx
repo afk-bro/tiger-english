@@ -1,7 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import avatar from "@/assets/TE-logo.png";
 import { SITE_GITHUB_URL, SITE_CONTACT_EMAIL } from "@/lib/siteConfig";
 
 export default function About() {
+  const { t } = useTranslation();
+
   const technologies = [
     { name: "React", category: "Frontend" },
     { name: "TypeScript", category: "Frontend" },
@@ -20,77 +23,59 @@ export default function About() {
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-6 py-12 md:py-16">
       <article className="card card-lg">
-        {/* Header Section */}
         <header className="flex items-center mb-8">
           <img
             src={avatar}
-            alt="Profile picture of the Tiger English creator"
+            alt={t('about.connect.avatar_alt')}
             className="w-16 h-16 rounded-full border-2 border-primary-500 shadow-sm mr-4 flex-shrink-0"
           />
           <div>
             <h1 className="text-display heading-accent">
-              About Tiger English
+              {t('about.title')}
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Building tools for language learners
+              {t('about.tagline')}
             </p>
           </div>
         </header>
 
-        {/* Personal Story Section */}
         <section className="mb-10">
           <h2 className="sr-only">My Story</h2>
           <p className="text-base md:text-lg text-text-light dark:text-text-dark mb-4 leading-relaxed">
-            Tiger English was created by someone who understands both the
-            challenges of learning a language and the value of great tools.
-            I have a background in web development, a TEFL certification, and a passion
-            for building interactive, learner-friendly experiences.
+            {t('about.story.p1')}
           </p>
-
           <p className="text-sm md:text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
-            This platform started as a side project — a way to combine my technical
-            skills with my interest in education. My goal is to help English learners
-            grow their vocabulary and confidence through fun,
-            focused practice.
+            {t('about.story.p2')}
           </p>
-
           <p className="text-sm md:text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
-            I'm currently preparing to live and teach abroad, and Tiger English is part
-            of that journey. I'm actively improving the site, learning as I go, and building
-            it into something that can genuinely help others.
+            {t('about.story.p3')}
           </p>
         </section>
 
-        {/* Skills & Technologies Section */}
         <section className="mb-10">
           <h2 className="text-display heading-accent mb-6">
-            Skills & Technologies
+            {t('about.skills.heading')}
           </h2>
           <p className="text-sm md:text-base text-text-light dark:text-text-dark mb-4 leading-relaxed">
-            This platform is built with modern web technologies to ensure a fast, 
-            accessible, and engaging learning experience:
+            {t('about.skills.intro')}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {technologies.map((tech) => (
-              <div
-                key={tech.name}
-                className="card text-center"
-              >
+              <div key={tech.name} className="card text-center">
                 <div className="font-medium text-text-light dark:text-text-dark text-sm">
                   {tech.name}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {tech.category}
+                  {t(`about.skills.categories.${tech.category}`, tech.category)}
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Social Links Section */}
         <section className="mb-8">
           <h2 className="text-display heading-accent mb-6">
-            Connect With Me
+            {t('about.connect.heading')}
           </h2>
           <div className="flex flex-wrap gap-4 justify-center sm:justify-start mb-6">
             {socialLinks.map((social) => (
@@ -98,30 +83,22 @@ export default function About() {
                 {social.comingSoon ? (
                   <div
                     aria-disabled="true"
-                    title="Coming soon"
+                    title={t('about.connect.coming_soon')}
                     className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed"
                   >
-                    <span className="text-lg" role="img" aria-hidden="true">
-                      {social.icon}
-                    </span>
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      {social.name}
-                    </span>
+                    <span className="text-lg" role="img" aria-hidden="true">{social.icon}</span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{social.name}</span>
                   </div>
                 ) : (
                   <a
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`${social.name} profile`}
+                    aria-label={t('about.connect.social_aria', { name: social.name })}
                     className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                   >
-                    <span className="text-lg" role="img" aria-hidden="true">
-                      {social.icon}
-                    </span>
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      {social.name}
-                    </span>
+                    <span className="text-lg" role="img" aria-hidden="true">{social.icon}</span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{social.name}</span>
                   </a>
                 )}
               </div>
@@ -129,20 +106,19 @@ export default function About() {
           </div>
         </section>
 
-        {/* Contact Section */}
         <section className="text-center">
           <h2 className="text-display heading-accent mb-4">
-            Get In Touch
+            {t('about.connect.contact_heading')}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Want to share feedback, ideas, or just say hi?
+            {t('about.connect.contact_desc')}
           </p>
           <a
             href={`mailto:${SITE_CONTACT_EMAIL}`}
             className="inline-block bg-primary-600 hover:bg-primary-700 focus:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105"
-            aria-label="Send email to the creator of Tiger English"
+            aria-label={t('about.connect.contact_button')}
           >
-            Contact Me
+            {t('about.connect.contact_button')}
           </a>
         </section>
       </article>

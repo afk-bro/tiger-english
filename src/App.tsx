@@ -1,6 +1,7 @@
 // src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { useTranslation } from "react-i18next";
 import AppInitializer from "./components/AppInitializer";
 import PublicLayout from "./components/layout/PublicLayout";
 import AuthLayout from "./components/layout/AuthLayout";
@@ -20,9 +21,14 @@ const Dashboard      = lazy(() => import("./pages/Dashboard"));
 const Settings       = lazy(() => import("@/pages/Settings"));
 
 // Stub pages for new authenticated routes
-const StubPage = ({ title }: { title: string }) => (
-  <div className="p-8 text-2xl font-semibold text-gray-700 dark:text-gray-300">{title} — coming soon</div>
-);
+const StubPage = ({ titleKey }: { titleKey: string }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="p-8 text-2xl font-semibold text-gray-700 dark:text-gray-300">
+      {t('common.stub.coming_soon', { title: t(titleKey) })}
+    </div>
+  );
+};
 
 const PageLoader = () => (
   <div className="min-h-screen bg-semantic-bg flex items-center justify-center">
@@ -43,7 +49,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/flashcards" element={<FlashcardsPage />} />
-              <Route path="/u/:username" element={<StubPage title="Public Profile" />} />
+              <Route path="/u/:username" element={<StubPage titleKey="common.stub.public_profile" />} />
               <Route path="/login" element={<RequireGuest><Login /></RequireGuest>} />
               <Route path="/register" element={<RequireGuest><Register /></RequireGuest>} />
             </Route>
@@ -55,12 +61,12 @@ function App() {
             <Route element={<RequireAuth><AuthLayout /></RequireAuth>}>
               <Route path="/home" element={<AuthHome />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/library" element={<StubPage title="Library" />} />
-              <Route path="/study-groups" element={<StubPage title="Study Groups" />} />
-              <Route path="/notifications" element={<StubPage title="Notifications" />} />
+              <Route path="/library" element={<StubPage titleKey="common.sidebar.nav.library" />} />
+              <Route path="/study-groups" element={<StubPage titleKey="common.sidebar.nav.study_groups" />} />
+              <Route path="/notifications" element={<StubPage titleKey="common.sidebar.nav.notifications" />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/drag-drop" element={<StubPage title="Drag & Drop" />} />
-              <Route path="/ad-libs" element={<StubPage title="Ad Libs" />} />
+              <Route path="/drag-drop" element={<StubPage titleKey="common.sidebar.nav.drag_drop" />} />
+              <Route path="/ad-libs" element={<StubPage titleKey="common.sidebar.nav.ad_libs" />} />
             </Route>
           </Routes>
         </Suspense>

@@ -57,6 +57,9 @@
     "login_cta": "Log in",
     "loading": "Creating account...",
     "username": "Username",
+    "username_placeholder": "Username",
+    "first_name_placeholder": "John",
+    "last_name_placeholder": "Doe",
     "native_language": "Your Native Language",
     "native_language_hint": "Cards will show this language on the front. You can change it in Settings."
   },
@@ -77,7 +80,74 @@
   "flashcards": {
     "choose_native_language": "Choose your native language to see translations:",
     "translation_coming_soon": "Translation coming soon",
-    "card_not_translated": "Card not yet translated. Press to flip."
+    "card_not_translated": "Card not yet translated. Press to flip.",
+    "flip": {
+      "front_with_word": "Flip card for {{word}}",
+      "front_no_word": "Flip card to see translation",
+      "back": "Flip card back"
+    },
+    "tts": {
+      "speak_label": "Hear pronunciation of {{word}}"
+    },
+    "example": {
+      "show": "Show Example",
+      "hide": "Hide Example"
+    },
+    "viewer": {
+      "no_cards": "No cards in this set yet.",
+      "back_to_sets": "← Back to sets",
+      "back": "← Back",
+      "card_count": "Card {{current}} of {{total}}",
+      "previous": "← Previous",
+      "next": "Next →",
+      "go_to_card": "Go to card {{number}}",
+      "still_learning": "Still learning",
+      "i_know_this": "I know this",
+      "keyboard_hint": "Use ← → arrow keys to navigate"
+    },
+    "sets": {
+      "heading": "Flashcard Sets",
+      "create": "+ Create set",
+      "loading": "Loading sets…",
+      "load_error": "Failed to load sets: {{error}}",
+      "empty": "No sets available yet.",
+      "card_singular": "card",
+      "card_plural": "cards"
+    },
+    "create_modal": {
+      "heading": "Create flashcard set",
+      "title_label": "Title",
+      "title_placeholder": "e.g. Business English",
+      "description_label": "Description",
+      "description_placeholder": "Optional description",
+      "submit_loading": "Creating…",
+      "submit": "Create set",
+      "cancel": "Cancel",
+      "error_default": "Failed to create set"
+    },
+    "welcome": {
+      "title": "Master English with",
+      "title_highlight": "Flashcards",
+      "subtitle": "Practice vocabulary, improve pronunciation, and build confidence in your English learning journey."
+    },
+    "action_bar": {
+      "play_audio": "Play Audio",
+      "play_audio_tooltip": "Play pronunciation",
+      "show_image": "Show Image",
+      "image_tooltip": "View related image",
+      "no_image_tooltip": "No image available",
+      "study_mode": "Study Mode",
+      "study_mode_tooltip": "Toggle study mode",
+      "add_word": "Add Word",
+      "add_word_tooltip": "Add to personal deck",
+      "add_word_login_tooltip": "Login to add words"
+    },
+    "loading_cards": "Loading cards…",
+    "language": {
+      "th": "Thai",
+      "zh": "Chinese",
+      "vi": "Vietnamese"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -86,5 +156,225 @@
     "save": "Save Changes",
     "saving": "Saving…",
     "saved": "Saved!"
+  },
+  "dashboard": {
+    "welcome": {
+      "greeting": "Welcome back, {{name}}!",
+      "journey": "Ready to continue your English learning journey?",
+      "level": "Level {{level}}",
+      "streak": "{{streak}} day streak"
+    },
+    "xp": {
+      "heading": "XP Progress",
+      "to_next_level": "{{percent}}% to next level",
+      "xp_per_word": "+{{xp}} XP per word",
+      "total_xp": "+{{xp}} XP",
+      "words": "{{count}} words",
+      "tiers": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "expert": "Expert"
+      }
+    },
+    "groups": {
+      "heading": "Your Flashcard Groups",
+      "progress": "Progress",
+      "cards": "{{completed}}/{{total}} cards",
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "stats": {
+      "words_learned": "Words Learned",
+      "today": "Today",
+      "accuracy": "Accuracy",
+      "day_streak": "Day Streak"
+    },
+    "logout": "Logout",
+    "loading": "Loading..."
+  },
+  "about": {
+    "title": "About Tiger English",
+    "tagline": "Building tools for language learners",
+    "story": {
+      "p1": "Tiger English was created by someone who understands both the challenges of learning a language and the value of great tools. I have a background in web development, a TEFL certification, and a passion for building interactive, learner-friendly experiences.",
+      "p2": "This platform started as a side project — a way to combine my technical skills with my interest in education. My goal is to help English learners grow their vocabulary and confidence through fun, focused practice.",
+      "p3": "I'm currently preparing to live and teach abroad, and Tiger English is part of that journey. I'm actively improving the site, learning as I go, and building it into something that can genuinely help others."
+    },
+    "skills": {
+      "heading": "Skills & Technologies",
+      "intro": "This platform is built with modern web technologies to ensure a fast, accessible, and engaging learning experience:",
+      "categories": {
+        "Frontend": "Frontend",
+        "Styling": "Styling",
+        "Build Tool": "Build Tool",
+        "Backend": "Backend",
+        "Internationalization": "Internationalization"
+      }
+    },
+    "connect": {
+      "heading": "Connect With Me",
+      "contact_heading": "Get In Touch",
+      "contact_desc": "Want to share feedback, ideas, or just say hi?",
+      "contact_button": "Contact Me",
+      "coming_soon": "Coming soon",
+      "social_aria": "{{name}} profile",
+      "avatar_alt": "Profile picture of the Tiger English creator"
+    }
+  },
+  "contact": {
+    "heading": "Get In Touch",
+    "intro": "Have questions, feedback, or just want to say hello? I'd love to hear from you!",
+    "form": {
+      "name_label": "Name",
+      "name_placeholder": "Your full name",
+      "email_label": "Email",
+      "email_placeholder": "your.email@example.com",
+      "message_label": "Message",
+      "message_placeholder": "Tell me about your question, feedback, or just say hello...",
+      "submit": "Send Message",
+      "sending": "Sending...",
+      "success": "Message sent successfully! I'll get back to you soon.",
+      "error": "Failed to send message. Please try again."
+    },
+    "info": {
+      "heading": "Let's Connect",
+      "intro": "I'm always excited to connect with fellow language learners, educators, and developers.",
+      "direct_heading": "Direct Contact",
+      "social_heading": "Social Media",
+      "coming_soon": "Coming soon",
+      "social_aria": "{{name}} profile"
+    },
+    "faq": {
+      "heading": "Quick Questions?",
+      "q1": "What's the best way to reach you?",
+      "a1": "Email is the most reliable way to get in touch. I typically respond within 24-48 hours.",
+      "q2": "Can you help with my English learning?",
+      "a2": "Absolutely! I love helping learners. Feel free to share your questions or challenges.",
+      "q3": "Are you available for collaboration?",
+      "a3": "I'm always open to interesting projects and collaborations. Let's discuss your ideas!"
+    }
+  },
+  "authhome": {
+    "continue_studying": {
+      "heading": "Continue Studying",
+      "empty": "You haven't studied any sets yet.",
+      "start": "Start your first set",
+      "reviewed": "Reviewed {{reviewed}} of {{total}} cards",
+      "completed": "Completed ✓",
+      "continue": "Continue Studying",
+      "streak_badge": "{{streak}} day streak",
+      "accuracy_badge": "{{accuracy}}% accuracy",
+      "time": {
+        "less_than_hour": "Less than an hour ago",
+        "one_hour": "1 hour ago",
+        "hours": "{{hours}} hours ago",
+        "one_day": "1 day ago",
+        "days": "{{days}} days ago"
+      }
+    },
+    "recommended": {
+      "heading": "Recommended Next",
+      "empty": "Complete a set to unlock recommendations.",
+      "reasons": {
+        "review": "Needs review",
+        "sequence": "Next in sequence",
+        "related": "Related to recent study"
+      },
+      "study": "Study"
+    },
+    "invite": {
+      "heading": "Invite Friends",
+      "desc": "Know someone who wants to learn English? Invite them to Tiger English.",
+      "copy": "Copy Invite Link",
+      "invite": "Invite a Friend",
+      "toast": {
+        "no_clipboard": "Clipboard not available. Please copy the link manually.",
+        "copied": "Invite link copied!",
+        "copy_failed": "Failed to copy link. Please copy it manually."
+      }
+    },
+    "study_groups": {
+      "heading": "Study Groups",
+      "empty": "No study groups yet. Create one to study with friends.",
+      "members": "{{count}} members",
+      "create": "Create Study Group",
+      "invite": "Invite to Group"
+    }
+  },
+  "auth": {
+    "errors": {
+      "email_registered": "It looks like you already have an account with this email.",
+      "login_instead": "Log in instead →",
+      "username_taken": "Please try a different username. You can use letters, numbers, and underscores.",
+      "general": "Please check your information and try again.",
+      "invalid_credentials": "Invalid email or password"
+    },
+    "google": {
+      "button": "Continue with Google",
+      "connecting": "Connecting…"
+    },
+    "separator": "or",
+    "toast": {
+      "login_success": "Login successful"
+    },
+    "password_rules": {
+      "min_length": "At least 8 characters",
+      "uppercase": "One uppercase letter",
+      "special": "One special character (!@#$%^&*)"
+    },
+    "callback": {
+      "checking": "Signing you in…",
+      "waiting": "Setting up your account…",
+      "timeout_title": "Taking longer than expected",
+      "timeout_message": "Your account is being set up. This usually takes just a moment.",
+      "try_again": "Try again",
+      "back_to_login": "Back to login",
+      "error_title": "Authentication failed",
+      "error_default": "Something went wrong during sign-in. Please try again.",
+      "session_expired": "Your session has expired. Please sign in again.",
+      "timed_out": "Authentication timed out. Please try again."
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": {
+      "title": "Something went wrong",
+      "message": "We're sorry, but something unexpected happened. Please try refreshing the page.",
+      "refresh": "Refresh Page",
+      "dev_details": "Error Details (Development)"
+    },
+    "nav": {
+      "open_menu": "Open menu",
+      "close_menu": "Close menu",
+      "open_nav": "Open navigation",
+      "close_nav": "Close navigation",
+      "expand_sidebar": "Expand sidebar",
+      "collapse_sidebar": "Collapse sidebar"
+    },
+    "footer": "© {{year}} Tiger English — All rights reserved.",
+    "coming_soon": "coming soon",
+    "sidebar": {
+      "title": "Tiger English",
+      "nav": {
+        "home": "Home",
+        "dashboard": "Dashboard",
+        "library": "Library",
+        "study_groups": "Study Groups",
+        "notifications": "Notifications",
+        "flashcards": "Flashcards",
+        "drag_drop": "Drag & Drop",
+        "ad_libs": "Ad Libs"
+      },
+      "utility": {
+        "settings": "Settings",
+        "help": "Help",
+        "profile": "Profile",
+        "logout": "Logout"
+      }
+    },
+    "stub": {
+      "coming_soon": "{{title}} — coming soon",
+      "public_profile": "Public Profile"
+    }
   }
 }
