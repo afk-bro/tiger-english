@@ -43,21 +43,21 @@ describe('Flashcard — flip button accessible labels', () => {
   it('front flip button uses word-specific label when englishText is present', () => {
     render(<Flashcard data={makeCard({ englishText: 'Hello' })} />);
     expect(
-      screen.getByRole('button', { name: 'flashcards.flip.front_with_word' })
+      screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' })
     ).toBeInTheDocument();
   });
 
   it('front flip button uses generic label when englishText is empty', () => {
     render(<Flashcard data={makeCard({ englishText: '' })} />);
     expect(
-      screen.getByRole('button', { name: 'flashcards.flip.front_no_word' })
+      screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_no_word' })
     ).toBeInTheDocument();
   });
 
   it('back flip button always has an accessible label', () => {
     render(<Flashcard data={makeCard()} />);
     expect(
-      screen.getByRole('button', { name: 'flashcards.flip.back' })
+      screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' })
     ).toBeInTheDocument();
   });
 });
@@ -68,21 +68,21 @@ describe('Flashcard — tabIndex management', () => {
   it('front flip button is keyboard-focusable before flipping', () => {
     render(<Flashcard data={makeCard()} />);
     expect(
-      screen.getByRole('button', { name: 'flashcards.flip.front_with_word' })
+      screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' })
     ).toHaveAttribute('tabindex', '0');
   });
 
   it('back flip button is not keyboard-focusable before flipping', () => {
     render(<Flashcard data={makeCard()} />);
     expect(
-      screen.getByRole('button', { name: 'flashcards.flip.back' })
+      screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' })
     ).toHaveAttribute('tabindex', '-1');
   });
 
   it('flipping swaps tabIndex on both flip buttons', () => {
     render(<Flashcard data={makeCard()} />);
-    const frontBtn = screen.getByRole('button', { name: 'flashcards.flip.front_with_word' });
-    const backBtn = screen.getByRole('button', { name: 'flashcards.flip.back' });
+    const frontBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' });
+    const backBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' });
 
     fireEvent.click(frontBtn);
 
@@ -93,15 +93,15 @@ describe('Flashcard — tabIndex management', () => {
   it('Show Example button is not keyboard-focusable before flipping', () => {
     render(<Flashcard data={makeCard({ exampleSentence: 'Hello, how are you?' })} />);
     expect(
-      screen.getByRole('button', { name: 'flashcards.example.show' })
+      screen.getByRole('button', { hidden: true, name: 'flashcards.example.show' })
     ).toHaveAttribute('tabindex', '-1');
   });
 
   it('Show Example button is keyboard-focusable after flipping to back', () => {
     render(<Flashcard data={makeCard({ exampleSentence: 'Hello, how are you?' })} />);
-    fireEvent.click(screen.getByRole('button', { name: 'flashcards.flip.front_with_word' }));
+    fireEvent.click(screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' }));
     expect(
-      screen.getByRole('button', { name: 'flashcards.example.show' })
+      screen.getByRole('button', { hidden: true, name: 'flashcards.example.show' })
     ).toHaveAttribute('tabindex', '0');
   });
 });
@@ -111,8 +111,8 @@ describe('Flashcard — tabIndex management', () => {
 describe('Flashcard — flip behavior', () => {
   it('clicking the front flip button flips the card', () => {
     render(<Flashcard data={makeCard()} />);
-    const frontBtn = screen.getByRole('button', { name: 'flashcards.flip.front_with_word' });
-    const backBtn = screen.getByRole('button', { name: 'flashcards.flip.back' });
+    const frontBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' });
+    const backBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' });
 
     fireEvent.click(frontBtn);
 
@@ -122,8 +122,8 @@ describe('Flashcard — flip behavior', () => {
 
   it('clicking the back flip button flips back to front', () => {
     render(<Flashcard data={makeCard()} />);
-    const frontBtn = screen.getByRole('button', { name: 'flashcards.flip.front_with_word' });
-    const backBtn = screen.getByRole('button', { name: 'flashcards.flip.back' });
+    const frontBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' });
+    const backBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' });
 
     fireEvent.click(frontBtn);
     fireEvent.click(backBtn);
@@ -138,19 +138,24 @@ describe('Flashcard — flip behavior', () => {
 describe('Flashcard — inner buttons do not flip the card', () => {
   it('clicking Show Example does not flip the card', () => {
     render(<Flashcard data={makeCard({ exampleSentence: 'Hello, how are you?' })} />);
-    fireEvent.click(screen.getByRole('button', { name: 'flashcards.flip.front_with_word' }));
-    const backBtn = screen.getByRole('button', { name: 'flashcards.flip.back' });
+    fireEvent.click(screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' }));
+    const backBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' });
     expect(backBtn).toHaveAttribute('tabindex', '0');
 
-    fireEvent.click(screen.getByRole('button', { name: 'flashcards.example.show' }));
+    fireEvent.click(screen.getByRole('button', { hidden: true, name: 'flashcards.example.show' }));
 
     // Both sides of the invariant: still on back
     expect(backBtn).toHaveAttribute('tabindex', '0');
-    expect(screen.getByRole('button', { name: 'flashcards.flip.front_with_word' })).toHaveAttribute('tabindex', '-1');
+    expect(screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' })).toHaveAttribute('tabindex', '-1');
   });
 
   describe('with TTS available', () => {
+    let originalSpeechSynthesis: typeof window.speechSynthesis | undefined;
+    let originalSpeechSynthesisUtterance: typeof globalThis.SpeechSynthesisUtterance | undefined;
+
     beforeEach(() => {
+      originalSpeechSynthesis = (window as any).speechSynthesis;
+      originalSpeechSynthesisUtterance = (globalThis as any).SpeechSynthesisUtterance;
       Object.defineProperty(window, 'speechSynthesis', {
         value: { speak: vi.fn(), cancel: vi.fn() },
         writable: true,
@@ -160,23 +165,27 @@ describe('Flashcard — inner buttons do not flip the card', () => {
     });
 
     afterEach(() => {
-      delete (window as any).speechSynthesis;
-      delete (globalThis as any).SpeechSynthesisUtterance;
+      Object.defineProperty(window, 'speechSynthesis', {
+        value: originalSpeechSynthesis,
+        writable: true,
+        configurable: true,
+      });
+      (globalThis as any).SpeechSynthesisUtterance = originalSpeechSynthesisUtterance;
     });
 
     it('clicking the TTS button does not flip the card', () => {
       render(<Flashcard data={makeCard()} />);
-      fireEvent.click(screen.getByRole('button', { name: 'flashcards.flip.front_with_word' }));
-      const backBtn = screen.getByRole('button', { name: 'flashcards.flip.back' });
+      fireEvent.click(screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' }));
+      const backBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' });
       expect(backBtn).toHaveAttribute('tabindex', '0');
 
       fireEvent.click(
-        screen.getByRole('button', { name: 'flashcards.tts.speak_label' })
+        screen.getByRole('button', { hidden: true, name: 'flashcards.tts.speak_label' })
       );
 
       // Both sides of the invariant: still on back
       expect(backBtn).toHaveAttribute('tabindex', '0');
-      expect(screen.getByRole('button', { name: 'flashcards.flip.front_with_word' })).toHaveAttribute('tabindex', '-1');
+      expect(screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' })).toHaveAttribute('tabindex', '-1');
     });
   });
 });

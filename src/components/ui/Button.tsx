@@ -15,6 +15,7 @@ type ButtonProps = {
   block?: boolean;
   align?: "left" | "center" | "right";
   disabled?: boolean;
+  tabIndex?: number;
   onClick?: (e?: React.MouseEvent) => void;
 };
 
@@ -31,6 +32,7 @@ export default function Button({
   block,
   align,
   disabled = false,
+  tabIndex,
   onClick,
 }: ButtonProps) {
   const base =
@@ -95,6 +97,7 @@ export default function Button({
       type={type}
       className={clsx(classes, disabled && "opacity-50 cursor-not-allowed")}
       disabled={disabled}
+      tabIndex={tabIndex}
       onClick={onClick}
     >
       {iconLeft}

@@ -1,7 +1,7 @@
 // src/components/home/authenticated/RecommendedNextCard.tsx
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from "react-router-dom";
-import type { RecommendedItem, ReasonType } from "./types";
+import type { RecommendedItem } from "./types";
 
 interface Props {
   data: RecommendedItem[] | null;

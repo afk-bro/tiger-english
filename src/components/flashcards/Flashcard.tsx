@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Volume2 } from "lucide-react";
 import type { FlashcardCard } from "@/features/flashcards/types";
+import Button from "@/components/ui/Button";
 
 export interface FlashcardProps {
   data: FlashcardCard;
@@ -13,10 +14,29 @@ export function Flashcard({ data }: FlashcardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [showExample, setShowExample] = useState(false);
 
+  const frontFlipRef = useRef<HTMLButtonElement>(null);
+  const backFlipRef = useRef<HTMLButtonElement>(null);
+  const flipInitiatedByKeyboard = useRef(false);
+
   const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
   const handleFlip = () => setIsFlipped((prev) => !prev);
+  const handleFlipKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      flipInitiatedByKeyboard.current = true;
+    }
+  };
   const handleExampleToggle = () => setShowExample((prev) => !prev);
+
+  useEffect(() => {
+    if (!flipInitiatedByKeyboard.current) return;
+    flipInitiatedByKeyboard.current = false;
+    if (isFlipped) {
+      backFlipRef.current?.focus();
+    } else {
+      frontFlipRef.current?.focus();
+    }
+  }, [isFlipped]);
   const handleSpeak = () => {
     if (!englishText) return;
     window.speechSynthesis.cancel();
@@ -49,6 +69,8 @@ export function Flashcard({ data }: FlashcardProps) {
       >
         {/* Front Side - Native Language */}
         <div
+          aria-hidden={isFlipped}
+          inert={isFlipped}
           className={`absolute inset-0 w-full h-full backface-hidden transition-opacity duration-300 ${
             isFlipped ? 'opacity-0' : 'opacity-100'
           }`}
@@ -56,9 +78,11 @@ export function Flashcard({ data }: FlashcardProps) {
           <div className="w-full h-full bg-white border-2 border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow relative p-8 select-none [&:has(>.flip-btn:focus-visible)]:ring-2 [&:has(>.flip-btn:focus-visible)]:ring-primary-400/40">
             {/* Overlay flip button — first child, fills face, sits behind content */}
             <button
+              ref={frontFlipRef}
               type="button"
-              className="flip-btn absolute inset-0 rounded-xl focus:outline-none"
+              className="flip-btn absolute inset-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40"
               onClick={handleFlip}
+              onKeyDown={handleFlipKeyDown}
               tabIndex={isFlipped ? -1 : 0}
               aria-label={frontFlipLabel}
             />
@@ -95,15 +119,21 @@ export function Flashcard({ data }: FlashcardProps) {
         </div>
 
         {/* Back Side - English Translation */}
-        <div className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 transition-opacity duration-300 ${
+        <div
+          aria-hidden={!isFlipped}
+          inert={!isFlipped}
+          className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 transition-opacity duration-300 ${
             isFlipped ? 'opacity-100' : 'opacity-0'
-          }`}>
+          }`}
+        >
           <div className="w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow relative p-8 flex flex-col select-none [&:has(>.flip-btn:focus-visible)]:ring-2 [&:has(>.flip-btn:focus-visible)]:ring-primary-400/40">
             {/* Overlay flip button — first child, fills face, sits behind content */}
             <button
+              ref={backFlipRef}
               type="button"
-              className="flip-btn absolute inset-0 rounded-xl focus:outline-none"
+              className="flip-btn absolute inset-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40"
               onClick={handleFlip}
+              onKeyDown={handleFlipKeyDown}
               tabIndex={isFlipped ? 0 : -1}
               aria-label={t('flashcards.flip.back')}
             />
@@ -126,7 +156,7 @@ export function Flashcard({ data }: FlashcardProps) {
                   <p className="text-4xl sm:text-5xl font-semibold text-primary-800">
                     {englishText}
                   </p>
-                  {ttsSupported && (
+                  {ttsSupported && englishText && (
                     <button
                       type="button"
                       aria-label={t('flashcards.tts.speak_label', { word: englishText })}
@@ -145,14 +175,15 @@ export function Flashcard({ data }: FlashcardProps) {
             {/* Example Section - sits below the word in normal flow */}
             {exampleSentence && (
               <div className="text-center pt-2">
-                <button
-                  type="button"
+                <Button
+                  size="sm"
+                  variant="white"
                   onClick={handleExampleToggle}
                   tabIndex={isFlipped ? 0 : -1}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ease-out active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40 border-2 border-primary-400 bg-white text-primary-700 hover:bg-primary-50"
+                  className="border-2 border-primary-400 shadow-none hover:shadow-none"
                 >
                   {showExample ? t('flashcards.example.hide') : t('flashcards.example.show')}
-                </button>
+                </Button>
 
                 <div className={`transition-all duration-300 overflow-hidden ${
                   showExample ? 'max-h-32 opacity-100 mt-3' : 'max-h-0 opacity-0'
