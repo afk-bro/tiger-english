@@ -22,7 +22,7 @@ export default function HeroSection() {
               <Button to="/register" variant="primary" iconRight={<ArrowRight />}>
                 {t("hero.cta")}
               </Button>
-              <Button to="/flashcards" variant="outline" iconRight={<CreditCard className="w-4 h-4" />}>
+              <Button to="/flashcards" variant="secondary" iconRight={<CreditCard className="w-4 h-4" />}>
                 {t("hero.try_flashcards")}
               </Button>
               <Link
