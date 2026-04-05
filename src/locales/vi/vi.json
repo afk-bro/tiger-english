@@ -340,6 +340,10 @@
   },
   "common": {
     "loading": "Đang tải...",
+    "language_switcher": {
+      "change_language": "Thay đổi ngôn ngữ",
+      "select_language": "Chọn ngôn ngữ"
+    },
     "error": {
       "title": "Có gì đó không ổn",
       "message": "Xin lỗi, đã xảy ra sự cố ngoài mong đợi. Vui lòng thử tải lại trang.",
