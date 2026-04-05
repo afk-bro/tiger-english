@@ -340,6 +340,10 @@
   },
   "common": {
     "loading": "กำลังโหลด...",
+    "language_switcher": {
+      "change_language": "เปลี่ยนภาษา",
+      "select_language": "เลือกภาษา"
+    },
     "error": {
       "title": "มีบางอย่างผิดพลาด",
       "message": "ขออภัย มีบางอย่างที่ไม่คาดคิดเกิดขึ้น กรุณารีเฟรชหน้า",

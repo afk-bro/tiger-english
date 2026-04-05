@@ -340,6 +340,10 @@
   },
   "common": {
     "loading": "Loading...",
+    "language_switcher": {
+      "change_language": "Change language",
+      "select_language": "Select language"
+    },
     "error": {
       "title": "Something went wrong",
       "message": "We're sorry, but something unexpected happened. Please try refreshing the page.",
