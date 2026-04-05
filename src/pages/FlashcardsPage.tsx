@@ -1,5 +1,5 @@
 // src/pages/FlashcardsPage.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/stores/useUserStore';
 import { useFlashcardSets } from '@/features/flashcards/hooks/useFlashcardSets';
@@ -12,18 +12,26 @@ import { SUPPORTED_LANGUAGES } from '@/schemas/authSchema';
 
 export default function FlashcardsPage() {
   const { t } = useTranslation();
-  const { profile } = useUserStore();
+  const { profile, profileLoading } = useUserStore();
   const isAuthenticated = profile !== null;
 
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  // Initialise with browser language if it's one we support, so users skip the picker
-  const [localLanguage, setLocalLanguage] = useState<string | null>(() => {
-    const detected = navigator.language.split('-')[0].toLowerCase();
-    return (SUPPORTED_LANGUAGES as readonly string[]).includes(detected) ? detected : null;
-  });
+  const [localLanguage, setLocalLanguage] = useState<string | null>(null);
 
-  // Language resolution: profile (authoritative) → local selection → null (blocked)
+  // Defer browser-language detection until after profile resolves so we don't
+  // fetch cards in the wrong language and then refetch when native_language loads.
+  useEffect(() => {
+    if (profileLoading) return;
+    if (profile?.native_language) return;
+    setLocalLanguage((prev) => {
+      if (prev !== null) return prev; // preserve a manual pick
+      const detected = navigator.language.split('-')[0].toLowerCase();
+      return (SUPPORTED_LANGUAGES as readonly string[]).includes(detected) ? detected : null;
+    });
+  }, [profileLoading, profile?.native_language]);
+
+  // Language resolution: profile (authoritative) → browser/local selection → null (blocked)
   const languageCode = profile?.native_language ?? localLanguage;
 
   const LANGUAGE_NAMES: Record<typeof SUPPORTED_LANGUAGES[number], string> = {
@@ -31,6 +39,21 @@ export default function FlashcardsPage() {
     zh: t('flashcards.language.zh'),
     vi: t('flashcards.language.vi'),
   };
+
+  const renderLanguageButtons = () => (
+    <div className="flex gap-3 flex-wrap justify-center">
+      {SUPPORTED_LANGUAGES.map((code) => (
+        <button
+          key={code}
+          type="button"
+          onClick={() => setLocalLanguage(code)}
+          className="px-6 py-3 rounded-xl border-2 border-primary-400 bg-white text-primary-700 hover:bg-primary-50 dark:bg-transparent dark:border-primary-500 dark:text-primary-300 dark:hover:bg-primary-900/30 text-base font-semibold transition-colors"
+        >
+          {LANGUAGE_NAMES[code]}
+        </button>
+      ))}
+    </div>
+  );
 
   const { sets, loading: setsLoading, error: setsError, createSet } = useFlashcardSets(profile?.id);
   const { cards, loading: cardsLoading } = useFlashcards(selectedSetId, languageCode ?? null);
@@ -52,18 +75,7 @@ export default function FlashcardsPage() {
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 {t('flashcards.language_required.subtext')}
               </p>
-              <div className="flex gap-3 flex-wrap justify-center mb-5">
-                {SUPPORTED_LANGUAGES.map((code) => (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => setLocalLanguage(code)}
-                    className="px-6 py-3 rounded-xl border-2 border-primary-400 bg-white text-primary-700 hover:bg-primary-50 dark:bg-transparent dark:border-primary-500 dark:text-primary-300 dark:hover:bg-primary-900/30 text-base font-semibold transition-colors"
-                  >
-                    {LANGUAGE_NAMES[code]}
-                  </button>
-                ))}
-              </div>
+              <div className="mb-5">{renderLanguageButtons()}</div>
               <button
                 type="button"
                 onClick={() => setSelectedSetId(null)}
@@ -84,18 +96,7 @@ export default function FlashcardsPage() {
                 <p className="text-sm text-primary-700 dark:text-primary-300 mb-4">
                   {t('flashcards.language_required.subtext')}
                 </p>
-                <div className="flex gap-3 flex-wrap justify-center">
-                  {SUPPORTED_LANGUAGES.map((code) => (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => setLocalLanguage(code)}
-                      className="px-6 py-3 rounded-xl border-2 border-primary-400 bg-white text-primary-700 hover:bg-primary-50 dark:bg-transparent dark:border-primary-500 dark:text-primary-300 dark:hover:bg-primary-900/30 text-base font-semibold transition-colors"
-                    >
-                      {LANGUAGE_NAMES[code]}
-                    </button>
-                  ))}
-                </div>
+                {renderLanguageButtons()}
               </div>
             )}
 
