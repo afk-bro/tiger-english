@@ -20,7 +20,18 @@ export function Flashcard({ data }: FlashcardProps) {
 
   const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
-  const handleFlip = () => setIsFlipped((prev) => !prev);
+  const handleFlip = () => {
+    // Blur whichever flip button currently has focus before state changes.
+    // This ensures no descendant holds focus when React writes aria-hidden=true
+    // + inert to the outgoing face, preventing the browser's aria-hidden warning.
+    if (
+      document.activeElement === frontFlipRef.current ||
+      document.activeElement === backFlipRef.current
+    ) {
+      (document.activeElement as HTMLElement).blur();
+    }
+    setIsFlipped((prev) => !prev);
+  };
   const handleFlipKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
       flipInitiatedByKeyboard.current = true;
