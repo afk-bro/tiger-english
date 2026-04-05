@@ -1,5 +1,6 @@
 // src/pages/FlashcardsPage.tsx
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/stores/useUserStore';
 import { useFlashcardSets } from '@/features/flashcards/hooks/useFlashcardSets';
@@ -14,8 +15,14 @@ export default function FlashcardsPage() {
   const { t } = useTranslation();
   const { profile, profileLoading } = useUserStore();
   const isAuthenticated = profile !== null;
+  const location = useLocation();
 
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
+
+  // Reset to set list when the user navigates to /flashcards (even from the same page)
+  useEffect(() => {
+    setSelectedSetId(null);
+  }, [location.key]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [localLanguage, setLocalLanguage] = useState<string | null>(null);
 
