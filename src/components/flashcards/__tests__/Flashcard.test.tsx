@@ -133,6 +133,79 @@ describe('Flashcard — flip behavior', () => {
   });
 });
 
+// ── Focus management on flip ──────────────────────────────────────────────────
+
+describe('Flashcard — focus management on flip', () => {
+  it('mouse click: front flip button does not retain focus after flipping (prevents aria-hidden warning)', () => {
+    render(<Flashcard data={makeCard()} />);
+    const frontBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' });
+
+    frontBtn.focus();
+    expect(document.activeElement).toBe(frontBtn);
+
+    fireEvent.click(frontBtn);
+
+    expect(document.activeElement).not.toBe(frontBtn);
+  });
+
+  it('mouse click: back flip button does not retain focus after flipping back', () => {
+    render(<Flashcard data={makeCard()} />);
+    const frontBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' });
+    const backBtn  = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' });
+
+    fireEvent.click(frontBtn); // flip to back
+
+    backBtn.focus();
+    expect(document.activeElement).toBe(backBtn);
+
+    fireEvent.click(backBtn); // flip back to front
+
+    expect(document.activeElement).not.toBe(backBtn);
+  });
+
+  it('keyboard flip (Enter): focus moves to the back flip button', () => {
+    render(<Flashcard data={makeCard()} />);
+    const frontBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' });
+    const backBtn  = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' });
+
+    frontBtn.focus();
+    fireEvent.keyDown(frontBtn, { key: 'Enter' });
+    fireEvent.click(frontBtn); // browser fires click after Enter on a button
+
+    expect(document.activeElement).toBe(backBtn);
+  });
+
+  it('keyboard flip (Space): focus moves to the back flip button', () => {
+    render(<Flashcard data={makeCard()} />);
+    const frontBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' });
+    const backBtn  = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' });
+
+    frontBtn.focus();
+    fireEvent.keyDown(frontBtn, { key: ' ' });
+    fireEvent.click(frontBtn);
+
+    expect(document.activeElement).toBe(backBtn);
+  });
+
+  it('keyboard flip back (Enter): focus returns to the front flip button', () => {
+    render(<Flashcard data={makeCard()} />);
+    const frontBtn = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.front_with_word' });
+    const backBtn  = screen.getByRole('button', { hidden: true, name: 'flashcards.flip.back' });
+
+    // Flip to back via keyboard
+    frontBtn.focus();
+    fireEvent.keyDown(frontBtn, { key: 'Enter' });
+    fireEvent.click(frontBtn);
+    expect(document.activeElement).toBe(backBtn);
+
+    // Flip back to front via keyboard
+    fireEvent.keyDown(backBtn, { key: 'Enter' });
+    fireEvent.click(backBtn);
+
+    expect(document.activeElement).toBe(frontBtn);
+  });
+});
+
 // ── Inner buttons do not trigger flip ─────────────────────────────────────────
 
 describe('Flashcard — inner buttons do not flip the card', () => {
