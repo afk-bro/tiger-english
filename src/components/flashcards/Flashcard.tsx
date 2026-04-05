@@ -76,11 +76,11 @@ export function Flashcard({ data }: FlashcardProps) {
           }`}
         >
           <div className="w-full h-full bg-white border-2 border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow relative p-8 select-none [&:has(>.flip-btn:focus-visible)]:ring-2 [&:has(>.flip-btn:focus-visible)]:ring-primary-400/40">
-            {/* Overlay flip button — first child, fills face, sits behind content */}
+            {/* Overlay flip button — z-10 puts it above static content; interactive elements use z-20 */}
             <button
               ref={frontFlipRef}
               type="button"
-              className="flip-btn absolute inset-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40"
+              className="flip-btn absolute inset-0 z-10 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40"
               onClick={handleFlip}
               onKeyDown={handleFlipKeyDown}
               tabIndex={isFlipped ? -1 : 0}
@@ -88,17 +88,17 @@ export function Flashcard({ data }: FlashcardProps) {
             />
             {/* Corner Badges */}
             {level && (
-              <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-medium border pointer-events-none ${getDifficultyColor(level)}`}>
+              <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-medium border ${getDifficultyColor(level)}`}>
                 {level.toUpperCase()}
               </div>
             )}
             {partOfSpeech && (
-              <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-700 border border-primary-200 pointer-events-none">
+              <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-700 border border-primary-200">
                 {partOfSpeech}
               </div>
             )}
             {/* Main Content - Perfectly Centered */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 {nativeText ? (
                   <>
@@ -127,11 +127,11 @@ export function Flashcard({ data }: FlashcardProps) {
           }`}
         >
           <div className="w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow relative p-8 flex flex-col select-none [&:has(>.flip-btn:focus-visible)]:ring-2 [&:has(>.flip-btn:focus-visible)]:ring-primary-400/40">
-            {/* Overlay flip button — first child, fills face, sits behind content */}
+            {/* Overlay flip button — z-10 puts it above static content; interactive elements use z-20 */}
             <button
               ref={backFlipRef}
               type="button"
-              className="flip-btn absolute inset-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40"
+              className="flip-btn absolute inset-0 z-10 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40"
               onClick={handleFlip}
               onKeyDown={handleFlipKeyDown}
               tabIndex={isFlipped ? 0 : -1}
@@ -139,18 +139,18 @@ export function Flashcard({ data }: FlashcardProps) {
             />
             {/* Corner Badges */}
             {level && (
-              <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-medium border pointer-events-none ${getDifficultyColor(level)}`}>
+              <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-medium border ${getDifficultyColor(level)}`}>
                 {level.toUpperCase()}
               </div>
             )}
             {partOfSpeech && (
-              <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-primary-200 text-primary-800 border border-primary-300 pointer-events-none">
+              <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-primary-200 text-primary-800 border border-primary-300">
                 {partOfSpeech}
               </div>
             )}
 
             {/* Main Content - Centered in remaining space */}
-            <div className="flex-1 flex items-center justify-center pt-4 pointer-events-none">
+            <div className="flex-1 flex items-center justify-center pt-4">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <p className="text-4xl sm:text-5xl font-semibold text-primary-800">
@@ -162,7 +162,7 @@ export function Flashcard({ data }: FlashcardProps) {
                       aria-label={t('flashcards.tts.speak_label', { word: englishText })}
                       onClick={handleSpeak}
                       tabIndex={isFlipped ? 0 : -1}
-                      className="flex-shrink-0 p-2 rounded-full text-primary-500 hover:text-primary-700 hover:bg-primary-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40 pointer-events-auto"
+                      className="relative z-20 flex-shrink-0 p-2 rounded-full text-primary-500 hover:text-primary-700 hover:bg-primary-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/40"
                     >
                       <Volume2 className="w-6 h-6 sm:w-7 sm:h-7" />
                     </button>
@@ -174,13 +174,13 @@ export function Flashcard({ data }: FlashcardProps) {
 
             {/* Example Section - sits below the word in normal flow */}
             {exampleSentence && (
-              <div className="text-center pt-2 pointer-events-none">
+              <div className="text-center pt-2">
                 <Button
                   size="sm"
                   variant="white"
                   onClick={handleExampleToggle}
                   tabIndex={isFlipped ? 0 : -1}
-                  className="border-2 border-primary-400 shadow-none hover:shadow-none pointer-events-auto"
+                  className="relative z-20 border-2 border-primary-400 shadow-none hover:shadow-none"
                 >
                   {showExample ? t('flashcards.example.hide') : t('flashcards.example.show')}
                 </Button>
