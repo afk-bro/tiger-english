@@ -78,7 +78,6 @@
     "fail": "Đăng xuất thất bại"
   },
   "flashcards": {
-    "choose_native_language": "Chọn ngôn ngữ mẹ đẻ để xem bản dịch:",
     "translation_coming_soon": "Bản dịch sắp có",
     "card_not_translated": "Thẻ này chưa có bản dịch. Nhấn để lật.",
     "flip": {
@@ -147,6 +146,10 @@
       "th": "Tiếng Thái",
       "zh": "Tiếng Trung",
       "vi": "Tiếng Việt"
+    },
+    "language_required": {
+      "heading": "Chọn ngôn ngữ mẹ đẻ của bạn",
+      "subtext": "Chúng tôi sẽ hiển thị bản dịch bằng ngôn ngữ của bạn để giúp bạn học tiếng Anh."
     }
   },
   "settings": {

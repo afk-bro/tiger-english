@@ -78,7 +78,6 @@
     "fail": "Logout failed"
   },
   "flashcards": {
-    "choose_native_language": "Choose your native language to see translations:",
     "translation_coming_soon": "Translation coming soon",
     "card_not_translated": "Card not yet translated. Press to flip.",
     "flip": {
@@ -147,6 +146,10 @@
       "th": "Thai",
       "zh": "Chinese",
       "vi": "Vietnamese"
+    },
+    "language_required": {
+      "heading": "Choose your native language",
+      "subtext": "We'll show you translations in your language so you can learn English."
     }
   },
   "settings": {
