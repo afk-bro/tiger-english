@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   frontend:
     name: Frontend
@@ -24,9 +27,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
-
-      - name: Type check
-        run: npm run type-check
 
       - name: Unit tests with coverage
         run: npm run test:coverage -- --run

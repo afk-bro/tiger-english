@@ -1,9 +1,11 @@
 // src/lib/analytics.ts
 interface AnalyticsEvent {
   event: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   userId?: string;
 }
+
+type GTagWindow = Window & { gtag?: (command: string, event: string, params?: Record<string, unknown>) => void };
 
 class Analytics {
   private isEnabled: boolean;
@@ -12,7 +14,7 @@ class Analytics {
     this.isEnabled = import.meta.env.VITE_ENABLE_ANALYTICS === 'true';
   }
 
-  track(event: string, properties?: Record<string, any>, userId?: string) {
+  track(event: string, properties?: Record<string, unknown>, userId?: string) {
     if (!this.isEnabled) return;
 
     const analyticsEvent: AnalyticsEvent = {
@@ -26,8 +28,8 @@ class Analytics {
     console.log('Analytics Event:', analyticsEvent);
 
     // Example implementation for Google Analytics 4
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', event, {
+    if (typeof window !== 'undefined' && (window as GTagWindow).gtag) {
+      (window as GTagWindow).gtag!('event', event, {
         ...properties,
         user_id: userId,
       });
