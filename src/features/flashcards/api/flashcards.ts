@@ -43,6 +43,7 @@ export async function getCardsBySet(setId: string, languageCode: string): Promis
   // resource converts the implicit LEFT JOIN to INNER JOIN, dropping untranslated cards.
 
   if (error) throw new Error(error.message);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data ?? []).map((row) => mapCard(row as any, languageCode));
 }
 

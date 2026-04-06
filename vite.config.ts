@@ -15,5 +15,17 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     exclude: ['**/node_modules/**', '**/e2e/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      exclude: [
+        '**/node_modules/**',
+        '**/e2e/**',
+        'src/test/**',
+        'src/main.tsx',
+        '**/*.d.ts',
+        '**/*.config.*',
+      ],
+    },
   },
 });
