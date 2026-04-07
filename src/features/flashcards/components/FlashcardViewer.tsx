@@ -72,7 +72,7 @@ export function FlashcardViewer({
       </div>
 
       <div className="flex justify-center w-full">
-        <Flashcard data={currentCard} />
+        <Flashcard key={currentCard.id} data={currentCard} />
       </div>
 
       <div className="flex items-center justify-between w-full gap-2">
