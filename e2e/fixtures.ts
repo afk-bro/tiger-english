@@ -120,3 +120,24 @@ export async function navigateToCardViewer(page: Page) {
  */
 export const FRONT_FLIP_BTN = 'button[aria-label^="Flip card for"]';
 export const BACK_FLIP_BTN  = 'button[aria-label="Flip card back"]';
+
+/**
+ * Sign in as the shared test account through the real login form so the
+ * Supabase session is established the same way a user would do it. The auth
+ * flow dispatches onAuthStateChange → fetchProfile(), which is why we wait
+ * for the URL to move away from /login rather than asserting on a specific
+ * destination — where exactly the router lands varies with session state.
+ *
+ * Used by any e2e test that needs to exercise routes behind <RequireAuth>.
+ */
+export async function signInAsTester(page: Page) {
+  await page.goto('/login');
+  // Use attribute/placeholder selectors rather than getByLabel — the form
+  // renders its label via a sibling <label htmlFor=...> but react-hook-form's
+  // register() spreads can race with label association in some Playwright
+  // runs. The input type+name attributes are set synchronously by FormInput.
+  await page.locator('input[type="email"]').fill('tester@test.com');
+  await page.locator('input[type="password"]').fill('Testing123');
+  await page.getByRole('button', { name: /log in/i }).click();
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 15000 });
+}

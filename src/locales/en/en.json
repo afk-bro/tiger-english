@@ -195,6 +195,33 @@
     "logout": "Logout",
     "loading": "Loading..."
   },
+  "lessons": {
+    "title": "Lessons",
+    "subtitle": "Structured English lessons, one unit at a time",
+    "unitShort": "Unit {{number}}",
+    "status": {
+      "available": "Available",
+      "comingSoon": "Coming soon"
+    },
+    "card": {
+      "estMinutes": "~{{count}} min"
+    },
+    "notFound": "Unit not found",
+    "comingSoonMessage": "This unit isn't ready yet. Check back soon.",
+    "backToLessons": "Back to lessons",
+    "detail": {
+      "building_title": "This unit is being built.",
+      "building_subtitle": "The structure below shows what will be here soon.",
+      "outline_heading": "Coming in this unit",
+      "sections": {
+        "overview": "Overview",
+        "grammar": "Grammar",
+        "vocabulary": "Vocabulary",
+        "dialogues": "Dialogues",
+        "activities": "Practice activities"
+      }
+    }
+  },
   "about": {
     "title": "About Tiger English",
     "tagline": "Building tools for language learners",
@@ -365,6 +392,7 @@
       "nav": {
         "home": "Home",
         "dashboard": "Dashboard",
+        "lessons": "Lessons",
         "library": "Library",
         "study_groups": "Study Groups",
         "notifications": "Notifications",

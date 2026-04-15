@@ -12,7 +12,18 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // Runs e2e/auth.setup.ts first and stashes the authenticated session at
+    // playwright/.auth/user.json. Keeps auth-requiring specs off the login
+    // endpoint so they don't trip Supabase's parallel-login rate limit.
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'playwright/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
   ],
   webServer: {
     command: 'npm run dev',

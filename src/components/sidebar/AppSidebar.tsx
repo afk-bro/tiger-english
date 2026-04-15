@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Home, LayoutDashboard, BookOpen, Users, Bell,
+  Home, LayoutDashboard, GraduationCap, BookOpen, Users, Bell,
   Layers, MousePointer2, FileText,
   Settings, HelpCircle, User, LogOut,
   ChevronLeft, ChevronRight, X,
@@ -20,6 +20,7 @@ interface AppSidebarProps {
 const NAV_ITEMS = [
   { to: "/home",          labelKey: "common.sidebar.nav.home",           icon: Home,           end: true },
   { to: "/dashboard",     labelKey: "common.sidebar.nav.dashboard",      icon: LayoutDashboard },
+  { to: "/lessons",       labelKey: "common.sidebar.nav.lessons",        icon: GraduationCap },
   { to: "/library",       labelKey: "common.sidebar.nav.library",        icon: BookOpen },
   { to: "/study-groups",  labelKey: "common.sidebar.nav.study_groups",   icon: Users },
   { to: "/notifications", labelKey: "common.sidebar.nav.notifications",  icon: Bell },

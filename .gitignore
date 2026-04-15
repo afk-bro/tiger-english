@@ -41,3 +41,6 @@ skills-lock.json
 /docs/scratch
 /docs/lessons_learned
 playwright-report/\ntest-results/
+
+# Playwright auth state (created by e2e/auth.setup.ts; contains session cookies)
+playwright/.auth/

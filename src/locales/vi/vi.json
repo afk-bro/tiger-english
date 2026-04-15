@@ -195,6 +195,33 @@
     "logout": "Đăng xuất",
     "loading": "Đang tải..."
   },
+  "lessons": {
+    "title": "Bài học",
+    "subtitle": "Các bài học tiếng Anh có cấu trúc, từng bài một",
+    "unitShort": "Bài {{number}}",
+    "status": {
+      "available": "Có sẵn",
+      "comingSoon": "Sắp ra mắt"
+    },
+    "card": {
+      "estMinutes": "~{{count}} phút"
+    },
+    "notFound": "Không tìm thấy bài học",
+    "comingSoonMessage": "Bài học này chưa sẵn sàng. Hãy quay lại sau.",
+    "backToLessons": "Quay lại các bài học",
+    "detail": {
+      "building_title": "Bài học này đang được xây dựng.",
+      "building_subtitle": "Cấu trúc dưới đây cho thấy những gì sẽ có ở đây sớm.",
+      "outline_heading": "Sắp có trong bài học này",
+      "sections": {
+        "overview": "Tổng quan",
+        "grammar": "Ngữ pháp",
+        "vocabulary": "Từ vựng",
+        "dialogues": "Hội thoại",
+        "activities": "Hoạt động luyện tập"
+      }
+    }
+  },
   "about": {
     "title": "Giới thiệu Tiger English",
     "tagline": "Xây dựng công cụ cho người học ngôn ngữ",
@@ -365,6 +392,7 @@
       "nav": {
         "home": "Trang chủ",
         "dashboard": "Bảng điều khiển",
+        "lessons": "Bài học",
         "library": "Thư viện",
         "study_groups": "Nhóm học",
         "notifications": "Thông báo",
