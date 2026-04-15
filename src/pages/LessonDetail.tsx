@@ -11,6 +11,9 @@ const OUTLINE_SECTIONS = [
   "activities",
 ] as const;
 
+const BACK_LINK_CLASS =
+  "inline-flex items-center gap-2 text-sm text-semantic-text-muted hover:text-primary-600 dark:hover:text-primary-400 mb-4";
+
 export default function LessonDetail() {
   const { t } = useTranslation();
   const { unitSlug } = useParams<{ unitSlug: string }>();
@@ -19,7 +22,7 @@ export default function LessonDetail() {
   if (!unit) {
     return (
       <div className="max-w-3xl mx-auto py-8 px-4">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">
+        <h1 className="text-2xl font-bold text-semantic-text mb-3">
           {t("lessons.notFound")}
         </h1>
         <Link
@@ -36,17 +39,14 @@ export default function LessonDetail() {
   if (unit.status === "coming-soon") {
     return (
       <div className="max-w-3xl mx-auto py-8 px-4">
-        <Link
-          to="/lessons"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 mb-4"
-        >
+        <Link to="/lessons" className={BACK_LINK_CLASS}>
           <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           {t("lessons.backToLessons")}
         </Link>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">
+        <h1 className="text-2xl font-bold text-semantic-text mb-3">
           {t("lessons.unitShort", { number: unit.number })} — {unit.title}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-semantic-text-muted">
           {t("lessons.comingSoonMessage")}
         </p>
       </div>
@@ -56,16 +56,13 @@ export default function LessonDetail() {
   // Available unit — real route, scaffold content.
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
-      <Link
-        to="/lessons"
-        className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 mb-4"
-      >
+      <Link to="/lessons" className={BACK_LINK_CLASS}>
         <ArrowLeft className="w-4 h-4" aria-hidden="true" />
         {t("lessons.backToLessons")}
       </Link>
 
       <div
-        role="status"
+        role="note"
         className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/40 dark:bg-amber-900/20 p-4 mb-6"
       >
         <Wrench
@@ -82,26 +79,26 @@ export default function LessonDetail() {
         </div>
       </div>
 
-      <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-1">
+      <h1 className="text-3xl font-bold text-semantic-text mb-1">
         {t("lessons.unitShort", { number: unit.number })} — {unit.title}
       </h1>
-      <p className="text-gray-600 dark:text-gray-400 mb-1">{unit.topic}</p>
-      <p className="text-sm text-gray-500 dark:text-gray-500 mb-8">
+      <p className="text-semantic-text-muted mb-1">{unit.topic}</p>
+      <p className="text-sm text-semantic-subtle mb-8">
         {unit.grammarFocus}
       </p>
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-4">
+      <div className="card card-lg">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-semantic-text-muted mb-4">
           {t("lessons.detail.outline_heading")}
         </h2>
         <ul className="space-y-3">
           {OUTLINE_SECTIONS.map((key) => (
             <li
               key={key}
-              className="flex items-center gap-3 text-gray-600 dark:text-gray-400"
+              className="flex items-center gap-3 text-semantic-text-muted"
             >
               <span
-                className="inline-block w-5 h-5 rounded border border-gray-300 dark:border-gray-600 flex-shrink-0"
+                className="inline-block w-5 h-5 rounded border border-semantic-border flex-shrink-0"
                 aria-hidden="true"
               />
               <span>{t(`lessons.detail.sections.${key}`)}</span>

@@ -111,6 +111,10 @@ Note: there is no `/auth/login` HTTP endpoint. `login_user()` exists on `AuthSer
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 VITE_API_BASE_URL=http://localhost:8000/api/v1
+
+# Playwright e2e (loaded by playwright.config.ts via vite's loadEnv)
+E2E_TESTER_EMAIL=
+E2E_TESTER_PASSWORD=
 ```
 
 **Backend** (`backend/.env`):

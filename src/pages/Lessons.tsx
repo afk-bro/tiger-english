@@ -7,11 +7,12 @@ function UnitCard({ unit }: { unit: Unit }) {
   const { t } = useTranslation();
   const isAvailable = unit.status === "available";
 
-  const baseClasses =
-    "block rounded-xl border p-6 transition-colors";
-  const variantClasses = isAvailable
-    ? "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-primary-500 hover:shadow-md"
-    : "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-60 cursor-not-allowed";
+  // Shared .card classes handle bg/border/radius/padding/shadow plus dark
+  // mode via semantic tokens. .card-interactive adds hover lift + the
+  // focus-visible ring so the available cards are keyboard-accessible.
+  // Coming-soon cards stay on the plain .card with an opacity dim — no
+  // hover affordance because they aren't clickable.
+  const className = `block ${isAvailable ? "card card-interactive" : "card opacity-60 cursor-not-allowed"}`;
 
   const content = (
     <>
@@ -22,8 +23,8 @@ function UnitCard({ unit }: { unit: Unit }) {
         <span
           className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${
             isAvailable
-              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-              : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+              ? "bg-semantic-success/10 text-semantic-success"
+              : "bg-semantic-surface-2 text-semantic-text-muted"
           }`}
         >
           {!isAvailable && <Lock className="w-3 h-3" aria-hidden="true" />}
@@ -32,16 +33,16 @@ function UnitCard({ unit }: { unit: Unit }) {
             : t("lessons.status.comingSoon")}
         </span>
       </div>
-      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1">
+      <h2 className="text-lg font-semibold text-semantic-text mb-1">
         {unit.title}
       </h2>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+      <p className="text-sm text-semantic-text-muted mb-2">
         {unit.topic}
       </p>
-      <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
+      <p className="text-xs text-semantic-subtle mb-4">
         {unit.grammarFocus}
       </p>
-      <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-500">
+      <div className="flex items-center gap-1 text-xs text-semantic-subtle">
         <Clock className="w-3 h-3" aria-hidden="true" />
         {t("lessons.card.estMinutes", { count: unit.estimatedMinutes })}
       </div>
@@ -50,13 +51,13 @@ function UnitCard({ unit }: { unit: Unit }) {
 
   if (isAvailable) {
     return (
-      <Link to={`/lessons/${unit.slug}`} className={`${baseClasses} ${variantClasses}`}>
+      <Link to={`/lessons/${unit.slug}`} className={className}>
         {content}
       </Link>
     );
   }
   return (
-    <div className={`${baseClasses} ${variantClasses}`} aria-disabled="true">
+    <div className={className} aria-disabled="true">
       {content}
     </div>
   );
@@ -71,13 +72,11 @@ export default function Lessons() {
           className="w-7 h-7 text-primary-600 dark:text-primary-400"
           aria-hidden="true"
         />
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+        <h1 className="text-2xl font-bold text-semantic-text">
           {t("lessons.title")}
         </h1>
       </div>
-      <p className="text-gray-600 dark:text-gray-400 mb-8">
-        {t("lessons.subtitle")}
-      </p>
+      <p className="text-semantic-text-muted mb-8">{t("lessons.subtitle")}</p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {units.map((unit) => (
           <UnitCard key={unit.slug} unit={unit} />
