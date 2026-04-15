@@ -195,6 +195,33 @@
     "logout": "ออกจากระบบ",
     "loading": "กำลังโหลด..."
   },
+  "lessons": {
+    "title": "บทเรียน",
+    "subtitle": "บทเรียนภาษาอังกฤษแบบมีโครงสร้าง ทีละหน่วย",
+    "unitShort": "บทที่ {{number}}",
+    "status": {
+      "available": "พร้อมเรียน",
+      "comingSoon": "เร็วๆ นี้"
+    },
+    "card": {
+      "estMinutes": "~{{count}} นาที"
+    },
+    "notFound": "ไม่พบบทเรียน",
+    "comingSoonMessage": "บทเรียนนี้ยังไม่พร้อม กรุณากลับมาอีกครั้งเร็วๆ นี้",
+    "backToLessons": "กลับไปที่บทเรียน",
+    "detail": {
+      "building_title": "บทเรียนนี้กำลังสร้าง",
+      "building_subtitle": "โครงสร้างด้านล่างแสดงสิ่งที่จะมีที่นี่เร็วๆ นี้",
+      "outline_heading": "สิ่งที่จะมีในบทเรียนนี้",
+      "sections": {
+        "overview": "ภาพรวม",
+        "grammar": "ไวยากรณ์",
+        "vocabulary": "คำศัพท์",
+        "dialogues": "บทสนทนา",
+        "activities": "กิจกรรมฝึก"
+      }
+    }
+  },
   "about": {
     "title": "เกี่ยวกับ Tiger English",
     "tagline": "สร้างเครื่องมือสำหรับผู้เรียนภาษา",
@@ -365,6 +392,7 @@
       "nav": {
         "home": "หน้าแรก",
         "dashboard": "แดชบอร์ด",
+        "lessons": "บทเรียน",
         "library": "ห้องสมุด",
         "study_groups": "กลุ่มเรียน",
         "notifications": "การแจ้งเตือน",

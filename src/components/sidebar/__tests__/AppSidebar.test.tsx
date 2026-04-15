@@ -40,11 +40,12 @@ describe('AppSidebar', () => {
   // sidebarContent is rendered in both the desktop panel and the always-mounted mobile drawer,
   // so nav labels and buttons appear twice in the DOM. Use getAllBy* accordingly.
 
-  it('renders all 8 nav items', () => {
+  it('renders all 9 nav items', () => {
     renderSidebar();
     const navKeys = [
       'common.sidebar.nav.home',
       'common.sidebar.nav.dashboard',
+      'common.sidebar.nav.lessons',
       'common.sidebar.nav.library',
       'common.sidebar.nav.study_groups',
       'common.sidebar.nav.notifications',
