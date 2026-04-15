@@ -40,7 +40,15 @@ skills-lock.json
 /docs/notes
 /docs/scratch
 /docs/lessons_learned
-playwright-report/\ntest-results/
+
+# Playwright output
+playwright-report/
+test-results/
 
 # Playwright auth state (created by e2e/auth.setup.ts; contains session cookies)
 playwright/.auth/
+
+# Obsidian vault — project-local notes, MEMORY folder, research + deliverables.
+# Nested inside the repo so Obsidian can open the project root as a vault;
+# tracked separately (or not at all) from the app code.
+tiger-english/
