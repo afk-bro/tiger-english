@@ -20,6 +20,7 @@ i18n
       th: { translation: th },
       vi: { translation: vi },
       'zh-CN': { translation: zhCN },
+      zh: { translation: zhCN },
     },
     interpolation: {
       escapeValue: false,

@@ -88,7 +88,14 @@ export default function SectionPage() {
         </Link>
         <h1 className="text-2xl font-bold text-semantic-text mt-1">{section.title}</h1>
       </div>
-      <SectionRenderer section={section} />
+      <SectionRenderer
+        section={section}
+        onExerciseCorrect={() => {
+          if (!progress.completed) {
+            toggleCompleted(unit.slug, validSectionKey);
+          }
+        }}
+      />
       <SectionNav
         unitSlug={unit.slug}
         currentSection={validSectionKey}

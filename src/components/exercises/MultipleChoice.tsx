@@ -1,17 +1,28 @@
-// src/components/exercises/MultipleChoice.tsx
 import { useState } from "react";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, RotateCcw } from "lucide-react";
 import { clsx } from "clsx";
 import type { McqExercise } from "./exercises.types";
 
 type Props = {
   exercise: McqExercise;
+  onCorrect?: () => void;
 };
 
-export default function MultipleChoice({ exercise }: Props) {
+export default function MultipleChoice({ exercise, onCorrect }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const answered = selectedId !== null;
   const isCorrect = selectedId === exercise.correctOptionId;
+
+  function handleSelect(optionId: string) {
+    setSelectedId(optionId);
+    if (optionId === exercise.correctOptionId) {
+      onCorrect?.();
+    }
+  }
+
+  function handleReset() {
+    setSelectedId(null);
+  }
 
   return (
     <div className="space-y-4">
@@ -28,7 +39,7 @@ export default function MultipleChoice({ exercise }: Props) {
               key={option.id}
               type="button"
               disabled={answered}
-              onClick={() => setSelectedId(option.id)}
+              onClick={() => handleSelect(option.id)}
               className={clsx(
                 "w-full text-left px-4 py-3 rounded-lg border text-sm font-medium transition-colors",
                 !answered && "border-semantic-border bg-semantic-surface hover:bg-semantic-surface-2 text-semantic-text",
@@ -44,22 +55,34 @@ export default function MultipleChoice({ exercise }: Props) {
         })}
       </div>
       {answered && (
-        <div
-          className={clsx(
-            "flex items-center gap-2 text-sm font-medium",
-            isCorrect ? "text-semantic-success" : "text-red-600 dark:text-red-400",
-          )}
-        >
-          {isCorrect ? (
-            <>
-              <CheckCircle className="w-4 h-4" aria-hidden="true" />
-              Correct!
-            </>
-          ) : (
-            <>
-              <XCircle className="w-4 h-4" aria-hidden="true" />
-              Incorrect
-            </>
+        <div className="flex items-center justify-between">
+          <div
+            className={clsx(
+              "flex items-center gap-2 text-sm font-medium",
+              isCorrect ? "text-semantic-success" : "text-red-600 dark:text-red-400",
+            )}
+          >
+            {isCorrect ? (
+              <>
+                <CheckCircle className="w-4 h-4" aria-hidden="true" />
+                Correct!
+              </>
+            ) : (
+              <>
+                <XCircle className="w-4 h-4" aria-hidden="true" />
+                Incorrect
+              </>
+            )}
+          </div>
+          {!isCorrect && (
+            <button
+              type="button"
+              onClick={handleReset}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
+            >
+              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+              Try again
+            </button>
           )}
         </div>
       )}

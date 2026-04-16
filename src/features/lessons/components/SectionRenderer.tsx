@@ -7,7 +7,7 @@ import DialogueBlock from "./blocks/DialogueBlock";
 import CalloutBlock from "./blocks/CalloutBlock";
 import ExerciseBlock from "./blocks/ExerciseBlock";
 
-function renderBlock(block: SectionBlock) {
+function renderBlock(block: SectionBlock, onExerciseCorrect?: () => void) {
   switch (block.type) {
     case "text": return <TextBlock content={block.content} />;
     case "heading": return <HeadingBlock content={block.content} />;
@@ -15,16 +15,22 @@ function renderBlock(block: SectionBlock) {
     case "vocab-list": return <VocabListBlock items={block.items} />;
     case "dialogue": return <DialogueBlock lines={block.lines} />;
     case "callout": return <CalloutBlock variant={block.variant} content={block.content} />;
-    case "exercise": return <ExerciseBlock exerciseType={block.exerciseType} exerciseId={block.exerciseId} />;
+    case "exercise": return <ExerciseBlock exerciseType={block.exerciseType} exerciseId={block.exerciseId} onCorrect={onExerciseCorrect} />;
     default: return null;
   }
 }
 
-type Props = { section: Section };
-export default function SectionRenderer({ section }: Props) {
+type Props = {
+  section: Section;
+  onExerciseCorrect?: () => void;
+};
+
+export default function SectionRenderer({ section, onExerciseCorrect }: Props) {
   return (
     <div className="space-y-6">
-      {section.blocks.map((block) => <div key={block.id}>{renderBlock(block)}</div>)}
+      {section.blocks.map((block) => (
+        <div key={block.id}>{renderBlock(block, onExerciseCorrect)}</div>
+      ))}
     </div>
   );
 }

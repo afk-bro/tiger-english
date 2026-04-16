@@ -1,14 +1,14 @@
-// src/components/exercises/FillBlank.tsx
 import { useState } from "react";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, RotateCcw } from "lucide-react";
 import { clsx } from "clsx";
 import type { FillBlankExercise } from "./exercises.types";
 
 type Props = {
   exercise: FillBlankExercise;
+  onCorrect?: () => void;
 };
 
-export default function FillBlank({ exercise }: Props) {
+export default function FillBlank({ exercise, onCorrect }: Props) {
   const [value, setValue] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
@@ -23,6 +23,14 @@ export default function FillBlank({ exercise }: Props) {
   function handleSubmit() {
     if (value.trim() === "") return;
     setSubmitted(true);
+    if (allAcceptable.some((a) => a.toLowerCase().trim() === value.toLowerCase().trim())) {
+      onCorrect?.();
+    }
+  }
+
+  function handleReset() {
+    setValue("");
+    setSubmitted(false);
   }
 
   return (
@@ -59,22 +67,34 @@ export default function FillBlank({ exercise }: Props) {
         </button>
       )}
       {submitted && (
-        <div
-          className={clsx(
-            "flex items-center gap-2 text-sm font-medium",
-            isCorrect ? "text-semantic-success" : "text-red-600 dark:text-red-400",
-          )}
-        >
-          {isCorrect ? (
-            <>
-              <CheckCircle className="w-4 h-4" aria-hidden="true" />
-              Correct!
-            </>
-          ) : (
-            <>
-              <XCircle className="w-4 h-4" aria-hidden="true" />
-              Incorrect
-            </>
+        <div className="flex items-center justify-between">
+          <div
+            className={clsx(
+              "flex items-center gap-2 text-sm font-medium",
+              isCorrect ? "text-semantic-success" : "text-red-600 dark:text-red-400",
+            )}
+          >
+            {isCorrect ? (
+              <>
+                <CheckCircle className="w-4 h-4" aria-hidden="true" />
+                Correct!
+              </>
+            ) : (
+              <>
+                <XCircle className="w-4 h-4" aria-hidden="true" />
+                Incorrect
+              </>
+            )}
+          </div>
+          {!isCorrect && (
+            <button
+              type="button"
+              onClick={handleReset}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
+            >
+              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+              Try again
+            </button>
           )}
         </div>
       )}

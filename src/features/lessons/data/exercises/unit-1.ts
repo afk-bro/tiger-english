@@ -17,5 +17,5 @@ export const activitiesFillBlank1: FillBlankExercise = {
   beforeBlank: "They",
   afterBlank: "from Thailand.",
   correctAnswer: "are",
-  acceptableAnswers: ["are", "'re"],
+  acceptableAnswers: ["are", "'re", "they're"],
 };
