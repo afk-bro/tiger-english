@@ -28,19 +28,27 @@ describe("getUnit", () => {
 describe("getSection + sectionRegistry", () => {
   const mockSection: Section = {
     id: "test-section",
-    unitSlug: "unit-1",
+    unitSlug: "unit-99",
     key: "overview",
     title: "Overview",
     blocks: [],
   };
 
-  it("returns undefined before registration", () => {
-    expect(getSection("unit-1", "grammar")).toBeUndefined();
+  it("returns undefined for unknown unit/section", () => {
+    expect(getSection("unit-99", "grammar")).toBeUndefined();
   });
 
-  it("returns section after registration", () => {
+  it("returns auto-registered unit-1 sections", () => {
+    expect(getSection("unit-1", "overview")).toBeDefined();
+    expect(getSection("unit-1", "grammar")).toBeDefined();
+    expect(getSection("unit-1", "vocabulary")).toBeDefined();
+    expect(getSection("unit-1", "dialogues")).toBeDefined();
+    expect(getSection("unit-1", "activities")).toBeDefined();
+  });
+
+  it("returns section after manual registration", () => {
     registerSection(mockSection);
-    const result = getSection("unit-1", "overview");
+    const result = getSection("unit-99", "overview");
     expect(result).toBeDefined();
     expect(result!.id).toBe("test-section");
   });
