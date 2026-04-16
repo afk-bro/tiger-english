@@ -101,7 +101,7 @@ type ExerciseType = "multiple-choice" | "fill-blank" | "match";
 
 - No content references the `match` type
 - No `Match.tsx` component is built
-- If `SectionRenderer` encounters a `match` exercise, it renders a "Coming soon" placeholder
+- If `SectionRenderer` encounters a `match` exercise, it renders a non-interactive placeholder card with a "Coming soon" label (same styling as exercise blocks but muted/disabled)
 
 ## File Structure
 
@@ -157,6 +157,8 @@ Route components do not import raw content files directly. Instead they use thin
 - `getSection(unitSlug, sectionKey)` — returns `Section | undefined`
 - `sectionRegistry.ts` — centralizes imports, maps `${unitSlug}:${sectionKey}` → `Section`
 
+Both functions stay pure — they return `undefined` on miss, no throws. The calling page component (`UnitHub`, `SectionPage`) handles `undefined` by rendering the not-found UI.
+
 This creates a seam for migrating to Supabase/CMS later without touching page components.
 
 ## Routing
@@ -173,8 +175,8 @@ All wrapped in `<RequireAuth>` + `AuthLayout` (existing pattern).
 
 **Route guards:**
 
-- Invalid `unitSlug` → not-found state
-- Invalid `sectionKey` for a valid unit → not-found state
+- Invalid `unitSlug` → not-found UI: simple inline fallback with "Unit not found" heading and link back to `/lessons`. Use existing app-level NotFound component if one exists, otherwise render a minimal fallback within the lessons layout.
+- Invalid `sectionKey` for a valid unit → same not-found UI with "Section not found" and link back to the unit hub
 - `"locked"` unit accessed via direct URL → redirect to `/lessons` or show locked state
 - `"coming-soon"` unit accessed via direct URL → show coming-soon message
 
@@ -201,7 +203,7 @@ Used for: UnitHub display order, prev/next logic, Continue CTA resolution, valid
 
 Displays:
 
-- Unit title, topic, description
+- Unit title, topic, grammar focus
 - Section list — each `SectionCard` is clickable, shows: title, estimated minutes, status icon
 - Primary CTA button:
   - No sections started → **"Start Unit"** → navigates to `/lessons/:unitSlug/overview`
@@ -248,7 +250,8 @@ type LessonProgressState = {
 
 - `visited` set to `true` on `SectionPage` mount
 - `completed` toggled by user via "Mark as Complete"
-- `lastVisitedSectionKey` updated on each section visit
+- `lastVisitedSectionKey` updated on every `SectionPage` mount (overwrites previous value for that unit)
+- `getSectionProgress` returns `{ visited: false, completed: false }` as default when the key doesn't exist yet — no undefined access
 - Not persisted to storage in Phase 1 — resets on refresh
 - `getUnitCompletionPercent` counts completed sections / total sections (future: weighted)
 
@@ -360,3 +363,20 @@ Remain in the unit catalog as `"coming-soon"`. No section data.
 - Streaks and performance bonuses
 - Level progression
 - Badges/achievements
+
+## Definition of Done (Phase 1)
+
+- [ ] User can navigate: `/lessons` → `/lessons/unit-1` → all 5 sections
+- [ ] UnitHub CTA updates correctly based on progress state (Start Unit / Continue / Review Unit)
+- [ ] SectionPage marks `visited` on mount
+- [ ] SectionPage toggles completion correctly via "Mark as Complete"
+- [ ] Prev/Next navigation works for all sections, last section shows "Back to Unit"
+- [ ] Overview + Vocabulary contain production-quality content for Unit 1
+- [ ] Grammar, Dialogues, Activities render correctly with placeholder content
+- [ ] MCQ and FillBlank exercise components function correctly
+- [ ] Units 2-4 show correct "coming soon" state and are not navigable to section pages
+- [ ] All routes handle invalid unitSlug and sectionKey gracefully (not-found UI)
+- [ ] Locked/coming-soon units handle direct URL access gracefully
+- [ ] Progress state is consistent across page navigations (Zustand, not local state)
+- [ ] Dark mode works correctly across all lesson pages
+- [ ] All tests pass: typecheck, unit tests, e2e tests
