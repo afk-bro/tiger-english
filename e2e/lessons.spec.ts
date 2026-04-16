@@ -98,7 +98,7 @@ test.describe("Lessons area", () => {
   test("vocabulary section renders vocab cards", async ({ page }) => {
     await page.goto("/lessons/unit-1/vocabulary");
     await expect(page.getByText("hello")).toBeVisible();
-    await expect(page.getByText("Tap to reveal")).toBeVisible();
+    await expect(page.getByText("Tap to reveal").first()).toBeVisible();
   });
 
   test("grammar section renders MCQ exercise", async ({ page }) => {
@@ -135,8 +135,8 @@ test.describe("Lessons area", () => {
     await page.getByRole("link", { name: /Next/i }).click();
     await expect(page).toHaveURL("/lessons/unit-1/activities");
 
-    // activities → back to unit (last section)
-    await page.getByRole("link", { name: /Back to Unit/i }).click();
+    // activities → back to unit (last section, nav button not header link)
+    await page.getByRole("link", { name: "Back to Unit", exact: true }).click();
     await expect(page).toHaveURL("/lessons/unit-1");
   });
 

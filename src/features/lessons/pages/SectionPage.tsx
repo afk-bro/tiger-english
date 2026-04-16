@@ -9,6 +9,8 @@ import { SECTION_ORDER, type SectionKey } from "../lesson.types";
 import SectionRenderer from "../components/SectionRenderer";
 import SectionNav from "../components/SectionNav";
 
+const DEFAULT_PROGRESS = { visited: false, completed: false } as const;
+
 export default function SectionPage() {
   const { t } = useTranslation();
   const { unitSlug, sectionKey } = useParams<{ unitSlug: string; sectionKey: string }>();
@@ -23,11 +25,11 @@ export default function SectionPage() {
   const markVisited = useLessonProgressStore((s) => s.markVisited);
   const setLastVisited = useLessonProgressStore((s) => s.setLastVisited);
   const toggleCompleted = useLessonProgressStore((s) => s.toggleCompleted);
-  const getSectionProgress = useLessonProgressStore((s) => s.getSectionProgress);
 
-  const progress = unitSlug && validSectionKey
-    ? getSectionProgress(unitSlug, validSectionKey)
-    : { visited: false, completed: false };
+  const progressKey = unitSlug && validSectionKey ? `${unitSlug}:${validSectionKey}` : "";
+  const progress = useLessonProgressStore(
+    (s) => progressKey ? (s.progress[progressKey] ?? DEFAULT_PROGRESS) : DEFAULT_PROGRESS,
+  );
 
   useEffect(() => {
     if (unitSlug && validSectionKey) {
@@ -48,18 +50,6 @@ export default function SectionPage() {
     );
   }
 
-  if (!validSectionKey || !section) {
-    return (
-      <div className="max-w-3xl mx-auto py-8 px-4">
-        <h1 className="text-2xl font-bold text-semantic-text mb-3">{t("lessons.sectionNotFound")}</h1>
-        <Link to={`/lessons/${unitSlug}`} className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:underline">
-          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-          {t("lessons.backToUnit")}
-        </Link>
-      </div>
-    );
-  }
-
   if (unit.status !== "available") {
     return (
       <div className="max-w-3xl mx-auto py-8 px-4">
@@ -71,6 +61,18 @@ export default function SectionPage() {
           {t("lessons.unitShort", { number: unit.number })} — {unit.title}
         </h1>
         <p className="text-semantic-text-muted">{t("lessons.comingSoonMessage")}</p>
+      </div>
+    );
+  }
+
+  if (!validSectionKey || !section) {
+    return (
+      <div className="max-w-3xl mx-auto py-8 px-4">
+        <h1 className="text-2xl font-bold text-semantic-text mb-3">{t("lessons.sectionNotFound")}</h1>
+        <Link to={`/lessons/${unitSlug}`} className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:underline">
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+          {t("lessons.backToUnit")}
+        </Link>
       </div>
     );
   }
