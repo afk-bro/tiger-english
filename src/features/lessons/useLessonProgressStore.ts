@@ -12,6 +12,7 @@ type LessonProgressState = {
   lastVisitedSectionKey: Partial<Record<string, SectionKey>>;
 
   markVisited: (unitSlug: string, sectionKey: SectionKey) => void;
+  markCompleted: (unitSlug: string, sectionKey: SectionKey) => void;
   toggleCompleted: (unitSlug: string, sectionKey: SectionKey) => void;
   setLastVisited: (unitSlug: string, sectionKey: SectionKey) => void;
   getSectionProgress: (
@@ -46,6 +47,20 @@ export const useLessonProgressStore = create<LessonProgressState>(
           [key]: { ...DEFAULT_PROGRESS, ...state.progress[key], visited: true },
         },
       }));
+    },
+
+    markCompleted: (unitSlug, sectionKey) => {
+      const key = makeKey(unitSlug, sectionKey);
+      set((state) => {
+        const current = state.progress[key] ?? DEFAULT_PROGRESS;
+        if (current.completed) return state;
+        return {
+          progress: {
+            ...state.progress,
+            [key]: { ...current, completed: true },
+          },
+        };
+      });
     },
 
     toggleCompleted: (unitSlug, sectionKey) => {

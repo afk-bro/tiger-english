@@ -24,6 +24,7 @@ export default function SectionPage() {
 
   const markVisited = useLessonProgressStore((s) => s.markVisited);
   const setLastVisited = useLessonProgressStore((s) => s.setLastVisited);
+  const markCompleted = useLessonProgressStore((s) => s.markCompleted);
   const toggleCompleted = useLessonProgressStore((s) => s.toggleCompleted);
 
   const progressKey = unitSlug && validSectionKey ? `${unitSlug}:${validSectionKey}` : "";
@@ -91,9 +92,7 @@ export default function SectionPage() {
       <SectionRenderer
         section={section}
         onExerciseCorrect={() => {
-          if (!progress.completed) {
-            toggleCompleted(unit.slug, validSectionKey);
-          }
+          markCompleted(unit.slug, validSectionKey);
         }}
       />
       <SectionNav
