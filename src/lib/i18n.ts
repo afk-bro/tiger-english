@@ -6,18 +6,20 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import en from '../locales/en/en.json';
 import th from '../locales/th/th.json';
 import vi from '../locales/vi/vi.json';
+import zhCN from '../locales/zh-CN/zh-CN.json';
 
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
-    supportedLngs: ['en', 'th', 'vi'],
+    supportedLngs: ['en', 'th', 'vi', 'zh-CN'],
     nonExplicitSupportedLngs: true,
     resources: {
       en: { translation: en },
       th: { translation: th },
       vi: { translation: vi },
+      'zh-CN': { translation: zhCN },
     },
     interpolation: {
       escapeValue: false,
