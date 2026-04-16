@@ -242,7 +242,10 @@
       }
     },
     "vocab": {
-      "revealAnswer": "Reveal answer"
+      "revealAnswer": "Reveal answer",
+      "flipToRevealEnglishFor": "Flip card to reveal English for {{nativeText}}",
+      "flipToRevealAnswer": "Flip card to reveal answer",
+      "flipBackToTranslation": "Flip card back to translation"
     }
   },
   "about": {

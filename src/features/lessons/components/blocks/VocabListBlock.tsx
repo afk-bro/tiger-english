@@ -11,9 +11,9 @@ function VocabCard({ item, learnerLang }: { item: VocabItem; learnerLang: Return
   const hasFront = nativeText !== null && nativeText !== undefined;
 
   const frontLabel = hasFront
-    ? `Flip card to reveal English for ${nativeText}`
-    : "Flip card to reveal answer";
-  const backLabel = "Flip card back to translation";
+    ? t("lessons.vocab.flipToRevealEnglishFor", { nativeText })
+    : t("lessons.vocab.flipToRevealAnswer");
+  const backLabel = t("lessons.vocab.flipBackToTranslation");
 
   return (
     <button

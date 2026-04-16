@@ -7,10 +7,15 @@ import type { VocabItem } from "../lesson.types";
 const mockLanguage = { current: "th" };
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string) => {
+    t: (key: string, opts?: Record<string, string>) => {
       const keys: Record<string, string> = {
         "lessons.vocab.revealAnswer": "Reveal answer",
+        "lessons.vocab.flipToRevealAnswer": "Flip card to reveal answer",
+        "lessons.vocab.flipBackToTranslation": "Flip card back to translation",
       };
+      if (key === "lessons.vocab.flipToRevealEnglishFor" && opts?.nativeText) {
+        return `Flip card to reveal English for ${opts.nativeText}`;
+      }
       return keys[key] ?? key;
     },
     i18n: { language: mockLanguage.current },

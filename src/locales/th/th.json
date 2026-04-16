@@ -242,7 +242,10 @@
       }
     },
     "vocab": {
-      "revealAnswer": "เฉลยคำตอบ"
+      "revealAnswer": "เฉลยคำตอบ",
+      "flipToRevealEnglishFor": "พลิกการ์ดเพื่อดูภาษาอังกฤษสำหรับ {{nativeText}}",
+      "flipToRevealAnswer": "พลิกการ์ดเพื่อดูคำตอบ",
+      "flipBackToTranslation": "พลิกการ์ดกลับไปดูคำแปล"
     }
   },
   "about": {

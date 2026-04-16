@@ -27,6 +27,13 @@ describe("getLearnerLanguage", () => {
     expect(getLearnerLanguage("ja")).toBeNull();
     expect(getLearnerLanguage("")).toBeNull();
   });
+
+  it("normalizes regional variants", () => {
+    expect(getLearnerLanguage("th-TH")).toBe("th");
+    expect(getLearnerLanguage("vi-VN")).toBe("vi");
+    expect(getLearnerLanguage("zh-cn")).toBe("zh-CN");
+    expect(getLearnerLanguage("zh-TW")).toBe("zh-CN");
+  });
 });
 
 describe("SUPPORTED_LEARNER_LANGUAGES", () => {

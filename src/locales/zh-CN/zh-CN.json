@@ -242,7 +242,10 @@
       }
     },
     "vocab": {
-      "revealAnswer": "显示答案"
+      "revealAnswer": "显示答案",
+      "flipToRevealEnglishFor": "翻转卡片查看 {{nativeText}} 的英文",
+      "flipToRevealAnswer": "翻转卡片查看答案",
+      "flipBackToTranslation": "翻转卡片返回翻译"
     }
   },
   "about": {
