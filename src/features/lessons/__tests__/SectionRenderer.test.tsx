@@ -1,8 +1,15 @@
 // src/features/lessons/__tests__/SectionRenderer.test.tsx
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import SectionRenderer from "../components/SectionRenderer";
 import type { Section } from "../lesson.types";
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "th" },
+  }),
+}));
 
 const testSection: Section = {
   id: "test",
@@ -12,7 +19,7 @@ const testSection: Section = {
   blocks: [
     { id: "b1", type: "heading", content: "Test Heading" },
     { id: "b2", type: "text", content: "Some paragraph text." },
-    { id: "b3", type: "examples", items: [{ english: "Hello", translation: "สวัสดี" }] },
+    { id: "b3", type: "examples", items: [{ id: "test-ex", english: "Hello", translations: { th: "สวัสดี" } }] },
     { id: "b4", type: "callout", variant: "tip", content: "A helpful tip." },
   ],
 };
