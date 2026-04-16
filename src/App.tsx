@@ -19,8 +19,9 @@ const Contact        = lazy(() => import("@/pages/Contact"));
 const FlashcardsPage = lazy(() => import("./pages/FlashcardsPage"));
 const Dashboard      = lazy(() => import("./pages/Dashboard"));
 const Settings       = lazy(() => import("@/pages/Settings"));
-const Lessons        = lazy(() => import("@/pages/Lessons"));
-const LessonDetail   = lazy(() => import("@/pages/LessonDetail"));
+const LessonsIndex   = lazy(() => import("@/features/lessons/pages/LessonsIndex"));
+const UnitHub        = lazy(() => import("@/features/lessons/pages/UnitHub"));
+const SectionPage    = lazy(() => import("@/features/lessons/pages/SectionPage"));
 
 // Stub pages for new authenticated routes
 const StubPage = ({ titleKey }: { titleKey: string }) => {
@@ -63,8 +64,9 @@ function App() {
             <Route element={<RequireAuth><AuthLayout /></RequireAuth>}>
               <Route path="/home" element={<AuthHome />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/lessons" element={<Lessons />} />
-              <Route path="/lessons/:unitSlug" element={<LessonDetail />} />
+              <Route path="/lessons" element={<LessonsIndex />} />
+              <Route path="/lessons/:unitSlug" element={<UnitHub />} />
+              <Route path="/lessons/:unitSlug/:sectionKey" element={<SectionPage />} />
               <Route path="/library" element={<StubPage titleKey="common.sidebar.nav.library" />} />
               <Route path="/study-groups" element={<StubPage titleKey="common.sidebar.nav.study_groups" />} />
               <Route path="/notifications" element={<StubPage titleKey="common.sidebar.nav.notifications" />} />
