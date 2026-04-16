@@ -29,7 +29,7 @@ type Props = { items: VocabItem[] };
 export default function VocabListBlock({ items }: Props) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      {items.map((item, i) => <VocabCard key={i} item={item} />)}
+      {items.map((item) => <VocabCard key={`${item.word}-${item.translation}`} item={item} />)}
     </div>
   );
 }

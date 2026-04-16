@@ -6,22 +6,16 @@ import type { McqExercise, FillBlankExercise } from "@/components/exercises/exer
 
 type Props = { exerciseType: ExerciseType; exerciseId: string };
 
-const exerciseMap: Record<string, McqExercise | FillBlankExercise> = {
-  "u1-grammar-mcq-1": unit1Exercises.grammarMcq1,
-  "u1-activities-fb-1": unit1Exercises.activitiesFillBlank1,
+type TaggedExercise =
+  | { type: "multiple-choice"; data: McqExercise }
+  | { type: "fill-blank"; data: FillBlankExercise };
+
+const exerciseMap: Record<string, TaggedExercise> = {
+  "u1-grammar-mcq-1": { type: "multiple-choice", data: unit1Exercises.grammarMcq1 },
+  "u1-activities-fb-1": { type: "fill-blank", data: unit1Exercises.activitiesFillBlank1 },
 };
 
 export default function ExerciseBlock({ exerciseType, exerciseId }: Props) {
-  const exercise = exerciseMap[exerciseId];
-
-  if (!exercise) {
-    return (
-      <div className="card p-4 opacity-60">
-        <p className="text-sm text-semantic-text-muted">Exercise not found.</p>
-      </div>
-    );
-  }
-
   if (exerciseType === "match") {
     return (
       <div className="card p-6 opacity-60 text-center">
@@ -30,10 +24,20 @@ export default function ExerciseBlock({ exerciseType, exerciseId }: Props) {
     );
   }
 
+  const entry = exerciseMap[exerciseId];
+
+  if (!entry || entry.type !== exerciseType) {
+    return (
+      <div className="card p-4 opacity-60">
+        <p className="text-sm text-semantic-text-muted">Exercise not found.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="card p-6 shadow-sm border border-semantic-border">
-      {exerciseType === "multiple-choice" && <MultipleChoice exercise={exercise as McqExercise} />}
-      {exerciseType === "fill-blank" && <FillBlank exercise={exercise as FillBlankExercise} />}
+      {entry.type === "multiple-choice" && <MultipleChoice exercise={entry.data} />}
+      {entry.type === "fill-blank" && <FillBlank exercise={entry.data} />}
     </div>
   );
 }

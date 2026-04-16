@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { getUnit } from "../data/getUnit";
 import SectionCard from "../components/SectionCard";
 import { useLessonProgressStore } from "../useLessonProgressStore";
-import { SECTION_ORDER, type SectionKey } from "../lesson.types";
+import type { SectionKey } from "../lesson.types";
 
 export default function UnitHub() {
   const { t } = useTranslation();
@@ -26,7 +26,7 @@ export default function UnitHub() {
     );
   }
 
-  if (unit.status === "coming-soon") {
+  if (unit.status !== "available") {
     return (
       <div className="max-w-3xl mx-auto py-8 px-4">
         <Link to="/lessons" className="inline-flex items-center gap-2 text-sm text-semantic-text-muted hover:text-primary-600 dark:hover:text-primary-400 mb-4">
@@ -56,7 +56,7 @@ export default function UnitHub() {
     if (lastVisited && !getSectionProgress(unit.slug, lastVisited).completed) {
       ctaTarget = lastVisited;
     } else {
-      ctaTarget = SECTION_ORDER.find((key) => !getSectionProgress(unit.slug, key).completed) ?? "overview";
+      ctaTarget = unit.sections.find((s) => !getSectionProgress(unit.slug, s.key).completed)?.key ?? "overview";
     }
   } else {
     ctaLabel = t("lessons.hub.startUnit");

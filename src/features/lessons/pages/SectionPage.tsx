@@ -31,12 +31,14 @@ export default function SectionPage() {
     (s) => progressKey ? (s.progress[progressKey] ?? DEFAULT_PROGRESS) : DEFAULT_PROGRESS,
   );
 
+  const shouldTrack = unit?.status === "available" && validSectionKey && section;
+
   useEffect(() => {
-    if (unitSlug && validSectionKey) {
+    if (shouldTrack && unitSlug && validSectionKey) {
       markVisited(unitSlug, validSectionKey);
       setLastVisited(unitSlug, validSectionKey);
     }
-  }, [unitSlug, validSectionKey, markVisited, setLastVisited]);
+  }, [shouldTrack, unitSlug, validSectionKey, markVisited, setLastVisited]);
 
   if (!unit) {
     return (

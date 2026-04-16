@@ -44,6 +44,7 @@ export default function FillBlank({ exercise }: Props) {
             submitted && !isCorrect && "border-red-400 bg-red-50 text-red-700 dark:border-red-500 dark:bg-red-900/20 dark:text-red-400",
           )}
           placeholder="..."
+          aria-label="Fill in the blank"
         />
         <span>{exercise.afterBlank}</span>
       </div>

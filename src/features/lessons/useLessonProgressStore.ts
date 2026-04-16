@@ -9,7 +9,7 @@ export type SectionProgress = {
 
 type LessonProgressState = {
   progress: Record<string, SectionProgress>;
-  lastVisitedSectionKey: Record<string, SectionKey>;
+  lastVisitedSectionKey: Partial<Record<string, SectionKey>>;
 
   markVisited: (unitSlug: string, sectionKey: SectionKey) => void;
   toggleCompleted: (unitSlug: string, sectionKey: SectionKey) => void;
