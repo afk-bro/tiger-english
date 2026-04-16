@@ -201,14 +201,34 @@
     "unitShort": "Unit {{number}}",
     "status": {
       "available": "Available",
-      "comingSoon": "Coming soon"
+      "comingSoon": "Coming soon",
+      "locked": "Locked"
     },
     "card": {
       "estMinutes": "~{{count}} min"
     },
     "notFound": "Unit not found",
+    "sectionNotFound": "Section not found",
     "comingSoonMessage": "This unit isn't ready yet. Check back soon.",
     "backToLessons": "Back to lessons",
+    "backToUnit": "Back to unit",
+    "hub": {
+      "startUnit": "Start Unit",
+      "continue": "Continue",
+      "reviewUnit": "Review Unit"
+    },
+    "section": {
+      "markComplete": "Mark as Complete",
+      "completed": "Completed",
+      "next": "Next",
+      "previous": "Previous",
+      "backToUnit": "Back to Unit"
+    },
+    "progress": {
+      "notStarted": "Not started",
+      "inProgress": "In progress",
+      "completed": "Completed"
+    },
     "detail": {
       "building_title": "This unit is being built.",
       "building_subtitle": "The structure below shows what will be here soon.",

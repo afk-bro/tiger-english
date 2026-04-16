@@ -197,28 +197,48 @@
   },
   "lessons": {
     "title": "บทเรียน",
-    "subtitle": "บทเรียนภาษาอังกฤษแบบมีโครงสร้าง ทีละหน่วย",
+    "subtitle": "บทเรียนภาษาอังกฤษแบบมีโครงสร้าง ทีละบท",
     "unitShort": "บทที่ {{number}}",
     "status": {
-      "available": "พร้อมเรียน",
-      "comingSoon": "เร็วๆ นี้"
+      "available": "พร้อมใช้งาน",
+      "comingSoon": "เร็วๆ นี้",
+      "locked": "ล็อค"
     },
     "card": {
       "estMinutes": "~{{count}} นาที"
     },
     "notFound": "ไม่พบบทเรียน",
-    "comingSoonMessage": "บทเรียนนี้ยังไม่พร้อม กรุณากลับมาอีกครั้งเร็วๆ นี้",
+    "sectionNotFound": "ไม่พบหัวข้อ",
+    "comingSoonMessage": "บทเรียนนี้ยังไม่พร้อม กรุณากลับมาใหม่เร็วๆ นี้",
     "backToLessons": "กลับไปที่บทเรียน",
+    "backToUnit": "กลับไปที่บท",
+    "hub": {
+      "startUnit": "เริ่มบทเรียน",
+      "continue": "ดำเนินต่อ",
+      "reviewUnit": "ทบทวนบทเรียน"
+    },
+    "section": {
+      "markComplete": "ทำเครื่องหมายว่าเสร็จ",
+      "completed": "เสร็จแล้ว",
+      "next": "ถัดไป",
+      "previous": "ก่อนหน้า",
+      "backToUnit": "กลับไปที่บท"
+    },
+    "progress": {
+      "notStarted": "ยังไม่เริ่ม",
+      "inProgress": "กำลังดำเนินการ",
+      "completed": "เสร็จแล้ว"
+    },
     "detail": {
-      "building_title": "บทเรียนนี้กำลังสร้าง",
-      "building_subtitle": "โครงสร้างด้านล่างแสดงสิ่งที่จะมีที่นี่เร็วๆ นี้",
-      "outline_heading": "สิ่งที่จะมีในบทเรียนนี้",
+      "building_title": "กำลังสร้างบทเรียนนี้",
+      "building_subtitle": "โครงสร้างด้านล่างแสดงสิ่งที่จะมีเร็วๆ นี้",
+      "outline_heading": "สิ่งที่จะมีในบทนี้",
       "sections": {
         "overview": "ภาพรวม",
         "grammar": "ไวยากรณ์",
         "vocabulary": "คำศัพท์",
         "dialogues": "บทสนทนา",
-        "activities": "กิจกรรมฝึก"
+        "activities": "แบบฝึกหัด"
       }
     }
   },

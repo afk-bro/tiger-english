@@ -197,28 +197,48 @@
   },
   "lessons": {
     "title": "Bài học",
-    "subtitle": "Các bài học tiếng Anh có cấu trúc, từng bài một",
+    "subtitle": "Bài học tiếng Anh có cấu trúc, từng bài một",
     "unitShort": "Bài {{number}}",
     "status": {
       "available": "Có sẵn",
-      "comingSoon": "Sắp ra mắt"
+      "comingSoon": "Sắp ra mắt",
+      "locked": "Đã khóa"
     },
     "card": {
       "estMinutes": "~{{count}} phút"
     },
     "notFound": "Không tìm thấy bài học",
+    "sectionNotFound": "Không tìm thấy phần",
     "comingSoonMessage": "Bài học này chưa sẵn sàng. Hãy quay lại sau.",
-    "backToLessons": "Quay lại các bài học",
+    "backToLessons": "Quay lại bài học",
+    "backToUnit": "Quay lại bài",
+    "hub": {
+      "startUnit": "Bắt đầu bài",
+      "continue": "Tiếp tục",
+      "reviewUnit": "Xem lại bài"
+    },
+    "section": {
+      "markComplete": "Đánh dấu hoàn thành",
+      "completed": "Đã hoàn thành",
+      "next": "Tiếp theo",
+      "previous": "Trước đó",
+      "backToUnit": "Quay lại bài"
+    },
+    "progress": {
+      "notStarted": "Chưa bắt đầu",
+      "inProgress": "Đang thực hiện",
+      "completed": "Đã hoàn thành"
+    },
     "detail": {
       "building_title": "Bài học này đang được xây dựng.",
-      "building_subtitle": "Cấu trúc dưới đây cho thấy những gì sẽ có ở đây sớm.",
-      "outline_heading": "Sắp có trong bài học này",
+      "building_subtitle": "Cấu trúc bên dưới cho thấy nội dung sắp có.",
+      "outline_heading": "Nội dung trong bài này",
       "sections": {
         "overview": "Tổng quan",
         "grammar": "Ngữ pháp",
         "vocabulary": "Từ vựng",
         "dialogues": "Hội thoại",
-        "activities": "Hoạt động luyện tập"
+        "activities": "Bài tập"
       }
     }
   },
