@@ -39,11 +39,32 @@ describe("MultipleChoice", () => {
     expect(screen.getByText("Incorrect")).toBeInTheDocument();
   });
 
-  it("disables options after an answer is selected", async () => {
+  it("disables option buttons after an answer is selected", async () => {
     const user = userEvent.setup();
     render(<MultipleChoice exercise={exercise} />);
     await user.click(screen.getByText("Goodbye"));
-    const buttons = screen.getAllByRole("button");
-    buttons.forEach((btn) => expect(btn).toBeDisabled());
+    // Option buttons are disabled
+    expect(screen.getByText("Goodbye").closest("button")).toBeDisabled();
+    expect(screen.getByText("A greeting").closest("button")).toBeDisabled();
+    expect(screen.getByText("Thank you").closest("button")).toBeDisabled();
+  });
+
+  it("shows Try again button on incorrect answer and resets on click", async () => {
+    const user = userEvent.setup();
+    render(<MultipleChoice exercise={exercise} />);
+    await user.click(screen.getByText("Goodbye"));
+    expect(screen.getByText("Try again")).toBeInTheDocument();
+    await user.click(screen.getByText("Try again"));
+    // Options are re-enabled after reset
+    expect(screen.getByText("Goodbye").closest("button")).not.toBeDisabled();
+    expect(screen.queryByText("Incorrect")).not.toBeInTheDocument();
+  });
+
+  it("does not show Try again on correct answer", async () => {
+    const user = userEvent.setup();
+    render(<MultipleChoice exercise={exercise} />);
+    await user.click(screen.getByText("A greeting"));
+    expect(screen.getByText("Correct!")).toBeInTheDocument();
+    expect(screen.queryByText("Try again")).not.toBeInTheDocument();
   });
 });

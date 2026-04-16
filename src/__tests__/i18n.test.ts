@@ -12,6 +12,11 @@ describe('i18n config', () => {
     expect(i18n.options.supportedLngs).toContain('vi');
   });
 
+  it('supports both zh and zh-CN to avoid nonExplicit language fallback issues', () => {
+    expect(i18n.options.supportedLngs).toContain('zh');
+    expect(i18n.options.supportedLngs).toContain('zh-CN');
+  });
+
   it('has nonExplicitSupportedLngs enabled so vi-VN resolves to vi', () => {
     expect((i18n.options as Record<string, unknown>).nonExplicitSupportedLngs).toBe(true);
   });

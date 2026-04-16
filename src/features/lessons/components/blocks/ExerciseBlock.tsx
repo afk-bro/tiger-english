@@ -4,7 +4,11 @@ import type { ExerciseType } from "../../lesson.types";
 import * as unit1Exercises from "../../data/exercises/unit-1";
 import type { McqExercise, FillBlankExercise } from "@/components/exercises/exercises.types";
 
-type Props = { exerciseType: ExerciseType; exerciseId: string };
+type Props = {
+  exerciseType: ExerciseType;
+  exerciseId: string;
+  onCorrect?: () => void;
+};
 
 type TaggedExercise =
   | { type: "multiple-choice"; data: McqExercise }
@@ -15,7 +19,7 @@ const exerciseMap: Record<string, TaggedExercise> = {
   "u1-activities-fb-1": { type: "fill-blank", data: unit1Exercises.activitiesFillBlank1 },
 };
 
-export default function ExerciseBlock({ exerciseType, exerciseId }: Props) {
+export default function ExerciseBlock({ exerciseType, exerciseId, onCorrect }: Props) {
   if (exerciseType === "match") {
     return (
       <div className="card p-6 opacity-60 text-center">
@@ -36,8 +40,8 @@ export default function ExerciseBlock({ exerciseType, exerciseId }: Props) {
 
   return (
     <div className="card p-6 shadow-sm border border-semantic-border">
-      {entry.type === "multiple-choice" && <MultipleChoice exercise={entry.data} />}
-      {entry.type === "fill-blank" && <FillBlank exercise={entry.data} />}
+      {entry.type === "multiple-choice" && <MultipleChoice exercise={entry.data} onCorrect={onCorrect} />}
+      {entry.type === "fill-blank" && <FillBlank exercise={entry.data} onCorrect={onCorrect} />}
     </div>
   );
 }

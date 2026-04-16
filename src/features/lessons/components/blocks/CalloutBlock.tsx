@@ -11,9 +11,9 @@ const VARIANT_STYLES = {
     icon: Lightbulb,
   },
   note: {
-    border: "border-accent-400 dark:border-accent-500",
-    bg: "bg-accent-50 dark:bg-accent-900/20",
-    text: "text-accent-800 dark:text-accent-300",
+    border: "border-sky-400 dark:border-sky-500",
+    bg: "bg-sky-50 dark:bg-sky-900/20",
+    text: "text-sky-800 dark:text-sky-300",
     icon: Info,
   },
   warning: {

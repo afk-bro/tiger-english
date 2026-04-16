@@ -26,6 +26,21 @@ describe("useLessonProgressStore", () => {
     expect(result.completed).toBe(false);
   });
 
+  it("marks completion idempotently", () => {
+    const store = useLessonProgressStore.getState();
+    store.markCompleted("unit-1", "grammar");
+    expect(
+      useLessonProgressStore.getState().getSectionProgress("unit-1", "grammar")
+        .completed,
+    ).toBe(true);
+
+    useLessonProgressStore.getState().markCompleted("unit-1", "grammar");
+    expect(
+      useLessonProgressStore.getState().getSectionProgress("unit-1", "grammar")
+        .completed,
+    ).toBe(true);
+  });
+
   it("toggles completion on and off", () => {
     const store = useLessonProgressStore.getState();
     store.toggleCompleted("unit-1", "grammar");

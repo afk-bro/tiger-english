@@ -44,4 +44,27 @@ describe("FillBlank", () => {
     await user.click(screen.getByRole("button", { name: /check/i }));
     expect(screen.getByText("Correct!")).toBeInTheDocument();
   });
+
+  it("shows Try again on incorrect and resets on click", async () => {
+    const user = userEvent.setup();
+    render(<FillBlank exercise={exercise} />);
+    await user.type(screen.getByRole("textbox"), "are");
+    await user.click(screen.getByRole("button", { name: /check/i }));
+    expect(screen.getByText("Try again")).toBeInTheDocument();
+    await user.click(screen.getByText("Try again"));
+    // Input is re-enabled and cleared
+    const input = screen.getByRole("textbox");
+    expect(input).not.toBeDisabled();
+    expect(input).toHaveValue("");
+    expect(screen.queryByText("Incorrect")).not.toBeInTheDocument();
+  });
+
+  it("does not show Try again on correct answer", async () => {
+    const user = userEvent.setup();
+    render(<FillBlank exercise={exercise} />);
+    await user.type(screen.getByRole("textbox"), "is");
+    await user.click(screen.getByRole("button", { name: /check/i }));
+    expect(screen.getByText("Correct!")).toBeInTheDocument();
+    expect(screen.queryByText("Try again")).not.toBeInTheDocument();
+  });
 });

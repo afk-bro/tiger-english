@@ -13,13 +13,14 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
-    supportedLngs: ['en', 'th', 'vi', 'zh-CN'],
+    supportedLngs: ['en', 'th', 'vi', 'zh', 'zh-CN'],
     nonExplicitSupportedLngs: true,
     resources: {
       en: { translation: en },
       th: { translation: th },
       vi: { translation: vi },
       'zh-CN': { translation: zhCN },
+      zh: { translation: zhCN },
     },
     interpolation: {
       escapeValue: false,
