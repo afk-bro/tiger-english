@@ -1,0 +1,441 @@
+{
+  "hero": {
+    "badge": "AI驱动的英语学习",
+    "title": "自信地学习英语",
+    "subtitle": "专为学生和专业人士设计。通过AI工具和个性化辅导，积累词汇、提升流利度、增强技能。",
+    "cta": "立即开始学习",
+    "try_flashcards": "试试闪卡",
+    "learn_more": "了解更多"
+  },
+  "features": {
+    "heading": "掌握英语所需的一切",
+    "subheading": "我们的综合平台将前沿AI与经过验证的教学方法相结合",
+    "cards": {
+      "flashcards": {
+        "title": "互动闪卡",
+        "desc": "生成AI驱动的词汇卡片，配有情境图片、语音发音和根据您学习风格定制的个性化释义。"
+      },
+      "tutoring": {
+        "title": "个性化辅导",
+        "desc": "获得经验丰富的导师一对一支持，他们了解学习者的独特挑战，并根据您的节奏和目标进行调整。"
+      },
+      "ai": {
+        "title": "AI驱动学习",
+        "desc": "体验智能内容，它会适应您的学习进度，识别薄弱环节，并提供针对性练习以实现最大进步。"
+      }
+    }
+  },
+  "cta": {
+    "heading": "准备好提升您的英语技能了吗？",
+    "desc": "为学生、专业人士和未来领袖打造的自信英语。",
+    "button": "创建您的账户",
+    "contact": "联系我们"
+  },
+  "header": {
+    "logo": "Tiger English",
+    "tagline": "照亮自信英语之路",
+    "nav": {
+      "flashcards": "闪卡",
+      "about": "关于",
+      "contact": "联系",
+      "login": "登录",
+      "register": "注册",
+      "dashboard": "仪表盘",
+      "logout": "退出"
+    }
+  },
+  "register": {
+    "title": "创建您的账户",
+    "subtitle": "加入Tiger English，通过AI工具和真人导师开始掌握英语。",
+    "first_name": "名",
+    "last_name": "姓",
+    "email": "邮箱",
+    "password": "密码",
+    "confirm_password": "确认密码",
+    "submit": "注册",
+    "login_link": "已有账户？",
+    "login_cta": "登录",
+    "loading": "正在创建账户...",
+    "username": "用户名",
+    "username_placeholder": "用户名",
+    "first_name_placeholder": "小明",
+    "last_name_placeholder": "王",
+    "native_language": "您的母语",
+    "native_language_hint": "卡片正面将显示此语言。您可以在设置中更改。"
+  },
+  "login": {
+    "title": "欢迎回来",
+    "subtitle": "登录以继续学习",
+    "email": "邮箱地址",
+    "password": "密码",
+    "submit": "登录",
+    "loading": "正在登录...",
+    "no_account": "还没有账户？",
+    "create_account": "注册"
+  },
+  "logout": {
+    "success": "退出成功",
+    "fail": "退出失败"
+  },
+  "flashcards": {
+    "translation_coming_soon": "翻译即将推出",
+    "card_not_translated": "卡片尚未翻译。按下翻转。",
+    "flip": {
+      "front_with_word": "翻转卡片查看 {{word}}",
+      "front_no_word": "翻转卡片查看翻译",
+      "back": "翻转卡片回正面"
+    },
+    "tts": {
+      "speak_label": "听 {{word}} 的发音"
+    },
+    "example": {
+      "show": "显示例句",
+      "hide": "隐藏例句"
+    },
+    "viewer": {
+      "no_cards": "此集合中还没有卡片。",
+      "back_to_sets": "← 返回集合",
+      "back": "← 返回",
+      "card_count": "第 {{current}} 张，共 {{total}} 张",
+      "previous": "← 上一张",
+      "next": "下一张 →",
+      "go_to_card": "跳转到第 {{number}} 张",
+      "still_learning": "还在学习",
+      "i_know_this": "我已掌握",
+      "keyboard_hint": "使用 ← → 方向键导航"
+    },
+    "sets": {
+      "heading": "闪卡集",
+      "create": "+ 创建集合",
+      "loading": "正在加载集合...",
+      "load_error": "加载集合失败：{{error}}",
+      "empty": "暂无可用集合。",
+      "card_singular": "张卡片",
+      "card_plural": "张卡片"
+    },
+    "create_modal": {
+      "heading": "创建闪卡集",
+      "title_label": "标题",
+      "title_placeholder": "例如：商务英语",
+      "description_label": "描述",
+      "description_placeholder": "可选描述",
+      "submit_loading": "正在创建...",
+      "submit": "创建集合",
+      "cancel": "取消",
+      "error_default": "创建集合失败"
+    },
+    "welcome": {
+      "title": "通过闪卡掌握",
+      "title_highlight": "英语",
+      "subtitle": "练习词汇，改善发音，在英语学习之旅中建立信心。"
+    },
+    "action_bar": {
+      "play_audio": "播放音频",
+      "play_audio_tooltip": "播放发音",
+      "show_image": "显示图片",
+      "image_tooltip": "查看相关图片",
+      "no_image_tooltip": "暂无图片",
+      "study_mode": "学习模式",
+      "study_mode_tooltip": "切换学习模式",
+      "add_word": "添加单词",
+      "add_word_tooltip": "添加到个人词库",
+      "add_word_login_tooltip": "登录以添加单词"
+    },
+    "loading_cards": "正在加载卡片...",
+    "language": {
+      "th": "泰语",
+      "zh": "中文",
+      "vi": "越南语"
+    },
+    "language_required": {
+      "heading": "选择您的母语",
+      "subtext": "我们将用您的语言显示翻译，帮助您学习英语。"
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "native_language": "母语",
+    "native_language_desc": "闪卡将以您选择的语言显示翻译。",
+    "save": "保存更改",
+    "saving": "正在保存...",
+    "saved": "已保存！"
+  },
+  "dashboard": {
+    "welcome": {
+      "greeting": "欢迎回来，{{name}}！",
+      "journey": "准备好继续您的英语学习之旅了吗？",
+      "level": "等级 {{level}}",
+      "streak": "连续 {{streak}} 天"
+    },
+    "xp": {
+      "heading": "经验值进度",
+      "to_next_level": "距下一等级 {{percent}}%",
+      "xp_per_word": "每词 +{{xp}} XP",
+      "total_xp": "+{{xp}} XP",
+      "words": "{{count}} 个单词",
+      "tiers": {
+        "beginner": "初学者",
+        "intermediate": "中级",
+        "expert": "专家"
+      }
+    },
+    "groups": {
+      "heading": "您的闪卡组",
+      "progress": "进度",
+      "cards": "{{completed}}/{{total}} 张卡片",
+      "today": "今天",
+      "yesterday": "昨天"
+    },
+    "stats": {
+      "words_learned": "已学单词",
+      "today": "今天",
+      "accuracy": "准确率",
+      "day_streak": "连续天数"
+    },
+    "logout": "退出",
+    "loading": "加载中..."
+  },
+  "lessons": {
+    "title": "课程",
+    "subtitle": "结构化英语课程，一次一个单元",
+    "unitShort": "单元 {{number}}",
+    "status": {
+      "available": "可用",
+      "comingSoon": "即将推出",
+      "locked": "已锁定"
+    },
+    "card": {
+      "estMinutes": "约 {{count}} 分钟"
+    },
+    "notFound": "未找到单元",
+    "sectionNotFound": "未找到章节",
+    "comingSoonMessage": "此单元尚未准备好。请稍后再来。",
+    "backToLessons": "返回课程",
+    "backToUnit": "返回单元",
+    "hub": {
+      "startUnit": "开始单元",
+      "continue": "继续",
+      "reviewUnit": "复习单元"
+    },
+    "section": {
+      "markComplete": "标记为完成",
+      "completed": "已完成",
+      "next": "下一节",
+      "previous": "上一节",
+      "backToUnit": "返回单元"
+    },
+    "progress": {
+      "notStarted": "未开始",
+      "inProgress": "进行中",
+      "completed": "已完成"
+    },
+    "detail": {
+      "building_title": "此单元正在建设中。",
+      "building_subtitle": "以下结构展示了即将推出的内容。",
+      "outline_heading": "此单元即将包含",
+      "sections": {
+        "overview": "概述",
+        "grammar": "语法",
+        "vocabulary": "词汇",
+        "dialogues": "对话",
+        "activities": "练习活动"
+      }
+    },
+    "vocab": {
+      "revealAnswer": "显示答案",
+      "flipToRevealEnglishFor": "翻转卡片查看 {{nativeText}} 的英文",
+      "flipToRevealAnswer": "翻转卡片查看答案",
+      "flipBackToTranslation": "翻转卡片返回翻译"
+    }
+  },
+  "about": {
+    "title": "关于Tiger English",
+    "tagline": "为语言学习者打造工具",
+    "story": {
+      "p1": "Tiger English 由一个既理解语言学习挑战又懂得优秀工具价值的人创建。我拥有Web开发背景、TEFL认证，以及对构建互动性强、对学习者友好的体验的热情。",
+      "p2": "这个平台始于一个副项目——将我的技术技能与对教育的兴趣相结合。我的目标是通过有趣、专注的练习，帮助英语学习者扩大词汇量和建立信心。",
+      "p3": "我目前正准备出国生活和教学，Tiger English是这段旅程的一部分。我正在积极改进网站，边学边做，将其打造成真正能帮助他人的工具。"
+    },
+    "skills": {
+      "heading": "技能与技术",
+      "intro": "本平台采用现代Web技术构建，确保快速、无障碍且引人入胜的学习体验：",
+      "categories": {
+        "Frontend": "前端",
+        "Styling": "样式",
+        "Build Tool": "构建工具",
+        "Backend": "后端",
+        "Internationalization": "国际化"
+      }
+    },
+    "connect": {
+      "heading": "与我联系",
+      "contact_heading": "联系方式",
+      "contact_desc": "想分享反馈、想法，或只是打个招呼？",
+      "contact_button": "联系我",
+      "coming_soon": "即将推出",
+      "social_aria": "{{name}} 个人主页",
+      "avatar_alt": "Tiger English创建者的头像"
+    }
+  },
+  "contact": {
+    "heading": "联系我们",
+    "intro": "有问题、反馈，或者只是想打个招呼？我很乐意听取您的意见！",
+    "form": {
+      "name_label": "姓名",
+      "name_placeholder": "您的全名",
+      "email_label": "邮箱",
+      "email_placeholder": "your.email@example.com",
+      "message_label": "留言",
+      "message_placeholder": "告诉我您的问题、反馈，或只是打个招呼...",
+      "submit": "发送消息",
+      "sending": "发送中...",
+      "success": "消息发送成功！我会尽快回复您。",
+      "error": "消息发送失败。请重试。"
+    },
+    "info": {
+      "heading": "让我们联系",
+      "intro": "我一直很高兴与语言学习者、教育工作者和开发者交流。",
+      "direct_heading": "直接联系",
+      "social_heading": "社交媒体",
+      "coming_soon": "即将推出",
+      "social_aria": "{{name}} 个人主页"
+    },
+    "faq": {
+      "heading": "常见问题",
+      "q1": "联系您的最佳方式是什么？",
+      "a1": "邮件是最可靠的联系方式。我通常会在24-48小时内回复。",
+      "q2": "您能帮助我学习英语吗？",
+      "a2": "当然可以！我很乐意帮助学习者。随时分享您的问题或挑战。",
+      "q3": "您可以合作吗？",
+      "a3": "我一直对有趣的项目和合作持开放态度。让我们讨论您的想法吧！"
+    }
+  },
+  "authhome": {
+    "continue_studying": {
+      "heading": "继续学习",
+      "empty": "您还没有学习过任何集合。",
+      "start": "开始您的第一个集合",
+      "reviewed": "已复习 {{reviewed}}/{{total}} 张卡片",
+      "completed": "已完成 ✓",
+      "continue": "继续学习",
+      "streak_badge": "连续 {{streak}} 天",
+      "accuracy_badge": "{{accuracy}}% 准确率",
+      "time": {
+        "less_than_hour": "不到一小时前",
+        "one_hour": "1小时前",
+        "hours": "{{hours}}小时前",
+        "one_day": "1天前",
+        "days": "{{days}}天前"
+      }
+    },
+    "recommended": {
+      "heading": "推荐学习",
+      "empty": "完成一个集合以解锁推荐。",
+      "reasons": {
+        "review": "需要复习",
+        "sequence": "按顺序下一个",
+        "related": "与最近学习相关"
+      },
+      "study": "学习"
+    },
+    "invite": {
+      "heading": "邀请朋友",
+      "desc": "认识想学英语的人？邀请他们加入Tiger English。",
+      "copy": "复制邀请链接",
+      "invite": "邀请朋友",
+      "toast": {
+        "no_clipboard": "剪贴板不可用。请手动复制链接。",
+        "copied": "邀请链接已复制！",
+        "copy_failed": "复制链接失败。请手动复制。"
+      }
+    },
+    "study_groups": {
+      "heading": "学习小组",
+      "empty": "还没有学习小组。创建一个与朋友一起学习。",
+      "members": "{{count}} 名成员",
+      "create": "创建学习小组",
+      "invite": "邀请加入小组"
+    }
+  },
+  "auth": {
+    "errors": {
+      "email_registered": "看起来您已经有一个使用此邮箱的账户。",
+      "login_instead": "改为登录 →",
+      "username_taken": "请尝试其他用户名。可以使用字母、数字和下划线。",
+      "general": "请检查您的信息并重试。",
+      "invalid_credentials": "邮箱或密码无效"
+    },
+    "google": {
+      "button": "使用Google继续",
+      "connecting": "正在连接..."
+    },
+    "separator": "或",
+    "toast": {
+      "login_success": "登录成功"
+    },
+    "password_rules": {
+      "min_length": "至少8个字符",
+      "uppercase": "一个大写字母",
+      "special": "一个特殊字符 (!@#$%^&*)"
+    },
+    "callback": {
+      "checking": "正在登录...",
+      "waiting": "正在设置您的账户...",
+      "timeout_title": "耗时超出预期",
+      "timeout_message": "您的账户正在设置中。这通常只需要一会儿。",
+      "try_again": "重试",
+      "back_to_login": "返回登录",
+      "error_title": "认证失败",
+      "error_default": "登录过程中出现问题。请重试。",
+      "session_expired": "您的会话已过期。请重新登录。",
+      "timed_out": "认证超时。请重试。"
+    }
+  },
+  "common": {
+    "loading": "加载中...",
+    "language_switcher": {
+      "change_language": "切换语言",
+      "select_language": "选择语言"
+    },
+    "error": {
+      "title": "出现了问题",
+      "message": "抱歉，发生了意外错误。请尝试刷新页面。",
+      "refresh": "刷新页面",
+      "dev_details": "错误详情（开发环境）"
+    },
+    "nav": {
+      "open_menu": "打开菜单",
+      "close_menu": "关闭菜单",
+      "open_nav": "打开导航",
+      "close_nav": "关闭导航",
+      "expand_sidebar": "展开侧栏",
+      "collapse_sidebar": "收起侧栏"
+    },
+    "footer": "© {{year}} Tiger English — 保留所有权利。",
+    "coming_soon": "即将推出",
+    "sidebar": {
+      "title": "Tiger English",
+      "nav": {
+        "home": "首页",
+        "dashboard": "仪表盘",
+        "lessons": "课程",
+        "library": "资料库",
+        "study_groups": "学习小组",
+        "notifications": "通知",
+        "flashcards": "闪卡",
+        "drag_drop": "拖放练习",
+        "ad_libs": "填空练习"
+      },
+      "utility": {
+        "settings": "设置",
+        "help": "帮助",
+        "profile": "个人资料",
+        "logout": "退出"
+      }
+    },
+    "stub": {
+      "coming_soon": "{{title}} — 即将推出",
+      "public_profile": "公开资料"
+    }
+  }
+}

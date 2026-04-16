@@ -97,8 +97,9 @@ test.describe("Lessons area", () => {
 
   test("vocabulary section renders vocab cards", async ({ page }) => {
     await page.goto("/lessons/unit-1/vocabulary");
+    // Default test language is English — English-only mode shows the English word on front
     await expect(page.getByText("hello")).toBeVisible();
-    await expect(page.getByText("Tap to reveal").first()).toBeVisible();
+    await expect(page.getByText("Reveal answer").first()).toBeVisible();
   });
 
   test("grammar section renders MCQ exercise", async ({ page }) => {

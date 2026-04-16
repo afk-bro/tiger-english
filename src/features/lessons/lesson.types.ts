@@ -1,4 +1,7 @@
 // src/features/lessons/lesson.types.ts
+import type { LearnerLanguage } from "./utils/learnerLanguage";
+
+export type { LearnerLanguage } from "./utils/learnerLanguage";
 
 export type UnitStatus = "available" | "coming-soon" | "locked";
 
@@ -52,23 +55,25 @@ export type SectionBlock =
   | { id: string; type: "callout"; variant: "tip" | "note" | "warning"; content: string };
 
 export type ExampleItem = {
+  id: string;
   english: string;
-  translation: string;
+  translations: Partial<Record<LearnerLanguage, string>>;
   note?: string;
 };
 
 export type VocabItem = {
+  id: string;
   word: string;
-  translation: string;
   phonetic?: string;
+  translations: Partial<Record<LearnerLanguage, string>>;
   audioUrl?: string;
-  example?: string;
 };
 
 export type DialogueLine = {
+  id: string;
   speaker: string;
   text: string;
-  translation: string;
+  translations: Partial<Record<LearnerLanguage, string>>;
   audioUrl?: string;
 };
 

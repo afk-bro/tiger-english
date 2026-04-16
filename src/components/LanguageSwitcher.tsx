@@ -3,14 +3,15 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown } from 'lucide-react';
 
-const UI_LANGUAGES = ['en', 'th', 'vi'] as const;
+const UI_LANGUAGES = ['en', 'th', 'vi', 'zh-CN'] as const;
 type UILang = typeof UI_LANGUAGES[number];
 
 // Always show each language's own name in its own script
 const LANG_META: Record<UILang, { native: string; short: string }> = {
-  en: { native: 'English',    short: 'EN' },
-  th: { native: 'ไทย',        short: 'TH' },
-  vi: { native: 'Tiếng Việt', short: 'VI' },
+  en:      { native: 'English',    short: 'EN' },
+  th:      { native: 'ไทย',        short: 'TH' },
+  vi:      { native: 'Tiếng Việt', short: 'VI' },
+  'zh-CN': { native: '中文',       short: 'ZH' },
 };
 
 export default function LanguageSwitcher() {
@@ -21,10 +22,14 @@ export default function LanguageSwitcher() {
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Normalise to base code (e.g. "en-US" → "en"); fall back to "en"
-  const rawLang = i18n.language.split('-')[0].toLowerCase();
+  const rawLang = i18n.language;
   const currentLang: UILang = (UI_LANGUAGES as readonly string[]).includes(rawLang)
     ? (rawLang as UILang)
-    : 'en';
+    : rawLang.split('-')[0].toLowerCase() === 'zh'
+      ? 'zh-CN'
+      : (UI_LANGUAGES as readonly string[]).includes(rawLang.split('-')[0].toLowerCase())
+        ? (rawLang.split('-')[0].toLowerCase() as UILang)
+        : 'en';
 
   // WCAG SC 3.1.1 — keep <html lang> in sync so AT pronounces content correctly
   useEffect(() => {

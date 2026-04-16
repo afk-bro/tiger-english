@@ -1,0 +1,44 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import DialogueBlock from "../components/blocks/DialogueBlock";
+import type { DialogueLine } from "../lesson.types";
+
+const mockLanguage = { current: "th" };
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: mockLanguage.current },
+  }),
+}));
+
+const lines: DialogueLine[] = [
+  { id: "d1", speaker: "Anna", text: "Hello!", translations: { th: "สวัสดี!" } },
+  { id: "d2", speaker: "Somchai", text: "Hi Anna.", translations: { th: "สวัสดีอันนา" } },
+];
+
+describe("DialogueBlock", () => {
+  beforeEach(() => {
+    mockLanguage.current = "th";
+  });
+
+  it("shows speaker, English text, and Thai translation", () => {
+    render(<DialogueBlock lines={lines} />);
+    expect(screen.getByText("Anna")).toBeInTheDocument();
+    expect(screen.getByText("Hello!")).toBeInTheDocument();
+    expect(screen.getByText("สวัสดี!")).toBeInTheDocument();
+  });
+
+  it("omits translation when missing for learner language", () => {
+    mockLanguage.current = "zh-CN";
+    render(<DialogueBlock lines={lines} />);
+    expect(screen.getByText("Hello!")).toBeInTheDocument();
+    expect(screen.queryByText("สวัสดี!")).not.toBeInTheDocument();
+  });
+
+  it("shows English-only for unsupported language", () => {
+    mockLanguage.current = "en";
+    render(<DialogueBlock lines={lines} />);
+    expect(screen.getByText("Hello!")).toBeInTheDocument();
+    expect(screen.queryByText("สวัสดี!")).not.toBeInTheDocument();
+  });
+});

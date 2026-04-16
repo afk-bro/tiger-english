@@ -240,6 +240,12 @@
         "dialogues": "Hội thoại",
         "activities": "Bài tập"
       }
+    },
+    "vocab": {
+      "revealAnswer": "Xem đáp án",
+      "flipToRevealEnglishFor": "Lật thẻ để xem tiếng Anh cho {{nativeText}}",
+      "flipToRevealAnswer": "Lật thẻ để xem đáp án",
+      "flipBackToTranslation": "Lật thẻ về bản dịch"
     }
   },
   "about": {

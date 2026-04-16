@@ -240,6 +240,12 @@
         "dialogues": "Dialogues",
         "activities": "Practice activities"
       }
+    },
+    "vocab": {
+      "revealAnswer": "Reveal answer",
+      "flipToRevealEnglishFor": "Flip card to reveal English for {{nativeText}}",
+      "flipToRevealAnswer": "Flip card to reveal answer",
+      "flipBackToTranslation": "Flip card back to translation"
     }
   },
   "about": {

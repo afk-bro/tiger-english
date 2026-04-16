@@ -240,6 +240,12 @@
         "dialogues": "บทสนทนา",
         "activities": "แบบฝึกหัด"
       }
+    },
+    "vocab": {
+      "revealAnswer": "เฉลยคำตอบ",
+      "flipToRevealEnglishFor": "พลิกการ์ดเพื่อดูภาษาอังกฤษสำหรับ {{nativeText}}",
+      "flipToRevealAnswer": "พลิกการ์ดเพื่อดูคำตอบ",
+      "flipBackToTranslation": "พลิกการ์ดกลับไปดูคำแปล"
     }
   },
   "about": {
