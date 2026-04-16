@@ -18,9 +18,9 @@ const grammar: Section = {
       id: "u1-gr-3",
       type: "examples",
       items: [
-        { english: "I am happy.", translation: "ฉันมีความสุข" },
-        { english: "You are tall.", translation: "คุณสูง" },
-        { english: "He is from Japan.", translation: "เขามาจากญี่ปุ่น" },
+        { id: "u1-ex-i-happy", english: "I am happy.", translations: { th: "ฉันมีความสุข" } },
+        { id: "u1-ex-you-tall", english: "You are tall.", translations: { th: "คุณสูง" } },
+        { id: "u1-ex-he-japan", english: "He is from Japan.", translations: { th: "เขามาจากญี่ปุ่น" } },
       ],
     },
     {
