@@ -22,6 +22,7 @@ const testSection: Section = {
     { id: "b3", type: "examples", items: [{ id: "test-ex", english: "Hello", translations: { th: "สวัสดี" } }] },
     { id: "b4", type: "callout", variant: "tip", content: "A helpful tip." },
     { id: "b5", type: "text", content: "Greetings.", translations: { th: "ทักทาย" } },
+    { id: "b6", type: "heading", content: "Welcome.", translations: { th: "ยินดีต้อนรับ" } },
   ],
 };
 
@@ -51,5 +52,11 @@ describe("SectionRenderer", () => {
     render(<SectionRenderer section={testSection} />);
     expect(screen.getByText("ทักทาย")).toBeInTheDocument();
     expect(screen.queryByText("Greetings.")).not.toBeInTheDocument();
+  });
+
+  it("passes translations to heading blocks (integration with HeadingBlock)", () => {
+    render(<SectionRenderer section={testSection} />);
+    expect(screen.getByText("ยินดีต้อนรับ")).toBeInTheDocument();
+    expect(screen.queryByText("Welcome.")).not.toBeInTheDocument();
   });
 });
