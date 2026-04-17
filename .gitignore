@@ -52,3 +52,4 @@ playwright/.auth/
 # Nested inside the repo so Obsidian can open the project root as a vault;
 # tracked separately (or not at all) from the app code.
 tiger-english/
+vault/
