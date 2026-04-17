@@ -21,7 +21,7 @@ const testSection: Section = {
     { id: "b2", type: "text", content: "Some paragraph text." },
     { id: "b3", type: "examples", items: [{ id: "test-ex", english: "Hello", translations: { th: "สวัสดี" } }] },
     { id: "b4", type: "callout", variant: "tip", content: "A helpful tip." },
-    { id: "b5", type: "text", content: "Hello.", translations: { th: "สวัสดี" } },
+    { id: "b5", type: "text", content: "Greetings.", translations: { th: "ทักทาย" } },
   ],
 };
 
@@ -39,7 +39,7 @@ describe("SectionRenderer", () => {
   it("renders example items", () => {
     render(<SectionRenderer section={testSection} />);
     expect(screen.getByText("Hello")).toBeInTheDocument();
-    expect(screen.getAllByText("สวัสดี").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("สวัสดี")).toBeInTheDocument();
   });
 
   it("renders callout blocks", () => {
@@ -49,9 +49,7 @@ describe("SectionRenderer", () => {
 
   it("passes translations to text blocks (integration with TextBlock)", () => {
     render(<SectionRenderer section={testSection} />);
-    // b5 text block should render the Thai translation, not the English fallback
-    const instances = screen.getAllByText("สวัสดี");
-    expect(instances.length).toBeGreaterThanOrEqual(1);
-    expect(screen.queryByText("Hello.")).not.toBeInTheDocument();
+    expect(screen.getByText("ทักทาย")).toBeInTheDocument();
+    expect(screen.queryByText("Greetings.")).not.toBeInTheDocument();
   });
 });
