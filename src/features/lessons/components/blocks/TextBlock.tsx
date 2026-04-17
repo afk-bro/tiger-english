@@ -10,6 +10,6 @@ type Props = {
 export default function TextBlock({ content, translations }: Props) {
   const { i18n } = useTranslation();
   const learnerLang = getLearnerLanguage(i18n.language);
-  const text = (learnerLang && translations?.[learnerLang]) ?? content;
+  const text = (learnerLang && translations?.[learnerLang]) || content;
   return <p className="text-base leading-relaxed text-semantic-text">{text}</p>;
 }

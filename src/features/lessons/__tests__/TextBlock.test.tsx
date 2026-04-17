@@ -39,4 +39,12 @@ describe("TextBlock", () => {
     );
     expect(screen.getByText("Hello, world.")).toBeInTheDocument();
   });
+
+  it("falls back to English when learner translation is an empty string", () => {
+    mockI18n.language = "th";
+    render(
+      <TextBlock content="Hello, world." translations={{ th: "" }} />,
+    );
+    expect(screen.getByText("Hello, world.")).toBeInTheDocument();
+  });
 });
