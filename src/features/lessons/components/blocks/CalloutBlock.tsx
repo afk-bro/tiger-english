@@ -1,8 +1,7 @@
 import { Lightbulb, Info, AlertTriangle } from "lucide-react";
 import { clsx } from "clsx";
-import { useTranslation } from "react-i18next";
 import type { LearnerLanguage } from "../../utils/learnerLanguage";
-import { getLearnerLanguage } from "../../utils/learnerLanguage";
+import { useLocalizedContent } from "../../utils/useLocalizedContent";
 
 type Props = {
   variant: "tip" | "note" | "warning";
@@ -32,9 +31,7 @@ const VARIANT_STYLES = {
 };
 
 export default function CalloutBlock({ variant, content, translations }: Props) {
-  const { i18n } = useTranslation();
-  const learnerLang = getLearnerLanguage(i18n.language);
-  const text = (learnerLang && translations?.[learnerLang]) || content;
+  const text = useLocalizedContent(content, translations);
   const style = VARIANT_STYLES[variant];
   const Icon = style.icon;
   return (
