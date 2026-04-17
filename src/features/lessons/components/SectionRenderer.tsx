@@ -9,7 +9,7 @@ import ExerciseBlock from "./blocks/ExerciseBlock";
 
 function renderBlock(block: SectionBlock, onExerciseCorrect?: () => void) {
   switch (block.type) {
-    case "text": return <TextBlock content={block.content} />;
+    case "text": return <TextBlock content={block.content} translations={block.translations} />;
     case "heading": return <HeadingBlock content={block.content} />;
     case "examples": return <ExamplesBlock items={block.items} />;
     case "vocab-list": return <VocabListBlock items={block.items} />;
