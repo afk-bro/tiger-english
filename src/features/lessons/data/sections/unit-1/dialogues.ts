@@ -8,11 +8,25 @@ const dialogues: Section = {
   key: "dialogues",
   title: "Dialogues",
   blocks: [
-    { id: "u1-dl-1", type: "heading", content: "Meeting someone new" },
+    {
+      id: "u1-dl-1",
+      type: "heading",
+      content: "Meeting someone new",
+      translations: {
+        th: "การพบคนใหม่",
+        vi: "Gặp gỡ người mới",
+        "zh-CN": "结识新朋友",
+      },
+    },
     {
       id: "u1-dl-2",
       type: "text",
       content: "Read through this conversation between two people meeting for the first time.",
+      translations: {
+        th: "อ่านบทสนทนาระหว่างคนสองคนที่พบกันเป็นครั้งแรก",
+        vi: "Đọc cuộc trò chuyện giữa hai người gặp nhau lần đầu.",
+        "zh-CN": "读一读两个人第一次见面的对话。",
+      },
     },
     {
       id: "u1-dl-3",

@@ -8,11 +8,25 @@ const vocabulary: Section = {
   key: "vocabulary",
   title: "Vocabulary",
   blocks: [
-    { id: "u1-vocab-1", type: "heading", content: "Key words for introductions" },
+    {
+      id: "u1-vocab-1",
+      type: "heading",
+      content: "Key words for introductions",
+      translations: {
+        th: "คำสำคัญสำหรับการแนะนำตัว",
+        vi: "Từ vựng quan trọng để giới thiệu",
+        "zh-CN": "介绍时的关键词",
+      },
+    },
     {
       id: "u1-vocab-2",
       type: "text",
       content: "Learn these common words and phrases used when meeting people for the first time.",
+      translations: {
+        th: "เรียนรู้คำและวลีที่พบบ่อยเหล่านี้ซึ่งใช้เมื่อพบผู้คนเป็นครั้งแรก",
+        vi: "Hãy học những từ và cụm từ phổ biến này được dùng khi gặp gỡ mọi người lần đầu.",
+        "zh-CN": "学习这些第一次见面时常用的单词和短语。",
+      },
     },
     {
       id: "u1-vocab-3",
