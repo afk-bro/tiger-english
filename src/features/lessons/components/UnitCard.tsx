@@ -2,11 +2,18 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Clock, Lock } from "lucide-react";
 import type { Unit } from "../lesson.types";
+import { getLearnerLanguage } from "../utils/learnerLanguage";
 
 type Props = { unit: Unit };
 
 export default function UnitCard({ unit }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const learnerLang = getLearnerLanguage(i18n.language);
+  const localized = learnerLang ? unit.translations[learnerLang] : undefined;
+  const title = localized?.title ?? unit.title;
+  const topic = localized?.topic ?? unit.topic;
+  const grammarFocus = localized?.grammarFocus ?? unit.grammarFocus;
+
   const isAvailable = unit.status === "available";
   const isLocked = unit.status === "locked";
 
@@ -33,9 +40,9 @@ export default function UnitCard({ unit }: Props) {
         </span>
         {statusBadge}
       </div>
-      <h2 className="text-lg font-semibold text-semantic-text mb-1">{unit.title}</h2>
-      <p className="text-sm text-semantic-text-muted mb-2">{unit.topic}</p>
-      <p className="text-xs text-semantic-subtle mb-4">{unit.grammarFocus}</p>
+      <h2 className="text-lg font-semibold text-semantic-text mb-1">{title}</h2>
+      <p className="text-sm text-semantic-text-muted mb-2">{topic}</p>
+      <p className="text-xs text-semantic-subtle mb-4">{grammarFocus}</p>
       <div className="flex items-center gap-1 text-xs text-semantic-subtle">
         <Clock className="w-3 h-3" aria-hidden="true" />
         {t("lessons.card.estMinutes", { count: unit.estimatedMinutes })}
