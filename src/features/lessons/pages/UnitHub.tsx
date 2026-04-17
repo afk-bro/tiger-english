@@ -4,10 +4,12 @@ import { ArrowLeft } from "lucide-react";
 import { getUnit } from "../data/getUnit";
 import SectionCard from "../components/SectionCard";
 import { useLessonProgressStore } from "../useLessonProgressStore";
+import { getLearnerLanguage } from "../utils/learnerLanguage";
 import type { SectionKey } from "../lesson.types";
 
 export default function UnitHub() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const learnerLang = getLearnerLanguage(i18n.language);
   const { unitSlug } = useParams<{ unitSlug: string }>();
   const navigate = useNavigate();
   const unit = unitSlug ? getUnit(unitSlug) : undefined;
@@ -34,12 +36,17 @@ export default function UnitHub() {
           {t("lessons.backToLessons")}
         </Link>
         <h1 className="text-2xl font-bold text-semantic-text mb-3">
-          {t("lessons.unitShort", { number: unit.number })} — {unit.title}
+          {t("lessons.unitShort", { number: unit.number })} — {(learnerLang && unit.translations[learnerLang]?.title) ?? unit.title}
         </h1>
         <p className="text-semantic-text-muted">{t("lessons.comingSoonMessage")}</p>
       </div>
     );
   }
+
+  const localized = learnerLang ? unit.translations[learnerLang] : undefined;
+  const title = localized?.title ?? unit.title;
+  const topic = localized?.topic ?? unit.topic;
+  const grammarFocus = localized?.grammarFocus ?? unit.grammarFocus;
 
   const hasAnyVisited = unit.sections.some((s) => getSectionProgress(unit.slug, s.key).visited);
   const allCompleted = unit.sections.every((s) => getSectionProgress(unit.slug, s.key).completed);
@@ -70,10 +77,10 @@ export default function UnitHub() {
         {t("lessons.backToLessons")}
       </Link>
       <h1 className="text-2xl font-bold text-semantic-text mb-1">
-        {t("lessons.unitShort", { number: unit.number })} — {unit.title}
+        {t("lessons.unitShort", { number: unit.number })} — {title}
       </h1>
-      <p className="text-semantic-text-muted mb-1">{unit.topic}</p>
-      <p className="text-sm text-semantic-subtle mb-6">{unit.grammarFocus}</p>
+      <p className="text-semantic-text-muted mb-1">{topic}</p>
+      <p className="text-sm text-semantic-subtle mb-6">{grammarFocus}</p>
       <button
         type="button"
         onClick={() => navigate(`/lessons/${unit.slug}/${ctaTarget}`)}
