@@ -29,6 +29,11 @@ export type Unit = {
   estimatedMinutes: number;
   status: UnitStatus;
   sections: SectionMeta[];
+  translations: Partial<Record<LearnerLanguage, {
+    title: string;
+    topic: string;
+    grammarFocus: string;
+  }>>;
 };
 
 export type SectionMeta = {
@@ -46,13 +51,13 @@ export type Section = {
 };
 
 export type SectionBlock =
-  | { id: string; type: "heading"; content: string }
-  | { id: string; type: "text"; content: string }
+  | { id: string; type: "heading"; content: string; translations?: Partial<Record<LearnerLanguage, string>> }
+  | { id: string; type: "text"; content: string; translations?: Partial<Record<LearnerLanguage, string>> }
   | { id: string; type: "examples"; items: ExampleItem[] }
   | { id: string; type: "vocab-list"; items: VocabItem[] }
   | { id: string; type: "dialogue"; lines: DialogueLine[] }
   | { id: string; type: "exercise"; exerciseType: ExerciseType; exerciseId: string }
-  | { id: string; type: "callout"; variant: "tip" | "note" | "warning"; content: string };
+  | { id: string; type: "callout"; variant: "tip" | "note" | "warning"; content: string; translations?: Partial<Record<LearnerLanguage, string>> };
 
 export type ExampleItem = {
   id: string;
