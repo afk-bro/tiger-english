@@ -87,7 +87,7 @@ export default function SectionPage() {
           <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           {t("lessons.backToUnit")}
         </Link>
-        <h1 className="text-2xl font-bold text-semantic-text mt-1">{section.title}</h1>
+        <h1 className="text-2xl font-bold text-semantic-text mt-1">{t(`lessons.detail.sections.${validSectionKey}`)}</h1>
       </div>
       <SectionRenderer
         section={section}
