@@ -23,6 +23,7 @@ const testSection: Section = {
     { id: "b4", type: "callout", variant: "tip", content: "A helpful tip." },
     { id: "b5", type: "text", content: "Greetings.", translations: { th: "ทักทาย" } },
     { id: "b6", type: "heading", content: "Welcome.", translations: { th: "ยินดีต้อนรับ" } },
+    { id: "b7", type: "callout", variant: "note", content: "Remember.", translations: { th: "จดจำ" } },
   ],
 };
 
@@ -58,5 +59,11 @@ describe("SectionRenderer", () => {
     render(<SectionRenderer section={testSection} />);
     expect(screen.getByText("ยินดีต้อนรับ")).toBeInTheDocument();
     expect(screen.queryByText("Welcome.")).not.toBeInTheDocument();
+  });
+
+  it("passes translations to callout blocks (integration with CalloutBlock)", () => {
+    render(<SectionRenderer section={testSection} />);
+    expect(screen.getByText("จดจำ")).toBeInTheDocument();
+    expect(screen.queryByText("Remember.")).not.toBeInTheDocument();
   });
 });
