@@ -1,0 +1,1533 @@
+# Lesson Image Generation Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build the author-time pipeline that generates lesson illustrations through Leonardo, uploads them to Supabase Storage, and hydrates the resulting URLs onto lesson items at runtime — without ever exposing the API key to the browser.
+
+**Architecture:** A standalone Node + tsx script (`scripts/generate-lesson-images.ts`) reads `backend/.env`, walks unit data, calls Leonardo, uploads PNGs to a public Supabase Storage bucket (`lesson-images`), and writes one sidecar JSON per unit (`src/features/lessons/data/images/unit-N.images.json`). Lesson types gain optional `imagePrompt` (hand-authored) and `imageUrl` (hydrated from sidecar at lookup time). Five lesson components branch on `imageUrl` to render `<img>`. No runtime API calls.
+
+**Tech Stack:** TypeScript, Node 20+ (built-in `fetch` + `crypto`), `tsx`, `dotenv`, `@supabase/supabase-js` (already a dep), Vitest + @testing-library/react, FastAPI (Pydantic Settings), Supabase Storage + RLS.
+
+**Spec:** `docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md`
+
+---
+
+## File Structure
+
+### Created
+
+| File | Responsibility |
+|---|---|
+| `supabase/migrations/20260502000001_lesson_images_bucket.sql` | Create public `lesson-images` bucket + read-everyone policy. |
+| `backend/.env` | Backend secrets (was missing); holds `LEONARDO_API_KEY` plus existing keys. |
+| `src/features/lessons/data/images/index.ts` | Single index that imports each unit's sidecar JSON. |
+| `src/features/lessons/data/images/unit-2.images.json` | Empty initial sidecar so the index has at least one entry; populated by the script later. |
+| `src/features/lessons/data/imageHydration.ts` | Pure functions: `hydrateUnit`, `hydrateSection`, sidecar key helpers. Easiest place to test the hydration logic in isolation. |
+| `src/features/lessons/__tests__/imageHydration.test.ts` | Unit tests for the pure hydration functions. |
+| `scripts/lesson-image-config.ts` | Constants (`STYLE_SUFFIX`, `MODEL_ID`, `IMAGE_DIM`) + helpers (`computePromptHash`, `templateVocabPrompt`, `sidecarKeyForSection`, `sidecarKeyForUnit`). |
+| `scripts/__tests__/lesson-image-config.test.ts` | Tests for the pure helpers. |
+| `scripts/generate-lesson-images.ts` | The CLI entry point. Parses args, walks data, calls Leonardo, uploads to Storage, writes sidecar. No tests in this PR. |
+
+### Modified
+
+| File | Responsibility |
+|---|---|
+| `src/features/lessons/lesson.types.ts` | Add optional `imagePrompt` / `imageUrl` to `VocabItem`, dialogue + exercise `SectionBlock` variants, `Section`, and `Unit`. |
+| `src/features/lessons/data/sectionRegistry.ts` | `lookupSection` returns a hydrated copy via `hydrateSection`. |
+| `src/features/lessons/data/getUnit.ts` | Returns a hydrated copy via `hydrateUnit`. |
+| `src/features/lessons/components/blocks/VocabListBlock.tsx` | Render `<img>` next to the word when `item.imageUrl` is present. |
+| `src/features/lessons/components/blocks/DialogueBlock.tsx` | Render banner `<img>` above dialogue lines when `imageUrl` is present. |
+| `src/features/lessons/components/blocks/ExerciseBlock.tsx` | Render `<img>` above the exercise when `imageUrl` is present. |
+| `src/features/lessons/pages/SectionPage.tsx` | Render section header image when `section.imageUrl` is present. |
+| `src/features/lessons/pages/UnitHub.tsx` | Render unit hero image when `unit.imageUrl` is present. |
+| `src/features/lessons/__tests__/VocabListBlock.test.tsx` | Add 2 cases: renders `<img>` when `imageUrl` set; absent when not. |
+| `src/features/lessons/__tests__/DialogueBlock.test.tsx` | Same. |
+| `src/features/lessons/__tests__/SectionPage.test.tsx` | Same for `section.imageUrl`. |
+| `src/features/lessons/__tests__/UnitHub.test.tsx` | Same for `unit.imageUrl`. |
+| `src/features/lessons/__tests__/SectionRenderer.test.tsx` | Add ExerciseBlock image test (it doesn't have a dedicated test file). |
+| `backend/app/core/config.py` | Add `leonardo_api_key: str` to `Settings`. |
+| `.env` | Remove `VITE_LEONARDO_API_KEY` line. |
+| `.env.example` (if it exists; otherwise create) | Add `LEONARDO_API_KEY=` placeholder for documentation. |
+| `package.json` | Add `"lesson-images": "tsx scripts/generate-lesson-images.ts"` to `scripts`. |
+| `CLAUDE.md` | Update Environment Variables section: note `LEONARDO_API_KEY` is in `backend/.env`, not frontend. |
+
+---
+
+## Task 1: Add the Supabase Storage bucket migration
+
+**Files:**
+- Create: `supabase/migrations/20260502000001_lesson_images_bucket.sql`
+
+- [ ] **Step 1: Create the migration file**
+
+```sql
+-- supabase/migrations/20260502000001_lesson_images_bucket.sql
+-- Public bucket for lesson illustrations (vocab thumbnails, dialogue scenes,
+-- exercise images, section headers, unit hero art). Generated by the
+-- author-time script scripts/generate-lesson-images.ts.
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('lesson-images', 'lesson-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "lesson_images_public_read" ON storage.objects
+  FOR SELECT USING (bucket_id = 'lesson-images');
+-- No insert/update/delete policies. Only the service role (script) writes.
+```
+
+- [ ] **Step 2: Confirm SQL parses**
+
+Run: `npx supabase db lint --linked` if linked to the live project, otherwise skip — the SQL is straightforward enough that visual review is sufficient.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add supabase/migrations/20260502000001_lesson_images_bucket.sql
+git commit -m "feat(db): add lesson-images storage bucket with public read"
+```
+
+---
+
+## Task 2: Create backend/.env and add LEONARDO_API_KEY to Pydantic Settings
+
+**Files:**
+- Create: `backend/.env`
+- Modify: `backend/app/core/config.py`
+- Modify: `backend/.gitignore` (verify `.env` is ignored)
+
+- [ ] **Step 1: Verify backend/.gitignore ignores .env**
+
+Run: `grep -E '^\.env$' backend/.gitignore`
+Expected: prints `.env`. If it doesn't, append `.env` to `backend/.gitignore` first.
+
+- [ ] **Step 2: Add `leonardo_api_key` to Settings**
+
+Edit `backend/app/core/config.py`:
+
+```python
+class Settings(BaseSettings):
+    model_config = ConfigDict(
+        env_file=".env",
+        extra="ignore"
+    )
+
+    # Supabase
+    supabase_url: str
+    supabase_service_role_key: str
+
+    # JWT
+    secret_key: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+
+    # CORS
+    allowed_origins: str = '["http://localhost:5173"]'
+
+    # Environment
+    environment: str = "development"
+
+    # Leonardo AI (used by scripts/generate-lesson-images.ts via dotenv,
+    # not yet read by the FastAPI runtime — declared here so the secret
+    # has a documented home and any future server-side image endpoint
+    # can consume it.)
+    leonardo_api_key: str
+
+    @property
+    def allowed_origins_list(self) -> List[str]:
+        try:
+            return json.loads(self.allowed_origins)
+        except json.JSONDecodeError:
+            return ["http://localhost:5173"]
+```
+
+- [ ] **Step 3: Create `backend/.env`**
+
+```bash
+cat > backend/.env <<'EOF'
+SUPABASE_URL=<paste from frontend .env VITE_SUPABASE_URL>
+SUPABASE_SERVICE_ROLE_KEY=<paste service role key from Supabase dashboard>
+LEONARDO_API_KEY=<paste from frontend .env VITE_LEONARDO_API_KEY>
+SECRET_KEY=<generate or copy existing FastAPI auth secret>
+ALLOWED_ORIGINS=["http://localhost:5173"]
+ENVIRONMENT=development
+EOF
+```
+
+The values are filled in by the developer locally; the file is gitignored.
+
+- [ ] **Step 4: Verify backend imports cleanly**
+
+Run: `cd backend && source venv/bin/activate && python -c "from app.core.config import settings; print('OK', bool(settings.leonardo_api_key))"`
+Expected: prints `OK True`. If `False`, the env file doesn't have the key set yet — fill it in.
+
+- [ ] **Step 5: Commit (config only — .env is gitignored)**
+
+```bash
+git add backend/app/core/config.py
+git commit -m "feat(backend): add leonardo_api_key to Settings"
+```
+
+---
+
+## Task 3: Remove VITE_LEONARDO_API_KEY from frontend .env
+
+**Files:**
+- Modify: `.env`
+
+- [ ] **Step 1: Delete the line**
+
+Use Edit to remove `VITE_LEONARDO_API_KEY=...` from `.env`. The file is gitignored, so this is a local-only cleanup, no commit required. Note: `.env.example` (if it exists) should NOT list `VITE_LEONARDO_API_KEY`.
+
+- [ ] **Step 2: Verify Vite still starts**
+
+Run: `npm run dev` in one terminal, confirm Vite boots without errors. Stop the server.
+
+- [ ] **Step 3: No commit**
+
+`.env` is gitignored. Nothing to commit.
+
+---
+
+## Task 4: Add optional imagePrompt / imageUrl fields to lesson types
+
+**Files:**
+- Modify: `src/features/lessons/lesson.types.ts`
+
+- [ ] **Step 1: Add the optional fields**
+
+In `lesson.types.ts`, modify the relevant types:
+
+```ts
+export type Unit = {
+  slug: string;
+  number: number;
+  title: string;
+  topic: string;
+  grammarFocus: string;
+  estimatedMinutes: number;
+  status: UnitStatus;
+  sections: SectionMeta[];
+  translations: Partial<Record<LearnerLanguage, {
+    title: string;
+    topic: string;
+    grammarFocus: string;
+  }>>;
+  imagePrompt?: string;
+  imageUrl?: string;
+};
+
+export type Section = {
+  id: string;
+  unitSlug: string;
+  key: SectionKey;
+  blocks: SectionBlock[];
+  imagePrompt?: string;
+  imageUrl?: string;
+};
+
+export type SectionBlock =
+  | { id: string; type: "heading"; content: string; translations?: Partial<Record<LearnerLanguage, string>> }
+  | { id: string; type: "text"; content: string; translations?: Partial<Record<LearnerLanguage, string>> }
+  | { id: string; type: "examples"; items: ExampleItem[] }
+  | { id: string; type: "vocab-list"; items: VocabItem[] }
+  | { id: string; type: "dialogue"; lines: DialogueLine[]; imagePrompt?: string; imageUrl?: string }
+  | { id: string; type: "exercise"; exerciseType: ExerciseType; exerciseId: string; imagePrompt?: string; imageUrl?: string }
+  | { id: string; type: "callout"; variant: "tip" | "note" | "warning"; content: string; translations?: Partial<Record<LearnerLanguage, string>> };
+
+export type VocabItem = {
+  id: string;
+  word: string;
+  phonetic?: string;
+  translations: Partial<Record<LearnerLanguage, string>>;
+  audioUrl?: string;
+  imagePrompt?: string;
+  imageUrl?: string;
+};
+```
+
+- [ ] **Step 2: Run type-check**
+
+Run: `npm run type-check`
+Expected: Passes — fields are all optional, no existing data needs updating.
+
+- [ ] **Step 3: Run the lessons test suite**
+
+Run: `npm test -- src/features/lessons`
+Expected: All existing tests pass.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/features/lessons/lesson.types.ts
+git commit -m "feat(lessons): add optional imagePrompt and imageUrl to lesson types"
+```
+
+---
+
+## Task 5: Create the empty sidecar + index file
+
+**Files:**
+- Create: `src/features/lessons/data/images/unit-2.images.json`
+- Create: `src/features/lessons/data/images/index.ts`
+
+- [ ] **Step 1: Create an empty sidecar JSON**
+
+Create `src/features/lessons/data/images/unit-2.images.json` with literally:
+
+```json
+{}
+```
+
+(unit-2 has no images yet; the file exists so the index has something to import.)
+
+- [ ] **Step 2: Create the index**
+
+Create `src/features/lessons/data/images/index.ts`:
+
+```ts
+// src/features/lessons/data/images/index.ts
+// Single point of import for per-unit image sidecars. Add new units here as
+// they come online. Each JSON file is generated/updated by
+// scripts/generate-lesson-images.ts; do not hand-edit URLs.
+
+import unit2 from "./unit-2.images.json";
+
+export type SidecarEntry = {
+  url: string;
+  promptHash: string;
+  model: string;
+  generatedAt: string;
+};
+
+export type UnitSidecar = Record<string, SidecarEntry>;
+
+export const unitImagesSidecars: Record<string, UnitSidecar> = {
+  "unit-2": unit2 as UnitSidecar,
+};
+```
+
+- [ ] **Step 3: Verify TypeScript JSON imports work**
+
+Run: `npm run type-check`
+Expected: Passes. `tsconfig.json` already has `"resolveJsonModule": true` in this project (it's a Vite default); if it doesn't, add it.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/features/lessons/data/images/index.ts src/features/lessons/data/images/unit-2.images.json
+git commit -m "feat(lessons): add per-unit image sidecar index"
+```
+
+---
+
+## Task 6: Write the hydration helper (pure functions) with tests
+
+**Files:**
+- Create: `src/features/lessons/data/imageHydration.ts`
+- Create: `src/features/lessons/__tests__/imageHydration.test.ts`
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `src/features/lessons/__tests__/imageHydration.test.ts`:
+
+```ts
+import { describe, it, expect } from "vitest";
+import {
+  hydrateUnit,
+  hydrateSection,
+  sidecarKeyForUnit,
+  sidecarKeyForSection,
+} from "../data/imageHydration";
+import type { Unit, Section } from "../lesson.types";
+import type { UnitSidecar } from "../data/images";
+
+const sidecarFixture: UnitSidecar = {
+  __unit__: { url: "https://example/unit.png", promptHash: "h1", model: "m", generatedAt: "t" },
+  "__section__:vocabulary": { url: "https://example/sec.png", promptHash: "h2", model: "m", generatedAt: "t" },
+  "u2-v-classroom": { url: "https://example/word.png", promptHash: "h3", model: "m", generatedAt: "t" },
+  "u2-d-1": { url: "https://example/dialogue.png", promptHash: "h4", model: "m", generatedAt: "t" },
+  "u2-ex-1": { url: "https://example/exercise.png", promptHash: "h5", model: "m", generatedAt: "t" },
+};
+
+const unit: Unit = {
+  slug: "unit-2",
+  number: 2,
+  title: "U2",
+  topic: "t",
+  grammarFocus: "g",
+  estimatedMinutes: 10,
+  status: "available",
+  sections: [],
+  translations: {},
+};
+
+const section: Section = {
+  id: "u2-vocabulary",
+  unitSlug: "unit-2",
+  key: "vocabulary",
+  blocks: [
+    { id: "u2-vl", type: "vocab-list", items: [
+      { id: "u2-v-classroom", word: "classroom", translations: {} },
+      { id: "u2-v-flag", word: "flag", translations: {} },
+    ]},
+    { id: "u2-d-1", type: "dialogue", lines: [] },
+    { id: "u2-ex-1", type: "exercise", exerciseType: "multiple-choice", exerciseId: "x" },
+    { id: "u2-h", type: "heading", content: "ignored — has no image support" },
+  ],
+};
+
+describe("hydrateUnit", () => {
+  it("returns a copy with imageUrl populated from __unit__ entry", () => {
+    const result = hydrateUnit(unit, sidecarFixture);
+    expect(result.imageUrl).toBe("https://example/unit.png");
+    expect(unit.imageUrl).toBeUndefined(); // original not mutated
+  });
+
+  it("returns a copy with imageUrl undefined when sidecar has no __unit__", () => {
+    const result = hydrateUnit(unit, {});
+    expect(result.imageUrl).toBeUndefined();
+  });
+});
+
+describe("hydrateSection", () => {
+  it("populates section.imageUrl from __section__:<key>", () => {
+    const result = hydrateSection(section, sidecarFixture);
+    expect(result.imageUrl).toBe("https://example/sec.png");
+  });
+
+  it("populates vocab item imageUrl from sidecar by item id", () => {
+    const result = hydrateSection(section, sidecarFixture);
+    const vocabBlock = result.blocks[0];
+    if (vocabBlock.type !== "vocab-list") throw new Error("expected vocab-list block");
+    expect(vocabBlock.items[0].imageUrl).toBe("https://example/word.png");
+    expect(vocabBlock.items[1].imageUrl).toBeUndefined();
+  });
+
+  it("populates dialogue and exercise block imageUrl from sidecar", () => {
+    const result = hydrateSection(section, sidecarFixture);
+    const dialogueBlock = result.blocks[1];
+    const exerciseBlock = result.blocks[2];
+    if (dialogueBlock.type !== "dialogue") throw new Error("expected dialogue block");
+    if (exerciseBlock.type !== "exercise") throw new Error("expected exercise block");
+    expect(dialogueBlock.imageUrl).toBe("https://example/dialogue.png");
+    expect(exerciseBlock.imageUrl).toBe("https://example/exercise.png");
+  });
+
+  it("does not mutate the input section or its blocks", () => {
+    hydrateSection(section, sidecarFixture);
+    expect(section.imageUrl).toBeUndefined();
+    const originalVocab = section.blocks[0];
+    if (originalVocab.type !== "vocab-list") throw new Error();
+    expect(originalVocab.items[0].imageUrl).toBeUndefined();
+  });
+
+  it("returns the section as-is when sidecar is empty", () => {
+    const result = hydrateSection(section, {});
+    expect(result.imageUrl).toBeUndefined();
+    if (result.blocks[0].type !== "vocab-list") throw new Error();
+    expect(result.blocks[0].items[0].imageUrl).toBeUndefined();
+  });
+});
+
+describe("sidecar key helpers", () => {
+  it("sidecarKeyForUnit returns __unit__", () => {
+    expect(sidecarKeyForUnit()).toBe("__unit__");
+  });
+
+  it("sidecarKeyForSection returns __section__:<key>", () => {
+    expect(sidecarKeyForSection("vocabulary")).toBe("__section__:vocabulary");
+    expect(sidecarKeyForSection("dialogues")).toBe("__section__:dialogues");
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npm test -- src/features/lessons/__tests__/imageHydration.test.ts`
+Expected: FAIL — module `../data/imageHydration` doesn't exist yet.
+
+- [ ] **Step 3: Re-export `UnitSidecar` from `data/images/index.ts`**
+
+The test imports `UnitSidecar` from `../data/images`. Adjust `data/images/index.ts` if needed to re-export the type (it already does — `export type UnitSidecar`).
+
+- [ ] **Step 4: Implement the helper**
+
+Create `src/features/lessons/data/imageHydration.ts`:
+
+```ts
+// src/features/lessons/data/imageHydration.ts
+// Pure helpers that produce a hydrated copy of a Unit/Section by looking up
+// image URLs in a per-unit sidecar map. No mutation, no side effects.
+
+import type { Unit, Section, SectionBlock, VocabItem, SectionKey } from "../lesson.types";
+import type { UnitSidecar } from "./images";
+
+export function sidecarKeyForUnit(): string {
+  return "__unit__";
+}
+
+export function sidecarKeyForSection(key: SectionKey): string {
+  return `__section__:${key}`;
+}
+
+export function hydrateUnit(unit: Unit, sidecar: UnitSidecar): Unit {
+  const entry = sidecar[sidecarKeyForUnit()];
+  if (!entry) return unit;
+  return { ...unit, imageUrl: entry.url };
+}
+
+export function hydrateSection(section: Section, sidecar: UnitSidecar): Section {
+  const sectionEntry = sidecar[sidecarKeyForSection(section.key)];
+  const blocks = section.blocks.map((block) => hydrateBlock(block, sidecar));
+  return {
+    ...section,
+    blocks,
+    ...(sectionEntry ? { imageUrl: sectionEntry.url } : {}),
+  };
+}
+
+function hydrateBlock(block: SectionBlock, sidecar: UnitSidecar): SectionBlock {
+  if (block.type === "vocab-list") {
+    const items = block.items.map<VocabItem>((item) => {
+      const entry = sidecar[item.id];
+      return entry ? { ...item, imageUrl: entry.url } : item;
+    });
+    return { ...block, items };
+  }
+  if (block.type === "dialogue" || block.type === "exercise") {
+    const entry = sidecar[block.id];
+    return entry ? { ...block, imageUrl: entry.url } : block;
+  }
+  return block;
+}
+```
+
+- [ ] **Step 5: Run tests to verify pass**
+
+Run: `npm test -- src/features/lessons/__tests__/imageHydration.test.ts`
+Expected: All 8 tests pass.
+
+- [ ] **Step 6: Run the full lessons suite**
+
+Run: `npm test -- src/features/lessons`
+Expected: All pass, 80 tests (72 before + 8 new).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/features/lessons/data/imageHydration.ts src/features/lessons/__tests__/imageHydration.test.ts
+git commit -m "feat(lessons): add hydrateUnit and hydrateSection helpers"
+```
+
+---
+
+## Task 7: Wire hydration into lookupSection and getUnit
+
+**Files:**
+- Modify: `src/features/lessons/data/sectionRegistry.ts`
+- Modify: `src/features/lessons/data/getUnit.ts`
+
+- [ ] **Step 1: Modify `lookupSection`**
+
+Replace `src/features/lessons/data/sectionRegistry.ts` with:
+
+```ts
+// src/features/lessons/data/sectionRegistry.ts
+import type { Section } from "../lesson.types";
+import { hydrateSection } from "./imageHydration";
+import { unitImagesSidecars } from "./images";
+
+const registry: Record<string, Section> = {};
+
+export function registerSection(section: Section): void {
+  const key = `${section.unitSlug}:${section.key}`;
+  if (import.meta.env.DEV && registry[key] !== undefined) {
+    throw new Error(`Duplicate section registration for key "${key}"`);
+  }
+  registry[key] = section;
+}
+
+export function lookupSection(
+  unitSlug: string,
+  sectionKey: string,
+): Section | undefined {
+  const stored = registry[`${unitSlug}:${sectionKey}`];
+  if (!stored) return undefined;
+  const sidecar = unitImagesSidecars[unitSlug] ?? {};
+  return hydrateSection(stored, sidecar);
+}
+```
+
+- [ ] **Step 2: Modify `getUnit`**
+
+Replace `src/features/lessons/data/getUnit.ts` with:
+
+```ts
+// src/features/lessons/data/getUnit.ts
+import type { Unit } from "../lesson.types";
+import { units } from "./units";
+import { hydrateUnit } from "./imageHydration";
+import { unitImagesSidecars } from "./images";
+
+export function getUnit(slug: string): Unit | undefined {
+  const unit = units.find((u) => u.slug === slug);
+  if (!unit) return undefined;
+  const sidecar = unitImagesSidecars[slug] ?? {};
+  return hydrateUnit(unit, sidecar);
+}
+```
+
+- [ ] **Step 3: Run the full lessons suite**
+
+Run: `npm test -- src/features/lessons`
+Expected: All pass. The empty sidecar means existing tests see `imageUrl === undefined` everywhere — same as before.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/features/lessons/data/sectionRegistry.ts src/features/lessons/data/getUnit.ts
+git commit -m "feat(lessons): hydrate imageUrl in lookupSection and getUnit"
+```
+
+---
+
+## Task 8: Render images in VocabListBlock
+
+**Files:**
+- Modify: `src/features/lessons/components/blocks/VocabListBlock.tsx`
+- Modify: `src/features/lessons/__tests__/VocabListBlock.test.tsx`
+
+- [ ] **Step 1: Read the existing test file**
+
+Run: `cat src/features/lessons/__tests__/VocabListBlock.test.tsx | head -40` — confirm the existing fixture/setup pattern (a `vocabItems` array, a render helper).
+
+- [ ] **Step 2: Add the failing tests**
+
+Append two tests inside the existing `describe("VocabListBlock", …)` block:
+
+```tsx
+it("renders an <img> on the front face when item.imageUrl is set", () => {
+  const items = [
+    { id: "v1", word: "classroom", translations: {}, imageUrl: "https://example.com/c.png" },
+  ];
+  render(<VocabListBlock items={items} />);
+  const img = screen.getByRole("img", { name: "classroom" });
+  expect(img).toHaveAttribute("src", "https://example.com/c.png");
+});
+
+it("does not render an <img> when item.imageUrl is undefined", () => {
+  const items = [{ id: "v1", word: "classroom", translations: {} }];
+  render(<VocabListBlock items={items} />);
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+});
+```
+
+- [ ] **Step 3: Run tests to verify they fail**
+
+Run: `npm test -- src/features/lessons/__tests__/VocabListBlock.test.tsx`
+Expected: 2 new tests FAIL — no `<img>` is rendered yet.
+
+- [ ] **Step 4: Add the conditional render**
+
+In `src/features/lessons/components/blocks/VocabListBlock.tsx`, modify the front face of `VocabCard` to render the image at the top when present:
+
+```tsx
+{!flipped ? (
+  <>
+    {item.imageUrl && (
+      <img
+        src={item.imageUrl}
+        alt={item.word}
+        className="w-16 h-16 rounded mb-2 object-cover"
+      />
+    )}
+    {hasFront ? (
+      <p className="text-lg font-semibold text-semantic-text">{nativeText}</p>
+    ) : learnerLang ? (
+      <p className="text-lg font-semibold text-semantic-text opacity-50">{item.word}</p>
+    ) : (
+      <p className="text-lg font-semibold text-semantic-text">{item.word}</p>
+    )}
+    <p className="text-xs text-semantic-text-muted mt-2">{t("lessons.vocab.revealAnswer")}</p>
+  </>
+) : (
+  /* …existing back face unchanged… */
+)}
+```
+
+- [ ] **Step 5: Run tests**
+
+Run: `npm test -- src/features/lessons/__tests__/VocabListBlock.test.tsx`
+Expected: All pass.
+
+- [ ] **Step 6: Run full lessons suite**
+
+Run: `npm test -- src/features/lessons`
+Expected: All pass.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/features/lessons/components/blocks/VocabListBlock.tsx src/features/lessons/__tests__/VocabListBlock.test.tsx
+git commit -m "feat(lessons): render image on vocab cards when imageUrl is set"
+```
+
+---
+
+## Task 9: Render images in DialogueBlock
+
+**Files:**
+- Modify: `src/features/lessons/components/blocks/DialogueBlock.tsx`
+- Modify: `src/features/lessons/__tests__/DialogueBlock.test.tsx`
+
+- [ ] **Step 1: Read DialogueBlock.tsx and its existing test for the prop shape**
+
+Run: `cat src/features/lessons/components/blocks/DialogueBlock.tsx`. Note the current prop signature.
+
+- [ ] **Step 2: Add the failing tests**
+
+Append to `DialogueBlock.test.tsx`:
+
+```tsx
+it("renders a banner <img> above the lines when imageUrl is provided", () => {
+  render(<DialogueBlock lines={[]} imageUrl="https://example.com/d.png" />);
+  const img = screen.getByRole("img");
+  expect(img).toHaveAttribute("src", "https://example.com/d.png");
+});
+
+it("does not render an <img> when imageUrl is undefined", () => {
+  render(<DialogueBlock lines={[]} />);
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+});
+```
+
+- [ ] **Step 3: Run tests to verify failure**
+
+Run: `npm test -- src/features/lessons/__tests__/DialogueBlock.test.tsx`
+Expected: 2 new tests FAIL.
+
+- [ ] **Step 4: Modify the component**
+
+In `DialogueBlock.tsx`:
+
+- Add `imageUrl?: string` to the props.
+- Render `<img src={imageUrl} alt="" className="w-full rounded-lg mb-4 object-cover" />` above the lines list when `imageUrl` is truthy. (Empty alt because the dialogue text below conveys the same content.)
+
+- [ ] **Step 5: Update SectionRenderer to pass `imageUrl`**
+
+In `SectionRenderer.tsx`, the dialogue case becomes:
+
+```tsx
+case "dialogue": return <DialogueBlock lines={block.lines} imageUrl={block.imageUrl} />;
+```
+
+- [ ] **Step 6: Run tests**
+
+Run: `npm test -- src/features/lessons`
+Expected: All pass.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/features/lessons/components/blocks/DialogueBlock.tsx src/features/lessons/__tests__/DialogueBlock.test.tsx src/features/lessons/components/SectionRenderer.tsx
+git commit -m "feat(lessons): render banner image on dialogue blocks when imageUrl is set"
+```
+
+---
+
+## Task 10: Render images in ExerciseBlock
+
+**Files:**
+- Modify: `src/features/lessons/components/blocks/ExerciseBlock.tsx`
+- Modify: `src/features/lessons/components/SectionRenderer.tsx` (pass `imageUrl` through)
+- Modify: `src/features/lessons/__tests__/SectionRenderer.test.tsx` (1 new test)
+
+- [ ] **Step 1: Add the failing test in SectionRenderer.test.tsx**
+
+```tsx
+it("renders an <img> in an exercise block when block.imageUrl is set", () => {
+  const section = {
+    id: "test", unitSlug: "unit-1", key: "activities" as const, blocks: [
+      { id: "ex1", type: "exercise" as const, exerciseType: "multiple-choice" as const, exerciseId: "u1-grammar-mcq-1", imageUrl: "https://example.com/e.png" },
+    ],
+  };
+  render(<SectionRenderer section={section} />);
+  const img = screen.getByRole("img");
+  expect(img).toHaveAttribute("src", "https://example.com/e.png");
+});
+```
+
+- [ ] **Step 2: Run test to verify failure**
+
+Run: `npm test -- src/features/lessons/__tests__/SectionRenderer.test.tsx`
+Expected: 1 new test FAILS.
+
+- [ ] **Step 3: Add `imageUrl` to ExerciseBlock props**
+
+In `ExerciseBlock.tsx`, add `imageUrl?: string` to `Props`. Render an `<img>` at the top of the rendered card when `imageUrl` is truthy:
+
+```tsx
+return (
+  <div className="card p-6 shadow-sm border border-semantic-border space-y-4">
+    {imageUrl && (
+      <img src={imageUrl} alt="" className="w-full rounded-lg object-cover" />
+    )}
+    {entry.type === "multiple-choice" && <MultipleChoice exercise={entry.data} onCorrect={onCorrect} />}
+    {entry.type === "fill-blank" && <FillBlank exercise={entry.data} onCorrect={onCorrect} />}
+  </div>
+);
+```
+
+- [ ] **Step 4: Update SectionRenderer to pass through**
+
+In `SectionRenderer.tsx`, the exercise case becomes:
+
+```tsx
+case "exercise": return <ExerciseBlock exerciseType={block.exerciseType} exerciseId={block.exerciseId} imageUrl={block.imageUrl} onCorrect={onExerciseCorrect} />;
+```
+
+- [ ] **Step 5: Run tests**
+
+Run: `npm test -- src/features/lessons`
+Expected: All pass.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/features/lessons/components/blocks/ExerciseBlock.tsx src/features/lessons/components/SectionRenderer.tsx src/features/lessons/__tests__/SectionRenderer.test.tsx
+git commit -m "feat(lessons): render image on exercise blocks when imageUrl is set"
+```
+
+---
+
+## Task 11: Render the section header image in SectionPage
+
+**Files:**
+- Modify: `src/features/lessons/pages/SectionPage.tsx`
+- Modify: `src/features/lessons/__tests__/SectionPage.test.tsx`
+
+- [ ] **Step 1: Add the failing tests using vi.mock**
+
+At the top of `SectionPage.test.tsx` (alongside the existing `vi.mock("react-i18next", …)` block), add:
+
+```tsx
+vi.mock("../data/sectionRegistry", async () => {
+  const actual = await vi.importActual<typeof import("../data/sectionRegistry")>("../data/sectionRegistry");
+  return {
+    ...actual,
+    lookupSection: (slug: string, key: string) => {
+      const real = actual.lookupSection(slug, key);
+      if (slug === "unit-1" && key === "grammar" && real) {
+        return { ...real, imageUrl: "https://example.com/sec.png" };
+      }
+      return real;
+    },
+  };
+});
+```
+
+Append the test cases:
+
+```tsx
+describe("SectionPage section header image", () => {
+  beforeEach(() => { mockI18n.language = "en"; });
+
+  it("renders a banner image when section.imageUrl is set", () => {
+    renderAt("/lessons/unit-1/grammar");
+    const img = screen.getByRole("img");
+    expect(img).toHaveAttribute("src", "https://example.com/sec.png");
+  });
+
+  it("does not render a banner image when section.imageUrl is undefined", () => {
+    renderAt("/lessons/unit-1/vocabulary");
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+});
+```
+
+(The mock injects an `imageUrl` only on `grammar`; other sections still report no image — so the negative case routes to a different section.)
+
+- [ ] **Step 2: Run tests to verify failure**
+
+Run: `npm test -- src/features/lessons/__tests__/SectionPage.test.tsx`
+Expected: 1 new test FAILS.
+
+- [ ] **Step 3: Render the image**
+
+In `SectionPage.tsx`, inside the available-section render block (around the sticky header), insert above the `<SectionRenderer>`:
+
+```tsx
+{section.imageUrl && (
+  <img src={section.imageUrl} alt="" className="w-full rounded-lg mb-6 object-cover" />
+)}
+```
+
+- [ ] **Step 4: Run tests**
+
+Run: `npm test -- src/features/lessons`
+Expected: All pass.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/features/lessons/pages/SectionPage.tsx src/features/lessons/__tests__/SectionPage.test.tsx
+git commit -m "feat(lessons): render section header image when imageUrl is set"
+```
+
+---
+
+## Task 12: Render the unit hero image in UnitHub
+
+**Files:**
+- Modify: `src/features/lessons/pages/UnitHub.tsx`
+- Modify: `src/features/lessons/__tests__/UnitHub.test.tsx`
+
+- [ ] **Step 1: Add the failing tests using vi.mock**
+
+At the top of `UnitHub.test.tsx`, add a togglable mock:
+
+```tsx
+const heroMockState = { withImage: false };
+vi.mock("../data/getUnit", async () => {
+  const actual = await vi.importActual<typeof import("../data/getUnit")>("../data/getUnit");
+  return {
+    ...actual,
+    getUnit: (slug: string) => {
+      const real = actual.getUnit(slug);
+      if (slug === "unit-1" && real && heroMockState.withImage) {
+        return { ...real, imageUrl: "https://example.com/hero.png" };
+      }
+      return real;
+    },
+  };
+});
+```
+
+Append the test cases (which flip the toggle):
+
+```tsx
+describe("UnitHub unit hero image", () => {
+  beforeEach(() => {
+    mockI18n.language = "en";
+    heroMockState.withImage = false;
+  });
+
+  it("renders a hero image when unit.imageUrl is set", () => {
+    heroMockState.withImage = true;
+    renderAt("/lessons/unit-1");
+    const img = screen.getByRole("img");
+    expect(img).toHaveAttribute("src", "https://example.com/hero.png");
+  });
+
+  it("does not render a hero image when unit.imageUrl is undefined", () => {
+    heroMockState.withImage = false;
+    renderAt("/lessons/unit-1");
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+});
+```
+
+- [ ] **Step 2: Run tests to verify failure**
+
+Run: `npm test -- src/features/lessons/__tests__/UnitHub.test.tsx`
+Expected: 1 new test FAILS.
+
+- [ ] **Step 3: Render the hero image**
+
+In `UnitHub.tsx`, inside the available branch right after the back link and before the `<h1>`:
+
+```tsx
+{unit.imageUrl && (
+  <img src={unit.imageUrl} alt={title} className="w-full rounded-lg mb-4 object-cover" />
+)}
+```
+
+(Use the `title` variable already defined in the component for alt text.)
+
+- [ ] **Step 4: Run tests**
+
+Run: `npm test -- src/features/lessons`
+Expected: All pass.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/features/lessons/pages/UnitHub.tsx src/features/lessons/__tests__/UnitHub.test.tsx
+git commit -m "feat(lessons): render unit hero image when imageUrl is set"
+```
+
+---
+
+## Task 13: Add the lesson-image-config helpers with tests
+
+**Files:**
+- Create: `scripts/lesson-image-config.ts`
+- Create: `scripts/__tests__/lesson-image-config.test.ts`
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `scripts/__tests__/lesson-image-config.test.ts`:
+
+```ts
+import { describe, it, expect } from "vitest";
+import {
+  STYLE_SUFFIX,
+  MODEL_ID,
+  IMAGE_DIM,
+  computePromptHash,
+  templateVocabPrompt,
+} from "../lesson-image-config";
+
+describe("STYLE_SUFFIX, MODEL_ID, IMAGE_DIM", () => {
+  it("are non-empty", () => {
+    expect(STYLE_SUFFIX.length).toBeGreaterThan(0);
+    expect(MODEL_ID.length).toBeGreaterThan(0);
+    expect(IMAGE_DIM.width).toBeGreaterThan(0);
+    expect(IMAGE_DIM.height).toBeGreaterThan(0);
+  });
+});
+
+describe("templateVocabPrompt", () => {
+  it("appends the style suffix to the word", () => {
+    expect(templateVocabPrompt("classroom")).toBe(`classroom, ${STYLE_SUFFIX}`);
+  });
+});
+
+describe("computePromptHash", () => {
+  it("produces a 64-char hex SHA-256 string", () => {
+    const h = computePromptHash("hello");
+    expect(h).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("changes when the model changes", () => {
+    const a = computePromptHash("hello", { model: "model-a" });
+    const b = computePromptHash("hello", { model: "model-b" });
+    expect(a).not.toBe(b);
+  });
+
+  it("changes when the style suffix changes", () => {
+    const a = computePromptHash("hello", { styleSuffix: "a" });
+    const b = computePromptHash("hello", { styleSuffix: "b" });
+    expect(a).not.toBe(b);
+  });
+
+  it("is stable for the same input", () => {
+    expect(computePromptHash("hello")).toBe(computePromptHash("hello"));
+  });
+});
+```
+
+- [ ] **Step 2: Run tests to verify failure**
+
+Run: `npm test -- scripts/__tests__/lesson-image-config.test.ts`
+Expected: FAIL — module doesn't exist.
+
+- [ ] **Step 3: Implement**
+
+Create `scripts/lesson-image-config.ts`:
+
+```ts
+// scripts/lesson-image-config.ts
+import { createHash } from "crypto";
+
+export const STYLE_SUFFIX = "flat vector illustration, soft pastel palette, simple background, friendly characters, ESL textbook style";
+export const MODEL_ID = "leonardo-phoenix-1.0";
+export const IMAGE_DIM = { width: 1024, height: 1024 } as const;
+
+export function templateVocabPrompt(word: string): string {
+  return `${word}, ${STYLE_SUFFIX}`;
+}
+
+type HashOpts = { model?: string; styleSuffix?: string };
+
+export function computePromptHash(prompt: string, opts: HashOpts = {}): string {
+  const model = opts.model ?? MODEL_ID;
+  const styleSuffix = opts.styleSuffix ?? STYLE_SUFFIX;
+  const composite = `${prompt} ${model} ${styleSuffix}`;
+  return createHash("sha256").update(composite).digest("hex");
+}
+```
+
+- [ ] **Step 4: Run tests**
+
+Run: `npm test -- scripts/__tests__/lesson-image-config.test.ts`
+Expected: All 6 tests pass.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add scripts/lesson-image-config.ts scripts/__tests__/lesson-image-config.test.ts
+git commit -m "feat(scripts): add lesson-image-config constants and helpers"
+```
+
+---
+
+## Task 14: Skeleton script — argument parsing + dry-run
+
+**Files:**
+- Create: `scripts/generate-lesson-images.ts`
+- Modify: `package.json`
+
+- [ ] **Step 1: Add the npm script alias**
+
+Edit `package.json`'s `"scripts"`:
+
+```json
+"scripts": {
+  // ...existing entries
+  "lesson-images": "tsx scripts/generate-lesson-images.ts"
+}
+```
+
+- [ ] **Step 2: Implement the skeleton**
+
+Create `scripts/generate-lesson-images.ts`:
+
+```ts
+// scripts/generate-lesson-images.ts
+// Author-time CLI that generates lesson illustrations via Leonardo and writes
+// per-unit sidecar JSON. Reads backend/.env directly via dotenv. Never runs
+// in the browser. See docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md.
+
+import { config as loadDotenv } from "dotenv";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(__dirname, "..");
+
+loadDotenv({ path: resolve(REPO_ROOT, "backend/.env") });
+
+type Args = {
+  unit: string;
+  item?: string;
+  force: boolean;
+  dryRun: boolean;
+  yes: boolean;
+  bail: boolean;
+  allowFail: boolean;
+};
+
+function parseArgs(argv: string[]): Args {
+  const out: Args = { unit: "", force: false, dryRun: false, yes: false, bail: false, allowFail: false };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--unit") out.unit = argv[++i];
+    else if (a === "--item") out.item = argv[++i];
+    else if (a === "--force") out.force = true;
+    else if (a === "--dry-run") out.dryRun = true;
+    else if (a === "--yes") out.yes = true;
+    else if (a === "--bail") out.bail = true;
+    else if (a === "--allow-fail") out.allowFail = true;
+    else throw new Error(`Unknown argument: ${a}`);
+  }
+  if (!out.unit) throw new Error("Missing required --unit <slug>");
+  return out;
+}
+
+function requireEnv(name: string): string {
+  const v = process.env[name];
+  if (!v) throw new Error(`Missing required env var: ${name} (expected in backend/.env)`);
+  return v;
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const env = {
+    leonardoKey: requireEnv("LEONARDO_API_KEY"),
+    supabaseUrl: requireEnv("SUPABASE_URL"),
+    supabaseServiceKey: requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+  };
+
+  console.log(`[lesson-images] unit=${args.unit} dryRun=${args.dryRun} force=${args.force}`);
+
+  if (args.dryRun) {
+    console.log("[lesson-images] DRY RUN — no API calls, no writes. Exiting.");
+    return;
+  }
+
+  // TODO: implemented in Task 15-17.
+  console.log("[lesson-images] No-op — full pipeline not yet implemented.");
+}
+
+main().catch((err) => {
+  console.error(`[lesson-images] FATAL: ${err.message}`);
+  process.exit(1);
+});
+```
+
+- [ ] **Step 3: Install dotenv if not already present**
+
+Run: `npm ls dotenv 2>&1 | head -5`. If absent: `npm install --save-dev dotenv`.
+
+- [ ] **Step 4: Smoke test the skeleton**
+
+Run: `npm run lesson-images -- --unit unit-2 --dry-run`
+Expected: prints the env summary and "DRY RUN — Exiting." with exit code 0. Confirms env loading works.
+
+Run: `npm run lesson-images -- --unit unit-2`
+Expected: prints "No-op — full pipeline not yet implemented." with exit code 0.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add scripts/generate-lesson-images.ts package.json package-lock.json
+git commit -m "feat(scripts): add lesson-images CLI skeleton with arg parsing"
+```
+
+---
+
+## Task 15: Wire up data walking and prompt resolution
+
+**Files:**
+- Modify: `scripts/generate-lesson-images.ts`
+
+- [ ] **Step 1: Implement the walker**
+
+Replace the `main()` body's TODO section with logic that:
+
+1. Imports the unit data and section data modules dynamically (so side effects of `registerSection` populate the registry).
+2. Calls `getUnit(args.unit)` and iterates through `SECTION_ORDER` calling `lookupSection(args.unit, sectionKey)`.
+3. For each candidate:
+   - Unit hero: if `unit.imagePrompt`, push `{ kind: "unit", id: sidecarKeyForUnit(), prompt: unit.imagePrompt }`.
+   - Section header: if `section.imagePrompt`, push `{ kind: "section", id: sidecarKeyForSection(section.key), prompt: section.imagePrompt }`.
+   - Vocab items: for each item, prompt = `item.imagePrompt ?? templateVocabPrompt(item.word)`. Push `{ kind: "vocab", id: item.id, prompt }`.
+   - Dialogue blocks: if `block.imagePrompt`, push `{ kind: "dialogue", id: block.id, prompt: block.imagePrompt }`.
+   - Exercise blocks: if `block.imagePrompt`, push `{ kind: "exercise", id: block.id, prompt: block.imagePrompt }`.
+4. If `args.item`, filter to only that id.
+5. Read the existing sidecar JSON (or empty object).
+6. For each candidate compute `promptHash`, look up sidecar entry, mark as `skip` (hash matches and not `--force`) or `generate`.
+7. Print plan summary: `N to generate, M unchanged`.
+8. If `args.dryRun`: list intended actions and exit.
+9. Else: prompt for confirmation unless `args.yes`. (Use `readline` from Node stdlib.)
+
+Concrete code:
+
+```ts
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import { computePromptHash, templateVocabPrompt } from "./lesson-image-config";
+import { units } from "../src/features/lessons/data/units";
+import { lookupSection } from "../src/features/lessons/data/sectionRegistry";
+import { SECTION_ORDER } from "../src/features/lessons/lesson.types";
+import { sidecarKeyForUnit, sidecarKeyForSection } from "../src/features/lessons/data/imageHydration";
+// Import the section files for their registerSection side effects:
+import "../src/features/lessons/data/sections/unit-1/overview";
+import "../src/features/lessons/data/sections/unit-1/grammar";
+import "../src/features/lessons/data/sections/unit-1/vocabulary";
+import "../src/features/lessons/data/sections/unit-1/dialogues";
+import "../src/features/lessons/data/sections/unit-1/activities";
+// Add unit-2 section imports here once they exist.
+
+type Candidate = {
+  kind: "unit" | "section" | "vocab" | "dialogue" | "exercise";
+  id: string;
+  prompt: string;
+};
+
+function buildCandidates(unitSlug: string): Candidate[] {
+  const unit = units.find((u) => u.slug === unitSlug);
+  if (!unit) throw new Error(`Unit not found: ${unitSlug}`);
+  const out: Candidate[] = [];
+
+  if (unit.imagePrompt) {
+    out.push({ kind: "unit", id: sidecarKeyForUnit(), prompt: unit.imagePrompt });
+  }
+
+  for (const meta of unit.sections) {
+    const section = lookupSection(unitSlug, meta.key);
+    if (!section) continue;
+    if (section.imagePrompt) {
+      out.push({ kind: "section", id: sidecarKeyForSection(section.key), prompt: section.imagePrompt });
+    }
+    for (const block of section.blocks) {
+      if (block.type === "vocab-list") {
+        for (const item of block.items) {
+          const prompt = item.imagePrompt ?? templateVocabPrompt(item.word);
+          out.push({ kind: "vocab", id: item.id, prompt });
+        }
+      } else if (block.type === "dialogue" && block.imagePrompt) {
+        out.push({ kind: "dialogue", id: block.id, prompt: block.imagePrompt });
+      } else if (block.type === "exercise" && block.imagePrompt) {
+        out.push({ kind: "exercise", id: block.id, prompt: block.imagePrompt });
+      }
+    }
+  }
+
+  return out;
+}
+
+function readSidecar(unitSlug: string): Record<string, { url: string; promptHash: string; model: string; generatedAt: string }> {
+  const path = resolve(REPO_ROOT, `src/features/lessons/data/images/${unitSlug}.images.json`);
+  if (!existsSync(path)) return {};
+  return JSON.parse(readFileSync(path, "utf-8"));
+}
+```
+
+Wire `buildCandidates`, hash filtering, and a confirmation prompt into `main()`. End-of-run still prints "no-op (no work to do)" if everything is unchanged.
+
+- [ ] **Step 2: Smoke test on unit-1 with --dry-run**
+
+Run: `npm run lesson-images -- --unit unit-1 --dry-run`
+Expected: prints a candidate list; since unit-1 vocab has no `imagePrompt` overrides, every vocab item becomes a templated candidate. With an empty `unit-1.images.json` sidecar, all candidates are "generate." The script prints them and exits.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add scripts/generate-lesson-images.ts
+git commit -m "feat(scripts): walk lesson data and compute generation plan"
+```
+
+---
+
+## Task 16: Wire up the Leonardo API call
+
+**Files:**
+- Modify: `scripts/generate-lesson-images.ts`
+
+- [ ] **Step 1: Add Leonardo client functions**
+
+Add to the script:
+
+```ts
+import { MODEL_ID, IMAGE_DIM } from "./lesson-image-config";
+
+const LEONARDO_BASE = "https://cloud.leonardo.ai/api/rest/v1";
+
+async function leonardoStartGeneration(prompt: string, apiKey: string): Promise<string> {
+  const res = await fetch(`${LEONARDO_BASE}/generations`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt,
+      modelId: MODEL_ID,
+      width: IMAGE_DIM.width,
+      height: IMAGE_DIM.height,
+      num_images: 1,
+    }),
+  });
+  if (!res.ok) throw new Error(`Leonardo start: ${res.status} ${await res.text()}`);
+  const body = await res.json() as { sdGenerationJob?: { generationId: string } };
+  const id = body.sdGenerationJob?.generationId;
+  if (!id) throw new Error(`Leonardo start: no generationId in response`);
+  return id;
+}
+
+async function leonardoPoll(id: string, apiKey: string, timeoutMs = 60000): Promise<string> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const res = await fetch(`${LEONARDO_BASE}/generations/${id}`, {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    });
+    if (!res.ok) throw new Error(`Leonardo poll: ${res.status}`);
+    const body = await res.json() as { generations_by_pk?: { status: string; generated_images: { url: string }[] } };
+    const gen = body.generations_by_pk;
+    if (gen?.status === "COMPLETE") {
+      const url = gen.generated_images[0]?.url;
+      if (!url) throw new Error(`Leonardo poll: no image url`);
+      return url;
+    }
+    if (gen?.status === "FAILED") throw new Error(`Leonardo poll: status FAILED`);
+  }
+  throw new Error(`Leonardo poll: timeout after ${timeoutMs}ms`);
+}
+
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try { return await fn(); }
+    catch (e) {
+      lastErr = e;
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, i)));
+    }
+  }
+  throw lastErr;
+}
+```
+
+- [ ] **Step 2: Smoke test on a single item**
+
+Run: `npm run lesson-images -- --unit unit-1 --item u1-v-hello --yes` (note: still incomplete — it will fail at the Storage upload step because we haven't wired that in. The point of this smoke is to confirm the Leonardo call returns a URL. Verify by adding a temporary `console.log("[smoke] got url:", url)` line and watching output. Remove the line before committing.)
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add scripts/generate-lesson-images.ts
+git commit -m "feat(scripts): call Leonardo API to start and poll generations"
+```
+
+---
+
+## Task 17: Wire up Supabase Storage upload
+
+**Files:**
+- Modify: `scripts/generate-lesson-images.ts`
+
+- [ ] **Step 1: Add the upload function**
+
+```ts
+import { createClient } from "@supabase/supabase-js";
+
+async function uploadToStorage(supabase: ReturnType<typeof createClient>, unitSlug: string, key: string, bytes: Buffer): Promise<string> {
+  // Replace any path-unsafe chars in the key (sidecar keys have ":" — unsafe in object names):
+  const safeKey = key.replace(/[^a-zA-Z0-9_\-]/g, "_");
+  const path = `${unitSlug}/${safeKey}.png`;
+  const { error } = await supabase.storage.from("lesson-images").upload(path, bytes, {
+    contentType: "image/png",
+    upsert: true,
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from("lesson-images").getPublicUrl(path);
+  return data.publicUrl;
+}
+```
+
+- [ ] **Step 2: Wire end-to-end**
+
+Add a confirmation prompt helper at the top of the file:
+
+```ts
+import { createInterface } from "readline";
+
+async function confirm(question: string): Promise<boolean> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(/^y(es)?$/i.test(answer.trim()));
+    });
+  });
+}
+```
+
+Just before the per-candidate loop, print the cost summary and gate on confirmation:
+
+```ts
+const costPerImage = 0.04;
+const estimated = (toGenerate.length * costPerImage).toFixed(2);
+console.log(`[lesson-images] ${toGenerate.length} images to generate (estimated $${estimated} at $${costPerImage}/image)`);
+
+if (!args.yes && toGenerate.length > 0) {
+  const ok = await confirm("Continue? [y/N] ");
+  if (!ok) {
+    console.log("[lesson-images] Aborted.");
+    return;
+  }
+}
+```
+
+Then the per-candidate loop:
+
+```ts
+const supabase = createClient(env.supabaseUrl, env.supabaseServiceKey);
+
+for (const cand of toGenerate) {
+  try {
+    const id = await withRetry(() => leonardoStartGeneration(cand.prompt, env.leonardoKey));
+    const leonardoUrl = await withRetry(() => leonardoPoll(id, env.leonardoKey));
+    const pngBytes = Buffer.from(await (await fetch(leonardoUrl)).arrayBuffer());
+    const publicUrl = await withRetry(() => uploadToStorage(supabase, args.unit, cand.id, pngBytes));
+    sidecar[cand.id] = {
+      url: publicUrl,
+      promptHash: computePromptHash(cand.prompt),
+      model: MODEL_ID,
+      generatedAt: new Date().toISOString(),
+    };
+    console.log(`✓ ${cand.kind} ${cand.id}`);
+  } catch (e) {
+    failed.push({ id: cand.id, error: (e as Error).message });
+    console.error(`✗ ${cand.kind} ${cand.id}: ${(e as Error).message}`);
+    if (args.bail) break;
+  }
+}
+```
+
+After the loop: write the updated sidecar JSON.
+
+```ts
+const sidecarPath = resolve(REPO_ROOT, `src/features/lessons/data/images/${args.unit}.images.json`);
+writeFileSync(sidecarPath, JSON.stringify(sidecar, null, 2) + "\n");
+console.log(`[lesson-images] Wrote ${sidecarPath}`);
+console.log(`[lesson-images] generated=${toGenerate.length - failed.length} skipped=${skipped.length} failed=${failed.length}`);
+if (failed.length > 0 && !args.allowFail) process.exit(1);
+```
+
+- [ ] **Step 3: End-to-end smoke test**
+
+Run: `npm run lesson-images -- --unit unit-1 --item u1-v-hello --yes`
+Expected: prints `✓ vocab u1-v-hello` and a `Wrote …unit-1.images.json` line. Verify the JSON has a single entry with a real-looking Supabase Storage URL. Open the URL in a browser → should display the generated PNG.
+
+- [ ] **Step 4: Idempotency check**
+
+Run the same command again.
+Expected: prints `↷ skip (unchanged)` for `u1-v-hello`. Sidecar mtime unchanged (or the same content rewritten — either is fine).
+
+- [ ] **Step 5: Force regeneration check**
+
+Run: `npm run lesson-images -- --unit unit-1 --item u1-v-hello --force --yes`
+Expected: regenerates, possibly producing a slightly different URL or the same one (Leonardo's output may vary).
+
+- [ ] **Step 6: Roll back the smoke artifacts**
+
+If you don't want the test image committed, revert `unit-1.images.json` (`git checkout src/features/lessons/data/images/unit-1.images.json`). The Storage bucket entry stays — it's just orphaned bytes you can clean up via the Supabase dashboard later.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add scripts/generate-lesson-images.ts
+git commit -m "feat(scripts): upload generated images to Supabase Storage and persist sidecar"
+```
+
+---
+
+## Task 18: Document the pipeline
+
+**Files:**
+- Modify: `CLAUDE.md`
+
+- [ ] **Step 1: Update the Environment Variables section**
+
+In `CLAUDE.md`, under "Environment Variables", remove any reference to `VITE_LEONARDO_API_KEY` from the frontend block, and add to the backend block:
+
+```
+LEONARDO_API_KEY=     # Used by scripts/generate-lesson-images.ts
+```
+
+Add a brief subsection:
+
+```markdown
+## Lesson images
+
+Author-time pipeline that fills `src/features/lessons/data/images/unit-N.images.json`:
+
+```bash
+npm run lesson-images -- --unit unit-2 --dry-run    # plan
+npm run lesson-images -- --unit unit-2              # execute (asks for confirmation)
+npm run lesson-images -- --unit unit-2 --force      # regenerate everything
+```
+
+Spec: `docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md`. Output is committed to git; runtime hydrates `imageUrl` onto items via `lookupSection` / `getUnit`.
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add CLAUDE.md
+git commit -m "docs: document lesson-images pipeline"
+```
+
+---
+
+## Final verification
+
+- [ ] Run the full test suite: `npm test`. All pass.
+- [ ] Run type-check: `npm run type-check`. Clean.
+- [ ] Run lint: `npm run lint`. Clean.
+- [ ] Review the diff one more time for any leftover smoke-test artifacts in `unit-1.images.json` you didn't intend to commit.
+
+## Out of scope (follow-ups)
+
+- Authoring `imagePrompt` fields for unit-2 content. Unit-2 sections are still empty (`status: "coming-soon"`) — that work happens when the unit is built out, not in this PR.
+- Removing the other suspicious `VITE_`-prefixed Supabase secrets from frontend `.env`. Flagged separately.
+- Integration tests for the script. Deferred.
+- Running the script from CI on PR open. Deferred.
