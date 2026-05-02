@@ -124,11 +124,28 @@ SUPABASE_SERVICE_ROLE_KEY=
 SECRET_KEY=
 ALLOWED_ORIGINS=["http://localhost:5173"]
 ENVIRONMENT=development
+LEONARDO_API_KEY=     # Used by scripts/generate-lesson-images.ts via dotenv (not yet read by FastAPI runtime)
 ```
 
 ## Git Workflow
 
 Always work on a feature branch — never commit directly to `main`. Branch naming: `feat/<name>`, `fix/<name>`, `refactor/<name>`. Open a PR targeting `main` when the work is ready.
+
+## Lesson images
+
+Author-time pipeline that fills `src/features/lessons/data/images/<unit>.images.json` with Leonardo-generated illustrations and uploads them to the public Supabase Storage bucket `lesson-images`. Runtime hydrates `imageUrl` onto items via `lookupSection` / `getUnit`; lesson components branch on the field.
+
+```bash
+npm run lesson-images -- --unit unit-2 --dry-run    # plan only
+npm run lesson-images -- --unit unit-2              # execute (asks for confirmation)
+npm run lesson-images -- --unit unit-2 --force      # regenerate everything (ignore prompt-hash)
+npm run lesson-images -- --unit unit-2 --item <id>  # regenerate one item
+```
+
+The Leonardo API key (`LEONARDO_API_KEY` in `backend/.env`) and Supabase service role key (`SUPABASE_SERVICE_ROLE_KEY`) are read server-side only by the script — never bundled into the client.
+
+Spec: `docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md`.
+Plan: `docs/superpowers/plans/2026-05-02-lesson-image-generation.md`.
 
 ## Path Aliases
 

@@ -3,14 +3,25 @@ import { clsx } from "clsx";
 import type { DialogueLine } from "../../lesson.types";
 import { getLearnerLanguage } from "../../utils/learnerLanguage";
 
-type Props = { lines: DialogueLine[] };
+type Props = { lines: DialogueLine[]; imageUrl?: string };
 
-export default function DialogueBlock({ lines }: Props) {
+export default function DialogueBlock({ lines, imageUrl }: Props) {
   const { i18n } = useTranslation();
   const learnerLang = getLearnerLanguage(i18n.language);
 
   return (
     <div className="space-y-3">
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt=""
+          width={1024}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+          className="w-full rounded-lg mb-4 object-cover"
+        />
+      )}
       {lines.map((line, i) => {
         const translation = learnerLang ? line.translations[learnerLang] : undefined;
         return (

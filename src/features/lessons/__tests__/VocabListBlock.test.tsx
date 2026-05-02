@@ -82,4 +82,19 @@ describe("VocabListBlock", () => {
     render(<VocabListBlock items={items} />);
     expect(screen.getAllByText("Reveal answer").length).toBeGreaterThan(0);
   });
+
+  it("renders an <img> on the front face when item.imageUrl is set", () => {
+    const items = [
+      { id: "v1", word: "classroom", translations: {}, imageUrl: "https://example.com/c.png" },
+    ];
+    render(<VocabListBlock items={items} />);
+    const img = screen.getByRole("img", { name: "classroom" });
+    expect(img).toHaveAttribute("src", "https://example.com/c.png");
+  });
+
+  it("does not render an <img> when item.imageUrl is undefined", () => {
+    const items = [{ id: "v1", word: "classroom", translations: {} }];
+    render(<VocabListBlock items={items} />);
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
 });

@@ -34,7 +34,10 @@ export default function SectionPage() {
     (s) => progressKey ? (s.progress[progressKey] ?? DEFAULT_PROGRESS) : DEFAULT_PROGRESS,
   );
 
-  const shouldTrack = unit?.status === "available" && validSectionKey && section;
+  // Boolean (not Section) so useEffect deps don't churn when hydrateSection
+  // returns a fresh object on each call (which it does whenever a sidecar
+  // entry applies). See PR #101 review comment 3176769201.
+  const shouldTrack = Boolean(unit?.status === "available" && validSectionKey && section);
 
   useEffect(() => {
     if (shouldTrack && unitSlug && validSectionKey) {
@@ -91,6 +94,17 @@ export default function SectionPage() {
         </Link>
         <h1 className="text-2xl font-bold text-semantic-text mt-1">{t(`lessons.detail.sections.${validSectionKey}`)}</h1>
       </div>
+      {section.imageUrl && (
+        <img
+          src={section.imageUrl}
+          alt=""
+          width={1024}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+          className="w-full rounded-lg mb-6 object-cover"
+        />
+      )}
       <SectionRenderer
         section={section}
         onExerciseCorrect={() => {

@@ -24,6 +24,21 @@ function VocabCard({ item, learnerLang }: { item: VocabItem; learnerLang: Return
     >
       {!flipped ? (
         <>
+          {item.imageUrl && (
+            // TODO: source images are 1024×1024 but render at 64×64. Real fix
+            //   is server-side resize variants (Supabase Storage transforms or
+            //   pre-resized at generate time). Lazy loading + intrinsic dims
+            //   are the cheap defenses for now.
+            <img
+              src={item.imageUrl}
+              alt={item.word}
+              width={64}
+              height={64}
+              loading="lazy"
+              decoding="async"
+              className="w-16 h-16 rounded mb-2 object-cover"
+            />
+          )}
           {hasFront ? (
             <p className="text-lg font-semibold text-semantic-text">{nativeText}</p>
           ) : learnerLang ? (

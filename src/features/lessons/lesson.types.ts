@@ -34,6 +34,8 @@ export type Unit = {
     topic: string;
     grammarFocus: string;
   }>>;
+  imagePrompt?: string;
+  imageUrl?: string;
 };
 
 export type SectionMeta = {
@@ -46,6 +48,8 @@ export type Section = {
   unitSlug: string;
   key: SectionKey;
   blocks: SectionBlock[];
+  imagePrompt?: string;
+  imageUrl?: string;
 };
 
 export type SectionBlock =
@@ -53,8 +57,8 @@ export type SectionBlock =
   | { id: string; type: "text"; content: string; translations?: Partial<Record<LearnerLanguage, string>> }
   | { id: string; type: "examples"; items: ExampleItem[] }
   | { id: string; type: "vocab-list"; items: VocabItem[] }
-  | { id: string; type: "dialogue"; lines: DialogueLine[] }
-  | { id: string; type: "exercise"; exerciseType: ExerciseType; exerciseId: string }
+  | { id: string; type: "dialogue"; lines: DialogueLine[]; imagePrompt?: string; imageUrl?: string }
+  | { id: string; type: "exercise"; exerciseType: ExerciseType; exerciseId: string; imagePrompt?: string; imageUrl?: string }
   | { id: string; type: "callout"; variant: "tip" | "note" | "warning"; content: string; translations?: Partial<Record<LearnerLanguage, string>> };
 
 export type ExampleItem = {
@@ -70,6 +74,8 @@ export type VocabItem = {
   phonetic?: string;
   translations: Partial<Record<LearnerLanguage, string>>;
   audioUrl?: string;
+  imagePrompt?: string;
+  imageUrl?: string;
 };
 
 export type DialogueLine = {

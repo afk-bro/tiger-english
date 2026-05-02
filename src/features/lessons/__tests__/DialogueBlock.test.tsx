@@ -41,4 +41,15 @@ describe("DialogueBlock", () => {
     expect(screen.getByText("Hello!")).toBeInTheDocument();
     expect(screen.queryByText("สวัสดี!")).not.toBeInTheDocument();
   });
+
+  it("renders a banner <img> above the lines when imageUrl is provided", () => {
+    const { container } = render(<DialogueBlock lines={[]} imageUrl="https://example.com/d.png" />);
+    const img = container.querySelector("img");
+    expect(img).toHaveAttribute("src", "https://example.com/d.png");
+  });
+
+  it("does not render an <img> when imageUrl is undefined", () => {
+    const { container } = render(<DialogueBlock lines={[]} />);
+    expect(container.querySelector("img")).toBeNull();
+  });
 });

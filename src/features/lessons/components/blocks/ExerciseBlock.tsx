@@ -7,6 +7,7 @@ import type { McqExercise, FillBlankExercise } from "@/components/exercises/exer
 type Props = {
   exerciseType: ExerciseType;
   exerciseId: string;
+  imageUrl?: string;
   onCorrect?: () => void;
 };
 
@@ -26,7 +27,7 @@ const exerciseMap: Record<string, TaggedExercise> = {
   "u1-activities-mcq-6": { type: "multiple-choice", data: unit1Exercises.activitiesLastNameMcq },
 };
 
-export default function ExerciseBlock({ exerciseType, exerciseId, onCorrect }: Props) {
+export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, onCorrect }: Props) {
   if (exerciseType === "match") {
     return (
       <div className="card p-6 opacity-60 text-center">
@@ -47,6 +48,19 @@ export default function ExerciseBlock({ exerciseType, exerciseId, onCorrect }: P
 
   return (
     <div className="card p-6 shadow-sm border border-semantic-border">
+      {/* TODO: alt="" assumes the image is decorative. Image-prompt exercises
+          ("choose what's in the picture") need real alt text from the data. */}
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt=""
+          width={1024}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+          className="w-full rounded-lg mb-4 object-cover"
+        />
+      )}
       {entry.type === "multiple-choice" && <MultipleChoice exercise={entry.data} onCorrect={onCorrect} />}
       {entry.type === "fill-blank" && <FillBlank exercise={entry.data} onCorrect={onCorrect} />}
     </div>

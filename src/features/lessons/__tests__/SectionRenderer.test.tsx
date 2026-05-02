@@ -65,4 +65,16 @@ describe("SectionRenderer", () => {
     expect(screen.getByText("จดจำ")).toBeInTheDocument();
     expect(screen.queryByText("Remember.")).not.toBeInTheDocument();
   });
+
+  it("renders an <img> in an exercise block when block.imageUrl is set", () => {
+    const section: Section = {
+      id: "test", unitSlug: "unit-1", key: "activities",
+      blocks: [
+        { id: "ex1", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-grammar-mcq-1", imageUrl: "https://example.com/e.png" },
+      ],
+    };
+    const { container } = render(<SectionRenderer section={section} />);
+    const img = container.querySelector("img");
+    expect(img).toHaveAttribute("src", "https://example.com/e.png");
+  });
 });
