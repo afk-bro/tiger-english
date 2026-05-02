@@ -44,7 +44,15 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, onCo
       {/* TODO: alt="" assumes the image is decorative. Image-prompt exercises
           ("choose what's in the picture") need real alt text from the data. */}
       {imageUrl && (
-        <img src={imageUrl} alt="" className="w-full rounded-lg mb-4 object-cover" />
+        <img
+          src={imageUrl}
+          alt=""
+          width={1024}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+          className="w-full rounded-lg mb-4 object-cover"
+        />
       )}
       {entry.type === "multiple-choice" && <MultipleChoice exercise={entry.data} onCorrect={onCorrect} />}
       {entry.type === "fill-blank" && <FillBlank exercise={entry.data} onCorrect={onCorrect} />}

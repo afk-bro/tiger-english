@@ -95,7 +95,15 @@ export default function SectionPage() {
         <h1 className="text-2xl font-bold text-semantic-text mt-1">{t(`lessons.detail.sections.${validSectionKey}`)}</h1>
       </div>
       {section.imageUrl && (
-        <img src={section.imageUrl} alt="" className="w-full rounded-lg mb-6 object-cover" />
+        <img
+          src={section.imageUrl}
+          alt=""
+          width={1024}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+          className="w-full rounded-lg mb-6 object-cover"
+        />
       )}
       <SectionRenderer
         section={section}

@@ -12,7 +12,15 @@ export default function DialogueBlock({ lines, imageUrl }: Props) {
   return (
     <div className="space-y-3">
       {imageUrl && (
-        <img src={imageUrl} alt="" className="w-full rounded-lg mb-4 object-cover" />
+        <img
+          src={imageUrl}
+          alt=""
+          width={1024}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+          className="w-full rounded-lg mb-4 object-cover"
+        />
       )}
       {lines.map((line, i) => {
         const translation = learnerLang ? line.translations[learnerLang] : undefined;

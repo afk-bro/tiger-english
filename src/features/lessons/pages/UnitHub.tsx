@@ -77,7 +77,15 @@ export default function UnitHub() {
         {t("lessons.backToLessons")}
       </Link>
       {unit.imageUrl && (
-        <img src={unit.imageUrl} alt={title} className="w-full rounded-lg mb-4 object-cover" />
+        <img
+          src={unit.imageUrl}
+          alt={title}
+          width={1024}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+          className="w-full rounded-lg mb-4 object-cover"
+        />
       )}
       <h1 className="text-2xl font-bold text-semantic-text mb-1">
         {t("lessons.unitShort", { number: unit.number })} — {title}
