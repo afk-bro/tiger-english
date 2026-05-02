@@ -38,7 +38,90 @@ const activities: Section = {
         "zh-CN": "先凭记忆作答，再回去查看语法部分。",
       },
     },
-    { id: "u1-act-4", type: "exercise", exerciseType: "fill-blank", exerciseId: "u1-activities-fb-1" },
+    {
+      id: "u1-act-4-h",
+      type: "heading",
+      content: "Asking someone's name",
+      translations: {
+        th: "การถามชื่อคนอื่น",
+        vi: "Hỏi tên người khác",
+        "zh-CN": "询问别人的名字",
+      },
+    },
+    { id: "u1-act-4", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-activities-mcq-1" },
+    {
+      id: "u1-act-10-h",
+      type: "heading",
+      content: "Asking for a first name",
+      translations: {
+        vi: "Hỏi tên",
+      },
+    },
+    { id: "u1-act-10", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-activities-mcq-5" },
+    {
+      id: "u1-act-11-h",
+      type: "heading",
+      content: "Asking for a last name",
+      translations: {
+        vi: "Hỏi họ",
+      },
+    },
+    { id: "u1-act-11", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-activities-mcq-6" },
+    {
+      id: "u1-act-5-h",
+      type: "heading",
+      content: "Asking for an address",
+      translations: {
+        th: "การถามที่อยู่",
+        vi: "Hỏi địa chỉ",
+        "zh-CN": "询问地址",
+      },
+    },
+    { id: "u1-act-5", type: "exercise", exerciseType: "fill-blank", exerciseId: "u1-activities-fb-1" },
+    {
+      id: "u1-act-6-h",
+      type: "heading",
+      content: "Asking for a phone number",
+      translations: {
+        th: "การถามเบอร์โทรศัพท์",
+        vi: "Hỏi số điện thoại",
+        "zh-CN": "询问电话号码",
+      },
+    },
+    { id: "u1-act-6", type: "exercise", exerciseType: "fill-blank", exerciseId: "u1-activities-fb-2" },
+    {
+      id: "u1-act-7-h",
+      type: "heading",
+      content: "Saying thank you",
+      translations: {
+        th: "การกล่าวขอบคุณ",
+        vi: "Nói cảm ơn",
+        "zh-CN": "表达感谢",
+      },
+    },
+    { id: "u1-act-7", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-activities-mcq-2" },
+    {
+      id: "u1-act-8-h",
+      type: "heading",
+      content: "Asking about someone else",
+      translations: {
+        th: "การถามเกี่ยวกับคนอื่น",
+        vi: "Hỏi về người khác",
+        "zh-CN": "询问关于他人",
+      },
+    },
+    { id: "u1-act-8", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-activities-mcq-3" },
+    {
+      id: "u1-act-9-h",
+      type: "heading",
+      content: "Asking where someone is from",
+      translations: {
+        th: "การถามว่ามาจากไหน",
+        vi: "Hỏi ai đó đến từ đâu",
+        "zh-CN": "询问某人来自哪里",
+      },
+    },
+    { id: "u1-act-9", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-activities-mcq-4" },
   ],
 };
 
