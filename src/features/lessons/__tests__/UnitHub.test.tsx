@@ -15,6 +15,21 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+const heroMockState = { withImage: false };
+vi.mock("../data/getUnit", async () => {
+  const actual = await vi.importActual<typeof import("../data/getUnit")>("../data/getUnit");
+  return {
+    ...actual,
+    getUnit: (slug: string) => {
+      const real = actual.getUnit(slug);
+      if (slug === "unit-1" && real && heroMockState.withImage) {
+        return { ...real, imageUrl: "https://example.com/hero.png" };
+      }
+      return real;
+    },
+  };
+});
+
 function renderAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -41,5 +56,26 @@ describe("UnitHub header", () => {
     renderAt("/lessons/unit-1");
     expect(screen.getByText("ข้อมูลส่วนตัวและการพบปะผู้คน")).toBeInTheDocument();
     expect(screen.getByText("กาลปัจจุบันของ 'to be' (am / is / are)")).toBeInTheDocument();
+  });
+});
+
+describe("UnitHub unit hero image", () => {
+  beforeEach(() => {
+    mockI18n.language = "en";
+    heroMockState.withImage = false;
+  });
+
+  it("renders a hero image when unit.imageUrl is set", () => {
+    heroMockState.withImage = true;
+    const { container } = renderAt("/lessons/unit-1");
+    const img = container.querySelector("img");
+    expect(img).not.toBeNull();
+    expect(img!.getAttribute("src")).toBe("https://example.com/hero.png");
+  });
+
+  it("does not render a hero image when unit.imageUrl is undefined", () => {
+    heroMockState.withImage = false;
+    const { container } = renderAt("/lessons/unit-1");
+    expect(container.querySelector("img")).toBeNull();
   });
 });
