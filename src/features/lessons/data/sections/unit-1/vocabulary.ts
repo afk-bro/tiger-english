@@ -31,6 +31,7 @@ const vocabulary: Section = {
       id: "u1-vocab-3",
       type: "vocab-list",
       items: [
+        { id: "u1-v-hello", word: "hello", phonetic: "heh-loh", translations: { th: "สวัสดี", vi: "xin chào", "zh-CN": "你好" } },
         { id: "u1-v-what", word: "what", phonetic: "wuht", translations: { th: "อะไร", vi: "gì", "zh-CN": "什么" } },
         { id: "u1-v-is", word: "is", phonetic: "iz", translations: { th: "เป็น / คือ", vi: "là", "zh-CN": "是" } },
         { id: "u1-v-am", word: "am", phonetic: "am", translations: { th: "เป็น / คือ", vi: "là", "zh-CN": "是" } },
@@ -40,8 +41,7 @@ const vocabulary: Section = {
         { id: "u1-v-address", word: "address", phonetic: "uh-dres", translations: { th: "ที่อยู่", vi: "địa chỉ", "zh-CN": "地址" } },
         { id: "u1-v-phone-number", word: "phone number", phonetic: "fohn nuhm-ber", translations: { th: "เบอร์โทรศัพท์", vi: "số điện thoại", "zh-CN": "电话号码" } },
         { id: "u1-v-from", word: "from", phonetic: "fruhm", translations: { th: "จาก", vi: "từ", "zh-CN": "来自" } },
-        { id: "u1-v-thank", word: "thank", phonetic: "thangk", translations: { th: "ขอบคุณ", vi: "cảm ơn", "zh-CN": "谢" } },
-        { id: "u1-v-you", word: "you", phonetic: "yoo", translations: { th: "คุณ", vi: "bạn", "zh-CN": "你" } },
+        { id: "u1-v-thank-you", word: "thank you", phonetic: "thangk-yoo", translations: { th: "ขอบคุณ", vi: "cảm ơn", "zh-CN": "谢谢" } },
         { id: "u1-v-i", word: "i", phonetic: "ahy", translations: { th: "ฉัน", vi: "tôi", "zh-CN": "我" } },
       ],
     },
