@@ -54,6 +54,10 @@ describe("hydrateUnit", () => {
     const result = hydrateUnit(unit, {});
     expect(result.imageUrl).toBeUndefined();
   });
+
+  it("returns the same unit reference when sidecar has no __unit__", () => {
+    expect(hydrateUnit(unit, {})).toBe(unit);
+  });
 });
 
 describe("hydrateSection", () => {
@@ -93,6 +97,18 @@ describe("hydrateSection", () => {
     expect(result.imageUrl).toBeUndefined();
     if (result.blocks[0].type !== "vocab-list") throw new Error();
     expect(result.blocks[0].items[0].imageUrl).toBeUndefined();
+  });
+
+  it("returns the same section reference when sidecar is empty", () => {
+    expect(hydrateSection(section, {})).toBe(section);
+  });
+
+  it("preserves vocab-list block reference when no items match sidecar", () => {
+    const partial: UnitSidecar = {
+      "__section__:vocabulary": sidecarFixture["__section__:vocabulary"],
+    };
+    const result = hydrateSection(section, partial);
+    expect(result.blocks[0]).toBe(section.blocks[0]);
   });
 });
 

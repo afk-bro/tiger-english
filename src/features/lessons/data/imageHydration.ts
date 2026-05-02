@@ -27,6 +27,9 @@ export function hydrateSection(section: Section, sidecar: UnitSidecar): Section 
     if (next !== block) blocksChanged = true;
     return next;
   });
+  // Preserve input reference when nothing applies — SectionPage's useEffect
+  // deps are referentially compared and a fresh object would re-trigger
+  // markVisited every render, looping.
   if (!sectionEntry && !blocksChanged) return section;
   return {
     ...section,
@@ -44,6 +47,8 @@ function hydrateBlock(block: SectionBlock, sidecar: UnitSidecar): SectionBlock {
       itemsChanged = true;
       return { ...item, imageUrl: entry.url };
     });
+    // Preserve block reference when no items matched — see hydrateSection
+    // for the SectionPage rationale.
     return itemsChanged ? { ...block, items } : block;
   }
   if (block.type === "dialogue" || block.type === "exercise") {
