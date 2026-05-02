@@ -24,6 +24,13 @@ function VocabCard({ item, learnerLang }: { item: VocabItem; learnerLang: Return
     >
       {!flipped ? (
         <>
+          {item.imageUrl && (
+            <img
+              src={item.imageUrl}
+              alt={item.word}
+              className="w-16 h-16 rounded mb-2 object-cover"
+            />
+          )}
           {hasFront ? (
             <p className="text-lg font-semibold text-semantic-text">{nativeText}</p>
           ) : learnerLang ? (
