@@ -1,5 +1,7 @@
 // src/features/lessons/data/sectionRegistry.ts
 import type { Section } from "../lesson.types";
+import { hydrateSection } from "./imageHydration";
+import { unitImagesSidecars } from "./images";
 
 const registry: Record<string, Section> = {};
 
@@ -15,5 +17,8 @@ export function lookupSection(
   unitSlug: string,
   sectionKey: string,
 ): Section | undefined {
-  return registry[`${unitSlug}:${sectionKey}`];
+  const stored = registry[`${unitSlug}:${sectionKey}`];
+  if (!stored) return undefined;
+  const sidecar = unitImagesSidecars[unitSlug] ?? {};
+  return hydrateSection(stored, sidecar);
 }

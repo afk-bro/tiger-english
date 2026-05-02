@@ -21,21 +21,30 @@ export function hydrateUnit(unit: Unit, sidecar: UnitSidecar): Unit {
 
 export function hydrateSection(section: Section, sidecar: UnitSidecar): Section {
   const sectionEntry = sidecar[sidecarKeyForSection(section.key)];
-  const blocks = section.blocks.map((block) => hydrateBlock(block, sidecar));
+  let blocksChanged = false;
+  const blocks = section.blocks.map((block) => {
+    const next = hydrateBlock(block, sidecar);
+    if (next !== block) blocksChanged = true;
+    return next;
+  });
+  if (!sectionEntry && !blocksChanged) return section;
   return {
     ...section,
-    blocks,
+    blocks: blocksChanged ? blocks : section.blocks,
     ...(sectionEntry ? { imageUrl: sectionEntry.url } : {}),
   };
 }
 
 function hydrateBlock(block: SectionBlock, sidecar: UnitSidecar): SectionBlock {
   if (block.type === "vocab-list") {
+    let itemsChanged = false;
     const items = block.items.map<VocabItem>((item) => {
       const entry = sidecar[item.id];
-      return entry ? { ...item, imageUrl: entry.url } : item;
+      if (!entry) return item;
+      itemsChanged = true;
+      return { ...item, imageUrl: entry.url };
     });
-    return { ...block, items };
+    return itemsChanged ? { ...block, items } : block;
   }
   if (block.type === "dialogue" || block.type === "exercise") {
     const entry = sidecar[block.id];
