@@ -63,7 +63,7 @@ export default function SectionPage() {
           {t("lessons.backToLessons")}
         </Link>
         <h1 className="text-2xl font-bold text-semantic-text mb-3">
-          {t("lessons.unitShort", { number: unit.number })} — {(learnerLang && unit.translations[learnerLang]?.title) ?? unit.title}
+          {t("lessons.unitShort", { number: unit.number })} — {(learnerLang && unit.translations[learnerLang]?.title) || unit.title}
         </h1>
         <p className="text-semantic-text-muted">{t("lessons.comingSoonMessage")}</p>
       </div>

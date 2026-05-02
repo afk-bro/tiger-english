@@ -55,4 +55,18 @@ describe("UnitCard", () => {
     render(<MemoryRouter><UnitCard unit={unit} /></MemoryRouter>);
     expect(screen.getByText("To Be: Introduction")).toBeInTheDocument();
   });
+
+  it("falls back to English when a learner translation field is an empty string", () => {
+    mockI18n.language = "th";
+    const unitWithEmpty: Unit = {
+      ...unit,
+      translations: {
+        th: { title: "", topic: "", grammarFocus: "" },
+      },
+    };
+    render(<MemoryRouter><UnitCard unit={unitWithEmpty} /></MemoryRouter>);
+    expect(screen.getByText("To Be: Introduction")).toBeInTheDocument();
+    expect(screen.getByText("Personal information & meeting people")).toBeInTheDocument();
+    expect(screen.getByText("Present tense of 'to be' (am / is / are)")).toBeInTheDocument();
+  });
 });

@@ -36,7 +36,7 @@ export default function UnitHub() {
           {t("lessons.backToLessons")}
         </Link>
         <h1 className="text-2xl font-bold text-semantic-text mb-3">
-          {t("lessons.unitShort", { number: unit.number })} — {(learnerLang && unit.translations[learnerLang]?.title) ?? unit.title}
+          {t("lessons.unitShort", { number: unit.number })} — {(learnerLang && unit.translations[learnerLang]?.title) || unit.title}
         </h1>
         <p className="text-semantic-text-muted">{t("lessons.comingSoonMessage")}</p>
       </div>
@@ -44,9 +44,9 @@ export default function UnitHub() {
   }
 
   const localized = learnerLang ? unit.translations[learnerLang] : undefined;
-  const title = localized?.title ?? unit.title;
-  const topic = localized?.topic ?? unit.topic;
-  const grammarFocus = localized?.grammarFocus ?? unit.grammarFocus;
+  const title = localized?.title || unit.title;
+  const topic = localized?.topic || unit.topic;
+  const grammarFocus = localized?.grammarFocus || unit.grammarFocus;
 
   const hasAnyVisited = unit.sections.some((s) => getSectionProgress(unit.slug, s.key).visited);
   const allCompleted = unit.sections.every((s) => getSectionProgress(unit.slug, s.key).completed);

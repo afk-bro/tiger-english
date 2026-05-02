@@ -10,9 +10,9 @@ export default function UnitCard({ unit }: Props) {
   const { t, i18n } = useTranslation();
   const learnerLang = getLearnerLanguage(i18n.language);
   const localized = learnerLang ? unit.translations[learnerLang] : undefined;
-  const title = localized?.title ?? unit.title;
-  const topic = localized?.topic ?? unit.topic;
-  const grammarFocus = localized?.grammarFocus ?? unit.grammarFocus;
+  const title = localized?.title || unit.title;
+  const topic = localized?.topic || unit.topic;
+  const grammarFocus = localized?.grammarFocus || unit.grammarFocus;
 
   const isAvailable = unit.status === "available";
   const isLocked = unit.status === "locked";
