@@ -74,11 +74,11 @@ describe("useLessonProgressStore", () => {
 
   it("calculates unit completion percent", () => {
     const sections = [
-      { key: "overview" as const, title: "Overview", estimatedMinutes: 3 },
-      { key: "grammar" as const, title: "Grammar", estimatedMinutes: 8 },
-      { key: "vocabulary" as const, title: "Vocabulary", estimatedMinutes: 5 },
-      { key: "dialogues" as const, title: "Dialogues", estimatedMinutes: 6 },
-      { key: "activities" as const, title: "Activities", estimatedMinutes: 8 },
+      { key: "overview" as const, estimatedMinutes: 3 },
+      { key: "grammar" as const, estimatedMinutes: 8 },
+      { key: "vocabulary" as const, estimatedMinutes: 5 },
+      { key: "dialogues" as const, estimatedMinutes: 6 },
+      { key: "activities" as const, estimatedMinutes: 8 },
     ];
 
     // 0 of 5 completed

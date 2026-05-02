@@ -6,7 +6,6 @@ const grammar: Section = {
   id: "u1-grammar",
   unitSlug: "unit-1",
   key: "grammar",
-  title: "Grammar",
   blocks: [
     {
       id: "u1-gr-1",

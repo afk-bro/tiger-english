@@ -6,7 +6,6 @@ const vocabulary: Section = {
   id: "u1-vocabulary",
   unitSlug: "unit-1",
   key: "vocabulary",
-  title: "Vocabulary",
   blocks: [
     {
       id: "u1-vocab-1",

@@ -38,7 +38,6 @@ export type Unit = {
 
 export type SectionMeta = {
   key: SectionKey;
-  title: string;
   estimatedMinutes: number;
 };
 
@@ -46,7 +45,6 @@ export type Section = {
   id: string;
   unitSlug: string;
   key: SectionKey;
-  title: string;
   blocks: SectionBlock[];
 };
 

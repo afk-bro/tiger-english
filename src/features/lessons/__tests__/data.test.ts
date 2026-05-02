@@ -31,7 +31,6 @@ describe("getSection + sectionRegistry", () => {
     id: "test-section",
     unitSlug: "unit-99",
     key: "overview",
-    title: "Overview",
     blocks: [],
   };
 

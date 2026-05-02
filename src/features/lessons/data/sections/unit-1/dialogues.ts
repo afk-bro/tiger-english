@@ -6,7 +6,6 @@ const dialogues: Section = {
   id: "u1-dialogues",
   unitSlug: "unit-1",
   key: "dialogues",
-  title: "Dialogues",
   blocks: [
     {
       id: "u1-dl-1",

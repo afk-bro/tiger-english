@@ -14,10 +14,10 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-const section: SectionMeta = { key: "grammar", title: "Grammar", estimatedMinutes: 8 };
+const section: SectionMeta = { key: "grammar", estimatedMinutes: 8 };
 
 describe("SectionCard", () => {
-  it("renders the i18n section key instead of section.title", () => {
+  it("renders the i18n section key", () => {
     render(
       <MemoryRouter>
         <SectionCard
@@ -28,6 +28,5 @@ describe("SectionCard", () => {
       </MemoryRouter>,
     );
     expect(screen.getByText("lessons.detail.sections.grammar")).toBeInTheDocument();
-    expect(screen.queryByText("Grammar")).not.toBeInTheDocument();
   });
 });

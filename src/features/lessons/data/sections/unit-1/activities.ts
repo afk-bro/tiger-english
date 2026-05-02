@@ -6,7 +6,6 @@ const activities: Section = {
   id: "u1-activities",
   unitSlug: "unit-1",
   key: "activities",
-  title: "Activities",
   blocks: [
     {
       id: "u1-act-1",

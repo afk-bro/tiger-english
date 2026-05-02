@@ -15,7 +15,6 @@ const testSection: Section = {
   id: "test",
   unitSlug: "unit-1",
   key: "overview",
-  title: "Test Section",
   blocks: [
     { id: "b1", type: "heading", content: "Test Heading" },
     { id: "b2", type: "text", content: "Some paragraph text." },

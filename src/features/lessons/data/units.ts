@@ -11,11 +11,11 @@ export const units: Unit[] = [
     estimatedMinutes: 30,
     status: "available",
     sections: [
-      { key: "overview", title: "Overview", estimatedMinutes: 3 },
-      { key: "grammar", title: "Grammar", estimatedMinutes: 8 },
-      { key: "vocabulary", title: "Vocabulary", estimatedMinutes: 5 },
-      { key: "dialogues", title: "Dialogues", estimatedMinutes: 6 },
-      { key: "activities", title: "Activities", estimatedMinutes: 8 },
+      { key: "overview", estimatedMinutes: 3 },
+      { key: "grammar", estimatedMinutes: 8 },
+      { key: "vocabulary", estimatedMinutes: 5 },
+      { key: "dialogues", estimatedMinutes: 6 },
+      { key: "activities", estimatedMinutes: 8 },
     ],
     translations: {
       th: {
