@@ -7,6 +7,16 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('lesson-images', 'lesson-images', true)
 ON CONFLICT (id) DO NOTHING;
 
-CREATE POLICY IF NOT EXISTS "lesson_images_public_read" ON storage.objects
-  FOR SELECT USING (bucket_id = 'lesson-images');
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage'
+      AND tablename = 'objects'
+      AND policyname = 'lesson_images_public_read'
+  ) THEN
+    CREATE POLICY "lesson_images_public_read" ON storage.objects
+      FOR SELECT USING (bucket_id = 'lesson-images');
+  END IF;
+END $$;
 -- No insert/update/delete policies. Only the service role (script) writes.
