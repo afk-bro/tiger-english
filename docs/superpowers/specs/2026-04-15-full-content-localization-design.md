@@ -41,9 +41,9 @@ type Unit = {
 
 `title`, `topic`, `grammarFocus` remain as English defaults. The `translations` object provides localized versions per learner language.
 
-### SectionMeta — no type change
+### SectionMeta — drop `title`
 
-`SectionMeta.title` stays as a human-readable identifier. The UI renders section names from i18n keys using `t("lessons.detail.sections.${section.key}")`. These keys already exist in all 4 locale files.
+`SectionMeta` previously carried a `title` field as a human-readable identifier, but every UI rendering now goes through i18n keys (`t("lessons.detail.sections.${section.key}")`) which exist for all 4 languages. The `title` field is dropped from both `SectionMeta` and `Section` to remove a dead, untranslated source.
 
 ### SectionBlock — optional translations on content blocks
 

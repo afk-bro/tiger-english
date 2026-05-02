@@ -143,11 +143,11 @@ export const units: Unit[] = [
     estimatedMinutes: 30,
     status: "available",
     sections: [
-      { key: "overview", title: "Overview", estimatedMinutes: 3 },
-      { key: "grammar", title: "Grammar", estimatedMinutes: 8 },
-      { key: "vocabulary", title: "Vocabulary", estimatedMinutes: 5 },
-      { key: "dialogues", title: "Dialogues", estimatedMinutes: 6 },
-      { key: "activities", title: "Activities", estimatedMinutes: 8 },
+      { key: "overview", estimatedMinutes: 3 },
+      { key: "grammar", estimatedMinutes: 8 },
+      { key: "vocabulary", estimatedMinutes: 5 },
+      { key: "dialogues", estimatedMinutes: 6 },
+      { key: "activities", estimatedMinutes: 8 },
     ],
     translations: {
       th: {
@@ -565,6 +565,8 @@ git commit -m "feat(lessons): localize UnitHub title/topic/grammarFocus"
 **Files:**
 - Modify: `src/features/lessons/components/SectionCard.tsx`
 - Create: `src/features/lessons/__tests__/SectionCard.test.tsx`
+
+> **Historical note.** The snippet below references `SectionMeta.title`. After Tasks 4 and 5 of this plan replaced every read of that field with the i18n key `lessons.detail.sections.<key>`, the field was dropped from `SectionMeta` and `Section` entirely as a follow-up cleanup. The walkthrough is preserved for narrative continuity; in current code the fixture has no `title:` and the assertion that `"Grammar"` is absent is no longer needed.
 
 - [ ] **Step 1: Write failing test**
 
@@ -1109,7 +1111,6 @@ const overview: Section = {
   id: "u1-overview",
   unitSlug: "unit-1",
   key: "overview",
-  title: "Overview",
   blocks: [
     {
       id: "u1-ov-1",
@@ -1203,7 +1204,6 @@ const grammar: Section = {
   id: "u1-grammar",
   unitSlug: "unit-1",
   key: "grammar",
-  title: "Grammar",
   blocks: [
     {
       id: "u1-gr-1",
@@ -1276,7 +1276,6 @@ const vocabulary: Section = {
   id: "u1-vocabulary",
   unitSlug: "unit-1",
   key: "vocabulary",
-  title: "Vocabulary",
   blocks: [
     {
       id: "u1-vocab-1",
@@ -1334,7 +1333,6 @@ const dialogues: Section = {
   id: "u1-dialogues",
   unitSlug: "unit-1",
   key: "dialogues",
-  title: "Dialogues",
   blocks: [
     {
       id: "u1-dl-1",
@@ -1387,7 +1385,6 @@ const activities: Section = {
   id: "u1-activities",
   unitSlug: "unit-1",
   key: "activities",
-  title: "Activities",
   blocks: [
     {
       id: "u1-act-1",
