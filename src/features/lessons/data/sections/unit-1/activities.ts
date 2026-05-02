@@ -50,6 +50,24 @@ const activities: Section = {
     },
     { id: "u1-act-4", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-activities-mcq-1" },
     {
+      id: "u1-act-10-h",
+      type: "heading",
+      content: "Asking for a first name",
+      translations: {
+        vi: "Hỏi tên",
+      },
+    },
+    { id: "u1-act-10", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-activities-mcq-5" },
+    {
+      id: "u1-act-11-h",
+      type: "heading",
+      content: "Asking for a last name",
+      translations: {
+        vi: "Hỏi họ",
+      },
+    },
+    { id: "u1-act-11", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-activities-mcq-6" },
+    {
       id: "u1-act-5-h",
       type: "heading",
       content: "Asking for an address",

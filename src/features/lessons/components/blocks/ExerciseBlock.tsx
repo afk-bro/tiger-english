@@ -22,6 +22,8 @@ const exerciseMap: Record<string, TaggedExercise> = {
   "u1-activities-mcq-2": { type: "multiple-choice", data: unit1Exercises.activitiesThanksMcq },
   "u1-activities-mcq-3": { type: "multiple-choice", data: unit1Exercises.activitiesThirdPersonMcq },
   "u1-activities-mcq-4": { type: "multiple-choice", data: unit1Exercises.activitiesWhereMcq },
+  "u1-activities-mcq-5": { type: "multiple-choice", data: unit1Exercises.activitiesFirstNameMcq },
+  "u1-activities-mcq-6": { type: "multiple-choice", data: unit1Exercises.activitiesLastNameMcq },
 };
 
 export default function ExerciseBlock({ exerciseType, exerciseId, onCorrect }: Props) {

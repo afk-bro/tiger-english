@@ -69,3 +69,25 @@ export const activitiesWhereMcq: McqExercise = {
   ],
   correctOptionId: "b",
 };
+
+export const activitiesFirstNameMcq: McqExercise = {
+  id: "u1-activities-mcq-5",
+  question: "Choose the correct response to: \"What is your first name?\"",
+  options: [
+    { id: "a", text: "My last name is Schmidt." },
+    { id: "b", text: "My first name is Anna." },
+    { id: "c", text: "My address is 12 Main Street." },
+  ],
+  correctOptionId: "b",
+};
+
+export const activitiesLastNameMcq: McqExercise = {
+  id: "u1-activities-mcq-6",
+  question: "Choose the correct response to: \"What is your last name?\"",
+  options: [
+    { id: "a", text: "My phone number is 555-1234." },
+    { id: "b", text: "My first name is Anna." },
+    { id: "c", text: "My last name is Schmidt." },
+  ],
+  correctOptionId: "c",
+};
