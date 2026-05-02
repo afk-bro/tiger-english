@@ -15,13 +15,9 @@ import { computePromptHash, templateVocabPrompt, MODEL_ID, IMAGE_DIM } from "./l
 import { units } from "../src/features/lessons/data/units";
 import { lookupSection } from "../src/features/lessons/data/sectionRegistry";
 import { sidecarKeyForUnit, sidecarKeyForSection } from "../src/features/lessons/data/imageHydration";
-// Side-effect imports register sections in the registry.
-import "../src/features/lessons/data/sections/unit-1/overview";
-import "../src/features/lessons/data/sections/unit-1/grammar";
-import "../src/features/lessons/data/sections/unit-1/vocabulary";
-import "../src/features/lessons/data/sections/unit-1/dialogues";
-import "../src/features/lessons/data/sections/unit-1/activities";
-// Note: when unit-2's section files exist, add their imports here.
+// Single bootstrap shared with getSection.ts so the section registration list
+// has one source of truth.
+import "../src/features/lessons/data/registerAllSections";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, "..");
