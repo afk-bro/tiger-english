@@ -27,8 +27,9 @@ class Settings(BaseSettings):
     # Leonardo AI (used by scripts/generate-lesson-images.ts via dotenv,
     # not yet read by the FastAPI runtime — declared here so the secret
     # has a documented home and any future server-side image endpoint
-    # can consume it.)
-    leonardo_api_key: str
+    # can consume it. Optional so the FastAPI dev server boots without
+    # the key set; the script enforces presence at its own boundary.)
+    leonardo_api_key: str | None = None
 
     @property
     def allowed_origins_list(self) -> List[str]:
