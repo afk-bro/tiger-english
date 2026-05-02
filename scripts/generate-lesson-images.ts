@@ -186,11 +186,6 @@ async function uploadToStorage(supabase: SupabaseClient, unitSlug: string, key: 
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const env = {
-    leonardoKey: requireEnv("LEONARDO_API_KEY"),
-    supabaseUrl: requireEnv("SUPABASE_URL"),
-    supabaseServiceKey: requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
-  };
 
   console.log(`[lesson-images] unit=${args.unit} dryRun=${args.dryRun} force=${args.force}`);
 
@@ -224,6 +219,14 @@ async function main() {
     return;
   }
 
+  // Only require secrets when actually generating — keeps dry-run usable on
+  // machines/CI where these are intentionally absent.
+  const env = {
+    leonardoKey: requireEnv("LEONARDO_API_KEY"),
+    supabaseUrl: requireEnv("SUPABASE_URL"),
+    supabaseServiceKey: requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+  };
+
   const costPerImage = 0.04;
   const estimated = (toGenerate.length * costPerImage).toFixed(2);
   console.log(`[lesson-images] ${toGenerate.length} images to generate (estimated $${estimated} at $${costPerImage}/image)`);
@@ -243,7 +246,11 @@ async function main() {
     try {
       const id = await withRetry(() => leonardoStartGeneration(cand.prompt, env.leonardoKey));
       const leonardoUrl = await withRetry(() => leonardoPoll(id, env.leonardoKey));
-      const pngBytes = Buffer.from(await (await fetch(leonardoUrl)).arrayBuffer());
+      const downloadRes = await fetch(leonardoUrl);
+      if (!downloadRes.ok) {
+        throw new Error(`Leonardo CDN download failed: ${downloadRes.status} ${downloadRes.statusText}`);
+      }
+      const pngBytes = Buffer.from(await downloadRes.arrayBuffer());
       const publicUrl = await withRetry(() => uploadToStorage(supabase, args.unit, cand.id, pngBytes));
       sidecar[cand.id] = {
         url: publicUrl,
