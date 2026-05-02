@@ -15,20 +15,20 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+// Returns a *fresh* object on every call when injecting the imageUrl. This
+// mirrors hydrateSection's actual behavior whenever a sidecar entry applies,
+// and serves as a regression test for the SectionPage render-loop bug fixed
+// by coercing shouldTrack to a boolean.
 vi.mock("../data/sectionRegistry", async () => {
   const actual = await vi.importActual<typeof import("../data/sectionRegistry")>("../data/sectionRegistry");
-  const cache = new Map<string, ReturnType<typeof actual.lookupSection>>();
   return {
     ...actual,
     lookupSection: (slug: string, key: string) => {
-      const cacheKey = `${slug}:${key}`;
-      if (cache.has(cacheKey)) return cache.get(cacheKey);
       const real = actual.lookupSection(slug, key as never);
-      const result = slug === "unit-1" && key === "grammar" && real
-        ? { ...real, imageUrl: "https://example.com/sec.png" }
-        : real;
-      cache.set(cacheKey, result);
-      return result;
+      if (slug === "unit-1" && key === "grammar" && real) {
+        return { ...real, imageUrl: "https://example.com/sec.png" };
+      }
+      return real;
     },
   };
 });
