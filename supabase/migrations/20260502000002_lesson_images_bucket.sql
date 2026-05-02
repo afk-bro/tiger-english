@@ -7,6 +7,6 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('lesson-images', 'lesson-images', true)
 ON CONFLICT (id) DO NOTHING;
 
-CREATE POLICY "lesson_images_public_read" ON storage.objects
+CREATE POLICY IF NOT EXISTS "lesson_images_public_read" ON storage.objects
   FOR SELECT USING (bucket_id = 'lesson-images');
 -- No insert/update/delete policies. Only the service role (script) writes.
