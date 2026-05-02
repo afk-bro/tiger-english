@@ -91,6 +91,9 @@ export default function SectionPage() {
         </Link>
         <h1 className="text-2xl font-bold text-semantic-text mt-1">{t(`lessons.detail.sections.${validSectionKey}`)}</h1>
       </div>
+      {section.imageUrl && (
+        <img src={section.imageUrl} alt="" className="w-full rounded-lg mb-6 object-cover" />
+      )}
       <SectionRenderer
         section={section}
         onExerciseCorrect={() => {
