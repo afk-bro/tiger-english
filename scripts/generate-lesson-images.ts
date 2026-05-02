@@ -8,7 +8,7 @@ import { readFileSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
-import { computePromptHash, templateVocabPrompt } from "./lesson-image-config";
+import { computePromptHash, templateVocabPrompt, MODEL_ID, IMAGE_DIM } from "./lesson-image-config";
 import { units } from "../src/features/lessons/data/units";
 import { lookupSection } from "../src/features/lessons/data/sectionRegistry";
 import { sidecarKeyForUnit, sidecarKeyForSection } from "../src/features/lessons/data/imageHydration";
@@ -105,6 +105,59 @@ function readSidecar(unitSlug: string): Sidecar {
   return JSON.parse(readFileSync(path, "utf-8")) as Sidecar;
 }
 
+const LEONARDO_BASE = "https://cloud.leonardo.ai/api/rest/v1";
+
+async function leonardoStartGeneration(prompt: string, apiKey: string): Promise<string> {
+  const res = await fetch(`${LEONARDO_BASE}/generations`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt,
+      modelId: MODEL_ID,
+      width: IMAGE_DIM.width,
+      height: IMAGE_DIM.height,
+      num_images: 1,
+    }),
+  });
+  if (!res.ok) throw new Error(`Leonardo start: ${res.status} ${await res.text()}`);
+  const body = await res.json() as { sdGenerationJob?: { generationId: string } };
+  const id = body.sdGenerationJob?.generationId;
+  if (!id) throw new Error(`Leonardo start: no generationId in response`);
+  return id;
+}
+
+async function leonardoPoll(id: string, apiKey: string, timeoutMs = 60000): Promise<string> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const res = await fetch(`${LEONARDO_BASE}/generations/${id}`, {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    });
+    if (!res.ok) throw new Error(`Leonardo poll: ${res.status}`);
+    const body = await res.json() as { generations_by_pk?: { status: string; generated_images: { url: string }[] } };
+    const gen = body.generations_by_pk;
+    if (gen?.status === "COMPLETE") {
+      const url = gen.generated_images[0]?.url;
+      if (!url) throw new Error(`Leonardo poll: no image url`);
+      return url;
+    }
+    if (gen?.status === "FAILED") throw new Error(`Leonardo poll: status FAILED`);
+  }
+  throw new Error(`Leonardo poll: timeout after ${timeoutMs}ms`);
+}
+
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try { return await fn(); }
+    catch (e) {
+      lastErr = e;
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, i)));
+    }
+  }
+  throw lastErr;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const env = {
@@ -113,6 +166,7 @@ async function main() {
     supabaseServiceKey: requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
   };
   void env; // Silences "declared but not used" while the API integration is pending.
+  void leonardoStartGeneration; void leonardoPoll; void withRetry; // Wired up in Task 17.
 
   console.log(`[lesson-images] unit=${args.unit} dryRun=${args.dryRun} force=${args.force}`);
 
