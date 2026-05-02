@@ -9,12 +9,12 @@ import ExerciseBlock from "./blocks/ExerciseBlock";
 
 function renderBlock(block: SectionBlock, onExerciseCorrect?: () => void) {
   switch (block.type) {
-    case "text": return <TextBlock content={block.content} />;
-    case "heading": return <HeadingBlock content={block.content} />;
+    case "text": return <TextBlock content={block.content} translations={block.translations} />;
+    case "heading": return <HeadingBlock content={block.content} translations={block.translations} />;
     case "examples": return <ExamplesBlock items={block.items} />;
     case "vocab-list": return <VocabListBlock items={block.items} />;
     case "dialogue": return <DialogueBlock lines={block.lines} />;
-    case "callout": return <CalloutBlock variant={block.variant} content={block.content} />;
+    case "callout": return <CalloutBlock variant={block.variant} content={block.content} translations={block.translations} />;
     case "exercise": return <ExerciseBlock exerciseType={block.exerciseType} exerciseId={block.exerciseId} onCorrect={onExerciseCorrect} />;
     default: return null;
   }

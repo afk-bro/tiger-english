@@ -15,12 +15,14 @@ const testSection: Section = {
   id: "test",
   unitSlug: "unit-1",
   key: "overview",
-  title: "Test Section",
   blocks: [
     { id: "b1", type: "heading", content: "Test Heading" },
     { id: "b2", type: "text", content: "Some paragraph text." },
     { id: "b3", type: "examples", items: [{ id: "test-ex", english: "Hello", translations: { th: "สวัสดี" } }] },
     { id: "b4", type: "callout", variant: "tip", content: "A helpful tip." },
+    { id: "b5", type: "text", content: "Greetings.", translations: { th: "ทักทาย" } },
+    { id: "b6", type: "heading", content: "Welcome.", translations: { th: "ยินดีต้อนรับ" } },
+    { id: "b7", type: "callout", variant: "note", content: "Remember.", translations: { th: "จดจำ" } },
   ],
 };
 
@@ -44,5 +46,23 @@ describe("SectionRenderer", () => {
   it("renders callout blocks", () => {
     render(<SectionRenderer section={testSection} />);
     expect(screen.getByText("A helpful tip.")).toBeInTheDocument();
+  });
+
+  it("passes translations to text blocks (integration with TextBlock)", () => {
+    render(<SectionRenderer section={testSection} />);
+    expect(screen.getByText("ทักทาย")).toBeInTheDocument();
+    expect(screen.queryByText("Greetings.")).not.toBeInTheDocument();
+  });
+
+  it("passes translations to heading blocks (integration with HeadingBlock)", () => {
+    render(<SectionRenderer section={testSection} />);
+    expect(screen.getByText("ยินดีต้อนรับ")).toBeInTheDocument();
+    expect(screen.queryByText("Welcome.")).not.toBeInTheDocument();
+  });
+
+  it("passes translations to callout blocks (integration with CalloutBlock)", () => {
+    render(<SectionRenderer section={testSection} />);
+    expect(screen.getByText("จดจำ")).toBeInTheDocument();
+    expect(screen.queryByText("Remember.")).not.toBeInTheDocument();
   });
 });

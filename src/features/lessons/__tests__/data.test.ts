@@ -4,6 +4,7 @@ import { getUnit } from "../data/getUnit";
 import { getSection } from "../data/getSection";
 import { registerSection } from "../data/sectionRegistry";
 import type { Section } from "../lesson.types";
+import { units } from "../data/units";
 
 describe("getUnit", () => {
   it("returns unit-1 by slug", () => {
@@ -30,7 +31,6 @@ describe("getSection + sectionRegistry", () => {
     id: "test-section",
     unitSlug: "unit-99",
     key: "overview",
-    title: "Overview",
     blocks: [],
   };
 
@@ -51,5 +51,21 @@ describe("getSection + sectionRegistry", () => {
     const result = getSection("unit-99", "overview");
     expect(result).toBeDefined();
     expect(result!.id).toBe("test-section");
+  });
+});
+
+describe("unit translations", () => {
+  const LANGS = ["th", "vi", "zh-CN"] as const;
+
+  it("every unit has translations for th/vi/zh-CN", () => {
+    for (const unit of units) {
+      for (const lang of LANGS) {
+        const t = unit.translations[lang];
+        expect(t, `${unit.slug} missing ${lang}`).toBeDefined();
+        expect(t!.title, `${unit.slug}.${lang}.title`).toBeTruthy();
+        expect(t!.topic, `${unit.slug}.${lang}.topic`).toBeTruthy();
+        expect(t!.grammarFocus, `${unit.slug}.${lang}.grammarFocus`).toBeTruthy();
+      }
+    }
   });
 });

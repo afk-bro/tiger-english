@@ -11,12 +11,29 @@ export const units: Unit[] = [
     estimatedMinutes: 30,
     status: "available",
     sections: [
-      { key: "overview", title: "Overview", estimatedMinutes: 3 },
-      { key: "grammar", title: "Grammar", estimatedMinutes: 8 },
-      { key: "vocabulary", title: "Vocabulary", estimatedMinutes: 5 },
-      { key: "dialogues", title: "Dialogues", estimatedMinutes: 6 },
-      { key: "activities", title: "Activities", estimatedMinutes: 8 },
+      { key: "overview", estimatedMinutes: 3 },
+      { key: "grammar", estimatedMinutes: 8 },
+      { key: "vocabulary", estimatedMinutes: 5 },
+      { key: "dialogues", estimatedMinutes: 6 },
+      { key: "activities", estimatedMinutes: 8 },
     ],
+    translations: {
+      th: {
+        title: "To Be: บทนำ",
+        topic: "ข้อมูลส่วนตัวและการพบปะผู้คน",
+        grammarFocus: "กาลปัจจุบันของ 'to be' (am / is / are)",
+      },
+      vi: {
+        title: "To Be: Giới thiệu",
+        topic: "Thông tin cá nhân và gặp gỡ mọi người",
+        grammarFocus: "Thì hiện tại của 'to be' (am / is / are)",
+      },
+      "zh-CN": {
+        title: "To Be: 介绍",
+        topic: "个人信息和认识新朋友",
+        grammarFocus: "'to be' 的现在时 (am / is / are)",
+      },
+    },
   },
   {
     slug: "unit-2",
@@ -27,6 +44,23 @@ export const units: Unit[] = [
     estimatedMinutes: 45,
     status: "coming-soon",
     sections: [],
+    translations: {
+      th: {
+        title: "To Be: คำถามใช่/ไม่ใช่",
+        topic: "ห้องเรียน ประเทศ สัญชาติ",
+        grammarFocus: "คำสรรพนามประธาน และ 'to be' รูปเอกพจน์/พหูพจน์",
+      },
+      vi: {
+        title: "To Be: Câu hỏi Có/Không",
+        topic: "Lớp học, các quốc gia, quốc tịch",
+        grammarFocus: "Đại từ nhân xưng & 'to be' số ít/số nhiều",
+      },
+      "zh-CN": {
+        title: "To Be: 是非疑问句",
+        topic: "教室、国家、国籍",
+        grammarFocus: "主语代词与单复数 'to be'",
+      },
+    },
   },
   {
     slug: "unit-3",
@@ -37,6 +71,23 @@ export const units: Unit[] = [
     estimatedMinutes: 45,
     status: "coming-soon",
     sections: [],
+    translations: {
+      th: {
+        title: "กาลปัจจุบันต่อเนื่อง",
+        topic: "กิจกรรมประจำวัน",
+        grammarFocus: "ปัจจุบันต่อเนื่อง (am/is/are + -ing)",
+      },
+      vi: {
+        title: "Thì Hiện tại Tiếp diễn",
+        topic: "Các hoạt động hàng ngày",
+        grammarFocus: "Hiện tại tiếp diễn (am/is/are + -ing)",
+      },
+      "zh-CN": {
+        title: "现在进行时",
+        topic: "日常活动",
+        grammarFocus: "现在进行时 (am/is/are + -ing)",
+      },
+    },
   },
   {
     slug: "unit-4",
@@ -47,5 +98,22 @@ export const units: Unit[] = [
     estimatedMinutes: 45,
     status: "coming-soon",
     sections: [],
+    translations: {
+      th: {
+        title: "To Be: คำตอบสั้น และคำคุณศัพท์แสดงความเป็นเจ้าของ",
+        topic: "สมาชิกในครอบครัวและคำอธิบาย",
+        grammarFocus: "คำคุณศัพท์แสดงความเป็นเจ้าของ (my, your, his, her…)",
+      },
+      vi: {
+        title: "To Be: Câu trả lời ngắn & Tính từ sở hữu",
+        topic: "Thành viên gia đình & miêu tả",
+        grammarFocus: "Tính từ sở hữu (my, your, his, her…)",
+      },
+      "zh-CN": {
+        title: "To Be: 简短回答与物主形容词",
+        topic: "家庭成员和描述",
+        grammarFocus: "物主形容词 (my, your, his, her…)",
+      },
+    },
   },
 ];

@@ -6,13 +6,15 @@ import { getUnit } from "../data/getUnit";
 import { getSection } from "../data/getSection";
 import { useLessonProgressStore } from "../useLessonProgressStore";
 import { SECTION_ORDER, type SectionKey } from "../lesson.types";
+import { getLearnerLanguage } from "../utils/learnerLanguage";
 import SectionRenderer from "../components/SectionRenderer";
 import SectionNav from "../components/SectionNav";
 
 const DEFAULT_PROGRESS = { visited: false, completed: false } as const;
 
 export default function SectionPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const learnerLang = getLearnerLanguage(i18n.language);
   const { unitSlug, sectionKey } = useParams<{ unitSlug: string; sectionKey: string }>();
 
   const unit = unitSlug ? getUnit(unitSlug) : undefined;
@@ -61,7 +63,7 @@ export default function SectionPage() {
           {t("lessons.backToLessons")}
         </Link>
         <h1 className="text-2xl font-bold text-semantic-text mb-3">
-          {t("lessons.unitShort", { number: unit.number })} — {unit.title}
+          {t("lessons.unitShort", { number: unit.number })} — {(learnerLang && unit.translations[learnerLang]?.title) || unit.title}
         </h1>
         <p className="text-semantic-text-muted">{t("lessons.comingSoonMessage")}</p>
       </div>
@@ -87,7 +89,7 @@ export default function SectionPage() {
           <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           {t("lessons.backToUnit")}
         </Link>
-        <h1 className="text-2xl font-bold text-semantic-text mt-1">{section.title}</h1>
+        <h1 className="text-2xl font-bold text-semantic-text mt-1">{t(`lessons.detail.sections.${validSectionKey}`)}</h1>
       </div>
       <SectionRenderer
         section={section}
