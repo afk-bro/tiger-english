@@ -4,9 +4,12 @@
 // in the browser. See docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md.
 
 import { config as loadDotenv } from "dotenv";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { createInterface } from "readline";
+
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { computePromptHash, templateVocabPrompt, MODEL_ID, IMAGE_DIM } from "./lesson-image-config";
 import { units } from "../src/features/lessons/data/units";
@@ -56,6 +59,16 @@ function requireEnv(name: string): string {
   const v = process.env[name];
   if (!v) throw new Error(`Missing required env var: ${name} (expected in backend/.env)`);
   return v;
+}
+
+async function confirm(question: string): Promise<boolean> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(/^y(es)?$/i.test(answer.trim()));
+    });
+  });
 }
 
 type Candidate = {
@@ -158,6 +171,19 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   throw lastErr;
 }
 
+async function uploadToStorage(supabase: SupabaseClient, unitSlug: string, key: string, bytes: Buffer): Promise<string> {
+  // Object names can include only [a-zA-Z0-9_\-./]; sidecar keys may contain ":".
+  const safeKey = key.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const path = `${unitSlug}/${safeKey}.png`;
+  const { error } = await supabase.storage.from("lesson-images").upload(path, bytes, {
+    contentType: "image/png",
+    upsert: true,
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from("lesson-images").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const env = {
@@ -165,8 +191,6 @@ async function main() {
     supabaseUrl: requireEnv("SUPABASE_URL"),
     supabaseServiceKey: requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
   };
-  void env; // Silences "declared but not used" while the API integration is pending.
-  void leonardoStartGeneration; void leonardoPoll; void withRetry; // Wired up in Task 17.
 
   console.log(`[lesson-images] unit=${args.unit} dryRun=${args.dryRun} force=${args.force}`);
 
@@ -192,20 +216,54 @@ async function main() {
   }
 
   console.log(`[lesson-images] plan: generate=${toGenerate.length} skip=${skipped.length}`);
-  for (const cand of toGenerate) {
-    console.log(`  + ${cand.kind} ${cand.id}`);
-  }
-  for (const cand of skipped) {
-    console.log(`  ↷ ${cand.kind} ${cand.id} (unchanged)`);
-  }
+  for (const cand of toGenerate) console.log(`  + ${cand.kind} ${cand.id}`);
+  for (const cand of skipped) console.log(`  ↷ ${cand.kind} ${cand.id} (unchanged)`);
 
   if (args.dryRun) {
     console.log("[lesson-images] DRY RUN — no API calls, no writes. Exiting.");
     return;
   }
 
-  // API integration + storage upload land in Tasks 16-17.
-  console.log("[lesson-images] No-op — walker complete, API integration pending.");
+  const costPerImage = 0.04;
+  const estimated = (toGenerate.length * costPerImage).toFixed(2);
+  console.log(`[lesson-images] ${toGenerate.length} images to generate (estimated $${estimated} at $${costPerImage}/image)`);
+
+  if (!args.yes && toGenerate.length > 0) {
+    const ok = await confirm("Continue? [y/N] ");
+    if (!ok) {
+      console.log("[lesson-images] Aborted.");
+      return;
+    }
+  }
+
+  const supabase = createClient(env.supabaseUrl, env.supabaseServiceKey);
+  const failed: { id: string; error: string }[] = [];
+
+  for (const cand of toGenerate) {
+    try {
+      const id = await withRetry(() => leonardoStartGeneration(cand.prompt, env.leonardoKey));
+      const leonardoUrl = await withRetry(() => leonardoPoll(id, env.leonardoKey));
+      const pngBytes = Buffer.from(await (await fetch(leonardoUrl)).arrayBuffer());
+      const publicUrl = await withRetry(() => uploadToStorage(supabase, args.unit, cand.id, pngBytes));
+      sidecar[cand.id] = {
+        url: publicUrl,
+        promptHash: computePromptHash(cand.prompt),
+        model: MODEL_ID,
+        generatedAt: new Date().toISOString(),
+      };
+      console.log(`✓ ${cand.kind} ${cand.id}`);
+    } catch (e) {
+      failed.push({ id: cand.id, error: (e as Error).message });
+      console.error(`✗ ${cand.kind} ${cand.id}: ${(e as Error).message}`);
+      if (args.bail) break;
+    }
+  }
+
+  const sidecarPath = resolve(REPO_ROOT, `src/features/lessons/data/images/${args.unit}.images.json`);
+  writeFileSync(sidecarPath, JSON.stringify(sidecar, null, 2) + "\n");
+  console.log(`[lesson-images] Wrote ${sidecarPath}`);
+  console.log(`[lesson-images] generated=${toGenerate.length - failed.length} skipped=${skipped.length} failed=${failed.length}`);
+  if (failed.length > 0 && !args.allowFail) process.exit(1);
 }
 
 main().catch((err) => {
