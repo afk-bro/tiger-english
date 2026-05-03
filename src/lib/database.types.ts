@@ -195,6 +195,7 @@ export type Database = {
           id: string
           last_name: string
           native_language: string | null
+          timezone: string | null
           username: string
         }
         Insert: {
@@ -204,6 +205,7 @@ export type Database = {
           id: string
           last_name: string
           native_language?: string | null
+          timezone?: string | null
           username: string
         }
         Update: {
@@ -213,6 +215,7 @@ export type Database = {
           id?: string
           last_name?: string
           native_language?: string | null
+          timezone?: string | null
           username?: string
         }
         Relationships: [

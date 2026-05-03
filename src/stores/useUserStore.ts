@@ -10,6 +10,7 @@ type UserProfile = {
   email?: string;
   username: string;
   native_language: string | null;
+  timezone?: string | null;
 };
 
 type UserStore = {
@@ -50,7 +51,7 @@ export const useUserStore = create<UserStore>((set) => ({
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, first_name, last_name, email, username, native_language")
+      .select("id, first_name, last_name, email, username, native_language, timezone")
       .eq("id", session.user.id)
       .single();
 
@@ -69,6 +70,7 @@ export const useUserStore = create<UserStore>((set) => ({
           last_name: data.last_name,
           username: data.username,
           native_language: data.native_language ?? null,
+          timezone: data.timezone ?? null,
         },
         error: null,
         profileLoading: false,

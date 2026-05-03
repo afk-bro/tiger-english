@@ -40,7 +40,8 @@ export interface UsernameCheckResponse {
 }
 
 export interface UpdateProfileData {
-  native_language: string | null;
+  native_language?: string | null;
+  timezone?: string | null;
 }
 
 export interface ProfileResponse {
