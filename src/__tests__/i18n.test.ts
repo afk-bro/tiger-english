@@ -42,11 +42,11 @@ describe('i18n config', () => {
   it('falls back to English for the new exercise chrome keys when the language file lacks them', () => {
     for (const lang of ['th', 'zh-CN']) {
       i18n.changeLanguage(lang);
-      expect(i18n.t('lessons.exercises.correct'), `${lang} fallback for correct`).toBe('Correct!');
-      expect(i18n.t('lessons.exercises.incorrect'), `${lang} fallback for incorrect`).toBe('Incorrect');
-      expect(i18n.t('lessons.exercises.tryAgain'), `${lang} fallback for tryAgain`).toBe('Try again');
-      expect(i18n.t('lessons.exercises.check'), `${lang} fallback for check`).toBe('Check');
-      expect(i18n.t('lessons.exercises.fillInTheBlank'), `${lang} fallback for fillInTheBlank`).toBe('Fill in the blank');
+      expect(i18n.t('lessons.exercises.correct')).toBe('Correct!');
+      expect(i18n.t('lessons.exercises.incorrect')).toBe('Incorrect');
+      expect(i18n.t('lessons.exercises.tryAgain')).toBe('Try again');
+      expect(i18n.t('lessons.exercises.check')).toBe('Check');
+      expect(i18n.t('lessons.exercises.fillInTheBlank')).toBe('Fill in the blank');
     }
   });
 });
