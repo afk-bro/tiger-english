@@ -193,7 +193,21 @@
       "day_streak": "连续天数"
     },
     "logout": "退出",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "yourProgress": {
+      "heading": "Your Progress",
+      "lessonsCompleted": "Lessons completed: {{count}}",
+      "exercises": "Exercises: {{attempts}} attempts ({{accuracy}}% correct)",
+      "flashcards": "Flashcards reviewed: {{reviewed}} ({{mastered}} mastered)",
+      "lastStudied": {
+        "label": "Last studied: {{relative}}",
+        "never": "never",
+        "today": "today",
+        "yesterday": "yesterday",
+        "daysAgo": "{{count}} days ago"
+      }
+    },
+    "error": "Couldn't load your progress. Try refreshing."
   },
   "lessons": {
     "title": "课程",
