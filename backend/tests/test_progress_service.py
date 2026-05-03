@@ -1,6 +1,7 @@
 """Tests for ProgressService — mocked Supabase client."""
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+from unittest.mock import MagicMock
 from uuid import UUID
 
 import pytest
@@ -101,3 +102,49 @@ def test_review_flashcard_accepts_unknown_status(mock_supabase, sample_user_id):
 
     args, _ = mock_supabase.rpc.call_args
     assert args[1]["p_status"] == "unknown"
+
+
+def test_get_summary_assembles_all_components(mock_supabase, sample_user_id, monkeypatch):
+    """Verify get_summary calls the right Supabase queries and assembles
+    the response shape correctly. We don't test the SQL itself here —
+    that's verified end-to-end in the manual walkthrough."""
+    from app.services.progress_service import ProgressService
+
+    # Mock the chained .table().select()...execute() calls
+    def make_table_mock(data=None, count=None):
+        m = MagicMock()
+        m.select.return_value = m
+        m.eq.return_value = m
+        m.order.return_value = m
+        m.limit.return_value = m
+        m.single.return_value = m
+        m.execute.return_value.data = data
+        m.execute.return_value.count = count
+        return m
+
+    table_mocks = {
+        "profiles": make_table_mock(data={"timezone": "UTC"}),
+        "lesson_section_progress": make_table_mock(data=[
+            {"unit_slug": "unit-1", "section_key": "overview"},
+            {"unit_slug": "unit-1", "section_key": "grammar"},
+            {"unit_slug": "unit-1", "section_key": "vocabulary"},
+            {"unit_slug": "unit-1", "section_key": "dialogues"},
+            {"unit_slug": "unit-1", "section_key": "activities"},
+            {"unit_slug": "unit-2", "section_key": "overview"},
+        ]),
+        "exercise_attempts": make_table_mock(count=10),
+        "flashcard_reviews": make_table_mock(count=42),
+        "user_card_progress": make_table_mock(count=12),
+        "user_activity_log": make_table_mock(data=[{"created_at": "2026-05-03T10:00:00+00:00"}]),
+    }
+    mock_supabase.table = lambda name: table_mocks[name]
+    mock_supabase.rpc.return_value.execute.return_value.data = [{"day": "2026-05-03"}]
+
+    monkeypatch.setattr("app.services.progress_service._today_in_tz", lambda tz: date(2026, 5, 3))
+
+    service = ProgressService(mock_supabase)
+    summary = service.get_summary(sample_user_id)
+
+    assert summary["activity"]["lessons_completed"] == 1  # only unit-1 has all 5 sections
+    assert summary["streak"]["current_days"] == 1
+    assert summary["last_active_at"] == "2026-05-03T10:00:00+00:00"
