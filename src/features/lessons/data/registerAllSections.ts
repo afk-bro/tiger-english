@@ -12,4 +12,5 @@ import "./sections/unit-2/overview";
 import "./sections/unit-2/grammar";
 import "./sections/unit-2/vocabulary";
 import "./sections/unit-2/dialogues";
+import "./sections/unit-2/activities";
 // Add unit-2 (and beyond) section imports here as they come online.
