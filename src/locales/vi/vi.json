@@ -252,7 +252,8 @@
       "incorrect": "Sai rồi",
       "tryAgain": "Thử lại",
       "check": "Kiểm tra",
-      "fillInTheBlank": "Điền vào chỗ trống"
+      "fillInTheBlank": "Điền vào chỗ trống",
+      "apostropheReminder": "Mẹo: cách viết đúng có dấu lược — \"{{form}}\""
     }
   },
   "about": {

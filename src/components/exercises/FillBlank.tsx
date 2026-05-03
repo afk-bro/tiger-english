@@ -18,9 +18,16 @@ export default function FillBlank({ exercise, onCorrect }: Props) {
     exercise.correctAnswer,
     ...(exercise.acceptableAnswers ?? []),
   ];
-  const isCorrect = allAcceptable.some(
+  const normalized = (s: string) =>
+    s.toLowerCase().trim().replace(/['‘’]/g, "");
+  const isStrictMatch = allAcceptable.some(
     (a) => a.toLowerCase().trim() === value.toLowerCase().trim(),
   );
+  const isLenientMatch =
+    !isStrictMatch &&
+    allAcceptable.some((a) => normalized(a) === normalized(value));
+  const isCorrect = isStrictMatch || isLenientMatch;
+  const showApostropheReminder = isLenientMatch;
   const { t } = useTranslation();
   const localizedInstruction = useLocalizedContent(
     exercise.instruction ?? "",
@@ -30,7 +37,7 @@ export default function FillBlank({ exercise, onCorrect }: Props) {
   function handleSubmit() {
     if (value.trim() === "") return;
     setSubmitted(true);
-    if (allAcceptable.some((a) => a.toLowerCase().trim() === value.toLowerCase().trim())) {
+    if (isCorrect) {
       onCorrect?.();
     }
   }
@@ -109,6 +116,11 @@ export default function FillBlank({ exercise, onCorrect }: Props) {
             </button>
           )}
         </div>
+      )}
+      {submitted && showApostropheReminder && (
+        <p className="text-sm text-semantic-success">
+          {t("lessons.exercises.apostropheReminder", { form: exercise.correctAnswer })}
+        </p>
       )}
     </div>
   );

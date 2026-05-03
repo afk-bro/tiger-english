@@ -252,7 +252,8 @@
       "incorrect": "Incorrect",
       "tryAgain": "Try again",
       "check": "Check",
-      "fillInTheBlank": "Fill in the blank"
+      "fillInTheBlank": "Fill in the blank",
+      "apostropheReminder": "Tip: it's spelled with an apostrophe — \"{{form}}\""
     }
   },
   "about": {
