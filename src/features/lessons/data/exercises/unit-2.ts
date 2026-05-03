@@ -82,7 +82,7 @@ export const activitiesVocabMixedMcq: McqExercise = {
 export const activitiesWhereResponseMariaMcq: McqExercise = {
   id: "u2-activities-mcq-5",
   question: "Choose the response to: \"Where is Maria?\"",
-  questionTranslations: { vi: "Chọn câu trả lời cho: \"Where is Maria?\"" },
+  questionTranslations: { vi: "Chọn câu trả lời đúng cho: \"Where is Maria?\"" },
   options: [
     { id: "a", text: "He's in the bedroom." },
     { id: "b", text: "I am Maria." },
@@ -101,7 +101,7 @@ export const activitiesWhereAreFb: FillBlankExercise = {
 export const activitiesWhereResponseChildrenMcq: McqExercise = {
   id: "u2-activities-mcq-6",
   question: "Choose the response to: \"Where are the children?\"",
-  questionTranslations: { vi: "Chọn câu trả lời cho: \"Where are the children?\"" },
+  questionTranslations: { vi: "Chọn câu trả lời đúng cho: \"Where are the children?\"" },
   options: [
     { id: "a", text: "They're in the yard." },
     { id: "b", text: "He's in the yard." },
@@ -147,7 +147,7 @@ export const activitiesContractionShortenFb: FillBlankExercise = {
   id: "u2-activities-fb-3",
   instruction: "Make this shorter (use a contraction): \"He is at home.\" →",
   instructionTranslations: {
-    vi: "Rút gọn câu này (dùng dạng rút gọn): \"He is at home.\" →",
+    vi: "Rút gọn câu này: \"He is at home.\" →",
   },
   beforeBlank: "",
   afterBlank: "at home.",
