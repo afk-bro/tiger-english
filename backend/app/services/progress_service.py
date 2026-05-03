@@ -32,3 +32,25 @@ class ProgressService:
                 "p_idempotency_key": idem,
             },
         ).execute().data
+
+    def submit_exercise_attempt(
+        self,
+        user_id: UUID,
+        unit_slug: str,
+        section_key: str,
+        exercise_id: str,
+        is_correct: bool,
+    ):
+        """Record a single exercise attempt (correct or incorrect).
+        Append-only; multi-attempt is meaningful so no idempotency key.
+        """
+        return self.supabase.rpc(
+            "submit_exercise_attempt_tx",
+            {
+                "p_user_id": str(user_id),
+                "p_unit_slug": unit_slug,
+                "p_section_key": section_key,
+                "p_exercise_id": exercise_id,
+                "p_is_correct": is_correct,
+            },
+        ).execute().data
