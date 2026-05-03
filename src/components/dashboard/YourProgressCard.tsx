@@ -54,7 +54,7 @@ export default function YourProgressCard({ activity, lastActiveAt, timezone }: P
           reviewed: activity.flashcards_reviewed,
           mastered: activity.flashcards_mastered,
         })}</li>
-        <li>{t("dashboard.yourProgress.lastStudied.label")} {relative}</li>
+        <li>{t("dashboard.yourProgress.lastStudied.label", { relative })}</li>
       </ul>
     </div>
   );
