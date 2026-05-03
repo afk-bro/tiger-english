@@ -122,3 +122,44 @@ describe("FillBlank localization", () => {
     expect(screen.getByText("Rút gọn câu này:")).toBeInTheDocument();
   });
 });
+
+const apostropheExercise: FillBlankExercise = {
+  id: "test-fb-apostrophe",
+  beforeBlank: "",
+  afterBlank: "at home.",
+  correctAnswer: "He's",
+};
+
+describe("FillBlank apostrophe leniency", () => {
+  beforeEach(() => {
+    mockI18n.language = "en";
+  });
+
+  it("accepts an answer missing its apostrophe and shows the spelling reminder", async () => {
+    const user = userEvent.setup();
+    render(<FillBlank exercise={apostropheExercise} />);
+    await user.type(screen.getByRole("textbox"), "hes");
+    await user.click(screen.getByRole("button", { name: /lessons\.exercises\.check/i }));
+    expect(screen.getByText("lessons.exercises.correct")).toBeInTheDocument();
+    expect(screen.getByText("lessons.exercises.apostropheReminder")).toBeInTheDocument();
+  });
+
+  it("accepts an answer with a curly apostrophe and shows the spelling reminder", async () => {
+    const user = userEvent.setup();
+    render(<FillBlank exercise={apostropheExercise} />);
+    // U+2019 right single quotation mark — the form iOS autocorrect inserts.
+    await user.type(screen.getByRole("textbox"), "He’s");
+    await user.click(screen.getByRole("button", { name: /lessons\.exercises\.check/i }));
+    expect(screen.getByText("lessons.exercises.correct")).toBeInTheDocument();
+    expect(screen.getByText("lessons.exercises.apostropheReminder")).toBeInTheDocument();
+  });
+
+  it("does not show the reminder when the apostrophe is typed correctly", async () => {
+    const user = userEvent.setup();
+    render(<FillBlank exercise={apostropheExercise} />);
+    await user.type(screen.getByRole("textbox"), "He's");
+    await user.click(screen.getByRole("button", { name: /lessons\.exercises\.check/i }));
+    expect(screen.getByText("lessons.exercises.correct")).toBeInTheDocument();
+    expect(screen.queryByText("lessons.exercises.apostropheReminder")).not.toBeInTheDocument();
+  });
+});
