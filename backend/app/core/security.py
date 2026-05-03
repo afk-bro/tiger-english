@@ -33,3 +33,37 @@ def verify_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
+
+
+from uuid import UUID
+
+from fastapi import Depends, Header, HTTPException, status
+
+from .supabase import get_supabase_admin
+
+
+async def get_current_user(
+    authorization: str = Header(..., alias="Authorization"),
+    supabase=Depends(get_supabase_admin),
+) -> UUID:
+    """Verify a Supabase JWT bearer token and return the user UUID.
+    Raises 401 on missing/invalid header or expired token."""
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"success": False, "message": "Invalid authorization header"},
+        )
+    token = authorization.removeprefix("Bearer ")
+    try:
+        user_response = supabase.auth.get_user(token)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"success": False, "message": "Invalid or expired token"},
+        )
+    if not user_response.user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"success": False, "message": "Invalid or expired token"},
+        )
+    return UUID(user_response.user.id)

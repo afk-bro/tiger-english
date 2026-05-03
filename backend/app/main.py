@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .api.v1.auth import router as auth_router
+from .api.v1.progress import router as progress_router
 
 app = FastAPI(
     title="Gain English API",
@@ -22,6 +23,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(progress_router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
