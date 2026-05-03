@@ -78,6 +78,13 @@ describe("getSection + sectionRegistry", () => {
     expect(totalItems).toBe(35);
   });
 
+  it("returns auto-registered unit-2 dialogues with two dialogue blocks", () => {
+    const section = getSection("unit-2", "dialogues");
+    expect(section).toBeDefined();
+    const dialogueBlocks = section!.blocks.filter((b) => b.type === "dialogue");
+    expect(dialogueBlocks).toHaveLength(2);
+  });
+
   it("returns section after manual registration", () => {
     registerSection(mockSection);
     const result = getSection("unit-99", "overview");
