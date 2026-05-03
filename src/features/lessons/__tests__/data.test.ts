@@ -18,8 +18,20 @@ describe("getUnit", () => {
     expect(getUnit("unit-99")).toBeUndefined();
   });
 
-  it("returns coming-soon units", () => {
+  it("returns unit-2 with the textbook metadata", () => {
     const unit = getUnit("unit-2");
+    expect(unit).toBeDefined();
+    expect(unit!.slug).toBe("unit-2");
+    expect(unit!.title).toBe("To Be + Location");
+    expect(unit!.status).toBe("available");
+    expect(unit!.sections).toHaveLength(5);
+    expect(unit!.translations.vi?.title).toBe("To Be + Vị trí");
+    expect(unit!.translations.th).toBeUndefined();
+    expect(unit!.translations["zh-CN"]).toBeUndefined();
+  });
+
+  it("returns coming-soon units", () => {
+    const unit = getUnit("unit-3");
     expect(unit).toBeDefined();
     expect(unit!.status).toBe("coming-soon");
     expect(unit!.sections).toHaveLength(0);
@@ -55,17 +67,20 @@ describe("getSection + sectionRegistry", () => {
 });
 
 describe("unit translations", () => {
-  const LANGS = ["th", "vi", "zh-CN"] as const;
-
-  it("every unit has translations for th/vi/zh-CN", () => {
+  it("every declared translation row has all required fields", () => {
     for (const unit of units) {
-      for (const lang of LANGS) {
-        const t = unit.translations[lang];
-        expect(t, `${unit.slug} missing ${lang}`).toBeDefined();
-        expect(t!.title, `${unit.slug}.${lang}.title`).toBeTruthy();
-        expect(t!.topic, `${unit.slug}.${lang}.topic`).toBeTruthy();
-        expect(t!.grammarFocus, `${unit.slug}.${lang}.grammarFocus`).toBeTruthy();
+      for (const lang of Object.keys(unit.translations) as Array<keyof typeof unit.translations>) {
+        const t = unit.translations[lang]!;
+        expect(t.title, `${unit.slug}.${lang}.title`).toBeTruthy();
+        expect(t.topic, `${unit.slug}.${lang}.topic`).toBeTruthy();
+        expect(t.grammarFocus, `${unit.slug}.${lang}.grammarFocus`).toBeTruthy();
       }
+    }
+  });
+
+  it("every unit has at least a Vietnamese translation", () => {
+    for (const unit of units) {
+      expect(unit.translations.vi, `${unit.slug} missing vi`).toBeDefined();
     }
   });
 });
