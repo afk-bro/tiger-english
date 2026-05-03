@@ -37,8 +37,8 @@ All in a single PR (Approach 1) so the toggle-to-Vietnamese experience lands con
 - `src/components/exercises/exercises.types.ts` — extend the two exercise types.
 - `src/components/exercises/MultipleChoice.tsx` — `useLocalizedContent` for the question; `t(...)` for chrome strings.
 - `src/components/exercises/FillBlank.tsx` — render an optional localized `instruction` paragraph above the inline blank; `t(...)` for chrome strings.
-- `src/locales/en/lessons.json` — add the `exercises` namespace with 5 new keys.
-- `src/locales/vi/lessons.json` — same keys with Vietnamese values.
+- `src/locales/en/en.json` — add the new `exercises` group under the existing top-level `lessons` namespace (5 new keys).
+- `src/locales/vi/vi.json` — same keys with Vietnamese values.
 - `src/features/lessons/data/exercises/unit-1.ts` — add `questionTranslations: { vi: ... }` to all 7 MCQ exercises (the 2 fill-blanks have no instruction text and stay scaffolding-only).
 - `src/features/lessons/data/exercises/unit-2.ts` — add `questionTranslations` to 11 MCQ exercises; refactor `activitiesContractionShortenFb` (`u2-activities-fb-3`) to move the instruction text out of `beforeBlank` and into `instruction` + `instructionTranslations`.
 
@@ -48,7 +48,28 @@ All in a single PR (Approach 1) so the toggle-to-Vietnamese experience lands con
 
 ## Schema changes
 
-Replace the contents of `src/components/exercises/exercises.types.ts`:
+In `src/components/exercises/exercises.types.ts`, **extend the existing types in place** — add the new field at the top of the file via a new `import type` line, and add the listed fields to `McqExercise` and `FillBlankExercise`. Do NOT rewrite the whole file; preserve `McqOption` and any other exports already present.
+
+Add this import at the top:
+
+```ts
+import type { LearnerLanguage } from "@/features/lessons/utils/learnerLanguage";
+```
+
+Add to `McqExercise` (after the existing `question` field):
+
+```ts
+  questionTranslations?: Partial<Record<LearnerLanguage, string>>;
+```
+
+Add to `FillBlankExercise` (before the existing `beforeBlank` field):
+
+```ts
+  instruction?: string;
+  instructionTranslations?: Partial<Record<LearnerLanguage, string>>;
+```
+
+Resulting shape (target state, for reference — do not blindly paste this; merge into whatever the file already contains):
 
 ```ts
 import type { LearnerLanguage } from "@/features/lessons/utils/learnerLanguage";
@@ -147,7 +168,9 @@ Swap the chrome strings:
 
 ## i18next chrome keys
 
-Add the following to `src/locales/en/lessons.json` under whatever existing nesting the file uses (merge into the `lessons` namespace):
+The project ships one JSON file per language at `src/locales/<lang>/<lang>.json` (`en.json`, `vi.json`, `th.json`, `zh-CN.json`), each registered under the single `translation` namespace in `src/lib/i18n.ts`. The existing `lessons` group is at the top level. Merge a new `exercises` sub-group into it.
+
+In `src/locales/en/en.json`, add under the existing `lessons` object:
 
 ```json
 {
@@ -163,7 +186,7 @@ Add the following to `src/locales/en/lessons.json` under whatever existing nesti
 }
 ```
 
-And to `src/locales/vi/lessons.json`:
+In `src/locales/vi/vi.json`, the same keys with Vietnamese values:
 
 ```json
 {
@@ -179,7 +202,7 @@ And to `src/locales/vi/lessons.json`:
 }
 ```
 
-The implementer merges these into the existing files at whatever depth the project already uses. The keys themselves are stable.
+**Thai / Chinese intentionally omitted from this PR.** `src/lib/i18n.ts` configures `fallbackLng: 'en'`, so missing keys in `th.json` / `zh-CN.json` resolve to the English value (not the raw key string). A regression test guards this — see Tests below. If the i18next config ever changes (e.g., someone disables `fallbackLng` or sets `returnNull` semantics), that test fails loudly.
 
 ## Content authoring
 
@@ -261,6 +284,25 @@ In `src/components/exercises/__tests__/` (create if absent), using the `react-i1
 - `BlockRenderer` / `SectionRenderer` tests use exercise blocks indirectly. Verify they still pass after the renderer changes (the new fields are optional, so this should be a non-event but worth confirming).
 - Any existing `MultipleChoice` / `FillBlank` test files (grep before starting): update them if they assert on the now-translated chrome strings (they'd need to find strings via `t(...)` keys, which the existing test mock returns verbatim).
 
+### i18next fallback test
+
+Add to `src/__tests__/i18n.test.ts` (mirrors the existing `falls back to English for unknown language` test at lines 37-40):
+
+```ts
+  it('falls back to English for the new exercise chrome keys when the language file lacks them', () => {
+    for (const lang of ['th', 'zh-CN']) {
+      i18n.changeLanguage(lang);
+      expect(i18n.t('lessons.exercises.correct'), `${lang} fallback for correct`).toBe('Correct!');
+      expect(i18n.t('lessons.exercises.incorrect'), `${lang} fallback for incorrect`).toBe('Incorrect');
+      expect(i18n.t('lessons.exercises.tryAgain'), `${lang} fallback for tryAgain`).toBe('Try again');
+      expect(i18n.t('lessons.exercises.check'), `${lang} fallback for check`).toBe('Check');
+      expect(i18n.t('lessons.exercises.fillInTheBlank'), `${lang} fallback for fillInTheBlank`).toBe('Fill in the blank');
+    }
+  });
+```
+
+This catches two failure modes: (1) i18next renders the raw key (`"lessons.exercises.correct"`) because `fallbackLng` was disabled, and (2) i18next renders empty/null because some other config change altered missing-key semantics. Both would surface as broken UI for Thai/Chinese learners.
+
 ### Pre-PR spot-checks
 
 1. `npm run type-check` — confirms all 9 + 14 = 23 exercise objects still satisfy the extended types.
@@ -281,7 +323,7 @@ In `src/components/exercises/__tests__/` (create if absent), using the `react-i1
 - [ ] `lessons.json` for `en` and `vi` updated with the 5 new keys.
 - [ ] All 7 unit-1 MCQ + 11 unit-2 MCQ have `vi` `questionTranslations`.
 - [ ] `u2-activities-fb-3` refactored: instruction text moved to new field, with `vi`.
-- [ ] All 6 new tests pass; existing exercise / block / section tests stay green.
+- [ ] All 6 renderer tests + the i18n fallback test pass; existing exercise / block / section / i18n tests stay green.
 - [ ] `npm test` + `npm run build` clean.
 - [ ] Manual toggle test on both unit-1 and unit-2 activities passes.
 
