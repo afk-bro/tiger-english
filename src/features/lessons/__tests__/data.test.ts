@@ -5,6 +5,7 @@ import { getSection } from "../data/getSection";
 import { registerSection } from "../data/sectionRegistry";
 import type { Section } from "../lesson.types";
 import { units } from "../data/units";
+import * as unit2Exercises from "../data/exercises/unit-2";
 
 describe("getUnit", () => {
   it("returns unit-1 by slug", () => {
@@ -115,6 +116,32 @@ describe("unit translations", () => {
   it("every unit has at least a Vietnamese translation", () => {
     for (const unit of units) {
       expect(unit.translations.vi, `${unit.slug} missing vi`).toBeDefined();
+    }
+  });
+});
+
+describe("unit-2 exercises", () => {
+  it("exports all 14 expected exercise objects with correct IDs", () => {
+    const expected: Record<string, string> = {
+      grammarMcqContractions: "u2-grammar-mcq-1",
+      grammarMcqWhereWord: "u2-grammar-mcq-2",
+      activitiesVocabClassroomMcq: "u2-activities-mcq-1",
+      activitiesVocabHomeMcq: "u2-activities-mcq-2",
+      activitiesVocabTownMcq: "u2-activities-mcq-3",
+      activitiesVocabMixedMcq: "u2-activities-mcq-4",
+      activitiesWhereResponseMariaMcq: "u2-activities-mcq-5",
+      activitiesWhereAreFb: "u2-activities-fb-1",
+      activitiesWhereResponseChildrenMcq: "u2-activities-mcq-6",
+      activitiesWhereDictionaryFb: "u2-activities-fb-2",
+      activitiesContractionTheyMcq: "u2-activities-mcq-7",
+      activitiesContractionItMcq: "u2-activities-mcq-8",
+      activitiesContractionShortenFb: "u2-activities-fb-3",
+      activitiesContractionCorrectMcq: "u2-activities-mcq-9",
+    };
+    for (const [exportName, id] of Object.entries(expected)) {
+      const exercise = (unit2Exercises as Record<string, { id: string }>)[exportName];
+      expect(exercise, `missing export: ${exportName}`).toBeDefined();
+      expect(exercise.id, `${exportName} has wrong id`).toBe(id);
     }
   });
 });
