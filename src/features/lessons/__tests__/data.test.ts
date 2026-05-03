@@ -66,6 +66,18 @@ describe("getSection + sectionRegistry", () => {
     expect(getSection("unit-2", "grammar")).toBeDefined();
   });
 
+  it("returns auto-registered unit-2 vocabulary with all 35 items", () => {
+    const section = getSection("unit-2", "vocabulary");
+    expect(section).toBeDefined();
+    const vocabBlocks = section!.blocks.filter((b) => b.type === "vocab-list");
+    expect(vocabBlocks).toHaveLength(3);
+    const totalItems = vocabBlocks.reduce(
+      (sum, b) => sum + (b.type === "vocab-list" ? b.items.length : 0),
+      0,
+    );
+    expect(totalItems).toBe(35);
+  });
+
   it("returns section after manual registration", () => {
     registerSection(mockSection);
     const result = getSection("unit-99", "overview");
