@@ -61,8 +61,8 @@ describe("SectionPage coming-soon branch", () => {
 
   it("renders the localized unit title when language is th", () => {
     mockI18n.language = "th";
-    renderAt("/lessons/unit-2/grammar");
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("To Be: คำถามใช่/ไม่ใช่");
+    renderAt("/lessons/unit-3/grammar");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("กาลปัจจุบันต่อเนื่อง");
   });
 });
 
