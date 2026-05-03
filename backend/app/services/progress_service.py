@@ -7,7 +7,7 @@ docs/superpowers/specs/2026-05-03-phase-1-progress-tracking-design.md
 """
 
 from datetime import date, datetime, timedelta
-from typing import List, Literal, Optional
+from typing import List, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo
 

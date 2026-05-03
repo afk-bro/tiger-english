@@ -1,7 +1,6 @@
 """Pure-Python tests for the streak derivation helper. No DB, no mocks."""
 
 from datetime import date, timedelta
-from zoneinfo import ZoneInfo
 
 
 def test_streak_empty_returns_zero():
