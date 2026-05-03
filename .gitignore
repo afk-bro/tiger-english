@@ -40,6 +40,8 @@ skills-lock.json
 /docs/notes
 /docs/scratch
 /docs/lessons_learned
+/docs/lesson-summary
+/docs/pdf
 
 # Playwright output
 playwright-report/
