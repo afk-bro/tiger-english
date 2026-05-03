@@ -86,7 +86,7 @@ const vocabulary: Section = {
       type: "vocab-list",
       items: [
         { id: "u2-v-bank", word: "bank", translations: { vi: "ngân hàng" } },
-        { id: "u2-v-hospital", word: "hospital", phonetic: "hos-pi-tl", translations: { vi: "bệnh viện" } },
+        { id: "u2-v-hospital", word: "hospital", phonetic: "hos-pi-tuhl", translations: { vi: "bệnh viện" } },
         { id: "u2-v-library", word: "library", phonetic: "lahy-brer-ee", translations: { vi: "thư viện" } },
         { id: "u2-v-movie-theater", word: "movie theater", phonetic: "moo-vee thee-uh-ter", translations: { vi: "rạp chiếu phim" } },
         { id: "u2-v-park", word: "park", translations: { vi: "công viên" } },
