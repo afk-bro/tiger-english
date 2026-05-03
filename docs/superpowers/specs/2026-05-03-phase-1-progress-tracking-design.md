@@ -278,7 +278,9 @@ CREATE OR REPLACE FUNCTION complete_lesson_section_tx(
   p_unit_slug TEXT,
   p_section_key TEXT,
   p_idempotency_key TEXT
-) RETURNS lesson_section_progress AS $$
+) RETURNS lesson_section_progress
+SET search_path = public, pg_temp, auth
+AS $$
 DECLARE
   result lesson_section_progress;
 BEGIN
@@ -301,6 +303,8 @@ BEGIN
   RETURN result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+-- (REVOKE EXECUTE FROM PUBLIC, anon, authenticated; GRANT EXECUTE TO service_role
+--  applied to every *_tx function — see "Function permissions" subsection above.)
 ```
 
 (Equivalent functions for `submit_exercise_attempt_tx` and `review_flashcard_tx` follow the same pattern. `review_flashcard_tx` additionally upserts `user_card_progress`.)
