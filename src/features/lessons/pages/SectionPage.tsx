@@ -110,6 +110,8 @@ export default function SectionPage() {
         onExerciseCorrect={() => {
           markCompleted(unit.slug, validSectionKey);
         }}
+        unitSlug={unit.slug}
+        sectionKey={validSectionKey}
       />
       <SectionNav
         unitSlug={unit.slug}

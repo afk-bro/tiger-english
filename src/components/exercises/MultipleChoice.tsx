@@ -8,9 +8,10 @@ import type { McqExercise } from "./exercises.types";
 type Props = {
   exercise: McqExercise;
   onCorrect?: () => void;
+  onAttempt?: (isCorrect: boolean) => void;
 };
 
-export default function MultipleChoice({ exercise, onCorrect }: Props) {
+export default function MultipleChoice({ exercise, onCorrect, onAttempt }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const answered = selectedId !== null;
   const isCorrect = selectedId === exercise.correctOptionId;
@@ -19,7 +20,9 @@ export default function MultipleChoice({ exercise, onCorrect }: Props) {
 
   function handleSelect(optionId: string) {
     setSelectedId(optionId);
-    if (optionId === exercise.correctOptionId) {
+    const correct = optionId === exercise.correctOptionId;
+    onAttempt?.(correct);
+    if (correct) {
       onCorrect?.();
     }
   }

@@ -120,3 +120,30 @@ describe("MultipleChoice localization", () => {
     expect(screen.getByText("What is the answer?")).toBeInTheDocument();
   });
 });
+
+describe("MultipleChoice onAttempt", () => {
+  beforeEach(() => {
+    mockI18n.language = "en";
+  });
+
+  it("calls onAttempt with isCorrect=true when the correct option is selected", async () => {
+    const onAttempt = vi.fn();
+    const user = userEvent.setup();
+
+    render(<MultipleChoice exercise={baseExercise} onAttempt={onAttempt} />);
+    // baseExercise.correctOptionId === "a", text "Option A"
+    await user.click(screen.getByRole("button", { name: "Option A" }));
+
+    expect(onAttempt).toHaveBeenCalledWith(true);
+  });
+
+  it("calls onAttempt with isCorrect=false when an incorrect option is selected", async () => {
+    const onAttempt = vi.fn();
+    const user = userEvent.setup();
+
+    render(<MultipleChoice exercise={baseExercise} onAttempt={onAttempt} />);
+    await user.click(screen.getByRole("button", { name: "Option B" }));
+
+    expect(onAttempt).toHaveBeenCalledWith(false);
+  });
+});
