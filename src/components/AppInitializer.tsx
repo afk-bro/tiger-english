@@ -11,13 +11,16 @@ async function captureTimezoneIfMissing() {
   const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   if (!browserTz) return;
   try {
-    await authAPI.updateProfile({ timezone: browserTz }, session.access_token);
+    const result = await authAPI.updateProfile({ timezone: browserTz }, session.access_token);
+    // updateProfile returns ProfileResponse on success, ApiResponse with success=false on logical failure
+    if ("success" in result && result.success === false) {
+      console.error("Failed to capture user timezone (server)", result.message);
+      return;
+    }
     // Re-fetch profile so the in-memory store gets the new timezone.
     await useUserStore.getState().fetchProfile();
   } catch (err) {
-    // Fire-and-forget; if it fails, the user just won't get a streak that
-    // respects their timezone this session.
-    console.error("Failed to capture user timezone", err);
+    console.error("Failed to capture user timezone (network)", err);
   }
 }
 

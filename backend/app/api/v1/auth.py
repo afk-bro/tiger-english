@@ -103,9 +103,10 @@ async def update_profile(
     """Update the authenticated user's profile."""
     try:
         update_payload: dict = {}
-        if profile_data.native_language is not None:
+        fields_set = profile_data.model_fields_set
+        if "native_language" in fields_set:
             update_payload["native_language"] = profile_data.native_language
-        if profile_data.timezone is not None:
+        if "timezone" in fields_set:
             update_payload["timezone"] = profile_data.timezone
 
         if not update_payload:
