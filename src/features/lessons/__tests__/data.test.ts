@@ -62,6 +62,10 @@ describe("getSection + sectionRegistry", () => {
     expect(getSection("unit-2", "overview")).toBeDefined();
   });
 
+  it("returns auto-registered unit-2 grammar", () => {
+    expect(getSection("unit-2", "grammar")).toBeDefined();
+  });
+
   it("returns section after manual registration", () => {
     registerSection(mockSection);
     const result = getSection("unit-99", "overview");
