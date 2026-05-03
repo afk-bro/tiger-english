@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, RotateCcw } from "lucide-react";
 import { clsx } from "clsx";
+import { useTranslation } from "react-i18next";
+import { useLocalizedContent } from "@/features/lessons/utils/useLocalizedContent";
 import type { FillBlankExercise } from "./exercises.types";
 
 type Props = {
@@ -19,6 +21,11 @@ export default function FillBlank({ exercise, onCorrect }: Props) {
   const isCorrect = allAcceptable.some(
     (a) => a.toLowerCase().trim() === value.toLowerCase().trim(),
   );
+  const { t } = useTranslation();
+  const localizedInstruction = useLocalizedContent(
+    exercise.instruction ?? "",
+    exercise.instructionTranslations,
+  );
 
   function handleSubmit() {
     if (value.trim() === "") return;
@@ -35,6 +42,11 @@ export default function FillBlank({ exercise, onCorrect }: Props) {
 
   return (
     <div className="space-y-4">
+      {exercise.instruction && (
+        <p className="text-base font-medium text-semantic-text">
+          {localizedInstruction}
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2 text-base text-semantic-text">
         <span>{exercise.beforeBlank}</span>
         <input
@@ -52,7 +64,7 @@ export default function FillBlank({ exercise, onCorrect }: Props) {
             submitted && !isCorrect && "border-red-400 bg-red-50 text-red-700 dark:border-red-500 dark:bg-red-900/20 dark:text-red-400",
           )}
           placeholder="..."
-          aria-label="Fill in the blank"
+          aria-label={t("lessons.exercises.fillInTheBlank")}
         />
         <span>{exercise.afterBlank}</span>
       </div>
@@ -63,7 +75,7 @@ export default function FillBlank({ exercise, onCorrect }: Props) {
           disabled={value.trim() === ""}
           className="px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Check
+          {t("lessons.exercises.check")}
         </button>
       )}
       {submitted && (
@@ -77,12 +89,12 @@ export default function FillBlank({ exercise, onCorrect }: Props) {
             {isCorrect ? (
               <>
                 <CheckCircle className="w-4 h-4" aria-hidden="true" />
-                Correct!
+                {t("lessons.exercises.correct")}
               </>
             ) : (
               <>
                 <XCircle className="w-4 h-4" aria-hidden="true" />
-                Incorrect
+                {t("lessons.exercises.incorrect")}
               </>
             )}
           </div>
@@ -93,7 +105,7 @@ export default function FillBlank({ exercise, onCorrect }: Props) {
               className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-              Try again
+              {t("lessons.exercises.tryAgain")}
             </button>
           )}
         </div>
