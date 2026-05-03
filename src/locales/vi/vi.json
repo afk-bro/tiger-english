@@ -246,6 +246,13 @@
       "flipToRevealEnglishFor": "Lật thẻ để xem tiếng Anh cho {{nativeText}}",
       "flipToRevealAnswer": "Lật thẻ để xem đáp án",
       "flipBackToTranslation": "Lật thẻ về bản dịch"
+    },
+    "exercises": {
+      "correct": "Đúng rồi!",
+      "incorrect": "Sai rồi",
+      "tryAgain": "Thử lại",
+      "check": "Kiểm tra",
+      "fillInTheBlank": "Điền vào chỗ trống"
     }
   },
   "about": {

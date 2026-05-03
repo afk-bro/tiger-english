@@ -38,4 +38,15 @@ describe('i18n config', () => {
     i18n.changeLanguage('fr');
     expect(i18n.t('login.title')).toBe('Welcome back');
   });
+
+  it('falls back to English for the new exercise chrome keys when the language file lacks them', () => {
+    for (const lang of ['th', 'zh-CN']) {
+      i18n.changeLanguage(lang);
+      expect(i18n.t('lessons.exercises.correct'), `${lang} fallback for correct`).toBe('Correct!');
+      expect(i18n.t('lessons.exercises.incorrect'), `${lang} fallback for incorrect`).toBe('Incorrect');
+      expect(i18n.t('lessons.exercises.tryAgain'), `${lang} fallback for tryAgain`).toBe('Try again');
+      expect(i18n.t('lessons.exercises.check'), `${lang} fallback for check`).toBe('Check');
+      expect(i18n.t('lessons.exercises.fillInTheBlank'), `${lang} fallback for fillInTheBlank`).toBe('Fill in the blank');
+    }
+  });
 });
