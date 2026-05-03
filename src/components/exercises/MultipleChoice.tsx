@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, RotateCcw } from "lucide-react";
 import { clsx } from "clsx";
+import { useTranslation } from "react-i18next";
+import { useLocalizedContent } from "@/features/lessons/utils/useLocalizedContent";
 import type { McqExercise } from "./exercises.types";
 
 type Props = {
@@ -12,6 +14,8 @@ export default function MultipleChoice({ exercise, onCorrect }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const answered = selectedId !== null;
   const isCorrect = selectedId === exercise.correctOptionId;
+  const { t } = useTranslation();
+  const localizedQuestion = useLocalizedContent(exercise.question, exercise.questionTranslations);
 
   function handleSelect(optionId: string) {
     setSelectedId(optionId);
@@ -27,7 +31,7 @@ export default function MultipleChoice({ exercise, onCorrect }: Props) {
   return (
     <div className="space-y-4">
       <p className="text-base font-medium text-semantic-text">
-        {exercise.question}
+        {localizedQuestion}
       </p>
       <div className="space-y-2">
         {exercise.options.map((option) => {
@@ -65,12 +69,12 @@ export default function MultipleChoice({ exercise, onCorrect }: Props) {
             {isCorrect ? (
               <>
                 <CheckCircle className="w-4 h-4" aria-hidden="true" />
-                Correct!
+                {t("lessons.exercises.correct")}
               </>
             ) : (
               <>
                 <XCircle className="w-4 h-4" aria-hidden="true" />
-                Incorrect
+                {t("lessons.exercises.incorrect")}
               </>
             )}
           </div>
@@ -81,7 +85,7 @@ export default function MultipleChoice({ exercise, onCorrect }: Props) {
               className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-              Try again
+              {t("lessons.exercises.tryAgain")}
             </button>
           )}
         </div>

@@ -246,6 +246,13 @@
       "flipToRevealEnglishFor": "Flip card to reveal English for {{nativeText}}",
       "flipToRevealAnswer": "Flip card to reveal answer",
       "flipBackToTranslation": "Flip card back to translation"
+    },
+    "exercises": {
+      "correct": "Correct!",
+      "incorrect": "Incorrect",
+      "tryAgain": "Try again",
+      "check": "Check",
+      "fillInTheBlank": "Fill in the blank"
     }
   },
   "about": {
