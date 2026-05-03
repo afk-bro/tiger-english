@@ -67,3 +67,37 @@ def test_submit_exercise_attempt_records_incorrect(mock_supabase, sample_user_id
 
     args, _ = mock_supabase.rpc.call_args
     assert args[1]["p_is_correct"] is False
+
+
+def test_review_flashcard_calls_rpc(mock_supabase, sample_user_id):
+    from app.services.progress_service import ProgressService
+
+    flashcard_id = UUID("22222222-2222-2222-2222-222222222222")
+    expected_row = {"id": 99, "reviewed_at": "2026-05-03T10:05:00+00:00"}
+    mock_supabase.rpc.return_value.execute.return_value.data = expected_row
+
+    service = ProgressService(mock_supabase)
+    result = service.review_flashcard(sample_user_id, flashcard_id, "known")
+
+    mock_supabase.rpc.assert_called_once_with(
+        "review_flashcard_tx",
+        {
+            "p_user_id": "11111111-1111-1111-1111-111111111111",
+            "p_flashcard_id": "22222222-2222-2222-2222-222222222222",
+            "p_status": "known",
+        },
+    )
+    assert result == expected_row
+
+
+def test_review_flashcard_accepts_unknown_status(mock_supabase, sample_user_id):
+    from app.services.progress_service import ProgressService
+
+    flashcard_id = UUID("22222222-2222-2222-2222-222222222222")
+    mock_supabase.rpc.return_value.execute.return_value.data = {}
+
+    service = ProgressService(mock_supabase)
+    service.review_flashcard(sample_user_id, flashcard_id, "unknown")
+
+    args, _ = mock_supabase.rpc.call_args
+    assert args[1]["p_status"] == "unknown"

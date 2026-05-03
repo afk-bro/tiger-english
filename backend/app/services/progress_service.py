@@ -54,3 +54,22 @@ class ProgressService:
                 "p_is_correct": is_correct,
             },
         ).execute().data
+
+    def review_flashcard(
+        self,
+        user_id: UUID,
+        flashcard_id: UUID,
+        status: Literal["known", "unknown"],
+    ):
+        """Record a flashcard review. Wraps the existing user_card_progress
+        upsert + appends a flashcard_reviews row + appends an event log
+        row, all in one Postgres transaction.
+        """
+        return self.supabase.rpc(
+            "review_flashcard_tx",
+            {
+                "p_user_id": str(user_id),
+                "p_flashcard_id": str(flashcard_id),
+                "p_status": status,
+            },
+        ).execute().data
