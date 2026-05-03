@@ -77,7 +77,7 @@ Notes:
 
 - `estimatedMinutes` total = 35 (vs unit-1's 30). The bump reflects the larger vocabulary surface (35 words vs ~16) and the larger grammar surface (7 pronouns × question forms + contractions).
 - `vocabulary` is bumped to 8 minutes to give learners time across all 3 sets.
-- `activities` is bumped to 10 minutes for the 14 exercises.
+- `activities` is bumped to 10 minutes for the 12 activity exercises.
 - The Vietnamese strings keep the **English** example tokens (`Where is he?`, `He's in the kitchen.`) embedded inline — matches how unit-1's `vi` rows leave English grammar tokens (`am, is, are`) untranslated.
 
 ## Section-by-section content plan
