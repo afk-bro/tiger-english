@@ -29,6 +29,7 @@ class UserRegister(BaseModel):
 
 class UpdateProfile(BaseModel):
     native_language: Optional[str] = None
+    timezone: Optional[str] = None
 
     @field_validator('native_language')
     @classmethod
