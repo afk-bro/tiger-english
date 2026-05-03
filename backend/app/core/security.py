@@ -1,8 +1,13 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from uuid import UUID
+
+from fastapi import Depends, Header, HTTPException, status
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+
 from .config import settings
+from .supabase import get_supabase_admin
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -33,13 +38,6 @@ def verify_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
-
-
-from uuid import UUID
-
-from fastapi import Depends, Header, HTTPException, status
-
-from .supabase import get_supabase_admin
 
 
 async def get_current_user(
