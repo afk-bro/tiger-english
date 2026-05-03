@@ -249,6 +249,22 @@ CREATE POLICY "users_select_own_<table>" ON <table>
 
 No INSERT/UPDATE/DELETE policies — those are intentionally absent so anonymous users and the anon Supabase key can never write. Only the backend service role bypasses RLS.
 
+### Function permissions
+
+All write functions (`complete_lesson_section_tx`, `submit_exercise_attempt_tx`, `review_flashcard_tx`) and the `user_study_days` helper are `REVOKE`d from `PUBLIC`, `anon`, and `authenticated`, then `GRANT`ed only to `service_role`. They are callable **exclusively from the FastAPI backend** via the Supabase service-role key. This matches the project's "secrets/writes behind the backend" pattern.
+
+Without these REVOKE/GRANT statements, Postgres's default `GRANT EXECUTE TO PUBLIC` combined with Supabase automatically exposing every `public` schema function as a PostgREST RPC endpoint would let any authenticated user call:
+
+```ts
+supabase.rpc('review_flashcard_tx', { p_user_id: '<victim_uuid>', p_flashcard_id: '...', p_status: 'unknown' })
+```
+
+and corrupt another user's progress + streak data — bypassing the backend's auth + business logic entirely.
+
+Each function is also defined with `SET search_path = public, pg_temp, auth` to mitigate `search_path` injection attacks against `SECURITY DEFINER` functions (matches the existing `handle_new_user` trigger function pattern in this repo).
+
+The new tables also have `GRANT SELECT ... TO authenticated`, alongside the SELECT-own RLS policies. Without the GRANT, the RLS policies are dead code (Postgres rejects the read at the GRANT layer before RLS is even consulted). With the GRANT in place, any future direct-from-frontend read via the anon key would be filtered to the user's own rows by RLS — defense-in-depth that costs nothing today.
+
 ### Transactional Postgres functions
 
 The migration defines three functions, one per domain action. Each does both the projection write AND the `user_activity_log` insert inside a single transaction. The Python service calls them via `.rpc()`.

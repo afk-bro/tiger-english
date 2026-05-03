@@ -188,7 +188,9 @@ CREATE OR REPLACE FUNCTION complete_lesson_section_tx(
   p_unit_slug TEXT,
   p_section_key TEXT,
   p_idempotency_key TEXT
-) RETURNS lesson_section_progress AS $$
+) RETURNS lesson_section_progress
+SET search_path = public, pg_temp, auth
+AS $$
 DECLARE
   result lesson_section_progress;
 BEGIN
@@ -218,7 +220,9 @@ CREATE OR REPLACE FUNCTION submit_exercise_attempt_tx(
   p_section_key TEXT,
   p_exercise_id TEXT,
   p_is_correct BOOLEAN
-) RETURNS exercise_attempts AS $$
+) RETURNS exercise_attempts
+SET search_path = public, pg_temp, auth
+AS $$
 DECLARE
   result exercise_attempts;
 BEGIN
@@ -246,7 +250,9 @@ CREATE OR REPLACE FUNCTION review_flashcard_tx(
   p_user_id UUID,
   p_flashcard_id UUID,
   p_status TEXT
-) RETURNS flashcard_reviews AS $$
+) RETURNS flashcard_reviews
+SET search_path = public, pg_temp, auth
+AS $$
 DECLARE
   result flashcard_reviews;
 BEGIN
@@ -275,12 +281,64 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION user_study_days(p_user_id UUID, p_tz TEXT)
-RETURNS TABLE(day DATE) AS $$
+RETURNS TABLE(day DATE)
+SET search_path = public, pg_temp, auth
+AS $$
   SELECT DISTINCT (created_at AT TIME ZONE p_tz)::date AS day
   FROM user_activity_log
   WHERE user_id = p_user_id
   ORDER BY day DESC;
 $$ LANGUAGE sql SECURITY DEFINER;
+
+-- =========================================================================
+-- Function permissions: progress functions are callable ONLY by the
+-- backend service role (which uses the Supabase service-role key and
+-- bypasses RLS). Anon and authenticated clients cannot call these via
+-- supabase.rpc() — writes happen exclusively through the FastAPI
+-- backend, matching the project's "secrets/writes behind the backend"
+-- pattern.
+--
+-- Without this, Postgres's default GRANT EXECUTE TO PUBLIC combined
+-- with Supabase auto-exposing functions via PostgREST RPC would let
+-- any authenticated user call e.g.
+--   supabase.rpc('review_flashcard_tx', { p_user_id: '<victim>', ... })
+-- and corrupt another user's data.
+-- =========================================================================
+
+REVOKE EXECUTE ON FUNCTION complete_lesson_section_tx(UUID, TEXT, TEXT, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION complete_lesson_section_tx(UUID, TEXT, TEXT, TEXT) FROM anon;
+REVOKE EXECUTE ON FUNCTION complete_lesson_section_tx(UUID, TEXT, TEXT, TEXT) FROM authenticated;
+
+REVOKE EXECUTE ON FUNCTION submit_exercise_attempt_tx(UUID, TEXT, TEXT, TEXT, BOOLEAN) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION submit_exercise_attempt_tx(UUID, TEXT, TEXT, TEXT, BOOLEAN) FROM anon;
+REVOKE EXECUTE ON FUNCTION submit_exercise_attempt_tx(UUID, TEXT, TEXT, TEXT, BOOLEAN) FROM authenticated;
+
+REVOKE EXECUTE ON FUNCTION review_flashcard_tx(UUID, UUID, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION review_flashcard_tx(UUID, UUID, TEXT) FROM anon;
+REVOKE EXECUTE ON FUNCTION review_flashcard_tx(UUID, UUID, TEXT) FROM authenticated;
+
+REVOKE EXECUTE ON FUNCTION user_study_days(UUID, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION user_study_days(UUID, TEXT) FROM anon;
+REVOKE EXECUTE ON FUNCTION user_study_days(UUID, TEXT) FROM authenticated;
+
+GRANT EXECUTE ON FUNCTION complete_lesson_section_tx(UUID, TEXT, TEXT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION submit_exercise_attempt_tx(UUID, TEXT, TEXT, TEXT, BOOLEAN) TO service_role;
+GRANT EXECUTE ON FUNCTION review_flashcard_tx(UUID, UUID, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION user_study_days(UUID, TEXT) TO service_role;
+
+-- =========================================================================
+-- Table grants: defense-in-depth alongside the SELECT-own RLS policies.
+-- The backend service role bypasses RLS via service_role key, so writes
+-- always work. The SELECT grants make the RLS SELECT-own policies
+-- meaningful for any future direct-from-frontend reads via the anon
+-- key (currently none in Phase 1, but the policies are now active
+-- rather than dead code).
+-- =========================================================================
+
+GRANT SELECT ON user_activity_log TO authenticated;
+GRANT SELECT ON lesson_section_progress TO authenticated;
+GRANT SELECT ON exercise_attempts TO authenticated;
+GRANT SELECT ON flashcard_reviews TO authenticated;
 ```
 
 **Note on `user_card_progress` upsert in `review_flashcard_tx`:** the `ON CONFLICT (user_id, flashcard_id)` clause assumes `user_card_progress` has a unique constraint on that pair. Verify with `\d user_card_progress` in psql — if it doesn't, the existing flashcard write code wouldn't have worked either (it does today), so the constraint is likely already there. If for some reason it isn't, add `ALTER TABLE user_card_progress ADD CONSTRAINT user_card_progress_user_card_uniq UNIQUE (user_id, flashcard_id);` to this migration.
