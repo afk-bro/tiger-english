@@ -4,6 +4,7 @@ import type { McqExercise, FillBlankExercise } from "@/components/exercises/exer
 export const grammarMcq1: McqExercise = {
   id: "u1-grammar-mcq-1",
   question: "Choose the correct form: 'She ___ a student.'",
+  questionTranslations: { vi: "Chọn dạng đúng: \"She ___ a student.\"" },
   options: [
     { id: "a", text: "am" },
     { id: "b", text: "is" },
@@ -15,6 +16,7 @@ export const grammarMcq1: McqExercise = {
 export const activitiesNameMcq: McqExercise = {
   id: "u1-activities-mcq-1",
   question: "Choose the correct response to: \"What is your name?\"",
+  questionTranslations: { vi: "Chọn câu trả lời đúng cho: \"What is your name?\"" },
   options: [
     { id: "a", text: "I am from Germany." },
     { id: "b", text: "My name is Anna." },
@@ -40,6 +42,7 @@ export const activitiesPhoneFillBlank: FillBlankExercise = {
 export const activitiesThanksMcq: McqExercise = {
   id: "u1-activities-mcq-2",
   question: "Choose the correct response to: \"Thank you!\"",
+  questionTranslations: { vi: "Chọn câu trả lời đúng cho: \"Thank you!\"" },
   options: [
     { id: "a", text: "Hello!" },
     { id: "b", text: "I am Anna." },
@@ -51,6 +54,7 @@ export const activitiesThanksMcq: McqExercise = {
 export const activitiesThirdPersonMcq: McqExercise = {
   id: "u1-activities-mcq-3",
   question: "Choose the correct response to: \"What is her name?\"",
+  questionTranslations: { vi: "Chọn câu trả lời đúng cho: \"What is her name?\"" },
   options: [
     { id: "a", text: "Her name is Maria." },
     { id: "b", text: "My name is Maria." },
@@ -62,6 +66,7 @@ export const activitiesThirdPersonMcq: McqExercise = {
 export const activitiesWhereMcq: McqExercise = {
   id: "u1-activities-mcq-4",
   question: "Choose the correct word: \"___ are you from?\"",
+  questionTranslations: { vi: "Chọn từ đúng: \"___ are you from?\"" },
   options: [
     { id: "a", text: "What" },
     { id: "b", text: "Where" },
@@ -73,6 +78,7 @@ export const activitiesWhereMcq: McqExercise = {
 export const activitiesFirstNameMcq: McqExercise = {
   id: "u1-activities-mcq-5",
   question: "Choose the correct response to: \"What is your first name?\"",
+  questionTranslations: { vi: "Chọn câu trả lời đúng cho: \"What is your first name?\"" },
   options: [
     { id: "a", text: "My last name is Schmidt." },
     { id: "b", text: "My first name is Anna." },
@@ -84,6 +90,7 @@ export const activitiesFirstNameMcq: McqExercise = {
 export const activitiesLastNameMcq: McqExercise = {
   id: "u1-activities-mcq-6",
   question: "Choose the correct response to: \"What is your last name?\"",
+  questionTranslations: { vi: "Chọn câu trả lời đúng cho: \"What is your last name?\"" },
   options: [
     { id: "a", text: "My phone number is 555-1234." },
     { id: "b", text: "My first name is Anna." },
