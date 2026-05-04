@@ -18,9 +18,10 @@
 |---|---|---|
 | `src/App.tsx` | Modify | Inline `FlashcardsLayout` (named export) + extract `AppRoutes` (named export) + reparent `/flashcards` route |
 | `src/__tests__/FlashcardsLayout.test.tsx` | Create | Unit test for the conditional with mocked layouts |
-| `src/__tests__/flashcardsRoute.test.tsx` | Create | Route-level integration test using `AppRoutes` + `MemoryRouter` with mocked layouts and mocked session |
+| `src/__tests__/flashcardsRoute.test.tsx` | Create | Route-level integration test using `AppRoutes` + `MemoryRouter` with mocked layouts and mocked profile |
+| `src/stores/useUserStore.ts` | Modify | Add `export` to `type UserStore` declaration so test files can type mock stores against the canonical shape |
 
-No other files modified. `AuthLayout`, `PublicLayout`, `AppSidebar`, `useUserStore`, `FlashcardsPage` stay as-is.
+`AuthLayout`, `PublicLayout`, `AppSidebar`, and `FlashcardsPage` stay as-is.
 
 ---
 
@@ -39,6 +40,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { FlashcardsLayout } from '../App';
 import { useUserStore } from '@/stores/useUserStore';
+import type { UserStore } from '@/stores/useUserStore';
 
 vi.mock('@/stores/useUserStore');
 
@@ -50,9 +52,21 @@ vi.mock('@/components/layout/PublicLayout', () => ({
   default: () => <div data-testid="mock-public-layout">public</div>,
 }));
 
-const setSession = (session: unknown) => {
-  vi.mocked(useUserStore).mockImplementation((selector?: (s: { session: unknown }) => unknown) =>
-    selector ? selector({ session }) : { session },
+const setProfile = (profile: UserStore['profile']) => {
+  const mockStore: UserStore = {
+    session: null,
+    sessionLoading: false,
+    setSession: vi.fn(),
+    setSessionLoading: vi.fn(),
+    profile,
+    profileLoading: false,
+    error: null,
+    fetchProfile: vi.fn(),
+    clearProfile: vi.fn(),
+    setNativeLanguage: vi.fn(),
+  };
+  vi.mocked(useUserStore).mockImplementation((selector?: (s: typeof mockStore) => unknown) =>
+    selector ? selector(mockStore) : mockStore,
   );
 };
 
@@ -61,15 +75,15 @@ describe('FlashcardsLayout', () => {
     vi.clearAllMocks();
   });
 
-  it('renders PublicLayout when session is null', () => {
-    setSession(null);
+  it('renders PublicLayout when profile is null', () => {
+    setProfile(null);
     const { getByTestId, queryByTestId } = render(<FlashcardsLayout />);
     expect(getByTestId('mock-public-layout')).toBeInTheDocument();
     expect(queryByTestId('mock-auth-layout')).not.toBeInTheDocument();
   });
 
-  it('renders AuthLayout when session is truthy', () => {
-    setSession({ user: { id: 'u-1' }, access_token: 'token' });
+  it('renders AuthLayout when profile is loaded', () => {
+    setProfile({ id: 'u-1', email: 'test@example.com', username: 'tester', first_name: 'Test', last_name: 'User', native_language: null, timezone: null });
     const { getByTestId, queryByTestId } = render(<FlashcardsLayout />);
     expect(getByTestId('mock-auth-layout')).toBeInTheDocument();
     expect(queryByTestId('mock-public-layout')).not.toBeInTheDocument();
@@ -100,11 +114,13 @@ import { useUserStore } from '@/stores/useUserStore';
 ```tsx
 // Auth-aware layout for /flashcards: public marketing chrome for anon
 // users, full app shell for authenticated users. The route stays
-// publicly reachable; only the chrome flips. See spec at
+// publicly reachable; only the chrome flips. Predicate mirrors
+// FlashcardsPage's `isAuthenticated = profile !== null` so chrome and
+// page-level auth behavior are always in sync. See spec at
 // docs/superpowers/specs/2026-05-04-flashcards-sidebar-layout-design.md.
 export function FlashcardsLayout() {
-  const session = useUserStore((s) => s.session);
-  return session ? <AuthLayout /> : <PublicLayout />;
+  const profile = useUserStore((s) => s.profile);
+  return profile ? <AuthLayout /> : <PublicLayout />;
 }
 ```
 
@@ -149,26 +165,61 @@ Create `src/__tests__/flashcardsRoute.test.tsx`:
 
 ```tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRoutes } from '../App';
 import { useUserStore } from '@/stores/useUserStore';
+import type { UserStore } from '@/stores/useUserStore';
 
 vi.mock('@/stores/useUserStore');
 
 // Mock the layouts so the test asserts which one mounts via the route
 // tree, without rendering full chrome (sidebar contents, header, etc.).
-vi.mock('@/components/layout/AuthLayout', () => ({
-  default: () => <div data-testid="mock-auth-layout">auth-layout</div>,
+// Both mocks render <Outlet /> so the index child (<FlashcardsPage />)
+// actually mounts — catching any "missing <Route index>" regressions.
+vi.mock('@/components/layout/AuthLayout', async () => {
+  const { Outlet } = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    default: () => (
+      <div data-testid="mock-auth-layout">
+        auth-layout
+        <Outlet />
+      </div>
+    ),
+  };
+});
+
+vi.mock('@/components/layout/PublicLayout', async () => {
+  const { Outlet } = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    default: () => (
+      <div data-testid="mock-public-layout">
+        public-layout
+        <Outlet />
+      </div>
+    ),
+  };
+});
+
+vi.mock('@/pages/FlashcardsPage', () => ({
+  default: () => <div data-testid="mock-flashcards-page">flashcards page</div>,
 }));
 
-vi.mock('@/components/layout/PublicLayout', () => ({
-  default: () => <div data-testid="mock-public-layout">public-layout</div>,
-}));
-
-const setSession = (session: unknown) => {
-  vi.mocked(useUserStore).mockImplementation((selector?: (s: { session: unknown }) => unknown) =>
-    selector ? selector({ session }) : { session },
+const setProfile = (profile: UserStore['profile']) => {
+  const mockStore: UserStore = {
+    session: null,
+    sessionLoading: false,
+    setSession: vi.fn(),
+    setSessionLoading: vi.fn(),
+    profile,
+    profileLoading: false,
+    error: null,
+    fetchProfile: vi.fn(),
+    clearProfile: vi.fn(),
+    setNativeLanguage: vi.fn(),
+  };
+  vi.mocked(useUserStore).mockImplementation((selector?: (s: typeof mockStore) => unknown) =>
+    selector ? selector(mockStore) : mockStore,
   );
 };
 
@@ -184,22 +235,24 @@ describe('/flashcards route layout', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the authenticated chrome (AuthLayout) when session is truthy', async () => {
-    setSession({ user: { id: 'u-1' }, access_token: 'token' });
-    const { findByTestId, queryByTestId } = renderAt('/flashcards');
+  it('renders the authenticated chrome (AuthLayout) when profile is loaded', async () => {
+    setProfile({ id: 'u-1', email: 'test@example.com', username: 'tester', first_name: 'Test', last_name: 'User', native_language: null, timezone: null });
+    const { findByTestId, queryByTestId, getByTestId } = renderAt('/flashcards');
     expect(await findByTestId('mock-auth-layout')).toBeInTheDocument();
     expect(queryByTestId('mock-public-layout')).not.toBeInTheDocument();
+    expect(getByTestId('mock-flashcards-page')).toBeInTheDocument();
   });
 
-  it('renders the public chrome (PublicLayout) when session is null', async () => {
-    setSession(null);
-    const { findByTestId, queryByTestId } = renderAt('/flashcards');
+  it('renders the public chrome (PublicLayout) when profile is null', async () => {
+    setProfile(null);
+    const { findByTestId, queryByTestId, getByTestId } = renderAt('/flashcards');
     expect(await findByTestId('mock-public-layout')).toBeInTheDocument();
     expect(queryByTestId('mock-auth-layout')).not.toBeInTheDocument();
+    expect(getByTestId('mock-flashcards-page')).toBeInTheDocument();
   });
 
-  it('still renders PublicLayout for other public routes regardless of session (regression check on /about)', async () => {
-    setSession({ user: { id: 'u-1' }, access_token: 'token' });
+  it('still renders PublicLayout for other public routes regardless of profile (regression check on /about)', async () => {
+    setProfile({ id: 'u-1', email: 'test@example.com', username: 'tester', first_name: 'Test', last_name: 'User', native_language: null, timezone: null });
     const { findByTestId, queryByTestId } = renderAt('/about');
     // /about is inside the PublicLayout block; it should NOT pick up
     // the FlashcardsLayout's auth-aware behavior.
@@ -399,7 +452,7 @@ Plan: \`docs/superpowers/plans/2026-05-04-flashcards-sidebar-layout.md\`
 
 ## Architecture
 
-- New \`FlashcardsLayout\` (named export from \`src/App.tsx\`, ~6 lines): \`session ? <AuthLayout /> : <PublicLayout />\`.
+- New \`FlashcardsLayout\` (named export from \`src/App.tsx\`, ~6 lines): \`profile ? <AuthLayout /> : <PublicLayout />\`.
 - Extracted \`AppRoutes\` from \`App\` so the route tree can be rendered through \`MemoryRouter\` for integration testing without the production \`BrowserRouter\` shell.
 - Reparented \`/flashcards\` from a child of \`<PublicLayout />\` to a child of \`<FlashcardsLayout />\` with \`<Route index>\` rendering \`<FlashcardsPage />\`.
 
@@ -442,7 +495,7 @@ Expected: PR opened against \`main\`.
 - Goal #3 (surgical, only \`/flashcards\` affected) → integration test 3 (\`/about\` regression check).
 - Architecture (\`FlashcardsLayout\` component, route reparent) → Task 1 + Task 2.4.
 - Components section (component + route changes only, no other files touched) → file map at top of plan.
-- Testing section (unit + integration with mocked layouts and mocked session) → Tasks 1 + 2 each include their respective tests.
+- Testing section (unit + integration with mocked layouts and mocked profile) → Tasks 1 + 2 each include their respective tests.
 - "Routes explicitly NOT touched" → integration test 3 covers \`/about\` as a sentinel; the PR description re-states the explicit list for reviewer clarity.
 - Acceptance criteria → Step 3.3 manual smoke covers all four bullets; Step 3.1 + 3.2 cover the test/lint/build bullet.
 
@@ -450,7 +503,7 @@ Expected: PR opened against \`main\`.
 - \`FlashcardsLayout\` is the exact name used across the test, the App.tsx export, and the route element prop.
 - \`AppRoutes\` is the exact name used in the integration test and the App.tsx export.
 - \`useUserStore\` is imported with the same path (\`@/stores/useUserStore\`) in tests and in the new App.tsx code.
-- The \`session\` selector signature in the unit test matches the one in the component (\`(s) => s.session\`).
+- The \`profile\` selector signature in the unit test matches the one in the component (\`(s) => s.profile\`).
 
 **Commit cadence:**
 - 3 task-level commits: \`FlashcardsLayout\` + unit test (Task 1), route reparent + integration test (Task 2), then push + PR (Task 3 has no commit; just verification + push). Plus the existing spec commit \`d15bb2f\` and review-update commit \`b3bac14\` already on the branch.

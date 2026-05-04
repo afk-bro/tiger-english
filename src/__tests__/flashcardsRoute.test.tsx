@@ -9,21 +9,53 @@ vi.mock('@/stores/useUserStore');
 
 // Mock the layouts so the test asserts which one mounts via the route
 // tree, without rendering full chrome (sidebar contents, header, etc.).
-vi.mock('@/components/layout/AuthLayout', () => ({
-  default: () => <div data-testid="mock-auth-layout">auth-layout</div>,
+// Both mocks render <Outlet /> so the index child (<FlashcardsPage />)
+// actually mounts — catching any "missing <Route index>" regressions.
+vi.mock('@/components/layout/AuthLayout', async () => {
+  const { Outlet } = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    default: () => (
+      <div data-testid="mock-auth-layout">
+        auth-layout
+        <Outlet />
+      </div>
+    ),
+  };
+});
+
+vi.mock('@/components/layout/PublicLayout', async () => {
+  const { Outlet } = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    default: () => (
+      <div data-testid="mock-public-layout">
+        public-layout
+        <Outlet />
+      </div>
+    ),
+  };
+});
+
+vi.mock('@/pages/FlashcardsPage', () => ({
+  default: () => <div data-testid="mock-flashcards-page">flashcards page</div>,
 }));
 
-vi.mock('@/components/layout/PublicLayout', () => ({
-  default: () => <div data-testid="mock-public-layout">public-layout</div>,
-}));
+const truthyProfile = {
+  id: 'u-1',
+  email: 'test@example.com',
+  username: 'tester',
+  first_name: 'Test',
+  last_name: 'User',
+  native_language: null,
+  timezone: null,
+};
 
-const setSession = (session: unknown) => {
+const setProfile = (profile: UserStore['profile']) => {
   const mockStore: UserStore = {
-    session: session as any,
+    session: null,
     sessionLoading: false,
     setSession: vi.fn(),
     setSessionLoading: vi.fn(),
-    profile: null,
+    profile,
     profileLoading: false,
     error: null,
     fetchProfile: vi.fn(),
@@ -47,22 +79,24 @@ describe('/flashcards route layout', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the authenticated chrome (AuthLayout) when session is truthy', async () => {
-    setSession({ user: { id: 'u-1' }, access_token: 'token' });
-    const { findByTestId, queryByTestId } = renderAt('/flashcards');
+  it('renders the authenticated chrome (AuthLayout) when profile is loaded', async () => {
+    setProfile(truthyProfile);
+    const { findByTestId, queryByTestId, getByTestId } = renderAt('/flashcards');
     expect(await findByTestId('mock-auth-layout')).toBeInTheDocument();
     expect(queryByTestId('mock-public-layout')).not.toBeInTheDocument();
+    expect(getByTestId('mock-flashcards-page')).toBeInTheDocument();
   });
 
-  it('renders the public chrome (PublicLayout) when session is null', async () => {
-    setSession(null);
-    const { findByTestId, queryByTestId } = renderAt('/flashcards');
+  it('renders the public chrome (PublicLayout) when profile is null', async () => {
+    setProfile(null);
+    const { findByTestId, queryByTestId, getByTestId } = renderAt('/flashcards');
     expect(await findByTestId('mock-public-layout')).toBeInTheDocument();
     expect(queryByTestId('mock-auth-layout')).not.toBeInTheDocument();
+    expect(getByTestId('mock-flashcards-page')).toBeInTheDocument();
   });
 
-  it('still renders PublicLayout for other public routes regardless of session (regression check on /about)', async () => {
-    setSession({ user: { id: 'u-1' }, access_token: 'token' });
+  it('still renders PublicLayout for other public routes regardless of profile (regression check on /about)', async () => {
+    setProfile(truthyProfile);
     const { findByTestId, queryByTestId } = renderAt('/about');
     // /about is inside the PublicLayout block; it should NOT pick up
     // the FlashcardsLayout's auth-aware behavior.

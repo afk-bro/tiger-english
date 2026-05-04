@@ -30,8 +30,8 @@ Add a thin auth-aware route element that picks the layout based on session state
 ```tsx
 // inline in src/App.tsx
 function FlashcardsLayout() {
-  const session = useUserStore((s) => s.session);
-  return session ? <AuthLayout /> : <PublicLayout />;
+  const profile = useUserStore((s) => s.profile);
+  return profile ? <AuthLayout /> : <PublicLayout />;
 }
 ```
 
@@ -63,12 +63,12 @@ Browser hits /flashcards
     ↓
 React Router resolves <FlashcardsLayout />
     ↓
-useUserStore.session
+useUserStore.profile
   ├── null (anon or pre-hydration) → <PublicLayout /> → <Outlet /> → <FlashcardsPage />
   └── truthy (authenticated)       → <AuthLayout />   → <Outlet /> → <FlashcardsPage />
 ```
 
-`useUserStore.session` is populated by `AppInitializer` via `supabase.auth.getSession()` (async) and `onAuthStateChange` (event-driven). On initial mount, the store starts with `session = null` until `getSession()` resolves.
+`useUserStore.profile` is populated after `AppInitializer` hydrates the session via `supabase.auth.getSession()` (async) and then fetches the profile via `fetchProfile()`. On initial mount, the store starts with `profile = null` until both resolve. This mirrors `FlashcardsPage`'s own `isAuthenticated = profile !== null` check, so chrome and page-level auth behavior are always in sync.
 
 ## Trade-off: the chrome flash
 
@@ -89,7 +89,7 @@ If a future quality-of-life pass wants to eliminate the flash, the right move wo
 ### `FlashcardsLayout` (new)
 
 - **Location:** inlined in `src/App.tsx` near the existing `StubPage` helper. No new file. Single-purpose, six lines.
-- **Inputs:** none. Reads `session` from `useUserStore`.
+- **Inputs:** none. Reads `profile` from `useUserStore`.
 - **Outputs:** `<AuthLayout />` or `<PublicLayout />`.
 - **Why inline rather than its own file:** YAGNI. One use site, one responsibility, no logic worth a dedicated file.
 
@@ -100,15 +100,15 @@ If a future quality-of-life pass wants to eliminate the flash, the right move wo
 
 ### Other components
 
-No changes to `AuthLayout`, `PublicLayout`, `AppSidebar`, `FlashcardsPage`, or `useUserStore`.
+No runtime changes to `AuthLayout`, `PublicLayout`, `AppSidebar`, `FlashcardsPage`, or `useUserStore`. `useUserStore` gains a single additive change — the `UserStore` type is now exported so test files can type their mock stores against the canonical shape.
 
 ## Testing
 
 The conditional-logic-only test (mock both layouts, assert which one mounts) is cheap but doesn't catch the actual risk — wrong route wiring. The real failure mode is the route tree being structured so `<FlashcardsLayout />` never gets reached, or being reached without an `<Outlet />` for `<FlashcardsPage />`. So testing has two layers:
 
 - **Unit test for the conditional itself** — `src/__tests__/FlashcardsLayout.test.tsx`:
-  - `session = null` → renders `PublicLayout`'s child marker.
-  - `session = { ... }` → renders `AuthLayout`'s child marker.
+  - `profile = null` → renders `PublicLayout`'s child marker.
+  - `profile = { ... }` → renders `AuthLayout`'s child marker.
   Both layouts are mocked at the module level. This pins the conditional logic in isolation.
 
 - **Route-level integration test** — `src/__tests__/flashcardsRoute.test.tsx`:

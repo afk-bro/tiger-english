@@ -36,11 +36,13 @@ const StubPage = ({ titleKey }: { titleKey: string }) => {
 
 // Auth-aware layout for /flashcards: public marketing chrome for anon
 // users, full app shell for authenticated users. The route stays
-// publicly reachable; only the chrome flips. See spec at
+// publicly reachable; only the chrome flips. Predicate mirrors
+// FlashcardsPage's `isAuthenticated = profile !== null` so chrome and
+// page-level auth behavior are always in sync. See spec at
 // docs/superpowers/specs/2026-05-04-flashcards-sidebar-layout-design.md.
 export function FlashcardsLayout() {
-  const session = useUserStore((s) => s.session);
-  return session ? <AuthLayout /> : <PublicLayout />;
+  const profile = useUserStore((s) => s.profile);
+  return profile ? <AuthLayout /> : <PublicLayout />;
 }
 
 const PageLoader = () => (

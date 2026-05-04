@@ -14,13 +14,23 @@ vi.mock('@/components/layout/PublicLayout', () => ({
   default: () => <div data-testid="mock-public-layout">public</div>,
 }));
 
-const setSession = (session: unknown) => {
+const truthyProfile = {
+  id: 'u-1',
+  email: 'test@example.com',
+  username: 'tester',
+  first_name: 'Test',
+  last_name: 'User',
+  native_language: null,
+  timezone: null,
+};
+
+const setProfile = (profile: UserStore['profile']) => {
   const mockStore: UserStore = {
-    session: session as any,
+    session: null,
     sessionLoading: false,
     setSession: vi.fn(),
     setSessionLoading: vi.fn(),
-    profile: null,
+    profile,
     profileLoading: false,
     error: null,
     fetchProfile: vi.fn(),
@@ -38,15 +48,15 @@ describe('FlashcardsLayout', () => {
     vi.clearAllMocks();
   });
 
-  it('renders PublicLayout when session is null', () => {
-    setSession(null);
+  it('renders PublicLayout when profile is null', () => {
+    setProfile(null);
     const { getByTestId, queryByTestId } = render(<FlashcardsLayout />);
     expect(getByTestId('mock-public-layout')).toBeInTheDocument();
     expect(queryByTestId('mock-auth-layout')).not.toBeInTheDocument();
   });
 
-  it('renders AuthLayout when session is truthy', () => {
-    setSession({ user: { id: 'u-1' }, access_token: 'token' });
+  it('renders AuthLayout when profile is loaded', () => {
+    setProfile(truthyProfile);
     const { getByTestId, queryByTestId } = render(<FlashcardsLayout />);
     expect(getByTestId('mock-auth-layout')).toBeInTheDocument();
     expect(queryByTestId('mock-public-layout')).not.toBeInTheDocument();
