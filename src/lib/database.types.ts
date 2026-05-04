@@ -14,6 +14,112 @@ export type Database = {
   }
   public: {
     Tables: {
+      exercise_attempts: {
+        Row: {
+          attempted_at: string
+          exercise_id: string
+          id: number
+          is_correct: boolean
+          section_key: string
+          unit_slug: string
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          exercise_id: string
+          id?: number
+          is_correct: boolean
+          section_key: string
+          unit_slug: string
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          exercise_id?: string
+          id?: number
+          is_correct?: boolean
+          section_key?: string
+          unit_slug?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      flashcard_reviews: {
+        Row: {
+          flashcard_id: string
+          id: number
+          reviewed_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          flashcard_id: string
+          id?: number
+          reviewed_at?: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          flashcard_id?: string
+          id?: number
+          reviewed_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcard_reviews_flashcard_id_fkey"
+            columns: ["flashcard_id"]
+            isOneToOne: false
+            referencedRelation: "flashcards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flashcard_sets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean
+          share_token: string | null
+          slug: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          share_token?: string | null
+          slug?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          share_token?: string | null
+          slug?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcard_sets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flashcard_translations: {
         Row: {
           created_at: string
@@ -66,50 +172,6 @@ export type Database = {
           {
             foreignKeyName: "flashcard_translations_updated_by_fkey"
             columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      flashcard_sets: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          description: string | null
-          id: string
-          is_public: boolean
-          share_token: string | null
-          slug: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_public?: boolean
-          share_token?: string | null
-          slug?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_public?: boolean
-          share_token?: string | null
-          slug?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "flashcard_sets_created_by_fkey"
-            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -190,6 +252,27 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_section_progress: {
+        Row: {
+          completed_at: string
+          section_key: string
+          unit_slug: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          section_key: string
+          unit_slug: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          section_key?: string
+          unit_slug?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -230,6 +313,33 @@ export type Database = {
             referencedColumns: ["code"]
           },
         ]
+      }
+      user_activity_log: {
+        Row: {
+          created_at: string
+          id: number
+          idempotency_key: string | null
+          payload: Json
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          idempotency_key?: string | null
+          payload?: Json
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          idempotency_key?: string | null
+          payload?: Json
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_card_progress: {
         Row: {
@@ -313,7 +423,72 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      complete_lesson_section_tx: {
+        Args: {
+          p_idempotency_key: string
+          p_section_key: string
+          p_unit_slug: string
+          p_user_id: string
+        }
+        Returns: {
+          completed_at: string
+          section_key: string
+          unit_slug: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lesson_section_progress"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      review_flashcard_tx: {
+        Args: { p_flashcard_id: string; p_status: string; p_user_id: string }
+        Returns: {
+          flashcard_id: string
+          id: number
+          reviewed_at: string
+          status: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "flashcard_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_exercise_attempt_tx: {
+        Args: {
+          p_exercise_id: string
+          p_is_correct: boolean
+          p_section_key: string
+          p_unit_slug: string
+          p_user_id: string
+        }
+        Returns: {
+          attempted_at: string
+          exercise_id: string
+          id: number
+          is_correct: boolean
+          section_key: string
+          unit_slug: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "exercise_attempts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      user_study_days: {
+        Args: { p_tz: string; p_user_id: string }
+        Returns: {
+          day: string
+        }[]
+      }
     }
     Enums: {
       card_status: "unseen" | "known" | "unknown"
