@@ -111,7 +111,75 @@
       "load_error": "加载集合失败：{{error}}",
       "empty": "暂无可用集合。",
       "card_singular": "张卡片",
-      "card_plural": "张卡片"
+      "card_plural": "张卡片",
+      "greetings_small_talk": {
+        "title": "问候与闲聊",
+        "description": "日常问候、自我介绍以及随意交谈的常用表达"
+      },
+      "numbers_1_100": {
+        "title": "数字 1–100",
+        "description": "学习读写从一到一百的数字"
+      },
+      "numbers_1_100_words": {
+        "title": "数字 1–100（单词形式）",
+        "description": "一到一百的数字用英文单词写出"
+      },
+      "numbers_1_100_phonetic": {
+        "title": "数字 1–100（音标）",
+        "description": "从一到一百的数字音标发音指南"
+      },
+      "fruit_20_basic": {
+        "title": "水果",
+        "description": "日常词汇中常见的水果"
+      },
+      "vegetables_20_basic": {
+        "title": "蔬菜",
+        "description": "日常词汇中常见的蔬菜"
+      },
+      "food_single_words_basic": {
+        "title": "食物",
+        "description": "基础食物词汇 — 适合初学者的单词"
+      },
+      "cutlery_china_10_basic": {
+        "title": "餐具与餐桌用品",
+        "description": "刀、叉、盘子等餐桌用品"
+      },
+      "daily_life_20": {
+        "title": "日常生活",
+        "description": "日常活动与例行公事的词汇"
+      },
+      "time_20": {
+        "title": "时间",
+        "description": "看时间、星期、月份以及时间表达"
+      },
+      "shopping_money_20": {
+        "title": "购物与金钱",
+        "description": "购物、价格以及处理金钱的词汇"
+      },
+      "directions_transportation_20": {
+        "title": "方向与交通",
+        "description": "询问和指引方向，以及交通词汇"
+      },
+      "accommodation_hotels_20": {
+        "title": "住宿与酒店",
+        "description": "入住、酒店设施以及住宿相关词汇"
+      },
+      "travel_essentials": {
+        "title": "旅行必备",
+        "description": "旅行时必需的短语和词汇"
+      },
+      "work_business_20": {
+        "title": "工作与商务",
+        "description": "适用于工作场所和商务环境的专业词汇"
+      },
+      "dating_social_20": {
+        "title": "约会与社交",
+        "description": "社交、约会以及结识新朋友的词汇"
+      },
+      "emergencies_health_20": {
+        "title": "紧急情况与健康",
+        "description": "医疗状况和紧急事件的必备词汇"
+      }
     },
     "create_modal": {
       "heading": "创建闪卡集",
