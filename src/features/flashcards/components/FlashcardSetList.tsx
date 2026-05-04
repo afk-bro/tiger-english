@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import type { FlashcardSet } from '../types';
 import Button from '@/components/ui/Button';
+import { useSetCopy } from '../hooks/useSetCopy';
 
 interface FlashcardSetListProps {
   sets: FlashcardSet[];
@@ -50,26 +51,7 @@ export function FlashcardSetList({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {sets.map((set) => (
-          <button
-            key={set.id}
-            onClick={() => onSelectSet(set.id)}
-            className="card card-interactive text-left space-y-3"
-          >
-            <h3 className="text-base md:text-lg font-semibold text-semantic-text dark:text-semantic-text">
-              {set.title}
-            </h3>
-            {set.description && (
-              <p className="text-sm leading-relaxed text-semantic-muted dark:text-semantic-muted">
-                {set.description}
-              </p>
-            )}
-            <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">
-              {set.cardCount}{' '}
-              {set.cardCount === 1
-                ? t('flashcards.sets.card_singular')
-                : t('flashcards.sets.card_plural')}
-            </p>
-          </button>
+          <FlashcardSetCard key={set.id} set={set} onSelect={onSelectSet} />
         ))}
       </div>
 
@@ -79,5 +61,37 @@ export function FlashcardSetList({
         </p>
       )}
     </div>
+  );
+}
+
+function FlashcardSetCard({
+  set,
+  onSelect,
+}: {
+  set: FlashcardSet;
+  onSelect: (setId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const { title, description } = useSetCopy(set);
+  return (
+    <button
+      onClick={() => onSelect(set.id)}
+      className="card card-interactive text-left space-y-3"
+    >
+      <h3 className="text-base md:text-lg font-semibold text-semantic-text dark:text-semantic-text">
+        {title}
+      </h3>
+      {description && (
+        <p className="text-sm leading-relaxed text-semantic-muted dark:text-semantic-muted">
+          {description}
+        </p>
+      )}
+      <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">
+        {set.cardCount}{' '}
+        {set.cardCount === 1
+          ? t('flashcards.sets.card_singular')
+          : t('flashcards.sets.card_plural')}
+      </p>
+    </button>
   );
 }

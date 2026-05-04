@@ -80,6 +80,7 @@ export type Database = {
           id: string
           is_public: boolean
           share_token: string | null
+          slug: string | null
           title: string
           updated_at: string
         }
@@ -90,6 +91,7 @@ export type Database = {
           id?: string
           is_public?: boolean
           share_token?: string | null
+          slug?: string | null
           title: string
           updated_at?: string
         }
@@ -100,6 +102,7 @@ export type Database = {
           id?: string
           is_public?: boolean
           share_token?: string | null
+          slug?: string | null
           title?: string
           updated_at?: string
         }

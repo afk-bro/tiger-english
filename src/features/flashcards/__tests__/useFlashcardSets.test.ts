@@ -22,6 +22,7 @@ const fakeSet = {
   createdBy: null,
   createdAt: '2026-01-01T00:00:00Z',
   cardCount: 3,
+  slug: 'thai-set',
 };
 
 describe('useFlashcardSets', () => {
