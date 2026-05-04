@@ -147,6 +147,20 @@ The Leonardo API key (`LEONARDO_API_KEY` in `backend/.env`) and Supabase secret 
 Spec: `docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md`.
 Plan: `docs/superpowers/plans/2026-05-02-lesson-image-generation.md`.
 
+## Flashcard sets
+
+The 17 curated sets are seeded by `supabase/migrations/20260322000001_seed_csv_sets.sql` and given stable slugs in `20260504000003_flashcard_set_slugs.sql`. Set titles and descriptions are translated via `src/locales/<lang>/<lang>.json` keyed by slug — see `flashcards.sets.<slug>.{title,description}`.
+
+Adding a new curated set is a three-place change:
+
+1. Add the seed `INSERT INTO flashcard_sets (...)` (and the cards) in a new migration.
+2. In the same or next migration, `UPDATE flashcard_sets SET slug = '<new_slug>' WHERE id = '<uuid>'`.
+3. Add `flashcards.sets.<new_slug>.{title,description}` to all four locale files (`en`, `vi`, `th`, `zh-CN`).
+
+`useSetCopy` (`src/features/flashcards/hooks/useSetCopy.ts`) falls back to the DB raw column when a locale key is missing, so a new slug without locale entries renders the seed-migration's English text rather than the key path — but step 3 is still required for translation to actually happen.
+
+User-created sets keep `slug = NULL` and render the user-typed title; the helper short-circuits without touching i18n.
+
 ## Path Aliases
 
 `@/` maps to `src/` (configured in `vite.config.ts` and `tsconfig.json`).
