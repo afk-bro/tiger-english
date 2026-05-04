@@ -304,7 +304,10 @@
       "completed": "Đã hoàn thành",
       "next": "Tiếp theo",
       "previous": "Trước đó",
-      "backToUnit": "Quay lại bài"
+      "backToUnit": "Quay lại bài",
+      "nextUnit": "Tiếp theo: {{unitLabel}}",
+      "allUnitsCompletedMessage": "Bạn đã hoàn thành tất cả các bài học hiện có",
+      "backToLessons": "Quay lại danh sách bài học"
     },
     "progress": {
       "notStarted": "Chưa bắt đầu",
