@@ -49,11 +49,15 @@ The walk-forward approach is intentional: it skips coming-soon units rather than
 
 ### "Last section" detection
 
-Explicit, not implied. `SectionNav` already imports `SECTION_ORDER` and computes `currentIndex`. Add:
+Explicit, not implied. Computed once in `SectionPage` and passed down to `SectionNav` as a prop:
 
 ```ts
-const isLastSection = currentIndex === SECTION_ORDER.length - 1;
+// in SectionPage
+const isLastSection =
+  SECTION_ORDER.indexOf(validSectionKey) === SECTION_ORDER.length - 1;
 ```
+
+Single source of truth — `SectionNav` receives `isLastSection: boolean` rather than recomputing it. Avoids the risk of the two sides drifting if someone changes the predicate (e.g., gating on `Mark complete` later).
 
 The right-side button branches on `isLastSection`, then on whether `nextUnit` is defined.
 
@@ -67,14 +71,15 @@ Right-side primary button:
 | `true` | defined | **`Next: Unit N — Title →`** to `/lessons/<next-slug>/overview` (new) |
 | `true` | undefined | `Back to Unit` (today's behavior) |
 
-Below the prev/next row, a tertiary "back to lessons" link appears only in the terminal-state case (`isLastSection && !nextUnit`):
+Below the prev/next row, in the terminal-state case (`isLastSection && !nextUnit`), render a small message + a tertiary back-to-lessons link as separate elements:
 
 ```
 [← Previous section]                                 [Back to Unit]
-              [← All available units completed — Back to Lessons]
+              You've completed all available units
+                      [← Back to Lessons]
 ```
 
-Tertiary visual weight: text-link styling (no filled button), centered under the prev/back row, smaller font.
+The message is muted text (e.g., `text-semantic-text-muted text-sm`), centered under the prev/back row. The link below it uses text-link styling (no filled button) — also centered. Two elements: prose for context, link for action. Splitting the two avoids cramming a sentence into a button label.
 
 ### Visual treatment of `Next: Unit N — Title →`
 
@@ -94,45 +99,58 @@ The within-unit "Next section" stays exactly as it is today.
 SectionPage:
   isLastSection = SECTION_ORDER.indexOf(currentSection) === SECTION_ORDER.length - 1
   nextUnitData = isLastSection ? getNextAvailableUnit(unit.slug) : undefined
+
+  unitTitle = (learnerLang && nextUnitData?.translations?.[learnerLang]?.title)
+              || nextUnitData?.title
+  unitLabel = nextUnitData
+    ? `${t('lessons.unitShort', { number: nextUnitData.number })} — ${unitTitle}`
+    : ''
+
   nextUnit = nextUnitData
     ? { slug: nextUnitData.slug,
-        label: `${t('lessons.unitShort', { number: nextUnitData.number })} — ${
-          (learnerLang && nextUnitData.translations[learnerLang]?.title) || nextUnitData.title
-        }` }
+        ctaText: t('lessons.section.nextUnit', { unitLabel }) }
     : undefined
 
 SectionPage renders SectionNav with:
   - unitSlug, currentSection, completed, onToggleComplete (existing)
-  - nextUnit?: { slug: string, label: string }    (NEW — already-formatted label)
+  - isLastSection: boolean                       (NEW — single source of truth)
+  - nextUnit?: { slug: string, ctaText: string }  (NEW — fully resolved CTA text)
 
 SectionNav internally:
-  - isLastSection = SECTION_ORDER.indexOf(currentSection) === SECTION_ORDER.length - 1
   - branch the right-side button on (isLastSection, nextUnit)
-  - render the terminal-state "Back to Lessons" tertiary link iff isLastSection && !nextUnit
+  - render the terminal-state message + Back to Lessons link iff isLastSection && !nextUnit
+  - never recomputes isLastSection or composes any i18n strings
 ```
 
-`SectionPage` does both the data lookup AND the i18n label composition because it already has the `t` function and `learnerLang`. `SectionNav` receives an already-formatted `{ slug, label }` and stays a presentational component free of i18n logic.
+`SectionPage` does both the data lookup AND the full i18n composition (the `t('lessons.section.nextUnit', ...)` call) because it already has the `t` function and `learnerLang`. `SectionNav` receives an already-formatted `ctaText` plus the `slug` it needs to build the route, and stays a purely presentational component free of i18n logic.
 
-The `isLastSection` computation is duplicated in both `SectionPage` (to decide whether to call `getNextAvailableUnit`) and `SectionNav` (to decide which right-side button to render). Acceptable because each side needs its own gate; the alternative — passing `isLastSection` as a prop — wouldn't simplify either side meaningfully and would couple the two on a derived boolean.
+`isLastSection` is computed once in `SectionPage` and passed down. Single source of truth.
+
+**Defensive guard on translation lookup:** the `nextUnitData?.translations?.[learnerLang]?.title` chain uses optional chaining throughout so a missing `translations` object on a unit entry doesn't crash the page. Falls back to `nextUnitData.title` (English).
+
+**Considered alternative API for `getNextAvailableUnit`:** pass `index: number` instead of `currentSlug: string`. Rejected — the caller has the slug naturally (from route params and the existing `unit` object); using the index would force the caller to do `units.findIndex(...)` first, which is exactly what the helper does internally. Slug input is the cleaner contract.
 
 ## i18n
 
-Two new keys per locale (`en`, `vi`, `th`, `zh-CN`):
+Three new keys per locale (`en`, `vi`, `th`, `zh-CN`):
 
 ```json
 "lessons.section.nextUnit": "Next: {{unitLabel}}",
-"lessons.section.allUnitsCompleted": "All available units completed — Back to Lessons"
+"lessons.section.allUnitsCompletedMessage": "You've completed all available units",
+"lessons.section.backToLessons": "Back to Lessons"
 ```
+
+The `nextUnit` key is interpolated via `t('lessons.section.nextUnit', { unitLabel })` (NOT a backtick template) so the leading "Next: " prefix can be properly translated per locale.
 
 `unitLabel` is composed at the call site in `SectionPage` using existing patterns:
 
 ```ts
-const unitLabel = `${t('lessons.unitShort', { number: nextUnit.number })} — ${
-  (learnerLang && nextUnit.translations[learnerLang]?.title) || nextUnit.title
-}`;
+const unitTitle = (learnerLang && nextUnit.translations?.[learnerLang]?.title)
+                || nextUnit.title;
+const unitLabel = `${t('lessons.unitShort', { number: nextUnit.number })} — ${unitTitle}`;
 ```
 
-The `lessons.unitShort` key (e.g., `"Unit {{number}}"` in en) and the per-unit translation lookup pattern are already in use at `SectionPage.tsx:69`. No new i18n primitives needed.
+The `lessons.unitShort` key (e.g., `"Unit {{number}}"` in en) and the per-unit translation lookup pattern are already in use at `SectionPage.tsx:69`. No new i18n primitives needed. The optional chaining on `translations` is defensive against units missing the field.
 
 Per existing fallback (`fallbackLng: 'en'`), th/zh-CN locales without their own translation of the new keys fall back to English.
 
@@ -142,13 +160,13 @@ Per existing fallback (`fallbackLng: 'en'`), th/zh-CN locales without their own 
 |---|---|
 | `src/features/lessons/data/getUnit.ts` | Add `getNextAvailableUnit` named export with the walk-forward logic + empty-array guard |
 | `src/features/lessons/data/__tests__/getNextAvailableUnit.test.ts` | New unit test file |
-| `src/features/lessons/components/SectionNav.tsx` | Accept `nextUnit?: { slug, label }` prop; branch right-side button; render tertiary "Back to Lessons" in terminal state |
-| `src/features/lessons/pages/SectionPage.tsx` | Compute `nextUnit` and `unitLabel`, pass into `SectionNav` |
+| `src/features/lessons/components/SectionNav.tsx` | Accept `isLastSection: boolean` and `nextUnit?: { slug: string, ctaText: string }` props; branch right-side button; render terminal-state message + Back-to-Lessons link |
+| `src/features/lessons/pages/SectionPage.tsx` | Compute `isLastSection`, call `getNextAvailableUnit`, compose the `unitLabel` and `ctaText`, pass `isLastSection` and `nextUnit` into `SectionNav` |
 | `src/locales/{en,vi,th,zh-CN}/<lang>.json` | Add `lessons.section.nextUnit` and `lessons.section.allUnitsCompleted` per locale |
 
 `useLessonProgressStore`, `lesson.types.ts`, the data accessor `getUnit`, and other sections of the lessons feature are untouched.
 
-`SectionNav` accepts the resolved unit *label* (already-formatted string) rather than a full `Unit` object — keeps the component free of i18n and translation-lookup logic.
+`SectionNav` accepts the resolved CTA *text* (already-translated and interpolated by `t()` in the parent) rather than a full `Unit` object — keeps the component free of i18n and translation-lookup logic.
 
 ## Testing
 
@@ -173,21 +191,21 @@ Update existing tests (or add new ones) to cover:
 |---|---|
 | Non-last section (`grammar`) | Renders within-unit `Next →` link to next section; no "Back to Lessons" |
 | Last section + `nextUnit` provided | Renders `Next: Unit 2 — To Be: Location →` (or whatever the test fixture's label is) linking to `/lessons/unit-2/overview`; no "Back to Lessons" |
-| Last section + `nextUnit` undefined | Renders `Back to Unit` AND tertiary `← All available units completed — Back to Lessons` link going to `/lessons` |
+| Last section + `nextUnit` undefined | Renders `Back to Unit` PLUS a muted message `You've completed all available units` PLUS a separate tertiary `← Back to Lessons` link going to `/lessons` |
 
 Existing tests that don't pass `nextUnit` continue to work — the new prop is optional (`nextUnit?: ...`), default `undefined`. In the non-last-section branch, `nextUnit` is never read, so its absence is harmless.
 
 ### Manual verify
 
 1. Log in, open `/lessons/unit-1/activities`. Right-side button reads `Next: Unit 2 — To Be: Location →`. Click it → land on `/lessons/unit-2/overview`.
-2. Open `/lessons/unit-2/activities`. Right-side button is `Back to Unit`. Below the row, a `← All available units completed — Back to Lessons` text link is visible. Click it → land on `/lessons`.
+2. Open `/lessons/unit-2/activities`. Right-side button is `Back to Unit`. Below the row: a muted message `You've completed all available units` and a separate `← Back to Lessons` text link. Click the link → land on `/lessons`.
 3. Open `/lessons/unit-1/grammar` (or any non-last section). Right-side button is `Next →` linking to the next section in unit-1. No "Back to Lessons" link below.
 4. Toggle UI language to Vietnamese on `/lessons/unit-1/activities`. The next-unit label should render in Vietnamese (using `nextUnit.translations.vi.title` if present).
 
 ## Acceptance criteria
 
 - [ ] Last section of unit-1 surfaces a `Next: Unit 2 — ...` button linking to `/lessons/unit-2/overview`.
-- [ ] Last section of unit-2 surfaces `Back to Unit` plus the terminal-state `Back to Lessons` link.
+- [ ] Last section of unit-2 surfaces `Back to Unit` plus the terminal-state message + `Back to Lessons` link as separate elements.
 - [ ] Non-last sections retain the existing within-unit "Next section →" behavior unchanged.
 - [ ] `getNextAvailableUnit` handles unknown slugs and empty arrays without throwing.
 - [ ] Locale toggling renders the next-unit label in the active learner language with English fallback.
