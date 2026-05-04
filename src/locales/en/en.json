@@ -111,7 +111,75 @@
       "load_error": "Failed to load sets: {{error}}",
       "empty": "No sets available yet.",
       "card_singular": "card",
-      "card_plural": "cards"
+      "card_plural": "cards",
+      "greetings_small_talk": {
+        "title": "Greetings & Small Talk",
+        "description": "Everyday greetings, introductions, and casual conversation phrases"
+      },
+      "numbers_1_100": {
+        "title": "Numbers 1–100",
+        "description": "Learn to read and write numbers from one to one hundred"
+      },
+      "numbers_1_100_words": {
+        "title": "Numbers 1–100 (Words)",
+        "description": "Numbers one to one hundred written out as English words"
+      },
+      "numbers_1_100_phonetic": {
+        "title": "Numbers 1–100 (Phonetic)",
+        "description": "Phonetic pronunciation guide for numbers one to one hundred"
+      },
+      "fruit_20_basic": {
+        "title": "Fruit",
+        "description": "Common fruits for everyday vocabulary"
+      },
+      "vegetables_20_basic": {
+        "title": "Vegetables",
+        "description": "Common vegetables for everyday vocabulary"
+      },
+      "food_single_words_basic": {
+        "title": "Food",
+        "description": "Essential food vocabulary — single words for beginners"
+      },
+      "cutlery_china_10_basic": {
+        "title": "Cutlery & Tableware",
+        "description": "Knives, forks, plates, and other table items"
+      },
+      "daily_life_20": {
+        "title": "Daily Life",
+        "description": "Vocabulary for common everyday activities and routines"
+      },
+      "time_20": {
+        "title": "Time",
+        "description": "Telling the time, days, months, and time expressions"
+      },
+      "shopping_money_20": {
+        "title": "Shopping & Money",
+        "description": "Vocabulary for shopping, prices, and handling money"
+      },
+      "directions_transportation_20": {
+        "title": "Directions & Transportation",
+        "description": "Asking for and giving directions, and transport vocabulary"
+      },
+      "accommodation_hotels_20": {
+        "title": "Accommodation & Hotels",
+        "description": "Vocabulary for checking in, hotel facilities, and lodging"
+      },
+      "travel_essentials": {
+        "title": "Travel Essentials",
+        "description": "Essential phrases and vocabulary for travelling"
+      },
+      "work_business_20": {
+        "title": "Work & Business",
+        "description": "Professional vocabulary for the workplace and business settings"
+      },
+      "dating_social_20": {
+        "title": "Dating & Social",
+        "description": "Vocabulary for socialising, dating, and meeting new people"
+      },
+      "emergencies_health_20": {
+        "title": "Emergencies & Health",
+        "description": "Essential vocabulary for medical situations and emergencies"
+      }
     },
     "create_modal": {
       "heading": "Create flashcard set",
