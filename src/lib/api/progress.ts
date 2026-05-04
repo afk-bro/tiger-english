@@ -46,11 +46,14 @@ class ProgressAPIClass {
     return res.json();
   }
 
-  async completeSection(unitSlug: string, sectionKey: string) {
+  async completeSection(args: { unitSlug: string; sectionKey: string }) {
     try {
       return await this.authedFetch<CompletedSection>("/me/progress/complete-section", {
         method: "POST",
-        body: JSON.stringify({ unit_slug: unitSlug, section_key: sectionKey }),
+        body: JSON.stringify({
+          unit_slug: args.unitSlug,
+          section_key: args.sectionKey,
+        }),
       });
     } catch (err) {
       console.error("ProgressAPI.completeSection failed", err);

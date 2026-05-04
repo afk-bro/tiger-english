@@ -1,6 +1,13 @@
 // src/features/lessons/__tests__/useLessonProgressStore.test.ts
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { ProgressAPI } from "@/lib/api/progress";
 import { useLessonProgressStore } from "../useLessonProgressStore";
+
+vi.mock("@/lib/api/progress", () => ({
+  ProgressAPI: {
+    completeSection: vi.fn().mockResolvedValue(null),
+  },
+}));
 
 describe("useLessonProgressStore", () => {
   beforeEach(() => {
@@ -8,6 +15,7 @@ describe("useLessonProgressStore", () => {
       progress: {},
       lastVisitedSectionKey: {},
     });
+    vi.mocked(ProgressAPI.completeSection).mockClear();
   });
 
   it("returns default progress for unknown keys", () => {
@@ -54,6 +62,40 @@ describe("useLessonProgressStore", () => {
       useLessonProgressStore.getState().getSectionProgress("unit-1", "grammar")
         .completed,
     ).toBe(false);
+  });
+
+  it("persists toggleCompleted on forward edge only", () => {
+    const store = useLessonProgressStore.getState();
+
+    // false → true should call the API
+    store.toggleCompleted("unit-1", "grammar");
+    expect(ProgressAPI.completeSection).toHaveBeenCalledTimes(1);
+    expect(ProgressAPI.completeSection).toHaveBeenCalledWith({
+      unitSlug: "unit-1",
+      sectionKey: "grammar",
+    });
+
+    // true → false should NOT call the API (no uncomplete endpoint)
+    useLessonProgressStore.getState().toggleCompleted("unit-1", "grammar");
+    expect(ProgressAPI.completeSection).toHaveBeenCalledTimes(1);
+  });
+
+  it("persists markCompleted via ProgressAPI.completeSection", () => {
+    useLessonProgressStore.getState().markCompleted("unit-1", "vocabulary");
+    expect(ProgressAPI.completeSection).toHaveBeenCalledWith({
+      unitSlug: "unit-1",
+      sectionKey: "vocabulary",
+    });
+  });
+
+  it("does not re-persist markCompleted when section is already complete", () => {
+    const store = useLessonProgressStore.getState();
+    store.markCompleted("unit-1", "vocabulary");
+    store.markCompleted("unit-1", "vocabulary");
+    store.markCompleted("unit-1", "vocabulary");
+    // Three .markCompleted calls but only the first should hit the network —
+    // backend /complete-section is idempotent but duplicate calls are wasteful.
+    expect(ProgressAPI.completeSection).toHaveBeenCalledTimes(1);
   });
 
   it("sets and retrieves lastVisitedSectionKey", () => {

@@ -52,9 +52,11 @@ export const useLessonProgressStore = create<LessonProgressState>(
 
     markCompleted: (unitSlug, sectionKey) => {
       const key = makeKey(unitSlug, sectionKey);
+      let didTransition = false;
       set((state) => {
         const current = state.progress[key] ?? DEFAULT_PROGRESS;
         if (current.completed) return state;
+        didTransition = true;
         return {
           progress: {
             ...state.progress,
@@ -63,21 +65,36 @@ export const useLessonProgressStore = create<LessonProgressState>(
         };
       });
 
-      // Persist to backend (fire-and-forget; errors logged inside ProgressAPI)
-      void ProgressAPI.completeSection(unitSlug, sectionKey);
+      // Persist only on the not-completed → completed transition. The backend
+      // /complete-section endpoint is idempotent (uses idempotency keys), so
+      // duplicate calls are safe — but they're wasted network. Skip them.
+      if (didTransition) {
+        void ProgressAPI.completeSection({ unitSlug, sectionKey });
+      }
     },
 
     toggleCompleted: (unitSlug, sectionKey) => {
       const key = makeKey(unitSlug, sectionKey);
+      let nowCompleted = false;
       set((state) => {
         const current = state.progress[key] ?? DEFAULT_PROGRESS;
+        nowCompleted = !current.completed;
         return {
           progress: {
             ...state.progress,
-            [key]: { ...current, completed: !current.completed },
+            [key]: { ...current, completed: nowCompleted },
           },
         };
       });
+
+      // Persist forward edge only — the backend's /complete-section endpoint
+      // is idempotent but has no uncomplete counterpart, so toggling
+      // true→false stays local-only and the user's prior backend completion
+      // remains. Full fix would need an uncomplete endpoint; this matches
+      // the established markCompleted pattern (also fire-and-forget).
+      if (nowCompleted) {
+        void ProgressAPI.completeSection({ unitSlug, sectionKey });
+      }
     },
 
     setLastVisited: (unitSlug, sectionKey) => {

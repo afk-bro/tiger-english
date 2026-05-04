@@ -22,7 +22,7 @@ describe("ProgressAPI", () => {
     mockGetSession.mockResolvedValue({ data: { session: null } });
     const { ProgressAPI } = await import("../progress");
 
-    const result = await ProgressAPI.completeSection("unit-1", "overview");
+    const result = await ProgressAPI.completeSection({ unitSlug: "unit-1", sectionKey: "overview" });
     expect(result).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -42,7 +42,7 @@ describe("ProgressAPI", () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
     const { ProgressAPI } = await import("../progress");
 
-    await ProgressAPI.completeSection("unit-1", "overview");
+    await ProgressAPI.completeSection({ unitSlug: "unit-1", sectionKey: "overview" });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0];
@@ -57,7 +57,7 @@ describe("ProgressAPI", () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
     const { ProgressAPI } = await import("../progress");
 
-    await ProgressAPI.completeSection("unit-2", "grammar");
+    await ProgressAPI.completeSection({ unitSlug: "unit-2", sectionKey: "grammar" });
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toContain("/me/progress/complete-section");
@@ -111,7 +111,7 @@ describe("ProgressAPI", () => {
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const { ProgressAPI } = await import("../progress");
 
-    const a = await ProgressAPI.completeSection("unit-1", "overview");
+    const a = await ProgressAPI.completeSection({ unitSlug: "unit-1", sectionKey: "overview" });
     const b = await ProgressAPI.attemptExercise({
       unitSlug: "u", sectionKey: "s", exerciseId: "e", isCorrect: true,
     });
