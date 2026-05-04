@@ -109,17 +109,19 @@ async def update_profile(
         if "timezone" in fields_set:
             update_payload["timezone"] = profile_data.timezone
 
-        if not update_payload:
-            # Nothing to update — fetch current profile and return it.
-            result = supabase.table('profiles').select(
-                'id, username, first_name, last_name, native_language'
-            ).eq('id', user_id).single().execute()
-        else:
-            result = supabase.table('profiles').update(
+        if update_payload:
+            update_result = supabase.table('profiles').update(
                 update_payload
-            ).eq('id', user_id).select(
-                'id, username, first_name, last_name, native_language'
-            ).single().execute()
+            ).eq('id', user_id).execute()
+            if not update_result.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail={"success": False, "message": "Profile not found"},
+                )
+
+        result = supabase.table('profiles').select(
+            'id, username, first_name, last_name, native_language'
+        ).eq('id', user_id).single().execute()
 
         if not result.data:
             raise HTTPException(
