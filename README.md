@@ -17,7 +17,7 @@ A modern React application designed to help Thai speakers learn English through 
 - **Frontend:** React 19 + TypeScript + Vite
 - **Styling:** Tailwind CSS + Headless UI
 - **State Management:** Zustand
-- **Backend:** Supabase (Auth + Database)
+- **Backend:** FastAPI + Supabase (PostgreSQL + Auth)
 - **Forms:** React Hook Form + Zod validation
 - **Testing:** Vitest + React Testing Library
 - **Internationalization:** i18next
