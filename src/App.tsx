@@ -8,6 +8,7 @@ import AuthLayout from "./components/layout/AuthLayout";
 import RequireAuth from "./features/auth/RequireAuth";
 import RequireGuest from "./features/auth/RequireGuest";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { useUserStore } from "@/stores/useUserStore";
 
 const Home           = lazy(() => import("@/pages/Home"));
 const AuthHome       = lazy(() => import("@/pages/AuthHome"));
@@ -32,6 +33,15 @@ const StubPage = ({ titleKey }: { titleKey: string }) => {
     </div>
   );
 };
+
+// Auth-aware layout for /flashcards: public marketing chrome for anon
+// users, full app shell for authenticated users. The route stays
+// publicly reachable; only the chrome flips. See spec at
+// docs/superpowers/specs/2026-05-04-flashcards-sidebar-layout-design.md.
+export function FlashcardsLayout() {
+  const session = useUserStore((s) => s.session);
+  return session ? <AuthLayout /> : <PublicLayout />;
+}
 
 const PageLoader = () => (
   <div className="min-h-screen bg-semantic-bg flex items-center justify-center">
