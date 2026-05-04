@@ -193,7 +193,21 @@
       "day_streak": "Chuỗi ngày"
     },
     "logout": "Đăng xuất",
-    "loading": "Đang tải..."
+    "loading": "Đang tải...",
+    "yourProgress": {
+      "heading": "Tiến độ của bạn",
+      "lessonsCompleted": "Bài học đã hoàn thành: {{count}}",
+      "exercises": "Bài tập: {{attempts}} lần làm ({{accuracy}}% đúng)",
+      "flashcards": "Thẻ ghi nhớ đã ôn: {{reviewed}} ({{mastered}} đã thuộc)",
+      "lastStudied": {
+        "label": "Học gần nhất: {{relative}}",
+        "never": "chưa bao giờ",
+        "today": "hôm nay",
+        "yesterday": "hôm qua",
+        "daysAgo": "{{count}} ngày trước"
+      }
+    },
+    "error": "Không thể tải tiến độ của bạn. Hãy thử làm mới."
   },
   "lessons": {
     "title": "Bài học",

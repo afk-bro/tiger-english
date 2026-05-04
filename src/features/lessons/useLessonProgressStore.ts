@@ -1,5 +1,6 @@
 // src/features/lessons/useLessonProgressStore.ts
 import { create } from "zustand";
+import { ProgressAPI } from "@/lib/api/progress";
 import type { SectionKey, SectionMeta } from "./lesson.types";
 
 export type SectionProgress = {
@@ -61,6 +62,9 @@ export const useLessonProgressStore = create<LessonProgressState>(
           },
         };
       });
+
+      // Persist to backend (fire-and-forget; errors logged inside ProgressAPI)
+      void ProgressAPI.completeSection(unitSlug, sectionKey);
     },
 
     toggleCompleted: (unitSlug, sectionKey) => {

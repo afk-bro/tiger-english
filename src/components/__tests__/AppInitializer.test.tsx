@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 
-const { mockGetSession, mockOnAuthStateChange, mockSetSession, mockSetSessionLoading, mockFetchProfile, mockClearProfile } = vi.hoisted(() => ({
+const { mockGetSession, mockOnAuthStateChange, mockSetSession, mockSetSessionLoading, mockFetchProfile, mockClearProfile, mockGetState } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockOnAuthStateChange: vi.fn(),
   mockSetSession: vi.fn(),
   mockSetSessionLoading: vi.fn(),
   mockFetchProfile: vi.fn(),
   mockClearProfile: vi.fn(),
+  mockGetState: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase', () => ({
@@ -21,12 +22,23 @@ vi.mock('@/lib/supabase', () => ({
 
 const mockUseUserStore = vi.fn();
 vi.mock('@/stores/useUserStore', () => ({
-  useUserStore: (selector: (s: unknown) => unknown) => mockUseUserStore(selector),
+  useUserStore: Object.assign(
+    (selector: (s: unknown) => unknown) => mockUseUserStore(selector),
+    { getState: mockGetState },
+  ),
 }));
 
 import AppInitializer from '../AppInitializer';
 
 function setup() {
+  mockFetchProfile.mockResolvedValue(undefined);
+  // captureTimezoneIfMissing uses getState(); return a profile with timezone set
+  // so it exits early without making any HTTP calls.
+  mockGetState.mockReturnValue({
+    profile: { timezone: 'UTC' },
+    session: { access_token: 'tok' },
+    fetchProfile: mockFetchProfile,
+  });
   mockUseUserStore.mockImplementation((selector: (s: unknown) => unknown) =>
     selector({
       setSession: mockSetSession,

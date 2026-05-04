@@ -2,6 +2,27 @@
 import { useEffect } from "react";
 import { useUserStore } from "@/stores/useUserStore";
 import { supabase } from "@/lib/supabase";
+import { authAPI } from "@/lib/api/auth";
+
+async function captureTimezoneIfMissing() {
+  const { profile, session } = useUserStore.getState();
+  if (!profile || !session) return;
+  if (profile.timezone) return; // already captured
+  const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (!browserTz) return;
+  try {
+    const result = await authAPI.updateProfile({ timezone: browserTz }, session.access_token);
+    // updateProfile returns ProfileResponse on success, ApiResponse with success=false on logical failure
+    if ("success" in result && result.success === false) {
+      console.error("Failed to capture user timezone (server)", result.message);
+      return;
+    }
+    // Re-fetch profile so the in-memory store gets the new timezone.
+    await useUserStore.getState().fetchProfile();
+  } catch (err) {
+    console.error("Failed to capture user timezone (network)", err);
+  }
+}
 
 export default function AppInitializer() {
   const setSession = useUserStore((s) => s.setSession);
@@ -15,7 +36,7 @@ export default function AppInitializer() {
       if (event === 'INITIAL_SESSION') return;
       setSession(session);
       if (session) {
-        fetchProfile();
+        fetchProfile().then(() => captureTimezoneIfMissing());
       } else {
         clearProfile();
       }
@@ -26,7 +47,7 @@ export default function AppInitializer() {
       setSession(session);
       setSessionLoading(false);
       if (session) {
-        fetchProfile();
+        fetchProfile().then(() => captureTimezoneIfMissing());
       } else {
         clearProfile();
       }

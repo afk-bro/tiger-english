@@ -6,7 +6,12 @@ vi.mock('@/lib/supabase', () => {
   return { supabase: { from: mockFrom } };
 });
 
+vi.mock('@/lib/api/progress', () => ({
+  ProgressAPI: { reviewFlashcard: vi.fn() },
+}));
+
 import { supabase } from '@/lib/supabase';
+import { ProgressAPI } from '@/lib/api/progress';
 import { getVisibleSets, getCardsBySet, getProgressByCards, upsertCardProgress } from '../api/flashcards';
 
 const mockFrom = vi.mocked(supabase.from);
@@ -113,21 +118,17 @@ describe('getProgressByCards', () => {
 });
 
 describe('upsertCardProgress', () => {
-  it('calls upsert with the correct payload', async () => {
-    const mockUpsert = vi.fn().mockResolvedValue({ error: null });
-    mockFrom.mockReturnValue({ upsert: mockUpsert } as any);
+  it('calls ProgressAPI.reviewFlashcard with flashcardId and status', async () => {
+    vi.mocked(ProgressAPI.reviewFlashcard).mockResolvedValue(null);
 
     await upsertCardProgress('user-1', 'card-1', 'known');
-    expect(mockUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({ user_id: 'user-1', flashcard_id: 'card-1', status: 'known' }),
-      { onConflict: 'user_id,flashcard_id' },
-    );
+    expect(ProgressAPI.reviewFlashcard).toHaveBeenCalledWith({ flashcardId: 'card-1', status: 'known' });
   });
 
-  it('throws when Supabase returns an error', async () => {
-    mockFrom.mockReturnValue({
-      upsert: vi.fn().mockResolvedValue({ error: { message: 'Upsert failed' } }),
-    } as any);
-    await expect(upsertCardProgress('user-1', 'card-1', 'known')).rejects.toThrow('Upsert failed');
+  it('resolves without throwing even when reviewFlashcard swallows an error', async () => {
+    // reviewFlashcard is fire-and-forget — it returns null on error instead of throwing
+    vi.mocked(ProgressAPI.reviewFlashcard).mockResolvedValue(null);
+
+    await expect(upsertCardProgress('user-1', 'card-1', 'known')).resolves.toBeUndefined();
   });
 });

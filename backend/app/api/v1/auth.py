@@ -102,9 +102,26 @@ async def update_profile(
 ):
     """Update the authenticated user's profile."""
     try:
-        result = supabase.table('profiles').update(
-            {"native_language": profile_data.native_language}
-        ).eq('id', user_id).select('id, username, first_name, last_name, native_language').single().execute()
+        update_payload: dict = {}
+        fields_set = profile_data.model_fields_set
+        if "native_language" in fields_set:
+            update_payload["native_language"] = profile_data.native_language
+        if "timezone" in fields_set:
+            update_payload["timezone"] = profile_data.timezone
+
+        if update_payload:
+            update_result = supabase.table('profiles').update(
+                update_payload
+            ).eq('id', user_id).execute()
+            if not update_result.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail={"success": False, "message": "Profile not found"},
+                )
+
+        result = supabase.table('profiles').select(
+            'id, username, first_name, last_name, native_language'
+        ).eq('id', user_id).single().execute()
 
         if not result.data:
             raise HTTPException(

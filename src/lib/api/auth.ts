@@ -40,7 +40,8 @@ export interface UsernameCheckResponse {
 }
 
 export interface UpdateProfileData {
-  native_language: string | null;
+  native_language?: string | null;
+  timezone?: string | null;
 }
 
 export interface ProfileResponse {
@@ -65,11 +66,11 @@ class AuthAPI {
     const url = `${this.baseUrl}${endpoint}`;
     
     const response = await fetch(url, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
-      ...options,
     });
 
     if (!response.ok) {

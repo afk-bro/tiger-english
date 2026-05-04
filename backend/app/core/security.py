@@ -1,8 +1,13 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from uuid import UUID
+
+from fastapi import Depends, Header, HTTPException, status
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+
 from .config import settings
+from .supabase import get_supabase_admin
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -33,3 +38,35 @@ def verify_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
+
+
+async def get_current_user(
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    supabase=Depends(get_supabase_admin),
+) -> UUID:
+    """Verify a Supabase JWT bearer token and return the user UUID.
+    Raises 401 on missing/invalid header or expired token.
+
+    Note: `authorization` is `Header(None, ...)` — required headers via
+    `Header(...)` would respond 422 on absence (Pydantic validation),
+    but the contract here is auth-or-401. Treat absent/empty as 401 too.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"success": False, "message": "Invalid authorization header"},
+        )
+    token = authorization.removeprefix("Bearer ")
+    try:
+        user_response = supabase.auth.get_user(token)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"success": False, "message": "Invalid or expired token"},
+        )
+    if not user_response.user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"success": False, "message": "Invalid or expired token"},
+        )
+    return UUID(user_response.user.id)

@@ -163,3 +163,31 @@ describe("FillBlank apostrophe leniency", () => {
     expect(screen.queryByText("lessons.exercises.apostropheReminder")).not.toBeInTheDocument();
   });
 });
+
+describe("FillBlank onAttempt", () => {
+  beforeEach(() => {
+    mockI18n.language = "en";
+  });
+
+  it("calls onAttempt with isCorrect=true on correct submit", async () => {
+    const onAttempt = vi.fn();
+    const user = userEvent.setup();
+
+    render(<FillBlank exercise={exercise} onAttempt={onAttempt} />);
+    await user.type(screen.getByRole("textbox"), "is");
+    await user.click(screen.getByRole("button", { name: /lessons\.exercises\.check/i }));
+
+    expect(onAttempt).toHaveBeenCalledWith(true);
+  });
+
+  it("calls onAttempt with isCorrect=false on incorrect submit", async () => {
+    const onAttempt = vi.fn();
+    const user = userEvent.setup();
+
+    render(<FillBlank exercise={exercise} onAttempt={onAttempt} />);
+    await user.type(screen.getByRole("textbox"), "are");
+    await user.click(screen.getByRole("button", { name: /lessons\.exercises\.check/i }));
+
+    expect(onAttempt).toHaveBeenCalledWith(false);
+  });
+});

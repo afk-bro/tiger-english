@@ -1,13 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import type { Profile, XPData, StudyStats as StudyStatsType } from "@/types/dashboard";
 
 interface WelcomePanelProps {
-  profile: Profile | null;
-  xp: XPData;
-  studyStats: StudyStatsType;
+  name: string;
+  streak: number;
 }
 
-export default function WelcomePanel({ profile, xp, studyStats }: WelcomePanelProps) {
+export default function WelcomePanel({ name, streak }: WelcomePanelProps) {
   const { t } = useTranslation();
 
   return (
@@ -15,18 +13,15 @@ export default function WelcomePanel({ profile, xp, studyStats }: WelcomePanelPr
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-            {t('dashboard.welcome.greeting', { name: profile?.first_name || 'Student' })} 👋
+            {t('dashboard.welcome.greeting', { name: name || 'Student' })} 👋
           </h1>
           <p className="text-primary-100 text-sm sm:text-base">
             {t('dashboard.welcome.journey')}
           </p>
         </div>
         <div className="mt-4 sm:mt-0 text-right">
-          <div className="text-2xl sm:text-3xl font-bold">
-            {t('dashboard.welcome.level', { level: xp.currentLevel })}
-          </div>
           <div className="text-primary-200 text-sm">
-            {t('dashboard.welcome.streak', { streak: studyStats.currentStreak })} 🔥
+            {t('dashboard.welcome.streak', { streak })} 🔥
           </div>
         </div>
       </div>

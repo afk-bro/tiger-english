@@ -28,40 +28,40 @@ const testSection: Section = {
 
 describe("SectionRenderer", () => {
   it("renders heading blocks", () => {
-    render(<SectionRenderer section={testSection} />);
+    render(<SectionRenderer section={testSection} unitSlug="unit-1" sectionKey="overview" />);
     expect(screen.getByText("Test Heading")).toBeInTheDocument();
   });
 
   it("renders text blocks", () => {
-    render(<SectionRenderer section={testSection} />);
+    render(<SectionRenderer section={testSection} unitSlug="unit-1" sectionKey="overview" />);
     expect(screen.getByText("Some paragraph text.")).toBeInTheDocument();
   });
 
   it("renders example items", () => {
-    render(<SectionRenderer section={testSection} />);
+    render(<SectionRenderer section={testSection} unitSlug="unit-1" sectionKey="overview" />);
     expect(screen.getByText("Hello")).toBeInTheDocument();
     expect(screen.getByText("สวัสดี")).toBeInTheDocument();
   });
 
   it("renders callout blocks", () => {
-    render(<SectionRenderer section={testSection} />);
+    render(<SectionRenderer section={testSection} unitSlug="unit-1" sectionKey="overview" />);
     expect(screen.getByText("A helpful tip.")).toBeInTheDocument();
   });
 
   it("passes translations to text blocks (integration with TextBlock)", () => {
-    render(<SectionRenderer section={testSection} />);
+    render(<SectionRenderer section={testSection} unitSlug="unit-1" sectionKey="overview" />);
     expect(screen.getByText("ทักทาย")).toBeInTheDocument();
     expect(screen.queryByText("Greetings.")).not.toBeInTheDocument();
   });
 
   it("passes translations to heading blocks (integration with HeadingBlock)", () => {
-    render(<SectionRenderer section={testSection} />);
+    render(<SectionRenderer section={testSection} unitSlug="unit-1" sectionKey="overview" />);
     expect(screen.getByText("ยินดีต้อนรับ")).toBeInTheDocument();
     expect(screen.queryByText("Welcome.")).not.toBeInTheDocument();
   });
 
   it("passes translations to callout blocks (integration with CalloutBlock)", () => {
-    render(<SectionRenderer section={testSection} />);
+    render(<SectionRenderer section={testSection} unitSlug="unit-1" sectionKey="overview" />);
     expect(screen.getByText("จดจำ")).toBeInTheDocument();
     expect(screen.queryByText("Remember.")).not.toBeInTheDocument();
   });
@@ -73,7 +73,7 @@ describe("SectionRenderer", () => {
         { id: "ex1", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-grammar-mcq-1", imageUrl: "https://example.com/e.png" },
       ],
     };
-    const { container } = render(<SectionRenderer section={section} />);
+    const { container } = render(<SectionRenderer section={section} unitSlug="unit-1" sectionKey="activities" />);
     const img = container.querySelector("img");
     expect(img).toHaveAttribute("src", "https://example.com/e.png");
   });

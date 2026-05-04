@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { ProgressAPI } from '@/lib/api/progress';
 import { mapSet, mapCard, mapProgress, type FlashcardSet, type FlashcardCard, type CardProgress } from '../types';
 
 export async function getVisibleSets(): Promise<FlashcardSet[]> {
@@ -64,16 +65,12 @@ export async function getProgressByCards(
 }
 
 export async function upsertCardProgress(
-  userId: string,
+  _userId: string,
   flashcardId: string,
   status: 'known' | 'unknown',
 ): Promise<void> {
-  const { error } = await supabase
-    .from('user_card_progress')
-    .upsert(
-      { user_id: userId, flashcard_id: flashcardId, status, last_studied_at: new Date().toISOString() },
-      { onConflict: 'user_id,flashcard_id' },
-    );
-
-  if (error) throw new Error(error.message);
+  // user_id is now read from the JWT on the backend (review_flashcard_tx),
+  // not passed explicitly. The Postgres function performs the dual-write
+  // (user_card_progress + flashcard_reviews + user_activity_log) atomically.
+  await ProgressAPI.reviewFlashcard({ flashcardId, status });
 }

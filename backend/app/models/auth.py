@@ -1,6 +1,7 @@
 import re
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
+from zoneinfo import available_timezones
 from ..core.languages import validate_native_language
 
 
@@ -29,11 +30,21 @@ class UserRegister(BaseModel):
 
 class UpdateProfile(BaseModel):
     native_language: Optional[str] = None
+    timezone: Optional[str] = None
 
     @field_validator('native_language')
     @classmethod
     def check_language(cls, v: Optional[str]) -> Optional[str]:
         return validate_native_language(v)
+
+    @field_validator('timezone')
+    @classmethod
+    def check_timezone(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        if v not in available_timezones():
+            raise ValueError(f"Invalid IANA timezone: {v}")
+        return v
 
 
 class UserLogin(BaseModel):

@@ -8,9 +8,10 @@ import type { FillBlankExercise } from "./exercises.types";
 type Props = {
   exercise: FillBlankExercise;
   onCorrect?: () => void;
+  onAttempt?: (isCorrect: boolean) => void;
 };
 
-export default function FillBlank({ exercise, onCorrect }: Props) {
+export default function FillBlank({ exercise, onCorrect, onAttempt }: Props) {
   const [value, setValue] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
@@ -37,6 +38,7 @@ export default function FillBlank({ exercise, onCorrect }: Props) {
   function handleSubmit() {
     if (value.trim() === "") return;
     setSubmitted(true);
+    onAttempt?.(isCorrect);
     if (isCorrect) {
       onCorrect?.();
     }
