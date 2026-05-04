@@ -32,9 +32,12 @@ class ProgressAPIClass {
     const res = await fetch(`${API_BASE}${path}`, {
       ...init,
       headers: {
+        // Caller headers are spread first so the auth token + JSON content
+        // type below cannot be silently overridden by a malformed init.
+        // For an authedFetch helper, those two headers are non-negotiable.
+        ...init?.headers,
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
-        ...init?.headers,
       },
     });
     if (!res.ok) {

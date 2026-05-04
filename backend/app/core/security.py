@@ -41,12 +41,17 @@ def verify_token(token: str) -> Optional[dict]:
 
 
 async def get_current_user(
-    authorization: str = Header(..., alias="Authorization"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
     supabase=Depends(get_supabase_admin),
 ) -> UUID:
     """Verify a Supabase JWT bearer token and return the user UUID.
-    Raises 401 on missing/invalid header or expired token."""
-    if not authorization.startswith("Bearer "):
+    Raises 401 on missing/invalid header or expired token.
+
+    Note: `authorization` is `Header(None, ...)` — required headers via
+    `Header(...)` would respond 422 on absence (Pydantic validation),
+    but the contract here is auth-or-401. Treat absent/empty as 401 too.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"success": False, "message": "Invalid authorization header"},

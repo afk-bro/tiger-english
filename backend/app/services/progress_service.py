@@ -14,11 +14,14 @@ from zoneinfo import ZoneInfo
 from supabase import Client
 
 
-REQUIRED_SECTIONS_PER_UNIT = 5
-"""Every unit currently has exactly 5 sections (overview, grammar, vocabulary,
-dialogues, activities) — see SectionKey at lesson.types.ts:8-13. If a future
-unit has a different section count, this constant breaks and we'll need to
-introduce backend unit metadata (Phase 2+ migration concern)."""
+REQUIRED_SECTION_KEYS = frozenset(
+    {"overview", "grammar", "vocabulary", "dialogues", "activities"}
+)
+"""The exact section_key set every unit must have for the unit to count
+as completed. Mirrored in `app/models/progress.py:SectionKey` (Pydantic
+Literal) and the migration's CHECK constraint. Adding a new section type
+is a deliberate three-place change.
+"""
 
 
 def _today_in_tz(tz_name: str) -> date:
@@ -52,6 +55,19 @@ def _start_of_iso_week_in_tz(tz_name: str) -> date:
     """Monday of the current ISO week in the user's local timezone."""
     today = _today_in_tz(tz_name)
     return today - timedelta(days=today.weekday())
+
+
+def _count_completed_units(sections: List[dict]) -> int:
+    """Count units that have EXACTLY the canonical section-key set.
+
+    Strict equality (==) rather than `len(...) >= n` so a unit with a
+    rogue section_key value can't inflate the completed-units count.
+    Operates over the already-fetched `sections` list — no extra round-trip.
+    """
+    by_unit: dict[str, set[str]] = {}
+    for row in sections:
+        by_unit.setdefault(row["unit_slug"], set()).add(row["section_key"])
+    return sum(1 for keys in by_unit.values() if keys == REQUIRED_SECTION_KEYS)
 
 
 class ProgressService:
@@ -177,8 +193,10 @@ class ProgressService:
             .count or 0
         )
 
-        # 5. lessons_completed: count units with all 5 sections present
-        lessons_completed = self._count_completed_units(user_id_str)
+        # 5. lessons_completed: count units with EXACTLY the canonical
+        # section-key set present. Reuses `sections` already fetched
+        # above to avoid a duplicate round-trip.
+        lessons_completed = _count_completed_units(sections)
 
         # 6. streak + study_days_this_week from the event log
         days_rows = (
@@ -219,21 +237,3 @@ class ProgressService:
             },
         }
 
-    def _count_completed_units(self, user_id_str: str) -> int:
-        """Count units with all REQUIRED_SECTIONS_PER_UNIT sections present.
-        Uses a Postgres aggregation via raw SQL through supabase.rpc would
-        be cleaner, but we'd need a dedicated function for it — for now,
-        fetch all (unit_slug, section_key) pairs and group in Python. The
-        per-user row count is small (at most ~5 sections × N units)."""
-        rows = (
-            self.supabase.table("lesson_section_progress")
-            .select("unit_slug, section_key")
-            .eq("user_id", user_id_str)
-            .execute()
-            .data or []
-        )
-        from collections import defaultdict
-        by_unit = defaultdict(set)
-        for row in rows:
-            by_unit[row["unit_slug"]].add(row["section_key"])
-        return sum(1 for keys in by_unit.values() if len(keys) >= REQUIRED_SECTIONS_PER_UNIT)
