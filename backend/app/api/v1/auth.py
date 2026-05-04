@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from ...models.auth import UserRegister, MessageResponse, UsernameCheckResponse, UpdateProfile, ProfileResponse
 from ...services.auth_service import AuthService
 from ...core.supabase import get_supabase_admin
+from ...core.security import get_current_user
 from ...utils.exceptions import AuthException
 import logging
 
@@ -68,36 +71,10 @@ async def logout_user():
     return {"success": True, "message": "Logged out successfully"}
 
 
-async def _get_user_id_from_token(
-    authorization: str = Header(..., alias="Authorization"),
-    supabase=Depends(get_supabase_admin),
-) -> str:
-    """Verify Supabase JWT and return user_id. Raises 401 on failure."""
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"success": False, "message": "Invalid authorization header"},
-        )
-    token = authorization.removeprefix("Bearer ")
-    try:
-        user_response = supabase.auth.get_user(token)
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"success": False, "message": "Invalid or expired token"},
-        )
-    if not user_response.user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"success": False, "message": "Invalid or expired token"},
-        )
-    return user_response.user.id
-
-
 @router.patch("/profile", response_model=ProfileResponse)
 async def update_profile(
     profile_data: UpdateProfile,
-    user_id: str = Depends(_get_user_id_from_token),
+    user_id: UUID = Depends(get_current_user),
     supabase=Depends(get_supabase_admin),
 ):
     """Update the authenticated user's profile."""
@@ -109,10 +86,12 @@ async def update_profile(
         if "timezone" in fields_set:
             update_payload["timezone"] = profile_data.timezone
 
+        user_id_str = str(user_id)
+
         if update_payload:
             update_result = supabase.table('profiles').update(
                 update_payload
-            ).eq('id', user_id).execute()
+            ).eq('id', user_id_str).execute()
             if not update_result.data:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -121,7 +100,7 @@ async def update_profile(
 
         result = supabase.table('profiles').select(
             'id, username, first_name, last_name, native_language'
-        ).eq('id', user_id).single().execute()
+        ).eq('id', user_id_str).single().execute()
 
         if not result.data:
             raise HTTPException(
