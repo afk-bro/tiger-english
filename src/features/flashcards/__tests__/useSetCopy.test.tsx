@@ -7,8 +7,8 @@ import type { FlashcardSet } from '../types';
 
 const i18n: I18nType = createInstance();
 
-beforeAll(() => {
-  i18n.use(initReactI18next).init({
+beforeAll(async () => {
+  await i18n.use(initReactI18next).init({
     lng: 'en',
     fallbackLng: 'en',
     resources: {

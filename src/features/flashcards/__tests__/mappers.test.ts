@@ -30,8 +30,8 @@ describe('mapSet', () => {
     const row = {
       id: 'abc', title: 'T', description: null, is_public: false,
       created_by: 'user-1', created_at: '2026-01-01T00:00:00Z',
-      updated_at: '2026-01-01T00:00:00Z', flashcards: [],
-    } as any;
+      updated_at: '2026-01-01T00:00:00Z', slug: null, flashcards: [],
+    };
     expect(mapSet(row).cardCount).toBe(0);
   });
 
@@ -39,8 +39,8 @@ describe('mapSet', () => {
     const row = {
       id: 'abc', title: 'T', description: null, is_public: false,
       created_by: null, created_at: '2026-01-01T00:00:00Z',
-      updated_at: '2026-01-01T00:00:00Z', flashcards: undefined as any,
-    } as any;
+      updated_at: '2026-01-01T00:00:00Z', slug: null, flashcards: undefined as any,
+    };
     expect(mapSet(row).cardCount).toBe(0);
   });
 

@@ -31,12 +31,35 @@ UPDATE flashcard_sets SET slug = 'work_business_20'             WHERE id = 'bdb4
 UPDATE flashcard_sets SET slug = 'dating_social_20'             WHERE id = 'dcf29f3d-3d44-ce90-0f15-9461e79af43e';
 UPDATE flashcard_sets SET slug = 'emergencies_health_20'        WHERE id = 'bf91ca3a-1356-273e-fe1f-f837199eb9c9';
 
--- Sanity check: catch curated UUIDs that drifted between this migration's
--- UPDATE list and reality. Fails the migration if any curated set is left
--- with a NULL slug.
+-- Sanity check: every UUID we backfilled above must now have a slug.
+-- Scoped to the explicit UUID list (not `created_by IS NULL`) so user-created
+-- sets whose owner profile was deleted (FK ON DELETE SET NULL) don't cause
+-- spurious failures on a fresh-DB replay.
 DO $$
 BEGIN
-  IF (SELECT COUNT(*) FROM flashcard_sets WHERE created_by IS NULL AND slug IS NULL) > 0 THEN
-    RAISE EXCEPTION 'curated set without slug after backfill — update migration UPDATE list';
+  IF (
+    SELECT COUNT(*) FROM flashcard_sets
+    WHERE id IN (
+      'c5543caa-e6bc-b529-1c87-f8fb105ca57d',
+      '4dd49c50-0c22-95f8-778c-604aecab4a5a',
+      '87cc9ab4-0e1c-be14-3286-9a05e906effe',
+      '0d716dca-681a-1ee0-a7b7-1f093d5429cc',
+      '39b3a616-f9f2-e290-a7d4-bc03c30851cd',
+      '86bb7f26-33ff-e4fa-4268-51b1d2a965b8',
+      'cecc9bfc-8086-b8e5-c793-839f50eb7b8b',
+      '28c8f4ca-d072-8c4a-fbd2-6f4438cf574b',
+      '6c14435e-ac23-c1db-78d7-5c5f9e30f9b0',
+      '3e698b90-bfda-c9cb-8042-a0616ef85910',
+      'f6af32e3-ed88-ec1e-3004-8736d589cf2e',
+      '4375bc23-c8e6-ae1f-0925-70a8eeefed39',
+      '10dcdbb5-517c-257e-56e6-258458edcf25',
+      '75edd4a4-8f3f-b458-de8a-7398a9e0faf5',
+      'bdb49c90-9690-3598-2a43-4bc811df2ddd',
+      'dcf29f3d-3d44-ce90-0f15-9461e79af43e',
+      'bf91ca3a-1356-273e-fe1f-f837199eb9c9'
+    )
+    AND slug IS NULL
+  ) > 0 THEN
+    RAISE EXCEPTION 'curated set without slug after backfill — UUID list out of sync with seed migration';
   END IF;
 END $$;
