@@ -48,8 +48,8 @@ A modern React application designed to help Thai speakers learn English through 
    ```env
    VITE_SUPABASE_URL=your_supabase_url
    VITE_SUPABASE_ANON_KEY=your_anon_key
-   VITE_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    ```
+   The backend's server-side Supabase key should be set in `backend/.env` as `SUPABASE_SERVICE_ROLE_KEY` (this is separate from the backend `SECRET_KEY` used for JWT/app secrets) — see `backend/README.md`.
 
 4. **Start development server**
    ```bash
