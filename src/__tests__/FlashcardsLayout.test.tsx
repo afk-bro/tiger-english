@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { FlashcardsLayout } from '../App';
 import { useUserStore } from '@/stores/useUserStore';
+import type { UserStore } from '@/stores/useUserStore';
 
 vi.mock('@/stores/useUserStore');
 
@@ -14,8 +15,8 @@ vi.mock('@/components/layout/PublicLayout', () => ({
 }));
 
 const setSession = (session: unknown) => {
-  const mockStore = {
-    session,
+  const mockStore: UserStore = {
+    session: session as any,
     sessionLoading: false,
     setSession: vi.fn(),
     setSessionLoading: vi.fn(),
@@ -27,7 +28,7 @@ const setSession = (session: unknown) => {
     setNativeLanguage: vi.fn(),
   };
 
-  vi.mocked(useUserStore).mockImplementation((selector?: (s: any) => unknown) =>
+  vi.mocked(useUserStore).mockImplementation((selector?: (s: typeof mockStore) => unknown) =>
     selector ? selector(mockStore) : mockStore,
   );
 };

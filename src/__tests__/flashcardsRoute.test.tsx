@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRoutes } from '../App';
 import { useUserStore } from '@/stores/useUserStore';
+import type { UserStore } from '@/stores/useUserStore';
 
 vi.mock('@/stores/useUserStore');
 
@@ -17,8 +18,20 @@ vi.mock('@/components/layout/PublicLayout', () => ({
 }));
 
 const setSession = (session: unknown) => {
-  vi.mocked(useUserStore).mockImplementation((selector?: (s: any) => unknown) => // NOSONAR
-    selector ? selector({ session }) : { session },
+  const mockStore: UserStore = {
+    session: session as any,
+    sessionLoading: false,
+    setSession: vi.fn(),
+    setSessionLoading: vi.fn(),
+    profile: null,
+    profileLoading: false,
+    error: null,
+    fetchProfile: vi.fn(),
+    clearProfile: vi.fn(),
+    setNativeLanguage: vi.fn(),
+  };
+  vi.mocked(useUserStore).mockImplementation((selector?: (s: typeof mockStore) => unknown) =>
+    selector ? selector(mockStore) : mockStore,
   );
 };
 

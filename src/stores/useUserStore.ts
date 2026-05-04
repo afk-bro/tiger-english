@@ -13,7 +13,7 @@ type UserProfile = {
   timezone?: string | null;
 };
 
-type UserStore = {
+export type UserStore = {
   // Auth slice
   session: Session | null;
   sessionLoading: boolean;
