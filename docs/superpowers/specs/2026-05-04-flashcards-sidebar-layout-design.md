@@ -104,16 +104,33 @@ No changes to `AuthLayout`, `PublicLayout`, `AppSidebar`, `FlashcardsPage`, or `
 
 ## Testing
 
-- **New unit test:** `src/__tests__/FlashcardsLayout.test.tsx` (or co-located in `App.test.tsx` if such a file exists). Covers the two branches:
+The conditional-logic-only test (mock both layouts, assert which one mounts) is cheap but doesn't catch the actual risk — wrong route wiring. The real failure mode is the route tree being structured so `<FlashcardsLayout />` never gets reached, or being reached without an `<Outlet />` for `<FlashcardsPage />`. So testing has two layers:
+
+- **Unit test for the conditional itself** — `src/__tests__/FlashcardsLayout.test.tsx`:
   - `session = null` → renders `PublicLayout`'s child marker.
   - `session = { ... }` → renders `AuthLayout`'s child marker.
-  Both layouts get mocked at the module level so the test asserts which one mounts without rendering their full chrome.
+  Both layouts are mocked at the module level. This pins the conditional logic in isolation.
+
+- **Route-level integration test** — `src/__tests__/flashcardsRoute.test.tsx`:
+  Renders the full `<App />` (or a route-tree slice) inside a `MemoryRouter` opened at `/flashcards`, with `useUserStore` mocked to return a truthy session. Asserts a sidebar-only marker (e.g., `getByRole('navigation', { name: 'Sidebar' })` or whichever label `AppSidebar` exposes) appears, and the public header (e.g., the `Header` component's title) does NOT. Then re-render with `session = null` and assert the inverse. This is the test that catches a botched route reparent — if `/flashcards` accidentally stays under `<PublicLayout />` or the index child is missing, this test fails.
+
+  Mocking strategy: stub `useUserStore` via `vi.mock('@/stores/useUserStore')` so the test controls session synchronously without `AppInitializer`'s async hydration. Also stub `supabase.auth.getSession()` (or short-circuit `AppInitializer`) so no real network calls fire during the test render.
+
 - **Existing tests:** `AppSidebar.test.tsx` doesn't test routing-layout coupling, no impact. `FlashcardsPage`-touching tests don't render outer chrome, no impact.
+
 - **Manual verify:**
   1. Logged in, click `Flashcards` from sidebar → land on `/flashcards` with sidebar still visible.
   2. Logged in, hard-reload `/flashcards` → see brief PublicLayout flash, then sidebar appears.
   3. Logged out, navigate to `/flashcards` → see public header + footer, no sidebar.
   4. Logged out, click `Login`, log in → routed to authenticated home; navigate back to `/flashcards` from sidebar → sidebar visible.
+
+## Routes explicitly NOT touched
+
+For clarity on what the route-tree change does and doesn't reach:
+
+- `/auth/callback` — top-level sibling route with no layout wrapper at all (`App.tsx` renders it directly: `<Route path="/auth/callback" element={<AuthCallback />} />`). It lives outside both `<PublicLayout />` and the new `<FlashcardsLayout />` block. This change does not affect it; the OAuth callback flow stays as-is.
+- All other `<PublicLayout />`-wrapped routes (`/`, `/about`, `/contact`, `/login`, `/register`, `/u/:username`) — the `<Route element={<PublicLayout />}>` block is edited only to remove the `<Route path="/flashcards" ...>` line. The remaining children stay siblings of each other and their behavior is unchanged.
+- All `<RequireAuth><AuthLayout /></RequireAuth>`-wrapped routes (`/home`, `/dashboard`, `/lessons/*`, `/library`, `/settings`, etc.) — not edited.
 
 ## Acceptance criteria
 
