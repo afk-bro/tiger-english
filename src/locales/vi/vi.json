@@ -111,7 +111,75 @@
       "load_error": "Không tải được bộ thẻ: {{error}}",
       "empty": "Chưa có bộ thẻ nào.",
       "card_singular": "thẻ",
-      "card_plural": "thẻ"
+      "card_plural": "thẻ",
+      "greetings_small_talk": {
+        "title": "Lời chào & Trò chuyện ngắn",
+        "description": "Lời chào hàng ngày, giới thiệu bản thân và các câu giao tiếp thường ngày"
+      },
+      "numbers_1_100": {
+        "title": "Số đếm 1–100",
+        "description": "Học cách đọc và viết các số từ một đến một trăm"
+      },
+      "numbers_1_100_words": {
+        "title": "Số đếm 1–100 (Chữ viết)",
+        "description": "Các số từ một đến một trăm viết bằng chữ tiếng Anh"
+      },
+      "numbers_1_100_phonetic": {
+        "title": "Số đếm 1–100 (Phiên âm)",
+        "description": "Hướng dẫn phát âm các số từ một đến một trăm"
+      },
+      "fruit_20_basic": {
+        "title": "Trái cây",
+        "description": "Các loại trái cây thường gặp trong từ vựng hàng ngày"
+      },
+      "vegetables_20_basic": {
+        "title": "Rau củ",
+        "description": "Các loại rau củ thường gặp trong từ vựng hàng ngày"
+      },
+      "food_single_words_basic": {
+        "title": "Đồ ăn",
+        "description": "Từ vựng đồ ăn cơ bản — từ đơn cho người mới bắt đầu"
+      },
+      "cutlery_china_10_basic": {
+        "title": "Dao kéo & Đồ dùng bàn ăn",
+        "description": "Dao, nĩa, đĩa và các vật dụng khác trên bàn ăn"
+      },
+      "daily_life_20": {
+        "title": "Cuộc sống hàng ngày",
+        "description": "Từ vựng cho các hoạt động và thói quen hàng ngày"
+      },
+      "time_20": {
+        "title": "Thời gian",
+        "description": "Cách xem giờ, các ngày, tháng, và cụm từ chỉ thời gian"
+      },
+      "shopping_money_20": {
+        "title": "Mua sắm & Tiền bạc",
+        "description": "Từ vựng về mua sắm, giá cả và xử lý tiền bạc"
+      },
+      "directions_transportation_20": {
+        "title": "Phương hướng & Phương tiện di chuyển",
+        "description": "Cách hỏi và chỉ đường, cùng từ vựng về phương tiện di chuyển"
+      },
+      "accommodation_hotels_20": {
+        "title": "Chỗ ở & Khách sạn",
+        "description": "Từ vựng về nhận phòng, tiện nghi khách sạn và chỗ ở"
+      },
+      "travel_essentials": {
+        "title": "Cẩm nang du lịch",
+        "description": "Các câu và từ vựng cần thiết khi đi du lịch"
+      },
+      "work_business_20": {
+        "title": "Công việc & Kinh doanh",
+        "description": "Từ vựng chuyên nghiệp dùng tại nơi làm việc và trong môi trường kinh doanh"
+      },
+      "dating_social_20": {
+        "title": "Hẹn hò & Xã giao",
+        "description": "Từ vựng về giao tiếp xã hội, hẹn hò và làm quen với người mới"
+      },
+      "emergencies_health_20": {
+        "title": "Trường hợp khẩn cấp & Sức khỏe",
+        "description": "Từ vựng thiết yếu cho các tình huống y tế và khẩn cấp"
+      }
     },
     "create_modal": {
       "heading": "Tạo bộ thẻ học",
