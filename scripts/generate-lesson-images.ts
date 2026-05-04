@@ -220,7 +220,7 @@ async function main() {
   const env = {
     leonardoKey: requireEnv("LEONARDO_API_KEY"),
     supabaseUrl: requireEnv("SUPABASE_URL"),
-    supabaseServiceKey: requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    supabaseSecretKey: requireEnv("SUPABASE_SECRET_KEY"),
   };
 
   const costPerImage = 0.04;
@@ -235,7 +235,7 @@ async function main() {
     }
   }
 
-  const supabase = createClient(env.supabaseUrl, env.supabaseServiceKey);
+  const supabase = createClient(env.supabaseUrl, env.supabaseSecretKey);
   const failed: { id: string; error: string }[] = [];
 
   for (const cand of toGenerate) {

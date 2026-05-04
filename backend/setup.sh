@@ -30,7 +30,7 @@ if [ ! -f ".env" ]; then
     cp .env.example .env
     echo "📝 Please edit .env file with your actual Supabase credentials:"
     echo "   - SUPABASE_URL"
-    echo "   - SUPABASE_SERVICE_ROLE_KEY"
+    echo "   - SUPABASE_SECRET_KEY"
     echo "   - SECRET_KEY (generate a strong random key)"
 fi
 
