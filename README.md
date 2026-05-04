@@ -35,7 +35,7 @@ A modern React application designed to help Thai speakers learn English through 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd gain-english
+   cd tiger-english
    ```
 
 2. **Install dependencies**
@@ -49,7 +49,7 @@ A modern React application designed to help Thai speakers learn English through 
    VITE_SUPABASE_URL=your_supabase_url
    VITE_SUPABASE_ANON_KEY=your_anon_key
    ```
-   The backend's server-side Supabase key should be set in `backend/.env` as `SUPABASE_SERVICE_ROLE_KEY` (this is separate from the backend `SECRET_KEY` used for JWT/app secrets) — see `backend/README.md`.
+   The backend's server-side Supabase key should be set in `backend/.env` as `SUPABASE_SECRET_KEY` (the `sb_secret_…` format from Project Settings → API; separate from the `SECRET_KEY` used for JWT/app secrets) — see `backend/README.md`.
 
 4. **Start development server**
    ```bash
