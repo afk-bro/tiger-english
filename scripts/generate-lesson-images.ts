@@ -220,7 +220,7 @@ async function main() {
   const env = {
     leonardoKey: requireEnv("LEONARDO_API_KEY"),
     supabaseUrl: requireEnv("SUPABASE_URL"),
-    supabaseServiceKey: requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    supabaseServiceKey: requireEnv("SUPABASE_SECRET_KEY"),
   };
 
   const costPerImage = 0.04;

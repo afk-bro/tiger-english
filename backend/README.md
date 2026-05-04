@@ -41,7 +41,7 @@ cp .env.example .env
 
 Required environment variables:
 - `SUPABASE_URL`: Your Supabase project URL
-- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key (keep secure!)
+- `SUPABASE_SECRET_KEY`: Your Supabase secret key (`sb_secret_…` format from Project Settings → API; keep secure!)
 - `SECRET_KEY`: JWT secret key (generate a strong random key)
 
 ### Running the Server

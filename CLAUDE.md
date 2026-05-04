@@ -42,7 +42,7 @@ npm test -- path/to/test.spec.ts   # Frontend: single file
 ### Frontend → Backend → Supabase Flow
 
 - **Frontend** uses `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (safe, limited permissions)
-- **Backend** uses `SUPABASE_SERVICE_ROLE_KEY` (never exposed to frontend)
+- **Backend** uses `SUPABASE_SECRET_KEY` (the new `sb_secret_…` format from Project Settings → API; never exposed to frontend)
 - All privileged operations (user creation, profile writes) go through the FastAPI backend
 
 API base: `VITE_API_BASE_URL` (defaults to `http://localhost:8000/api/v1`)
@@ -120,7 +120,7 @@ E2E_TESTER_PASSWORD=
 **Backend** (`backend/.env`):
 ```
 SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_SECRET_KEY=
 SECRET_KEY=
 ALLOWED_ORIGINS=["http://localhost:5173"]
 ENVIRONMENT=development
@@ -142,7 +142,7 @@ npm run lesson-images -- --unit unit-2 --force      # regenerate everything (ign
 npm run lesson-images -- --unit unit-2 --item <id>  # regenerate one item
 ```
 
-The Leonardo API key (`LEONARDO_API_KEY` in `backend/.env`) and Supabase service role key (`SUPABASE_SERVICE_ROLE_KEY`) are read server-side only by the script — never bundled into the client.
+The Leonardo API key (`LEONARDO_API_KEY` in `backend/.env`) and Supabase secret key (`SUPABASE_SECRET_KEY`) are read server-side only by the script — never bundled into the client.
 
 Spec: `docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md`.
 Plan: `docs/superpowers/plans/2026-05-02-lesson-image-generation.md`.

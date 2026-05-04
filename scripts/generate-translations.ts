@@ -5,7 +5,7 @@
  *   npx tsx scripts/generate-translations.ts --lang th --cards-file src/data/translations/cards.json
  *
  * Or with Supabase credentials to fetch cards directly:
- *   SUPABASE_URL=https://... SUPABASE_SERVICE_ROLE_KEY=... \
+ *   SUPABASE_URL=https://... SUPABASE_SECRET_KEY=... \
  *   npx tsx scripts/generate-translations.ts --lang th
  *
  * Uses ANTHROPIC_CODE_OAUTH_TOKEN if present (Claude Code sessions),
@@ -67,7 +67,7 @@ if (cardsFilePath) {
 } else {
   const supabase = createClient(
     process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.SUPABASE_SECRET_KEY!,
   );
 
   console.log(`Fetching cards without a reviewed ${langName} translation...`);
