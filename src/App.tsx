@@ -49,43 +49,55 @@ const PageLoader = () => (
   </div>
 );
 
+// Exported so route-level integration tests can render the route tree
+// inside a MemoryRouter without needing the BrowserRouter shell.
+export function AppRoutes() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Public routes with PublicLayout */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/u/:username" element={<StubPage titleKey="common.stub.public_profile" />} />
+          <Route path="/login" element={<RequireGuest><Login /></RequireGuest>} />
+          <Route path="/register" element={<RequireGuest><Register /></RequireGuest>} />
+        </Route>
+
+        {/* /flashcards: auth-aware chrome — sidebar when signed in, public layout otherwise */}
+        <Route path="/flashcards" element={<FlashcardsLayout />}>
+          <Route index element={<FlashcardsPage />} />
+        </Route>
+
+        {/* Auth callback — no layout wrapper */}
+        <Route path="/auth/callback" element={<AuthCallback />} />
+
+        {/* Authenticated routes with AuthLayout + RequireAuth */}
+        <Route element={<RequireAuth><AuthLayout /></RequireAuth>}>
+          <Route path="/home" element={<AuthHome />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/lessons" element={<LessonsIndex />} />
+          <Route path="/lessons/:unitSlug" element={<UnitHub />} />
+          <Route path="/lessons/:unitSlug/:sectionKey" element={<SectionPage />} />
+          <Route path="/library" element={<StubPage titleKey="common.sidebar.nav.library" />} />
+          <Route path="/study-groups" element={<StubPage titleKey="common.sidebar.nav.study_groups" />} />
+          <Route path="/notifications" element={<StubPage titleKey="common.sidebar.nav.notifications" />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/drag-drop" element={<StubPage titleKey="common.sidebar.nav.drag_drop" />} />
+          <Route path="/ad-libs" element={<StubPage titleKey="common.sidebar.nav.ad_libs" />} />
+        </Route>
+      </Routes>
+    </Suspense>
+  );
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <Router>
         <AppInitializer />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Public routes with PublicLayout */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/flashcards" element={<FlashcardsPage />} />
-              <Route path="/u/:username" element={<StubPage titleKey="common.stub.public_profile" />} />
-              <Route path="/login" element={<RequireGuest><Login /></RequireGuest>} />
-              <Route path="/register" element={<RequireGuest><Register /></RequireGuest>} />
-            </Route>
-
-            {/* Auth callback — no layout wrapper */}
-            <Route path="/auth/callback" element={<AuthCallback />} />
-
-            {/* Authenticated routes with AuthLayout + RequireAuth */}
-            <Route element={<RequireAuth><AuthLayout /></RequireAuth>}>
-              <Route path="/home" element={<AuthHome />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/lessons" element={<LessonsIndex />} />
-              <Route path="/lessons/:unitSlug" element={<UnitHub />} />
-              <Route path="/lessons/:unitSlug/:sectionKey" element={<SectionPage />} />
-              <Route path="/library" element={<StubPage titleKey="common.sidebar.nav.library" />} />
-              <Route path="/study-groups" element={<StubPage titleKey="common.sidebar.nav.study_groups" />} />
-              <Route path="/notifications" element={<StubPage titleKey="common.sidebar.nav.notifications" />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/drag-drop" element={<StubPage titleKey="common.sidebar.nav.drag_drop" />} />
-              <Route path="/ad-libs" element={<StubPage titleKey="common.sidebar.nav.ad_libs" />} />
-            </Route>
-          </Routes>
-        </Suspense>
+        <AppRoutes />
       </Router>
     </ErrorBoundary>
   );
