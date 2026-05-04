@@ -25,7 +25,7 @@ The route is correctly bucketed as "public" because anonymous users *can* visit 
 
 ## Approach
 
-Add a thin auth-aware route element that picks the layout based on session state, and reparent `/flashcards` under it. Both existing layouts already render `<Outlet />` for nested routes, so the wrapper just delegates.
+Add a thin auth-aware route element that picks the layout based on the user's `profile` (the same signal `FlashcardsPage` already uses for its `isAuthenticated` check), and reparent `/flashcards` under it. Both existing layouts already render `<Outlet />` for nested routes, so the wrapper just delegates.
 
 ```tsx
 // inline in src/App.tsx
@@ -74,8 +74,8 @@ useUserStore.profile
 
 A logged-in user landing fresh on `/flashcards` (cold reload, not a SPA navigation from `/home`) will:
 
-1. See `PublicLayout` for ~100-300ms (the time `supabase.auth.getSession()` takes to read from `localStorage` and resolve).
-2. Re-render once `setSession(...)` fires, swapping to `AuthLayout`.
+1. See `PublicLayout` for the time it takes `supabase.auth.getSession()` to resolve AND `fetchProfile()` to return — typically ~200-500ms in total (session hydrates first from `localStorage`, then the profile fetch round-trips).
+2. Re-render once the profile populates the store, swapping to `AuthLayout`.
 
 The flash is on chrome only — the flashcards content underneath renders normally and isn't replaced. Two options considered:
 
@@ -112,9 +112,9 @@ The conditional-logic-only test (mock both layouts, assert which one mounts) is 
   Both layouts are mocked at the module level. This pins the conditional logic in isolation.
 
 - **Route-level integration test** — `src/__tests__/flashcardsRoute.test.tsx`:
-  Renders the full `<App />` (or a route-tree slice) inside a `MemoryRouter` opened at `/flashcards`, with `useUserStore` mocked to return a truthy session. Asserts a sidebar-only marker (e.g., `getByRole('navigation', { name: 'Sidebar' })` or whichever label `AppSidebar` exposes) appears, and the public header (e.g., the `Header` component's title) does NOT. Then re-render with `session = null` and assert the inverse. This is the test that catches a botched route reparent — if `/flashcards` accidentally stays under `<PublicLayout />` or the index child is missing, this test fails.
+  Renders `<AppRoutes />` inside a `MemoryRouter` opened at `/flashcards`, with `useUserStore` mocked to return a truthy `profile`. Mocked `AuthLayout` and `PublicLayout` each render an `<Outlet />` so the index child mounts; `FlashcardsPage` is mocked to a stable test marker so the test can assert the index child rendered (catching a missing `<Route index>` regression). Then re-render with `profile = null` and assert the inverse. The third test sets a truthy profile and renders `/about` to confirm other public routes still get `PublicLayout` (regression sentinel for accidental over-reparenting).
 
-  Mocking strategy: stub `useUserStore` via `vi.mock('@/stores/useUserStore')` so the test controls session synchronously without `AppInitializer`'s async hydration. Also stub `supabase.auth.getSession()` (or short-circuit `AppInitializer`) so no real network calls fire during the test render.
+  Mocking strategy: stub `useUserStore` via `vi.mock('@/stores/useUserStore')` so the test controls profile synchronously without `AppInitializer`'s async hydration. Mock layouts and the page; no real network calls fire during the test render.
 
 - **Existing tests:** `AppSidebar.test.tsx` doesn't test routing-layout coupling, no impact. `FlashcardsPage`-touching tests don't render outer chrome, no impact.
 
