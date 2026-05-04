@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { I18nextProvider } from 'react-i18next';
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import { I18nextProvider, initReactI18next } from 'react-i18next';
+import { createInstance, type i18n as I18nType } from 'i18next';
 import { useSetCopy } from '../hooks/useSetCopy';
 import type { FlashcardSet } from '../types';
+
+const i18n: I18nType = createInstance();
 
 beforeAll(() => {
   i18n.use(initReactI18next).init({
