@@ -52,9 +52,11 @@ export const useLessonProgressStore = create<LessonProgressState>(
 
     markCompleted: (unitSlug, sectionKey) => {
       const key = makeKey(unitSlug, sectionKey);
+      let didTransition = false;
       set((state) => {
         const current = state.progress[key] ?? DEFAULT_PROGRESS;
         if (current.completed) return state;
+        didTransition = true;
         return {
           progress: {
             ...state.progress,
@@ -63,8 +65,12 @@ export const useLessonProgressStore = create<LessonProgressState>(
         };
       });
 
-      // Persist to backend (fire-and-forget; errors logged inside ProgressAPI)
-      void ProgressAPI.completeSection({ unitSlug, sectionKey });
+      // Persist only on the not-completed → completed transition. The backend
+      // /complete-section endpoint is idempotent (uses idempotency keys), so
+      // duplicate calls are safe — but they're wasted network. Skip them.
+      if (didTransition) {
+        void ProgressAPI.completeSection({ unitSlug, sectionKey });
+      }
     },
 
     toggleCompleted: (unitSlug, sectionKey) => {

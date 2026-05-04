@@ -88,6 +88,16 @@ describe("useLessonProgressStore", () => {
     });
   });
 
+  it("does not re-persist markCompleted when section is already complete", () => {
+    const store = useLessonProgressStore.getState();
+    store.markCompleted("unit-1", "vocabulary");
+    store.markCompleted("unit-1", "vocabulary");
+    store.markCompleted("unit-1", "vocabulary");
+    // Three .markCompleted calls but only the first should hit the network —
+    // backend /complete-section is idempotent but duplicate calls are wasteful.
+    expect(ProgressAPI.completeSection).toHaveBeenCalledTimes(1);
+  });
+
   it("sets and retrieves lastVisitedSectionKey", () => {
     useLessonProgressStore.getState().setLastVisited("unit-1", "vocabulary");
     expect(
