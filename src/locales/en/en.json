@@ -304,7 +304,10 @@
       "completed": "Completed",
       "next": "Next",
       "previous": "Previous",
-      "backToUnit": "Back to Unit"
+      "backToUnit": "Back to Unit",
+      "nextUnit": "Next: {{unitLabel}}",
+      "allUnitsCompletedMessage": "You've completed all available units",
+      "backToLessons": "Back to Lessons"
     },
     "progress": {
       "notStarted": "Not started",

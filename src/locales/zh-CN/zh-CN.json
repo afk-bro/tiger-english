@@ -304,7 +304,10 @@
       "completed": "已完成",
       "next": "下一节",
       "previous": "上一节",
-      "backToUnit": "返回单元"
+      "backToUnit": "返回单元",
+      "nextUnit": "下一个：{{unitLabel}}",
+      "allUnitsCompletedMessage": "您已完成所有可用单元",
+      "backToLessons": "返回课程列表"
     },
     "progress": {
       "notStarted": "未开始",

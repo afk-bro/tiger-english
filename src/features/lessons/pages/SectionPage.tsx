@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
-import { getUnit } from "../data/getUnit";
+import { getUnit, getNextAvailableUnit } from "../data/getUnit";
 import { getSection } from "../data/getSection";
 import { useLessonProgressStore } from "../useLessonProgressStore";
 import { SECTION_ORDER, type SectionKey } from "../lesson.types";
@@ -85,6 +85,23 @@ export default function SectionPage() {
     );
   }
 
+  const isLastSection =
+    SECTION_ORDER.indexOf(validSectionKey) === SECTION_ORDER.length - 1;
+  const nextUnitData = isLastSection
+    ? getNextAvailableUnit(unit.slug)
+    : undefined;
+  const nextUnitTitle = nextUnitData
+    ? (learnerLang && nextUnitData.translations?.[learnerLang]?.title) || nextUnitData.title
+    : '';
+  const nextUnit = nextUnitData
+    ? {
+        slug: nextUnitData.slug,
+        ctaText: t('lessons.section.nextUnit', {
+          unitLabel: `${t('lessons.unitShort', { number: nextUnitData.number })} — ${nextUnitTitle}`,
+        }),
+      }
+    : undefined;
+
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       <div className="sticky top-0 z-10 bg-semantic-bg pb-3 mb-6 border-b border-semantic-border -mx-4 px-4 pt-2">
@@ -118,6 +135,8 @@ export default function SectionPage() {
         currentSection={validSectionKey}
         completed={progress.completed}
         onToggleComplete={() => toggleCompleted(unit.slug, validSectionKey)}
+        isLastSection={isLastSection}
+        nextUnit={nextUnit}
       />
     </div>
   );

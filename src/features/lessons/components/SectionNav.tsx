@@ -9,13 +9,22 @@ type Props = {
   currentSection: SectionKey;
   completed: boolean;
   onToggleComplete: () => void;
+  isLastSection: boolean;
+  nextUnit?: { slug: string; ctaText: string };
 };
 
-export default function SectionNav({ unitSlug, currentSection, completed, onToggleComplete }: Props) {
+export default function SectionNav({
+  unitSlug,
+  currentSection,
+  completed,
+  onToggleComplete,
+  isLastSection,
+  nextUnit,
+}: Props) {
   const { t } = useTranslation();
   const currentIndex = SECTION_ORDER.indexOf(currentSection);
   const prevSection = currentIndex > 0 ? SECTION_ORDER[currentIndex - 1] : null;
-  const nextSection = currentIndex < SECTION_ORDER.length - 1 ? SECTION_ORDER[currentIndex + 1] : null;
+  const nextSection = !isLastSection ? SECTION_ORDER[currentIndex + 1] : null;
 
   return (
     <div className="mt-12 pt-6 border-t border-semantic-border space-y-4">
@@ -46,6 +55,11 @@ export default function SectionNav({ unitSlug, currentSection, completed, onTogg
             {t("lessons.section.next")}
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
+        ) : nextUnit ? (
+          <Link to={`/lessons/${nextUnit.slug}/overview`} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-md transition-colors">
+            {nextUnit.ctaText}
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </Link>
         ) : (
           <Link to={`/lessons/${unitSlug}`} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors">
             {t("lessons.section.backToUnit")}
@@ -53,6 +67,15 @@ export default function SectionNav({ unitSlug, currentSection, completed, onTogg
           </Link>
         )}
       </div>
+      {isLastSection && !nextUnit && (
+        <div className="flex flex-col items-center gap-1 pt-2">
+          <p className="text-sm text-semantic-text-muted">{t("lessons.section.allUnitsCompletedMessage")}</p>
+          <Link to="/lessons" className="inline-flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline">
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+            {t("lessons.section.backToLessons")}
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

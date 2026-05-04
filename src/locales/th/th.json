@@ -304,7 +304,10 @@
       "completed": "เสร็จแล้ว",
       "next": "ถัดไป",
       "previous": "ก่อนหน้า",
-      "backToUnit": "กลับไปที่บท"
+      "backToUnit": "กลับไปที่บท",
+      "nextUnit": "ถัดไป: {{unitLabel}}",
+      "allUnitsCompletedMessage": "คุณได้เรียนจบบทเรียนที่มีอยู่ทั้งหมดแล้ว",
+      "backToLessons": "กลับไปยังรายการบทเรียน"
     },
     "progress": {
       "notStarted": "ยังไม่เริ่ม",
