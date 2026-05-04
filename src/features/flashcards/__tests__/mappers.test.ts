@@ -11,6 +11,7 @@ describe('mapSet', () => {
       created_by: null,
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
+      slug: 'test_slug',
       flashcards: [{ count: 5 }],
     };
     expect(mapSet(row)).toEqual({
@@ -21,6 +22,7 @@ describe('mapSet', () => {
       createdBy: null,
       createdAt: '2026-01-01T00:00:00Z',
       cardCount: 5,
+      slug: 'test_slug',
     });
   });
 
@@ -29,7 +31,7 @@ describe('mapSet', () => {
       id: 'abc', title: 'T', description: null, is_public: false,
       created_by: 'user-1', created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z', flashcards: [],
-    };
+    } as any;
     expect(mapSet(row).cardCount).toBe(0);
   });
 
@@ -38,8 +40,17 @@ describe('mapSet', () => {
       id: 'abc', title: 'T', description: null, is_public: false,
       created_by: null, created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z', flashcards: undefined as any,
-    };
+    } as any;
     expect(mapSet(row).cardCount).toBe(0);
+  });
+
+  it('preserves explicit null slug', () => {
+    const row = {
+      id: 'abc', title: 'T', description: null, is_public: false, slug: null,
+      created_by: null, created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z', flashcards: [{ count: 0 }],
+    };
+    expect(mapSet(row).slug).toBe(null);
   });
 });
 

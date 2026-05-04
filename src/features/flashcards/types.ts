@@ -6,6 +6,7 @@ export type FlashcardSet = {
   createdBy: string | null
   createdAt: string
   cardCount: number
+  slug: string | null
 }
 
 export type FlashcardCard = {
@@ -42,6 +43,7 @@ type SetRow = {
   is_public: boolean
   created_by: string | null
   created_at: string
+  slug: string | null
   flashcards?: { count: number }[]   // optional: PostgREST may omit if no rows
 }
 
@@ -86,6 +88,7 @@ export function mapSet(row: SetRow): FlashcardSet {
     createdBy: row.created_by,
     createdAt: row.created_at,
     cardCount: (row.flashcards ?? [])[0]?.count ?? 0,
+    slug: row.slug ?? null,
   };
 }
 
