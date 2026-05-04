@@ -65,15 +65,26 @@ The API will be available at:
 
 ### Authentication
 
-- `POST /api/v1/auth/register` - Register new user
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/logout` - User logout
-- `GET /api/v1/auth/check-username/{username}` - Check username availability
+- `POST /api/v1/auth/register` — Register new user
+- `POST /api/v1/auth/logout` — User logout
+- `GET /api/v1/auth/check-username/{username}` — Check username availability
+- `PATCH /api/v1/auth/profile` — Update authenticated user's profile (auth required via `get_current_user`); accepts partial updates for `native_language` and `timezone`
+
+There is no `POST /auth/login` HTTP endpoint — login goes directly through `supabase.auth.signInWithPassword()` from the frontend. `AuthService.login_user()` exists for future internal use only.
+
+### Progress (Phase 1)
+
+All endpoints require authentication via the `Authorization: Bearer <jwt>` header. Writes route through transactional Postgres functions (`*_tx`) granted only to `service_role`.
+
+- `POST /api/v1/me/progress/complete-section` — Mark a lesson section complete (idempotent on `user_id, unit_slug, section_key`)
+- `POST /api/v1/me/progress/attempt-exercise` — Record an exercise attempt (correct or incorrect)
+- `POST /api/v1/me/progress/review-flashcard` — Record a flashcard review (`status: 'known' | 'unknown'`)
+- `GET /api/v1/me/progress/summary` — Aggregated dashboard read: sections completed, exercises (total + correct), flashcards (reviewed + currently_known), streak, study days this week, last active
 
 ### Health
 
-- `GET /` - Root endpoint
-- `GET /health` - Health check
+- `GET /` — Root endpoint
+- `GET /health` — Health check
 
 ## Project Structure
 

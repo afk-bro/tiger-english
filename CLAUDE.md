@@ -47,13 +47,17 @@ npm test -- path/to/test.spec.ts   # Frontend: single file
 
 API base: `VITE_API_BASE_URL` (defaults to `http://localhost:8000/api/v1`)
 
-Frontend API client: `src/lib/api/auth.ts` — `AuthAPI` singleton class with typed request/response interfaces.
+Frontend API clients live under `src/lib/api/`:
+- `auth.ts` — `AuthAPI` singleton with typed request/response interfaces
+- `progress.ts` — `ProgressAPI` for the authenticated `/me/progress/*` endpoints (`completeSection`, `attemptExercise`, `reviewFlashcard`, `getSummary`); uses `authedFetch` with `defaultValue` fallback so missing locale keys / network failures degrade gracefully
+
+Add new clients alongside these following the same pattern: one module per `<feature>API`, an `authedFetch` helper that injects the bearer token, and try/catch wrappers that log + return `null` for write methods.
 
 ### Auth Flow
 
 1. **AppInitializer** (`src/components/AppInitializer.tsx`) restores Supabase session on app start — its `onAuthStateChange` handler is the single trigger for `fetchProfile()` on `SIGNED_IN`
 2. **Zustand store** (`src/stores/useUserStore.ts`) holds global user profile/auth state
-3. **UserLayout** (`src/routes/UserLayout.tsx`) guards `/u/:username` routes — redirects unauthenticated users
+3. **`RequireAuth`** (`src/features/auth/RequireAuth.tsx`) wraps the authenticated route block in `App.tsx`; `RequireGuest` mirrors it for `/login` and `/register`. There is no separate `UserLayout` — auth is enforced at the route element via `<RequireAuth><AuthLayout /></RequireAuth>`.
 4. Registration goes through FastAPI → backend creates Supabase user + `profiles` + `user_stats` rows
 5. Login calls `supabase.auth.signInWithPassword()` directly and navigates on success — profile hydration happens asynchronously via `onAuthStateChange`; `UserMenu` shows a spinner during that window
 
@@ -63,10 +67,12 @@ Zustand (`src/stores/useUserStore.ts`) is the single source of truth for user st
 
 ### Routing
 
-React Router DOM v7. Pages are lazy-loaded with Suspense.
+React Router DOM v7. Pages are lazy-loaded with `Suspense`. Three layout buckets, defined in `src/App.tsx`:
 
-- Public: `/`, `/register`, `/login`, `/about`, `/contact`, `/flashcards`, `/flashcard-test`
-- Protected (requires auth): `/u/:username/*`
+- **`PublicLayout`** (Header + Footer): `/`, `/about`, `/contact`, `/login`, `/register`, `/u/:username` (public profile stub)
+- **`FlashcardsLayout`** (auth-aware): `/flashcards` — picks `AuthLayout` when `useUserStore.profile` is non-null, `PublicLayout` otherwise. Anonymous users still get the preview path; logged-in users keep the sidebar
+- **`AuthLayout` + `RequireAuth`** (sidebar + slim header): `/home`, `/dashboard`, `/lessons`, `/lessons/:unitSlug`, `/lessons/:unitSlug/:sectionKey`, `/library`, `/study-groups`, `/notifications`, `/settings`, `/drag-drop`, `/ad-libs`
+- **No layout wrapper**: `/auth/callback` (OAuth completion handler — top-level sibling route)
 
 ### Forms
 
@@ -74,7 +80,7 @@ React Hook Form + Zod schemas for all forms. Real-time username availability via
 
 ### i18n
 
-i18next with browser language detection. Supported: English (`en`), Thai (`th`). Locale files at `src/locales/{en,th}/`.
+`react-i18next` with browser language detection. Supported locales: `en`, `vi`, `th`, `zh-CN`. Locale files at `src/locales/<lang>/<lang>.json`. `fallbackLng: 'en'` — any missing key falls back to English. Locale-keyed content (e.g. flashcard set titles, dashboard progress copy) lives under nested objects like `flashcards.sets.<slug>.title` and `dashboard.yourProgress.*`. When using `t(key, { defaultValue })` the default is returned if the key is missing in every locale (the `useSetCopy` hook is the canonical example — `src/features/flashcards/hooks/useSetCopy.ts`).
 
 ### Styling
 
@@ -112,7 +118,10 @@ Note: All progress writes go through transactional Postgres functions (`complete
 
 - `profiles` — id (FK auth.users), first_name, last_name, email, username (unique), native_language, timezone
 - `user_stats` — user_id (FK auth.users), xp, level, study_streak, last_login
-- `flashcards` — in progress
+- `flashcards` — vocabulary cards, joined to per-language `flashcard_translations` for native-text rendering
+- `flashcard_sets` — curated sets (17 seeded, `created_by IS NULL`) plus user-created sets; each curated set has a stable `slug` keyed into the locale files
+- `flashcard_translations` — per-card translations for `th`, `vi`, `zh`
+- `languages` — reference table for `language_code` (th/vi/zh)
 - `user_activity_log` — single-source-of-truth event stream (lesson_section_completed, exercise_attempted, flashcard_reviewed)
 - `lesson_section_progress` — projection: which sections each user has completed (idempotent on user/unit/section)
 - `exercise_attempts` — projection: every exercise attempt (correct OR incorrect)
