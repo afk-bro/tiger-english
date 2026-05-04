@@ -263,19 +263,19 @@
     "logout": "退出",
     "loading": "加载中...",
     "yourProgress": {
-      "heading": "Your Progress",
-      "lessonsCompleted": "Lessons completed: {{count}}",
-      "exercises": "Exercises: {{attempts}} attempts ({{accuracy}}% correct)",
-      "flashcards": "Flashcards reviewed: {{reviewed}} ({{mastered}} mastered)",
+      "heading": "您的学习进度",
+      "lessonsCompleted": "已完成课程：{{count}}",
+      "exercises": "练习：{{attempts}} 次（正确率 {{accuracy}}%）",
+      "flashcards": "已复习闪卡：{{reviewed}}（已掌握 {{mastered}}）",
       "lastStudied": {
-        "label": "Last studied: {{relative}}",
-        "never": "never",
-        "today": "today",
-        "yesterday": "yesterday",
-        "daysAgo": "{{count}} days ago"
+        "label": "上次学习：{{relative}}",
+        "never": "从未",
+        "today": "今天",
+        "yesterday": "昨天",
+        "daysAgo": "{{count}} 天前"
       }
     },
-    "error": "Couldn't load your progress. Try refreshing."
+    "error": "无法加载您的进度，请刷新重试"
   },
   "lessons": {
     "title": "课程",
