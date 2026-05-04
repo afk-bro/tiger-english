@@ -263,19 +263,19 @@
     "logout": "ออกจากระบบ",
     "loading": "กำลังโหลด...",
     "yourProgress": {
-      "heading": "Your Progress",
-      "lessonsCompleted": "Lessons completed: {{count}}",
-      "exercises": "Exercises: {{attempts}} attempts ({{accuracy}}% correct)",
-      "flashcards": "Flashcards reviewed: {{reviewed}} ({{mastered}} mastered)",
+      "heading": "ความก้าวหน้าของคุณ",
+      "lessonsCompleted": "บทเรียนที่เรียนจบ: {{count}}",
+      "exercises": "แบบฝึกหัด: {{attempts}} ครั้ง (ถูก {{accuracy}}%)",
+      "flashcards": "แฟลชการ์ดที่ทบทวน: {{reviewed}} (จำได้ {{mastered}})",
       "lastStudied": {
-        "label": "Last studied: {{relative}}",
-        "never": "never",
-        "today": "today",
-        "yesterday": "yesterday",
-        "daysAgo": "{{count}} days ago"
+        "label": "เรียนล่าสุด: {{relative}}",
+        "never": "ยังไม่เคย",
+        "today": "วันนี้",
+        "yesterday": "เมื่อวาน",
+        "daysAgo": "{{count}} วันที่แล้ว"
       }
     },
-    "error": "Couldn't load your progress. Try refreshing."
+    "error": "โหลดความก้าวหน้าไม่ได้ ลองรีเฟรชอีกครั้ง"
   },
   "lessons": {
     "title": "บทเรียน",
