@@ -48,18 +48,18 @@ npm test -- path/to/test.spec.ts   # Frontend: single file
 API base: `VITE_API_BASE_URL` (defaults to `http://localhost:8000/api/v1`)
 
 Frontend API clients live under `src/lib/api/`:
-- `auth.ts` — `AuthAPI` singleton with typed request/response interfaces
-- `progress.ts` — `ProgressAPI` for the authenticated `/me/progress/*` endpoints (`completeSection`, `attemptExercise`, `reviewFlashcard`, `getSummary`); uses `authedFetch` with `defaultValue` fallback so missing locale keys / network failures degrade gracefully
+- `auth.ts` — exports `authAPI` (an instance of class `AuthAPI`) with typed request/response interfaces; private `makeRequest` sets `Content-Type: application/json` and lets callers pass `Authorization` explicitly per call
+- `progress.ts` — exports `ProgressAPI` (instance of `ProgressAPIClass`) for the authenticated `/me/progress/*` endpoints (`completeSection`, `attemptExercise`, `reviewFlashcard`, `getSummary`); private `authedFetch` helper resolves the Supabase session, returns `null` when none exists, throws on non-2xx, and forces `Authorization: Bearer <jwt>` + `Content-Type: application/json` over caller-supplied headers. Write methods catch and log errors and return `null` so callers can degrade gracefully; `getSummary` deliberately propagates errors so its hook can render an error state.
 
-Add new clients alongside these following the same pattern: one module per `<feature>API`, an `authedFetch` helper that injects the bearer token, and try/catch wrappers that log + return `null` for write methods.
+Add new clients alongside these following the same pattern: one module per `<feature>API`, a private `authedFetch`-style helper that injects the bearer token, and try/catch wrappers on write methods that log + return `null`.
 
 ### Auth Flow
 
-1. **AppInitializer** (`src/components/AppInitializer.tsx`) restores Supabase session on app start — its `onAuthStateChange` handler is the single trigger for `fetchProfile()` on `SIGNED_IN`
+1. **AppInitializer** (`src/components/AppInitializer.tsx`) restores the Supabase session on app start. It calls `supabase.auth.getSession()` once for initial hydration and subscribes to `onAuthStateChange`; the subscriber explicitly skips `INITIAL_SESSION` (to avoid double-firing with `getSession()`). On both code paths, if a session exists it calls `fetchProfile()` and then `captureTimezoneIfMissing()`; if not, it calls `clearProfile()`. This means profile re-hydration also runs on token refresh and other non-INITIAL auth events — not only on `SIGNED_IN`.
 2. **Zustand store** (`src/stores/useUserStore.ts`) holds global user profile/auth state
 3. **`RequireAuth`** (`src/features/auth/RequireAuth.tsx`) wraps the authenticated route block in `App.tsx`; `RequireGuest` mirrors it for `/login` and `/register`. There is no separate `UserLayout` — auth is enforced at the route element via `<RequireAuth><AuthLayout /></RequireAuth>`.
 4. Registration goes through FastAPI → backend creates Supabase user + `profiles` + `user_stats` rows
-5. Login calls `supabase.auth.signInWithPassword()` directly and navigates on success — profile hydration happens asynchronously via `onAuthStateChange`; `UserMenu` shows a spinner during that window
+5. Login calls `supabase.auth.signInWithPassword()` directly and navigates on success — profile hydration happens asynchronously via the `AppInitializer` auth-state subscriber; `UserMenu` shows a spinner during that window
 
 ### State Management
 
