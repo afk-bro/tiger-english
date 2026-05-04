@@ -87,22 +87,36 @@ Tailwind CSS with dark mode (class-based). Custom colors defined in `tailwind.co
 
 ```
 backend/app/
-├── api/v1/auth.py       # Auth endpoints: /register, /check-username, /logout (injected via Depends)
+├── api/v1/
+│   ├── auth.py        # Auth endpoints: /register, /check-username, /logout, /profile (PATCH)
+│   └── progress.py    # Progress endpoints under /me/progress/: complete-section, attempt-exercise, review-flashcard, summary (auth via get_current_user)
 ├── core/
-│   ├── config.py        # Pydantic BaseSettings (reads .env)
-│   ├── security.py      # JWT helpers, password hashing
-│   └── supabase.py      # Supabase client (uses service role key)
-├── models/auth.py       # Pydantic request/response models
-└── services/auth_service.py  # Business logic: create user, verify credentials; AuthService injected via FastAPI Depends()
+│   ├── config.py      # Pydantic BaseSettings (reads backend/.env)
+│   ├── security.py    # JWT helpers, password hashing, get_current_user dependency
+│   └── supabase.py    # Supabase admin client (uses SUPABASE_SECRET_KEY)
+├── models/
+│   ├── auth.py        # Pydantic auth models (UpdateProfile validates timezone)
+│   └── progress.py    # Pydantic progress models (SectionKey Literal, regex-validated unit_slug + exercise_id)
+└── services/
+    ├── auth_service.py     # Business logic: create user, verify credentials
+    └── progress_service.py # Domain functions: complete_lesson_section, submit_exercise_attempt, review_flashcard, get_summary
+
+backend/tests/         # pytest infrastructure; tests are mock-based — real DB verification happens in manual walkthroughs
 ```
 
 Note: there is no `/auth/login` HTTP endpoint. `login_user()` exists on `AuthService` for future internal use (org membership checks, invite-only flows, admin tooling) but is not exposed as a route.
 
+Note: All progress writes go through transactional Postgres functions (`complete_lesson_section_tx`, `submit_exercise_attempt_tx`, `review_flashcard_tx`) that do projection-table inserts and event-log inserts atomically. The functions are REVOKEd from PUBLIC/anon/authenticated and GRANTed only to `service_role`. Frontend never writes the new tables directly — all writes go through `services/progress_service.py`.
+
 ### Database Schema (Supabase)
 
-- `profiles` — id (FK auth.users), first_name, last_name, email, username (unique)
+- `profiles` — id (FK auth.users), first_name, last_name, email, username (unique), native_language, timezone
 - `user_stats` — user_id (FK auth.users), xp, level, study_streak, last_login
 - `flashcards` — in progress
+- `user_activity_log` — single-source-of-truth event stream (lesson_section_completed, exercise_attempted, flashcard_reviewed)
+- `lesson_section_progress` — projection: which sections each user has completed (idempotent on user/unit/section)
+- `exercise_attempts` — projection: every exercise attempt (correct OR incorrect)
+- `flashcard_reviews` — projection: flashcard known/unknown reviews
 
 ## Environment Variables
 
