@@ -771,7 +771,7 @@
       "Log in as a starter/pro plan user",
       "Verify 'Start mission' works normally"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 55,
@@ -785,7 +785,7 @@
       "Verify the teacher appears in the pending/active list",
       "Verify the teacher account gets teacher role in the org"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 56,
@@ -999,7 +999,7 @@
       "Verify the assigned lesson is shown in the rail with due date (if set)",
       "Verify clicking the assigned lesson navigates to it normally"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 71,
@@ -1013,7 +1013,7 @@
       "Verify a recent activity feed shows org-wide events",
       "Verify seat usage (e.g. '45/200 seats used') is shown"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 72,
@@ -1028,7 +1028,7 @@
       "Verify cache hit rate trend graph",
       "Verify top-N expensive users table"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 73,

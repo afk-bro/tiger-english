@@ -40,6 +40,7 @@ const TeacherStudentsPage       = lazy(() => import("@/features/teacher/pages/Te
 const TeacherStudentDetailPage  = lazy(() => import("@/features/teacher/pages/TeacherStudentDetailPage"));
 const OrgOverviewPage           = lazy(() => import("@/features/org-admin/pages/OrgOverviewPage"));
 const OrgBillingPage            = lazy(() => import("@/features/org-admin/pages/OrgBillingPage"));
+const AdminAiUsagePage          = lazy(() => import("@/features/admin/pages/AdminAiUsagePage"));
 
 // Stub pages for new authenticated routes
 const StubPage = ({ titleKey }: { titleKey: string }) => {
@@ -127,6 +128,7 @@ export function AppRoutes() {
           {/* Org admin */}
           <Route path="/admin/orgs/:slug" element={<OrgOverviewPage />} />
           <Route path="/admin/orgs/:slug/billing" element={<OrgBillingPage />} />
+          <Route path="/admin/ai-usage" element={<AdminAiUsagePage />} />
         </Route>
       </Routes>
     </Suspense>
