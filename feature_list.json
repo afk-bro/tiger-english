@@ -1101,7 +1101,7 @@
       "Verify input_tokens, output_tokens, cache_hit_rate are recorded",
       "Verify cost_estimate_usd is calculated correctly"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 78,
@@ -1116,7 +1116,7 @@
       "Click 'Show stronger version' and verify the rewritten exemplar expands",
       "Verify writing submission is saved (navigate away and return \u2014 submission appears in history)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 79,

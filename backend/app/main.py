@@ -8,6 +8,7 @@ from .api.v1.ai_tutor import router as ai_tutor_router
 from .api.v1.skills import router as skills_router
 from .api.v1.review import router as review_router
 from .api.v1.conversations import router as conversations_router
+from .api.v1.admin import router as admin_router
 
 app = FastAPI(
     title="Gain English API",
@@ -33,6 +34,7 @@ app.include_router(ai_tutor_router, prefix="/api/v1")
 app.include_router(skills_router, prefix="/api/v1")
 app.include_router(review_router, prefix="/api/v1")
 app.include_router(conversations_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
