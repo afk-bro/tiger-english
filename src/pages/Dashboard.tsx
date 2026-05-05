@@ -44,6 +44,7 @@ export default function Dashboard() {
           targetCefrLevel={profile?.target_cefr_level ?? null}
           reviewDueCount={reviewDueCount}
           skillScores={skillsSummary?.skills}
+          eligibleForAssessment={null}
         />
       </div>
       <LogoutButton onLogout={handleLogout} />

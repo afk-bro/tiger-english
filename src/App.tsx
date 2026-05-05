@@ -6,6 +6,7 @@ import AppInitializer from "./components/AppInitializer";
 import PublicLayout from "./components/layout/PublicLayout";
 import AuthLayout from "./components/layout/AuthLayout";
 import RequireAuth from "./features/auth/RequireAuth";
+import RequireTeacher from "./features/teacher/components/RequireTeacher";
 import RequireGuest from "./features/auth/RequireGuest";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useUserStore } from "@/stores/useUserStore";
@@ -30,6 +31,15 @@ const ConversationsPage         = lazy(() => import("@/features/conversations/pa
 const MissionRunnerPage         = lazy(() => import("@/features/conversations/pages/MissionRunnerPage"));
 const ConversationHistoryPage   = lazy(() => import("@/features/conversations/pages/ConversationHistoryPage"));
 const ConversationDetailPage    = lazy(() => import("@/features/conversations/pages/ConversationDetailPage"));
+const AssessmentRunnerPage      = lazy(() => import("@/features/assessment/pages/AssessmentRunnerPage"));
+const AssessmentResultsPage     = lazy(() => import("@/features/assessment/pages/AssessmentResultsPage"));
+const TeacherOverviewPage       = lazy(() => import("@/features/teacher/pages/TeacherOverviewPage"));
+const TeacherClassesPage        = lazy(() => import("@/features/teacher/pages/TeacherClassesPage"));
+const TeacherClassDetailPage    = lazy(() => import("@/features/teacher/pages/TeacherClassDetailPage"));
+const TeacherStudentsPage       = lazy(() => import("@/features/teacher/pages/TeacherStudentsPage"));
+const TeacherStudentDetailPage  = lazy(() => import("@/features/teacher/pages/TeacherStudentDetailPage"));
+const OrgOverviewPage           = lazy(() => import("@/features/org-admin/pages/OrgOverviewPage"));
+const OrgBillingPage            = lazy(() => import("@/features/org-admin/pages/OrgBillingPage"));
 
 // Stub pages for new authenticated routes
 const StubPage = ({ titleKey }: { titleKey: string }) => {
@@ -103,6 +113,20 @@ export function AppRoutes() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/drag-drop" element={<StubPage titleKey="common.sidebar.nav.drag_drop" />} />
           <Route path="/ad-libs" element={<StubPage titleKey="common.sidebar.nav.ad_libs" />} />
+          {/* Assessment routes */}
+          <Route path="/u/:username/assessment/:level" element={<AssessmentRunnerPage />} />
+          <Route path="/u/:username/assessment/:level/results" element={<AssessmentResultsPage />} />
+          <Route path="/assessment/:level" element={<AssessmentRunnerPage />} />
+          <Route path="/assessment/:level/results" element={<AssessmentResultsPage />} />
+          {/* Teacher portal */}
+          <Route path="/teacher" element={<RequireTeacher><TeacherOverviewPage /></RequireTeacher>} />
+          <Route path="/teacher/classes" element={<RequireTeacher><TeacherClassesPage /></RequireTeacher>} />
+          <Route path="/teacher/classes/:classId" element={<RequireTeacher><TeacherClassDetailPage /></RequireTeacher>} />
+          <Route path="/teacher/students" element={<RequireTeacher><TeacherStudentsPage /></RequireTeacher>} />
+          <Route path="/teacher/students/:studentId" element={<RequireTeacher><TeacherStudentDetailPage /></RequireTeacher>} />
+          {/* Org admin */}
+          <Route path="/admin/orgs/:slug" element={<OrgOverviewPage />} />
+          <Route path="/admin/orgs/:slug/billing" element={<OrgBillingPage />} />
         </Route>
       </Routes>
     </Suspense>

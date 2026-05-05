@@ -273,7 +273,8 @@
         "today": "วันนี้",
         "yesterday": "เมื่อวาน",
         "daysAgo": "{{count}} วันที่แล้ว"
-      }
+      },
+      "takeAssessment": "Take {{level}} exit assessment"
     },
     "error": "โหลดความก้าวหน้าไม่ได้ ลองรีเฟรชอีกครั้ง"
   },
@@ -573,5 +574,49 @@
     "explain": {
       "thinking": "กำลังคิด…"
     }
+  },
+  "assessment": {
+    "runner": {
+      "title": "Exit Assessment",
+      "section": "Section {{current}} of {{total}}",
+      "pause": "Pause",
+      "next": "Next section",
+      "sections": {
+        "listening": "Listening",
+        "reading": "Reading",
+        "vocabulary": "Vocabulary",
+        "grammar": "Grammar",
+        "speaking": "Speaking",
+        "writing": "Writing"
+      }
+    },
+    "results": {
+      "passed": "Passed!",
+      "needsWork": "Needs more work",
+      "congratulations": "Congratulations! You've passed the {{level}} assessment.",
+      "keepPracticing": "Keep practicing! Here's what to focus on:",
+      "tryAgain": "Try again",
+      "backToDashboard": "Back to dashboard",
+      "yourScores": "Your scores"
+    }
+  },
+  "teacher": {
+    "portal": "Teacher Portal",
+    "overview": "Overview",
+    "students": "Students",
+    "classes": "Classes",
+    "createClass": "Create class",
+    "inviteStudents": "Invite students",
+    "noStudents": "No students yet",
+    "noClasses": "No classes yet",
+    "recommendedAction": "Get recommended action"
+  },
+  "orgAdmin": {
+    "portal": "Org Admin",
+    "overview": "Overview",
+    "billing": "Billing",
+    "usage": "Usage",
+    "upgrade": "Upgrade",
+    "contactUs": "Contact us to upgrade"
   }
 }

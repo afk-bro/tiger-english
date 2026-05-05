@@ -33,6 +33,8 @@ type Props = {
   reviewDueCount?: number;
   /** Skill scores for the mini skill breakdown section. */
   skillScores?: SkillScore[];
+  /** When set, shows a CTA to take the exit assessment for that level. */
+  eligibleForAssessment?: { level: string } | null;
 };
 
 function localDayInTz(d: Date, tz: string): Date {
@@ -52,7 +54,7 @@ function relativeStudyLabel(lastActiveAt: string | null, tz: string, t: TFunctio
   return t("dashboard.yourProgress.lastStudied.daysAgo", { count: diffDays });
 }
 
-export default function YourProgressCard({ activity, lastActiveAt, timezone, cefrEstimate, targetCefrLevel, reviewDueCount, skillScores }: Props) {
+export default function YourProgressCard({ activity, lastActiveAt, timezone, cefrEstimate, targetCefrLevel, reviewDueCount, skillScores, eligibleForAssessment }: Props) {
   const { t } = useTranslation();
   const accuracy = activity.exercises_attempted > 0
     ? Math.round((activity.exercises_correct / activity.exercises_attempted) * 100)
@@ -102,6 +104,22 @@ export default function YourProgressCard({ activity, lastActiveAt, timezone, cef
         })}</li>
         <li>{t("dashboard.yourProgress.lastStudied.label", { relative })}</li>
       </ul>
+
+      {/* Assessment CTA */}
+      {eligibleForAssessment && (
+        <div className="mt-4">
+          <Link
+            to={`/assessment/${eligibleForAssessment.level.toLowerCase()}`}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          >
+            <span aria-hidden="true">🎓</span>
+            {t("dashboard.yourProgress.takeAssessment", {
+              level: eligibleForAssessment.level,
+              defaultValue: `Take ${eligibleForAssessment.level} exit assessment`,
+            })}
+          </Link>
+        </div>
+      )}
 
       {/* Review due prompt */}
       {reviewDueCount != null && reviewDueCount > 0 && (
