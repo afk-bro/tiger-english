@@ -1072,7 +1072,7 @@
       "Switch to Chinese (zh-CN) and verify same",
       "Verify no raw key paths appear (e.g. 'skills.page.title' as visible text is a failure)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 76,
