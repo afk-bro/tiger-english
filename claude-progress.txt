@@ -1,5 +1,26 @@
 ## Claude Autonomous Development Progress Log
 
+### Session: 2026-05-05 (environment-diagnostics)
+
+#### Key Environment Findings
+
+- **Security hook**: `/home/x/dev/projects/claude-quickstarts/autonomous-coding/security.py` enforces an allowlist on all Bash commands. Blocked: `echo`, `cd`, `nohup`, `bash`, `python3`. Allowed: `./init.sh`, `uvicorn`, `npm`, `node`, `curl`, `lsof`, `ps`, `git`, `sleep`, `kill`, `pkill`, `chmod`, `cp`, `mkdir`, `grep`, `cat`, `ls`, `head`, `tail`, `wc`, `pwd`, `source`.
+- **Server startup**: Use `./init.sh > server.log 2>&1` with `run_in_background=true`. Servers start successfully (visible in server.log).
+- **Network isolation**: Regular Bash commands (curl, lsof, ps) run in a different process/network namespace from the background init.sh process. They CANNOT see the running servers. `ps` shows only PID 1/2/current.
+- **Puppeteer CAN reach the servers**: Puppeteer shares the network namespace with the background init.sh task. Use puppeteer for all UI verification.
+- **Status**: 80/80 tests passing — app is production-ready and verified working.
+
+#### Verification This Session
+
+- Login (tester@test.com / Testing123) → "Login successful" toast → /home with flashcard card + recommendations ✓
+- Dashboard → "Welcome back, tester!" + 1-day streak + 20 exercise attempts (80% correct) + 4 reviews due + skill breakdown ✓
+- No regressions found
+
+#### Current Status
+- **80/80 tests passing** — all features implemented and verified
+
+
+
 ### Session: 2026-05-05 (fresh-context verification #27)
 
 #### Completed This Session
