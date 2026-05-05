@@ -164,7 +164,7 @@
       "Verify text appears progressively (streaming), not all at once",
       "Verify the explanation is relevant and complete"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 13,
@@ -1043,7 +1043,7 @@
       "Navigate to /teacher \u2014 verify tables and cards render in dark mode",
       "Verify no white-on-white or invisible text in any new surface"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 74,
@@ -1057,7 +1057,7 @@
       "Start a conversation \u2014 verify AI response appears instantly without character-by-character animation",
       "Verify ReviewDrillCard reveal is instant without slide animation"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 75,

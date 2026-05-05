@@ -145,7 +145,7 @@ export default function SkillDetailPage() {
         </div>
 
         {isLoading ? (
-          <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse motion-reduce:animate-none" />
         ) : (
           <SkillBar
             score={score}
