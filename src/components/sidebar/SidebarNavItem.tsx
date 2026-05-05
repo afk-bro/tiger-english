@@ -7,9 +7,11 @@ interface SidebarNavItemProps {
   icon: LucideIcon;
   collapsed: boolean;
   end?: boolean;
+  /** Optional count badge shown on the right side of the nav item when > 0. */
+  badge?: number;
 }
 
-export default function SidebarNavItem({ to, label, icon: Icon, collapsed, end = false }: SidebarNavItemProps) {
+export default function SidebarNavItem({ to, label, icon: Icon, collapsed, end = false, badge }: SidebarNavItemProps) {
   const resolved = useResolvedPath(to);
   const match = useMatch({ path: resolved.pathname, end });
   const isActive = !!match;
@@ -21,7 +23,7 @@ export default function SidebarNavItem({ to, label, icon: Icon, collapsed, end =
       aria-label={collapsed ? label : undefined}
       title={collapsed ? label : undefined}
       className={[
-        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150",
+        "relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
         isActive
           ? collapsed
@@ -33,7 +35,15 @@ export default function SidebarNavItem({ to, label, icon: Icon, collapsed, end =
       <Icon
         className={["w-5 h-5 flex-shrink-0", isActive ? "text-primary-600 dark:text-primary-400" : ""].join(" ")}
       />
-      {!collapsed && <span>{label}</span>}
+      {!collapsed && <span className="flex-1">{label}</span>}
+      {!collapsed && badge != null && badge > 0 && (
+        <span className="ml-auto flex-shrink-0 min-w-[1.25rem] h-5 px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center leading-none">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
+      {collapsed && badge != null && badge > 0 && (
+        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" aria-hidden="true" />
+      )}
     </NavLink>
   );
 }

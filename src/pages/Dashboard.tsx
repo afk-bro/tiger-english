@@ -4,11 +4,15 @@ import YourProgressCard from "@/components/dashboard/YourProgressCard";
 import LogoutButton from "@/components/dashboard/LogoutButton";
 import { useDashboard } from "@/features/dashboard/useDashboard";
 import { useProgressSummary } from "@/features/dashboard/useProgressSummary";
+import { useReviewCount } from "@/features/review/useReviewCount";
+import { useSkillsSummary } from "@/features/skills/useSkillsSummary";
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const { handleLogout, profile } = useDashboard();
   const { data: summary, isLoading, error } = useProgressSummary();
+  const { count: reviewDueCount } = useReviewCount();
+  const { data: skillsSummary } = useSkillsSummary();
 
   if (isLoading) {
     return (
@@ -37,6 +41,8 @@ export default function Dashboard() {
           lastActiveAt={summary.last_active_at}
           timezone={profile?.timezone ?? "UTC"}
           cefrEstimate={profile?.cefr_estimate ?? null}
+          reviewDueCount={reviewDueCount}
+          skillScores={skillsSummary?.skills}
         />
       </div>
       <LogoutButton onLogout={handleLogout} />

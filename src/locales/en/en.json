@@ -512,12 +512,16 @@
         "home": "Home",
         "dashboard": "Dashboard",
         "lessons": "Lessons",
+        "review": "Review",
+        "skills": "Skills",
+        "conversations": "Conversations",
         "library": "Library",
         "study_groups": "Study Groups",
         "notifications": "Notifications",
         "flashcards": "Flashcards",
         "drag_drop": "Drag & Drop",
-        "ad_libs": "Ad Libs"
+        "ad_libs": "Ad Libs",
+        "ai_tutor": "AI Tutor"
       },
       "utility": {
         "settings": "Settings",

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import SidebarNavItem from "./SidebarNavItem";
 import { useAiTutorStore } from "@/stores/useAiTutorStore";
+import { useReviewCount } from "@/features/review/useReviewCount";
 import Logo from "@/assets/TE-logo.png";
 
 interface AppSidebarProps {
@@ -44,6 +45,7 @@ const UTILITY_ITEMS = [
 export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClose, triggerRef }: AppSidebarProps) {
   const { t } = useTranslation();
   const openAiTutor = useAiTutorStore((s) => s.open);
+  const { count: reviewCount } = useReviewCount();
   // Return focus to the trigger (hamburger) button on drawer close
   const prevIsOpen = useRef(isOpen);
   useEffect(() => {
@@ -94,6 +96,7 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
             icon={item.icon}
             collapsed={collapsed}
             end={'end' in item ? item.end : false}
+            badge={item.to === "/review" ? reviewCount : undefined}
           />
         ))}
       </nav>

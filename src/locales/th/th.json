@@ -504,12 +504,16 @@
         "home": "หน้าแรก",
         "dashboard": "แดชบอร์ด",
         "lessons": "บทเรียน",
+        "review": "ทบทวน",
+        "skills": "ทักษะ",
+        "conversations": "สนทนา",
         "library": "ห้องสมุด",
         "study_groups": "กลุ่มเรียน",
         "notifications": "การแจ้งเตือน",
         "flashcards": "แฟลชการ์ด",
         "drag_drop": "ลากและวาง",
-        "ad_libs": "เติมคำ"
+        "ad_libs": "เติมคำ",
+        "ai_tutor": "ครู AI"
       },
       "utility": {
         "settings": "การตั้งค่า",

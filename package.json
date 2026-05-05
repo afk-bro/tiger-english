@@ -20,7 +20,7 @@
     "lesson-images": "tsx scripts/generate-lesson-images.ts",
     "analyze": "vite build --mode analyze",
     "bundle-report": "npm run build && npx vite-bundle-analyzer dist",
-    "backend:dev": "bash -c 'cd backend && /home/x/dev/projects/gain-english/backend/venv/bin/uvicorn app.main:app --reload --port 8000'",
+    "backend:dev": "/home/x/dev/projects/tiger-english/backend/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --app-dir /home/x/dev/projects/tiger-english/backend",
     "test:backend": "bash -c 'PYTHONPATH=/home/x/dev/projects/tiger-english/backend /home/x/dev/projects/tiger-english/backend/venv/bin/python -m pytest /home/x/dev/projects/tiger-english/backend/tests -v'"
   },
   "dependencies": {

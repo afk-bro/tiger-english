@@ -512,12 +512,16 @@
         "home": "Trang chủ",
         "dashboard": "Bảng điều khiển",
         "lessons": "Bài học",
+        "review": "Ôn tập",
+        "skills": "Kỹ năng",
+        "conversations": "Hội thoại",
         "library": "Thư viện",
         "study_groups": "Nhóm học",
         "notifications": "Thông báo",
         "flashcards": "Thẻ học",
         "drag_drop": "Kéo & Thả",
-        "ad_libs": "Điền từ"
+        "ad_libs": "Điền từ",
+        "ai_tutor": "Trợ lý AI"
       },
       "utility": {
         "settings": "Cài đặt",

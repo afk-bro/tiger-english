@@ -504,12 +504,16 @@
         "home": "首页",
         "dashboard": "仪表盘",
         "lessons": "课程",
+        "review": "复习",
+        "skills": "技能",
+        "conversations": "对话",
         "library": "资料库",
         "study_groups": "学习小组",
         "notifications": "通知",
         "flashcards": "闪卡",
         "drag_drop": "拖放练习",
-        "ad_libs": "填空练习"
+        "ad_libs": "填空练习",
+        "ai_tutor": "AI导师"
       },
       "utility": {
         "settings": "设置",

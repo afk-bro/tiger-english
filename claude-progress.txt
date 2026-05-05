@@ -1,0 +1,56 @@
+## Claude Autonomous Development Progress Log
+
+### Session: 2026-05-05
+
+#### Completed This Session
+
+1. **Fixed backend .env loading (config.py)**
+   - Backend was loading project root `.env` (VITE_* keys) instead of `backend/.env`
+   - Fixed by computing absolute path from `__file__` in `backend/app/core/config.py`
+   - Result: `/api/v1/health` now returns `db_reachable: true`
+
+2. **Fixed npm backend:dev script (package.json)**
+   - Script had wrong project path (`gain-english` → `tiger-english`)
+   - Fixed to use absolute paths to the venv uvicorn binary
+
+3. **Added missing sidebar nav translations**
+   - Added `nav.*` keys to all 4 locale files: en, vi, th, zh-CN
+   - Keys added: review, skills, conversations, ai_tutor (were showing raw keys)
+
+4. **Implemented review backend API (backend/app/api/v1/review.py)**
+   - `GET /api/v1/me/review/due` - returns incorrect exercise attempts (last 30 days, limit 20)
+   - `GET /api/v1/me/review/count` - returns `{"count": N}`
+   - `POST /api/v1/me/review/{item_id}/rate` - accepts difficulty rating, returns `{"success": true}`
+   - Uses existing `exercise_attempts` table (avoids DB migration since direct TCP to Supabase is blocked)
+
+5. **Review count badge in sidebar (SidebarNavItem.tsx, AppSidebar.tsx)**
+   - SidebarNavItem now accepts optional `badge?: number` prop
+   - Shows red pill when expanded, red dot when collapsed
+   - AppSidebar uses `useReviewCount` hook to fetch count and pass to Review nav item
+
+6. **Dashboard enhancements (YourProgressCard.tsx, Dashboard.tsx)**
+   - Added "Today's review: N due" pulsing orange-dot button (Link to /review)
+   - Added 11-skill breakdown mini-row with colored bars and link to /skills
+   - Passes `reviewDueCount` and `skillScores` from Dashboard page via hooks
+
+7. **Verified features marked as passing in feature_list.json**
+   - ID 1: Backend /api/v1/health returns db_reachable: true
+   - ID 31: Sidebar nav items (Home, Dashboard, Lessons, etc.) all present
+   - ID 37: Review due count badge on sidebar
+   - ID 38: Dashboard YourProgressCard shows review due prompt
+   - ID 59: Backend /health endpoint present and working
+
+#### Known Limitations / Blocked Items
+
+- **DB migrations**: Direct TCP to Supabase port 5432 is blocked in this environment
+  - Supabase Management API also unreachable from Node scripts
+  - Workaround: implemented review system using existing `exercise_attempts` table
+  - New `review_items` table (SM-2) cannot be created in this session
+
+- **Network restrictions**: Cannot curl/fetch external URLs from Node.js scripts
+
+#### Next Priorities
+
+1. Conversation scenarios UI (features 16, 21) - conversations page with scenario picker
+2. Review items with meaningful prompts (feature 33) - currently shows exercise IDs
+3. Continue feature verification and marking passes in feature_list.json

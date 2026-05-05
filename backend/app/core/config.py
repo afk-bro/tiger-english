@@ -3,9 +3,13 @@ from pydantic import ConfigDict
 from typing import List
 import json
 
+import os as _os
+_HERE = _os.path.dirname(_os.path.abspath(__file__))
+_BACKEND_ENV = _os.path.join(_HERE, "..", "..", ".env")
+
 class Settings(BaseSettings):
     model_config = ConfigDict(
-        env_file=".env",
+        env_file=_BACKEND_ENV,
         extra="ignore"  # Ignore extra fields like SUPABASE_ANON_KEY
     )
 
@@ -19,7 +23,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
 
     # CORS
-    allowed_origins: str = '["http://localhost:5173"]'
+    allowed_origins: str = '["http://localhost:5173", "http://127.0.0.1:5173"]'
 
     # Environment
     environment: str = "development"
