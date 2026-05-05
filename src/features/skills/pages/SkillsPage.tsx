@@ -6,6 +6,7 @@
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { Zap } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import SkillBar from "../components/SkillBar";
@@ -32,7 +33,7 @@ async function fetchSkillSummary(): Promise<SkillScore[] | null> {
   });
   if (!res.ok) return null;
   const data = await res.json();
-  return data as SkillScore[];
+  return (Array.isArray(data) ? data : data?.skills ?? []) as SkillScore[];
 }
 
 /** Build zero-score placeholders for all 11 skills. */
@@ -112,7 +113,8 @@ function SkillCard({ skillScore }: { skillScore: SkillScore }) {
   const isEmpty = skillScore.sample_size === 0;
 
   return (
-    <article className="card p-4 flex flex-col gap-3">
+    <Link to={`/skills/${skillScore.skill}`} className="block group">
+    <article className="card p-4 flex flex-col gap-3 group-hover:shadow-md transition-shadow cursor-pointer">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-semantic-text">
           {t(`skills.names.${skillScore.skill}`, { defaultValue: label })}
@@ -148,5 +150,6 @@ function SkillCard({ skillScore }: { skillScore: SkillScore }) {
         )}
       </div>
     </article>
+    </Link>
   );
 }

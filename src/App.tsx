@@ -23,7 +23,8 @@ const Settings       = lazy(() => import("@/pages/Settings"));
 const LessonsIndex   = lazy(() => import("@/features/lessons/pages/LessonsIndex"));
 const UnitHub        = lazy(() => import("@/features/lessons/pages/UnitHub"));
 const SectionPage    = lazy(() => import("@/features/lessons/pages/SectionPage"));
-const SkillsPage     = lazy(() => import("@/features/skills/pages/SkillsPage"));
+const SkillsPage       = lazy(() => import("@/features/skills/pages/SkillsPage"));
+const SkillDetailPage  = lazy(() => import("@/features/skills/pages/SkillDetailPage"));
 const ReviewPage          = lazy(() => import("@/features/review/pages/ReviewPage"));
 const ConversationsPage   = lazy(() => import("@/features/conversations/pages/ConversationsPage"));
 
@@ -86,6 +87,7 @@ export function AppRoutes() {
           <Route path="/lessons/:unitSlug" element={<UnitHub />} />
           <Route path="/lessons/:unitSlug/:sectionKey" element={<SectionPage />} />
           <Route path="/skills" element={<SkillsPage />} />
+          <Route path="/skills/:skillKey" element={<SkillDetailPage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/conversations" element={<ConversationsPage />} />
           <Route path="/conversations/:slug" element={<StubPage titleKey="common.stub.mission_coming_soon" />} />

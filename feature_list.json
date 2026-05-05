@@ -418,7 +418,7 @@
       "Verify a list of recent activities shows events that affected this skill",
       "Verify a 'Recommended drills' section shows practice items targeting this weakness"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 31,
@@ -826,7 +826,7 @@
       "Verify clicking a locked/coming-soon unit does NOT navigate to the lesson",
       "Verify available units can still be clicked normally"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 59,
