@@ -25,7 +25,7 @@
         "Verify A0/A1 badges have stone/gray colors, A2/B1 have sky/blue colors",
         "Verify badges are pill-shaped with rounded corners"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 3,
@@ -39,7 +39,7 @@
         "Verify unit-1 and unit-2 appear under A0-A1 section",
         "Verify each level section has a heading with the CEFR level name"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 4,
@@ -53,7 +53,7 @@
         "Verify it shows a CEFR estimate badge (e.g. 'A0' or 'A1')",
         "Verify the badge uses the correct color scheme for that level"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 5,

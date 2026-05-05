@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import { CefrBadge } from "@/components/CefrBadge";
+import type { CefrLevel } from "@/features/lessons/lesson.types";
 
 type ActivityCounts = {
   lessons_completed: number;
@@ -13,6 +15,8 @@ type Props = {
   activity: ActivityCounts;
   lastActiveAt: string | null;
   timezone: string;
+  /** Learner's estimated CEFR proficiency. When provided, a badge is shown in the card header. */
+  cefrEstimate?: CefrLevel | null;
 };
 
 function localDayInTz(d: Date, tz: string): Date {
@@ -32,7 +36,7 @@ function relativeStudyLabel(lastActiveAt: string | null, tz: string, t: TFunctio
   return t("dashboard.yourProgress.lastStudied.daysAgo", { count: diffDays });
 }
 
-export default function YourProgressCard({ activity, lastActiveAt, timezone }: Props) {
+export default function YourProgressCard({ activity, lastActiveAt, timezone, cefrEstimate }: Props) {
   const { t } = useTranslation();
   const accuracy = activity.exercises_attempted > 0
     ? Math.round((activity.exercises_correct / activity.exercises_attempted) * 100)
@@ -41,9 +45,18 @@ export default function YourProgressCard({ activity, lastActiveAt, timezone }: P
 
   return (
     <div className="card p-6">
-      <h2 className="text-lg font-semibold text-semantic-text mb-4">
-        {t("dashboard.yourProgress.heading")}
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-semantic-text">
+          {t("dashboard.yourProgress.heading")}
+        </h2>
+        {cefrEstimate && (
+          <CefrBadge
+            level={cefrEstimate}
+            size="sm"
+            aria-label={t("dashboard.yourProgress.cefrEstimate", { level: cefrEstimate, defaultValue: `CEFR estimate: ${cefrEstimate}` })}
+          />
+        )}
+      </div>
       <ul className="space-y-2 text-sm text-semantic-text">
         <li>{t("dashboard.yourProgress.lessonsCompleted", { count: activity.lessons_completed })}</li>
         <li>{t("dashboard.yourProgress.exercises", {

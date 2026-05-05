@@ -36,6 +36,7 @@ export default function Dashboard() {
           activity={summary.activity}
           lastActiveAt={summary.last_active_at}
           timezone={profile?.timezone ?? "UTC"}
+          cefrEstimate={profile?.cefr_estimate ?? null}
         />
       </div>
       <LogoutButton onLogout={handleLogout} />

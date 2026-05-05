@@ -24,6 +24,15 @@ class Settings(BaseSettings):
     # Environment
     environment: str = "development"
 
+    # AI settings
+    anthropic_api_key: str | None = None
+    ai_default_model: str = "claude-sonnet-4-6"
+    ai_haiku_model: str = "claude-haiku-4-5"
+    ai_voice_enabled: bool = False
+
+    # Admin settings
+    super_admin_user_ids: str = "[]"  # JSON array of user UUIDs allowed to access /admin endpoints
+
     # Leonardo AI (used by scripts/generate-lesson-images.ts via dotenv,
     # not yet read by the FastAPI runtime — declared here so the secret
     # has a documented home and any future server-side image endpoint
@@ -38,5 +47,21 @@ class Settings(BaseSettings):
             return json.loads(self.allowed_origins)
         except json.JSONDecodeError:
             return ["http://localhost:5173"]
+
+    @property
+    def ai_tutor_enabled(self) -> bool:
+        """Check if AI tutor is enabled (API key present and not placeholder)"""
+        return bool(
+            self.anthropic_api_key
+            and not self.anthropic_api_key.startswith("sk-ant-placeholder")
+        )
+
+    @property
+    def super_admin_ids(self) -> List[str]:
+        """Parse super admin user IDs from JSON string"""
+        try:
+            return json.loads(self.super_admin_user_ids)
+        except json.JSONDecodeError:
+            return []
 
 settings = Settings()

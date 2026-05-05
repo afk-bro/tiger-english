@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Clock, Lock } from "lucide-react";
 import type { Unit } from "../lesson.types";
 import { getLearnerLanguage } from "../utils/learnerLanguage";
+import { CefrBadge } from "@/components/CefrBadge";
 
 type Props = { unit: Unit };
 
@@ -38,7 +39,10 @@ export default function UnitCard({ unit }: Props) {
         <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary-500/10 text-primary-600 dark:text-primary-400 font-bold">
           {unit.number}
         </span>
-        {statusBadge}
+        <div className="flex items-center gap-2">
+          {unit.cefrLevel && <CefrBadge level={unit.cefrLevel} size="sm" />}
+          {statusBadge}
+        </div>
       </div>
       <h2 className="text-lg font-semibold text-semantic-text mb-1">{title}</h2>
       <p className="text-sm text-semantic-text-muted mb-2">{topic}</p>

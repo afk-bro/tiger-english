@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
+import type { CefrLevel } from "@/features/lessons/lesson.types";
 
 type UserProfile = {
   id: string;
@@ -11,6 +12,8 @@ type UserProfile = {
   username: string;
   native_language: string | null;
   timezone?: string | null;
+  /** Learner's estimated CEFR proficiency level — populated once the DB migration adds the column */
+  cefr_estimate?: CefrLevel | null;
 };
 
 export type UserStore = {

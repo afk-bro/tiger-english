@@ -10,6 +10,7 @@ export const units: Unit[] = [
     grammarFocus: "Present tense of 'to be' (am / is / are)",
     estimatedMinutes: 30,
     status: "available",
+    cefrLevel: "A1",
     sections: [
       { key: "overview", estimatedMinutes: 3 },
       { key: "grammar", estimatedMinutes: 8 },
@@ -43,6 +44,7 @@ export const units: Unit[] = [
     grammarFocus: "Subject pronouns + 'to be' for location ('Where is he?' / 'He's in the kitchen.')",
     estimatedMinutes: 35,
     status: "available",
+    cefrLevel: "A1",
     sections: [
       { key: "overview", estimatedMinutes: 3 },
       { key: "grammar", estimatedMinutes: 8 },
@@ -66,6 +68,7 @@ export const units: Unit[] = [
     grammarFocus: "Present continuous (am/is/are + -ing)",
     estimatedMinutes: 45,
     status: "coming-soon",
+    cefrLevel: "A1",
     sections: [],
     translations: {
       th: {
@@ -93,6 +96,7 @@ export const units: Unit[] = [
     grammarFocus: "Possessive adjectives (my, your, his, her…)",
     estimatedMinutes: 45,
     status: "coming-soon",
+    cefrLevel: "A1",
     sections: [],
     translations: {
       th: {
