@@ -96,6 +96,8 @@ export default function MissionRunnerPage() {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [rateLimitToast, setRateLimitToast] = useState<{ message: string; retryAfter: number } | null>(null);
   const rateLimitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [reconnectToast, setReconnectToast] = useState<string | null>(null);
+  const cancelledRef = useRef(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -121,9 +123,41 @@ export default function MissionRunnerPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  async function fetchWithRetry(
+    url: string,
+    options: RequestInit,
+    retryDelays = [200, 800, 3200]
+  ): Promise<Response> {
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt <= retryDelays.length; attempt++) {
+      if (cancelledRef.current) throw new Error("cancelled");
+      try {
+        const res = await fetch(url, options);
+        return res;
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        if (attempt < retryDelays.length && !cancelledRef.current) {
+          const delay = retryDelays[attempt];
+          if (attempt === 0) {
+            setReconnectToast(t("conversations.mission.reconnecting", {
+              defaultValue: "Tutor disconnected — retrying...",
+            }));
+          }
+          await new Promise<void>((res) => setTimeout(res, delay));
+        }
+      }
+    }
+    setReconnectToast(t("conversations.mission.connectionFailed", {
+      defaultValue: "Connection failed. Please try again.",
+    }));
+    setTimeout(() => setReconnectToast(null), 4000);
+    throw lastError ?? new Error("fetch failed");
+  }
+
   async function handleSend() {
     const text = inputText.trim();
     if (!text || sending || missionEnded) return;
+    cancelledRef.current = false;
 
     const learnerMsg: ChatMessage = {
       id: `learner-${Date.now()}`,
@@ -154,7 +188,7 @@ export default function MissionRunnerPage() {
       if (!session) return;
 
       // Try real API first; fall back to stub if AI is disabled
-      const res = await fetch(`${API_BASE}/me/conversations/turn`, {
+      const res = await fetchWithRetry(`${API_BASE}/me/conversations/turn`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -166,6 +200,8 @@ export default function MissionRunnerPage() {
           history: messages.map((m) => ({ role: m.role, text: m.text })),
         }),
       });
+      // Clear reconnect toast on success
+      setReconnectToast(null);
 
       let replyText: string;
       if (res.ok) {
@@ -198,8 +234,12 @@ export default function MissionRunnerPage() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, tutorMsg]);
-    } catch {
-      // Stub fallback
+    } catch (err) {
+      // Don't add stub reply if user cancelled or after repeated network failures
+      if (err instanceof Error && err.message === "cancelled") {
+        return;
+      }
+      // Stub fallback for non-network errors
       const tutorMsg: ChatMessage = {
         id: `tutor-${Date.now()}`,
         role: "tutor",
@@ -225,6 +265,7 @@ export default function MissionRunnerPage() {
 
   function doEndMission() {
     setShowEndConfirm(false);
+    cancelledRef.current = true;
     // Mark unused chips as missed
     setVocabChips((prev) =>
       prev.map((chip) =>
@@ -259,6 +300,13 @@ export default function MissionRunnerPage() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
+      {/* Reconnect toast */}
+      {reconnectToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg bg-gray-800 dark:bg-gray-700 text-white text-sm font-medium shadow-lg flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" aria-hidden="true" />
+          {reconnectToast}
+        </div>
+      )}
       {/* Top bar */}
       <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="flex items-center gap-3 min-w-0">
