@@ -2,11 +2,12 @@ import { useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Home, LayoutDashboard, GraduationCap, BookOpen, Users, Bell,
-  Layers, MousePointer2, FileText,
+  Layers, MousePointer2, FileText, MessageCircleQuestion,
   Settings, HelpCircle, User, LogOut,
   ChevronLeft, ChevronRight, X,
 } from "lucide-react";
 import SidebarNavItem from "./SidebarNavItem";
+import { useAiTutorStore } from "@/stores/useAiTutorStore";
 import Logo from "@/assets/TE-logo.png";
 
 interface AppSidebarProps {
@@ -38,6 +39,7 @@ const UTILITY_ITEMS = [
 
 export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClose, triggerRef }: AppSidebarProps) {
   const { t } = useTranslation();
+  const openAiTutor = useAiTutorStore((s) => s.open);
   // Return focus to the trigger (hamburger) button on drawer close
   const prevIsOpen = useRef(isOpen);
   useEffect(() => {
@@ -91,6 +93,19 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
           />
         ))}
       </nav>
+
+      {/* AI Tutor button */}
+      <div className="px-2 py-2 border-t border-gray-200 dark:border-gray-700">
+        <button
+          onClick={() => openAiTutor()}
+          aria-label={collapsed ? t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" }) : undefined}
+          title={collapsed ? t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" }) : undefined}
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
+        >
+          <MessageCircleQuestion className="w-5 h-5 flex-shrink-0" aria-hidden />
+          {!collapsed && <span>{t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" })}</span>}
+        </button>
+      </div>
 
       {/* Bottom utility zone */}
       <div className="px-2 py-3 border-t border-gray-200 dark:border-gray-700 space-y-1">

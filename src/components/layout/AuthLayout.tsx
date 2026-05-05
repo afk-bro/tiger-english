@@ -7,6 +7,7 @@ import AppSidebar from "@/components/sidebar/AppSidebar";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import UserMenu from "@/components/ui/UserMenu";
+import AiTutorPanel from "@/features/ai-tutor/components/AiTutorPanel";
 import Logo from "@/assets/TE-logo.png";
 import { Menu } from "lucide-react";
 
@@ -54,6 +55,9 @@ export default function AuthLayout() {
           triggerRef={hamburgerRef}
         />
       </div>
+
+      {/* AI Tutor slide-out panel — mounted once, persists across routes */}
+      <AiTutorPanel />
     </div>
   );
 }

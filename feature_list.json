@@ -151,7 +151,7 @@
         "Verify the panel has a close button",
         "Navigate to a lesson page and verify floating 'Ask Tutor' button appears (bottom-right)"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 12,
