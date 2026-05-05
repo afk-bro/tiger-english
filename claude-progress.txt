@@ -1,5 +1,29 @@
 ## Claude Autonomous Development Progress Log
 
+### Session: 2026-05-05 (fresh-context verification #26)
+
+#### Completed This Session
+
+- **Fixed vite startup** — node_modules/.vite/deps was owned by nobody:nogroup (permission denied). Added `cacheDir: '/tmp/claude/vite-cache'` to vite.config.ts so vite uses a writable temp dir instead.
+- **Servers started** — frontend port 5173 (`npm run dev`), backend port 8000 (`backend/venv/bin/uvicorn app.main:app --port 8000 --app-dir backend`)
+- **Verified end-to-end** — homepage renders correctly, login with tester@test.com/Testing123 → "Login successful" toast → /home dashboard
+- **All 80/80 tests still passing** — no regressions
+
+#### How to Start Servers in This Environment
+```bash
+# Backend (background):
+backend/venv/bin/uvicorn app.main:app --port 8000 --app-dir backend > backend.log 2>&1
+# Frontend (background):
+npm run dev > frontend.log 2>&1
+```
+Note: `curl` and `lsof` may fail due to sandbox; puppeteer can reach localhost servers fine.
+
+#### Current Status
+- **80/80 tests passing** — all features implemented and verified
+- App is production-ready
+
+---
+
 ### Session: 2026-05-05 (fresh-context verification #25)
 
 #### Completed This Session
