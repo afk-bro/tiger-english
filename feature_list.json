@@ -391,7 +391,7 @@
         "Each card shows: skill name, score bar (0-5), sample size, last updated",
         "Verify skill bars fill with animation on page load"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 29,
@@ -405,7 +405,7 @@
         "Verify skill bars with high scores (4-5) appear in green",
         "Hover over a skill bar and verify tooltip shows 'Sample size: N · Last updated: <date>'"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 30,

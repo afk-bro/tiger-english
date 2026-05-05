@@ -23,6 +23,7 @@ const Settings       = lazy(() => import("@/pages/Settings"));
 const LessonsIndex   = lazy(() => import("@/features/lessons/pages/LessonsIndex"));
 const UnitHub        = lazy(() => import("@/features/lessons/pages/UnitHub"));
 const SectionPage    = lazy(() => import("@/features/lessons/pages/SectionPage"));
+const SkillsPage     = lazy(() => import("@/features/skills/pages/SkillsPage"));
 
 // Stub pages for new authenticated routes
 const StubPage = ({ titleKey }: { titleKey: string }) => {
@@ -82,6 +83,9 @@ export function AppRoutes() {
           <Route path="/lessons" element={<LessonsIndex />} />
           <Route path="/lessons/:unitSlug" element={<UnitHub />} />
           <Route path="/lessons/:unitSlug/:sectionKey" element={<SectionPage />} />
+          <Route path="/skills" element={<SkillsPage />} />
+          <Route path="/review" element={<StubPage titleKey="common.sidebar.nav.review" />} />
+          <Route path="/conversations" element={<StubPage titleKey="common.sidebar.nav.conversations" />} />
           <Route path="/library" element={<StubPage titleKey="common.sidebar.nav.library" />} />
           <Route path="/study-groups" element={<StubPage titleKey="common.sidebar.nav.study_groups" />} />
           <Route path="/notifications" element={<StubPage titleKey="common.sidebar.nav.notifications" />} />
