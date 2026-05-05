@@ -884,7 +884,7 @@
       "Verify 'Get feedback' button is present",
       "Verify the block shows min/max word targets"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 63,
