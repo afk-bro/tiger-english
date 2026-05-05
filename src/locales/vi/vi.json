@@ -533,6 +533,53 @@
     "stub": {
       "coming_soon": "{{title}} — sắp ra mắt",
       "public_profile": "Hồ sơ công khai"
+    },
+    "back": "Quay lại"
+  },
+  "conversations": {
+    "backToScenarios": "Quay lại danh sách kịch bản",
+    "mission": {
+      "notFound": "Không tìm thấy nhiệm vụ.",
+      "roles": "Bạn: {{learnerRole}} · AI: {{aiRole}}",
+      "toggleVocab": "Ẩn/hiện bảng từ vựng",
+      "endMission": "Kết thúc nhiệm vụ",
+      "thinking": "Đang suy nghĩ…",
+      "targetVocab": "Từ vựng mục tiêu",
+      "grammarFocus": "Trọng tâm ngữ pháp",
+      "tipHeading": "💡 Mẹo",
+      "tipBody": "Cố gắng dùng ít nhất 3 từ vựng mục tiêu. Đừng lo về ngữ pháp — tập trung vào giao tiếp!",
+      "endedTitle": "Hoàn thành nhiệm vụ!",
+      "vocabScore": "Bạn đã dùng {{used}}/{{total}} từ mục tiêu ({{pct}}%)",
+      "tryAnother": "Thử nhiệm vụ khác",
+      "inputPlaceholder": "Nhập câu trả lời của bạn…",
+      "send": "Gửi"
+    },
+    "history": {
+      "title": "Hội thoại của tôi",
+      "subtitle": "Lịch sử các nhiệm vụ hội thoại AI của bạn.",
+      "newMission": "Nhiệm vụ mới",
+      "vocabUsed": "{{used}}/{{total}} từ",
+      "empty": {
+        "title": "Chưa có hội thoại nào",
+        "body": "Thử nhiệm vụ hội thoại AI đầu tiên! Luyện tiếng Anh thực tế trong kịch bản có hướng dẫn.",
+        "cta": "Xem kịch bản"
+      },
+      "status": {
+        "completed": "Hoàn thành",
+        "abandoned": "Bỏ dở"
+      }
+    }
+  },
+  "lessons": {
+    "aiMission": {
+      "label": "Nhiệm vụ AI",
+      "duration": "~{{count}} phút",
+      "startButton": "Bắt đầu nhiệm vụ"
+    }
+  },
+  "aiTutor": {
+    "explain": {
+      "thinking": "Đang suy nghĩ…"
     }
   }
 }

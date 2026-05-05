@@ -525,6 +525,53 @@
     "stub": {
       "coming_soon": "{{title}} — เร็วๆ นี้",
       "public_profile": "โปรไฟล์สาธารณะ"
+    },
+    "back": "กลับ"
+  },
+  "conversations": {
+    "backToScenarios": "กลับไปที่รายการสถานการณ์",
+    "mission": {
+      "notFound": "ไม่พบภารกิจ",
+      "roles": "คุณ: {{learnerRole}} · AI: {{aiRole}}",
+      "toggleVocab": "สลับแผงคำศัพท์",
+      "endMission": "จบภารกิจ",
+      "thinking": "กำลังคิด…",
+      "targetVocab": "คำศัพท์เป้าหมาย",
+      "grammarFocus": "จุดเน้นไวยากรณ์",
+      "tipHeading": "💡 เคล็ดลับ",
+      "tipBody": "พยายามใช้คำศัพท์เป้าหมายอย่างน้อย 3 คำ ไม่ต้องกังวลเรื่องไวยากรณ์ — เน้นการสื่อสาร!",
+      "endedTitle": "เสร็จสิ้นภารกิจ!",
+      "vocabScore": "คุณใช้ {{used}}/{{total}} คำเป้าหมาย ({{pct}}%)",
+      "tryAnother": "ลองภารกิจอื่น",
+      "inputPlaceholder": "พิมพ์คำตอบของคุณ…",
+      "send": "ส่ง"
+    },
+    "history": {
+      "title": "การสนทนาของฉัน",
+      "subtitle": "ประวัติภารกิจสนทนา AI ของคุณ",
+      "newMission": "ภารกิจใหม่",
+      "vocabUsed": "{{used}}/{{total}} คำ",
+      "empty": {
+        "title": "ยังไม่มีการสนทนา",
+        "body": "ลองภารกิจสนทนา AI แรกของคุณ! ฝึกภาษาอังกฤษจริงในสถานการณ์ที่มีการแนะนำ",
+        "cta": "ดูสถานการณ์"
+      },
+      "status": {
+        "completed": "เสร็จสมบูรณ์",
+        "abandoned": "ละทิ้ง"
+      }
+    }
+  },
+  "lessons": {
+    "aiMission": {
+      "label": "ภารกิจ AI",
+      "duration": "~{{count}} นาที",
+      "startButton": "เริ่มภารกิจ"
+    }
+  },
+  "aiTutor": {
+    "explain": {
+      "thinking": "กำลังคิด…"
     }
   }
 }

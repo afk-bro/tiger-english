@@ -534,6 +534,53 @@
       "coming_soon": "{{title}} — coming soon",
       "public_profile": "Public Profile",
       "mission_coming_soon": "Mission runner"
+    },
+    "back": "Back"
+  },
+  "conversations": {
+    "backToScenarios": "Back to scenarios",
+    "mission": {
+      "notFound": "Mission not found.",
+      "roles": "You: {{learnerRole}} · AI: {{aiRole}}",
+      "toggleVocab": "Toggle vocabulary panel",
+      "endMission": "End mission",
+      "thinking": "Thinking…",
+      "targetVocab": "Target vocabulary",
+      "grammarFocus": "Grammar focus",
+      "tipHeading": "💡 Tip",
+      "tipBody": "Try to use at least 3 vocabulary words. Don't worry about perfect grammar — focus on communication!",
+      "endedTitle": "Mission complete!",
+      "vocabScore": "You used {{used}}/{{total}} target words ({{pct}}%)",
+      "tryAnother": "Try another mission",
+      "inputPlaceholder": "Type your response…",
+      "send": "Send"
+    },
+    "history": {
+      "title": "My Conversations",
+      "subtitle": "Your past AI conversation missions and results.",
+      "newMission": "New mission",
+      "vocabUsed": "{{used}}/{{total}} vocab",
+      "empty": {
+        "title": "No conversations yet",
+        "body": "Try your first AI conversation mission! Practice real English in a guided scenario.",
+        "cta": "Browse scenarios"
+      },
+      "status": {
+        "completed": "Completed",
+        "abandoned": "Abandoned"
+      }
+    }
+  },
+  "lessons": {
+    "aiMission": {
+      "label": "AI Mission",
+      "duration": "~{{count}} min",
+      "startButton": "Start mission"
+    }
+  },
+  "aiTutor": {
+    "explain": {
+      "thinking": "Thinking…"
     }
   }
 }

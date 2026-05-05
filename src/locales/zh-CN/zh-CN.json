@@ -525,6 +525,53 @@
     "stub": {
       "coming_soon": "{{title}} — 即将推出",
       "public_profile": "公开资料"
+    },
+    "back": "返回"
+  },
+  "conversations": {
+    "backToScenarios": "返回情景列表",
+    "mission": {
+      "notFound": "未找到任务。",
+      "roles": "你：{{learnerRole}} · AI：{{aiRole}}",
+      "toggleVocab": "切换词汇面板",
+      "endMission": "结束任务",
+      "thinking": "思考中…",
+      "targetVocab": "目标词汇",
+      "grammarFocus": "语法重点",
+      "tipHeading": "💡 提示",
+      "tipBody": "尝试使用至少3个目标词汇。不要担心语法是否完美——专注于沟通！",
+      "endedTitle": "任务完成！",
+      "vocabScore": "你使用了 {{used}}/{{total}} 个目标词汇（{{pct}}%）",
+      "tryAnother": "尝试其他任务",
+      "inputPlaceholder": "输入你的回答…",
+      "send": "发送"
+    },
+    "history": {
+      "title": "我的对话",
+      "subtitle": "你的AI对话任务历史记录。",
+      "newMission": "新任务",
+      "vocabUsed": "{{used}}/{{total}} 词汇",
+      "empty": {
+        "title": "还没有对话",
+        "body": "尝试你的第一个AI对话任务！在有引导的情景中练习真实英语。",
+        "cta": "浏览情景"
+      },
+      "status": {
+        "completed": "已完成",
+        "abandoned": "已放弃"
+      }
+    }
+  },
+  "lessons": {
+    "aiMission": {
+      "label": "AI任务",
+      "duration": "约{{count}}分钟",
+      "startButton": "开始任务"
+    }
+  },
+  "aiTutor": {
+    "explain": {
+      "thinking": "思考中…"
     }
   }
 }
