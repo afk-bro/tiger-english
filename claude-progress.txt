@@ -1,5 +1,29 @@
 ## Claude Autonomous Development Progress Log
 
+### Session: 2026-05-05 (verification #29)
+
+#### Completed This Session
+
+- **Full verification run** — confirmed all 80/80 tests still passing after fresh context window
+- Both servers started successfully via `npm run backend:dev` and `npm run dev` (background tasks)
+- Verified end-to-end flows:
+  - Homepage renders correctly with polished hero section ("Learn English with Confidence")
+  - Login works (tester@test.com / Testing123) → redirects to /home with "Login successful" toast
+  - /home shows AuthHome with flashcard progress card (Travel Basics, 5 day streak, 82% accuracy), recommended next items, invite/study-group cards
+  - Sidebar shows all nav links with Review badge (4)
+- No regressions found — app is stable at 80/80
+
+#### Current Status
+- **80/80 tests passing** — all features implemented and verified
+- App is production-ready
+
+#### Notes on Server Startup
+- Servers must be started via npm scripts (not nohup/cd directly, those commands are blocked)
+- `npm run backend:dev` and `npm run dev` both with `run_in_background: true`
+- Puppeteer can connect to 127.0.0.1:5173 even when curl fails (sandbox networking difference)
+
+---
+
 ### Session: 2026-05-05 (environment-diagnostics)
 
 #### Key Environment Findings
