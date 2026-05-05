@@ -54,3 +54,49 @@
 1. Conversation scenarios UI (features 16, 21) - conversations page with scenario picker
 2. Review items with meaningful prompts (feature 33) - currently shows exercise IDs
 3. Continue feature verification and marking passes in feature_list.json
+
+---
+
+### Session: 2026-05-05 (continued)
+
+#### Completed This Session
+
+1. **Conversation system — full end-to-end flow (features 17, 18, 19, 20)**
+   - Verified `POST /api/v1/me/conversations/start` returns session_id, opening_line, target_vocabulary
+   - Verified `POST /api/v1/me/conversations/{id}/turn` streams SSE tokens (EventSource)
+   - Added `POST /api/v1/me/conversations/end` endpoint in `conversations.py`:
+     - Accepts turn_count, vocab_hits, vocab_misses, history, scenario_slug
+     - Returns 6 heuristic scores (task_success, comprehension, response_relevance, language_control, repair_ability, independence) + feedback_summary
+     - Adds missed vocab to in-memory pending review queue
+   - Added `backend/app/core/pending_reviews.py` in-memory store for vocab review items
+   - Updated `GET /me/review/due` and `/me/review/count` to merge pending in-memory items
+   - Updated `MissionRunnerPage.tsx` with full results screen:
+     - 6 score bars with color coding (green ≥4, amber ≥2.5, red <2.5)
+     - Average score display, feedback box, missed vocab chips
+     - "Go to review" and "Try another mission" CTAs
+
+2. **Skill scores from in-memory fallback (feature 27)**
+   - Added `backend/app/core/in_memory_skills.py` in-memory store for EWMA-smoothed skill scores
+   - Updated `SkillScoringService.record_exercise_attempt()` to mirror to in-memory store when DB unavailable
+   - Updated `SkillScoringService.get_summary()` to fill missing skills from in-memory store
+   - Verified: completing a grammar exercise shows Grammar Accuracy 4.0/5 on skills page
+
+#### Known Limitations / Blocked Items
+
+- **DB migrations still blocked**: review_items and skill_scores tables don't exist in Supabase
+  - In-memory stores survive server process lifetime but reset on restart
+  - Features 77/78 (AI usage log, writing submissions) require DB tables + ANTHROPIC_API_KEY
+
+#### Passing Features After This Session
+
+- ID 17: Start conversation session endpoint works
+- ID 18: Conversation turn endpoint streams SSE
+- ID 19: End conversation session returns scoring
+- ID 20: Review items auto-created from missed vocab
+- ID 27: Skill scores updated after completing an exercise
+
+#### Next Priorities
+
+1. Features 77/78 (AI usage, writing submissions) — requires ANTHROPIC_API_KEY in backend/.env
+2. Feature 5 (DB schema for units/modules) — requires DB migration access
+3. Additional feature verification passes

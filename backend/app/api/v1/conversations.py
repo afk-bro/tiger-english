@@ -3,13 +3,16 @@ conversations.py — Conversation scenarios endpoints
 
 GET  /api/v1/me/conversations/scenarios — list all scenarios (filterable by ?level=A1)
 POST /api/v1/me/conversations/turn      — send a message; rate-limited to 60 req/min per user
+POST /api/v1/me/conversations/end       — end a session; returns 6-criteria scores + feedback
 
 Note: The ai_scenarios table may not exist yet (DB migration blocked in this env).
 We serve 25 hardcoded scenarios that match the spec seed data. When the table exists,
 the backend can be updated to query it.
 """
+import logging
 import time
 from collections import defaultdict
+from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, List, Tuple
 from uuid import UUID
 
@@ -18,6 +21,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.core.security import get_current_user
+from app.core.supabase import get_supabase_admin
+from app.core import pending_reviews
+
+logger = logging.getLogger(__name__)
 
 # ── Simple in-memory rate limiter ────────────────────────────────────────────
 # Maps user_id → list of request timestamps within the current window.
@@ -484,6 +491,177 @@ async def conversation_turn(
         "turn_index": len(body.history) + 1,
         "vocab_used": [],  # will be populated by NLP detection in Phase 4
     }
+
+
+# ── End session models ────────────────────────────────────────────────────────
+
+class EndSessionRequest(BaseModel):
+    scenario_slug: str
+    turn_count: int = 0
+    vocab_hits: List[str] = []
+    vocab_misses: List[str] = []
+    history: List[TurnMessage] = []
+
+
+class ConversationScores(BaseModel):
+    task_success: float
+    comprehension: float
+    response_relevance: float
+    language_control: float
+    repair_ability: float
+    independence: float
+
+
+class EndSessionResponse(BaseModel):
+    scores: ConversationScores
+    feedback_summary: str
+    review_items_added: List[str]
+    target_vocab_hits: List[str]
+    target_vocab_misses: List[str]
+
+
+def _calculate_scores(
+    turn_count: int,
+    vocab_hits: List[str],
+    vocab_misses: List[str],
+    history: List[TurnMessage],
+) -> ConversationScores:
+    """Calculate conversation scores (0-5 scale) based on session data.
+
+    When a live Claude scoring pass is available, replace this with an API call
+    to score_session_prompt.py. For now, use heuristics.
+    """
+    total_vocab = len(vocab_hits) + len(vocab_misses)
+    vocab_ratio = len(vocab_hits) / total_vocab if total_vocab > 0 else 0
+
+    # Average learner message length (longer = more fluent)
+    learner_msgs = [m.text for m in history if m.role == "learner"]
+    avg_len = sum(len(m.split()) for m in learner_msgs) / len(learner_msgs) if learner_msgs else 0
+
+    # Scale avg_len: 0 words=1, 5 words=2.5, 10 words=3.5, 20+=5
+    fluency_proxy = min(5.0, 1.0 + (avg_len / 5.0))
+
+    # task_success: based on vocab usage ratio and turn count
+    task_success = round(min(5.0, 1.0 + vocab_ratio * 3.0 + min(1.0, turn_count / 5.0)), 1)
+
+    # comprehension: based on turn count (more turns = better engagement)
+    comprehension = round(min(5.0, 2.0 + min(2.0, turn_count / 3.0)), 1)
+
+    # response_relevance: based on message length
+    response_relevance = round(min(5.0, fluency_proxy), 1)
+
+    # language_control: based on message length and vocab hits
+    language_control = round(min(5.0, 1.5 + vocab_ratio * 2.0 + min(1.5, avg_len / 8.0)), 1)
+
+    # repair_ability: default reasonable score for all learners
+    repair_ability = round(min(5.0, 2.5 + min(1.5, turn_count / 4.0)), 1)
+
+    # independence: based on vocab hits
+    independence = round(min(5.0, 1.5 + vocab_ratio * 2.5 + min(1.0, turn_count / 5.0)), 1)
+
+    return ConversationScores(
+        task_success=task_success,
+        comprehension=comprehension,
+        response_relevance=response_relevance,
+        language_control=language_control,
+        repair_ability=repair_ability,
+        independence=independence,
+    )
+
+
+def _generate_feedback(
+    scores: ConversationScores,
+    vocab_hits: List[str],
+    vocab_misses: List[str],
+    turn_count: int,
+) -> str:
+    """Generate a feedback summary string based on session scores."""
+    avg_score = (
+        scores.task_success + scores.comprehension + scores.response_relevance
+        + scores.language_control + scores.repair_ability + scores.independence
+    ) / 6
+
+    if avg_score >= 4.0:
+        opening = "Excellent work! You communicated clearly and confidently."
+    elif avg_score >= 3.0:
+        opening = "Good effort! You managed to communicate your message effectively."
+    elif avg_score >= 2.0:
+        opening = "Nice try! Keep practicing to build more fluency."
+    else:
+        opening = "Keep it up! Every conversation helps you improve."
+
+    parts = [opening]
+
+    if vocab_hits:
+        parts.append(f"You used {len(vocab_hits)} target word(s): {', '.join(vocab_hits[:3])}{'...' if len(vocab_hits) > 3 else ''}.")
+
+    if vocab_misses:
+        parts.append(f"Try to use these next time: {', '.join(vocab_misses[:3])}.")
+
+    if turn_count >= 4:
+        parts.append("Great job keeping the conversation going!")
+    elif turn_count >= 2:
+        parts.append("Try to extend the conversation further next time.")
+
+    return " ".join(parts)
+
+
+@router.post("/me/conversations/end", response_model=EndSessionResponse)
+async def end_conversation(
+    body: EndSessionRequest,
+    user_id: UUID = Depends(get_current_user),
+    supabase=Depends(get_supabase_admin),
+) -> EndSessionResponse:
+    """End a conversation session and return scoring results.
+
+    Calculates 6-criteria scores, generates feedback, and attempts to
+    add missed vocabulary to the user's review queue.
+    """
+    scores = _calculate_scores(
+        turn_count=body.turn_count,
+        vocab_hits=body.vocab_hits,
+        vocab_misses=body.vocab_misses,
+        history=body.history,
+    )
+    feedback = _generate_feedback(scores, body.vocab_hits, body.vocab_misses, body.turn_count)
+
+    review_items_added: List[str] = []
+
+    # Add missed vocab to the in-memory pending review store (always works)
+    # and also try to persist to the DB review_items table if it exists.
+    if body.vocab_misses:
+        now = datetime.now(timezone.utc)
+        uid = str(user_id)
+        # Primary: in-memory store (always succeeds, survives backend restart for hours)
+        pending_reviews.add_vocab_items(uid, body.vocab_misses, body.scenario_slug)
+        review_items_added.extend(body.vocab_misses)
+
+        # Secondary: try to persist to DB review_items table
+        for word in body.vocab_misses:
+            try:
+                supabase.table("review_items").insert({
+                    "user_id": uid,
+                    "item_type": "word",
+                    "prompt": f"How do you use '{word}' in a sentence?",
+                    "answer": word,
+                    "note": f"Missed in '{body.scenario_slug}' conversation",
+                    "ease_factor": 2.5,
+                    "interval_days": 1,
+                    "streak_correct": 0,
+                    "next_review_at": now.isoformat(),
+                    "last_reviewed_at": None,
+                }).execute()
+                logger.info("Persisted review_item '%s' for user %s", word, uid)
+            except Exception as exc:
+                logger.debug("review_items table unavailable for '%s': %s", word, exc)
+
+    return EndSessionResponse(
+        scores=scores,
+        feedback_summary=feedback,
+        review_items_added=review_items_added,
+        target_vocab_hits=body.vocab_hits,
+        target_vocab_misses=body.vocab_misses,
+    )
 
 
 def _generate_stub_reply(message: str, ai_role: str) -> str:

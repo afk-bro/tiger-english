@@ -46,6 +46,23 @@ type VocabChip = {
   status: "unused" | "used" | "missed";
 };
 
+type ConversationScores = {
+  task_success: number;
+  comprehension: number;
+  response_relevance: number;
+  language_control: number;
+  repair_ability: number;
+  independence: number;
+};
+
+type EndSessionResult = {
+  scores: ConversationScores;
+  feedback_summary: string;
+  review_items_added: string[];
+  target_vocab_hits: string[];
+  target_vocab_misses: string[];
+};
+
 // ─── Hook: load scenario ──────────────────────────────────────────────────────
 
 function useScenario(slug: string | undefined) {
@@ -93,6 +110,8 @@ export default function MissionRunnerPage() {
   const [vocabChips, setVocabChips] = useState<VocabChip[]>([]);
   const [vocabDrawerOpen, setVocabDrawerOpen] = useState(false);
   const [missionEnded, setMissionEnded] = useState(false);
+  const [endResults, setEndResults] = useState<EndSessionResult | null>(null);
+  const [endingMission, setEndingMission] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [rateLimitToast, setRateLimitToast] = useState<{ message: string; retryAfter: number } | null>(null);
   const rateLimitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -263,16 +282,51 @@ export default function MissionRunnerPage() {
     }
   }
 
-  function doEndMission() {
+  async function doEndMission() {
     setShowEndConfirm(false);
     cancelledRef.current = true;
+    setEndingMission(true);
+
     // Mark unused chips as missed
-    setVocabChips((prev) =>
-      prev.map((chip) =>
-        chip.status === "unused" ? { ...chip, status: "missed" } : chip
-      )
+    const finalChips = vocabChips.map((chip) =>
+      chip.status === "unused" ? { ...chip, status: "missed" as const } : chip
     );
-    setMissionEnded(true);
+    setVocabChips(finalChips);
+
+    const vocabHits = finalChips.filter((c) => c.status === "used").map((c) => c.word);
+    const vocabMisses = finalChips.filter((c) => c.status === "missed").map((c) => c.word);
+    const learnerTurns = messages.filter((m) => m.role === "learner").length;
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        const res = await fetch(`${API_BASE}/me/conversations/end`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            scenario_slug: slug,
+            turn_count: learnerTurns,
+            vocab_hits: vocabHits,
+            vocab_misses: vocabMisses,
+            history: messages.map((m) => ({ role: m.role, text: m.text })),
+          }),
+        });
+        if (res.ok) {
+          const data: EndSessionResult = await res.json();
+          setEndResults(data);
+        }
+      }
+    } catch {
+      // Fallback: show basic results without backend data
+    } finally {
+      setEndingMission(false);
+      setMissionEnded(true);
+    }
   }
 
   if (loading) {
@@ -384,10 +438,19 @@ export default function MissionRunnerPage() {
               </div>
             )}
             {missionEnded && (
-              <MissionEndedCard
-                usedCount={vocabChips.filter((c) => c.status === "used").length}
-                totalCount={vocabChips.length}
-              />
+              endResults ? (
+                <MissionResultsCard results={endResults} />
+              ) : endingMission ? (
+                <div className="flex items-center gap-2 text-semantic-text-muted text-sm p-4">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Scoring your session…</span>
+                </div>
+              ) : (
+                <MissionEndedCard
+                  usedCount={vocabChips.filter((c) => c.status === "used").length}
+                  totalCount={vocabChips.length}
+                />
+              )
             )}
             <div ref={chatEndRef} />
           </div>
@@ -548,6 +611,115 @@ function VocabChipBadge({ chip }: { chip: VocabChip }) {
       {chip.status === "missed" && <span aria-hidden>!</span>}
       {chip.word}
     </span>
+  );
+}
+
+// ─── Full results card (shown when backend /end returns scores) ───────────────
+
+const SCORE_LABELS: Record<keyof ConversationScores, string> = {
+  task_success: "Task success",
+  comprehension: "Comprehension",
+  response_relevance: "Response relevance",
+  language_control: "Language control",
+  repair_ability: "Repair ability",
+  independence: "Independence",
+};
+
+function ScoreBar({ label, score }: { label: string; score: number }) {
+  const pct = (score / 5) * 100;
+  const color =
+    score >= 4 ? "bg-green-500" : score >= 2.5 ? "bg-amber-400" : "bg-red-400";
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-semantic-text-muted">{label}</span>
+        <span className="text-xs font-semibold text-semantic-text">{score.toFixed(1)}<span className="text-gray-400">/5</span></span>
+      </div>
+      <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ${color}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MissionResultsCard({ results }: { results: EndSessionResult }) {
+  const { t } = useTranslation();
+  const avgScore =
+    Object.values(results.scores).reduce((a, b) => a + b, 0) / 6;
+
+  return (
+    <div className="rounded-xl border-2 border-primary-200 dark:border-primary-800 bg-white dark:bg-gray-900 p-5 space-y-5 shadow-sm">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <CheckCircle2 className="w-7 h-7 text-green-500 flex-shrink-0" aria-hidden />
+        <div>
+          <h3 className="font-semibold text-semantic-text text-base">
+            {t("conversations.mission.endedTitle", { defaultValue: "Mission complete!" })}
+          </h3>
+          <p className="text-xs text-semantic-text-muted">
+            Average score: {avgScore.toFixed(1)}/5
+          </p>
+        </div>
+      </div>
+
+      {/* 6 score criteria */}
+      <div className="space-y-2.5">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-semantic-text-muted">
+          Scores
+        </h4>
+        {(Object.keys(SCORE_LABELS) as (keyof ConversationScores)[]).map((key) => (
+          <ScoreBar key={key} label={SCORE_LABELS[key]} score={results.scores[key]} />
+        ))}
+      </div>
+
+      {/* Feedback summary */}
+      {results.feedback_summary && (
+        <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-3">
+          <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">Feedback</p>
+          <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
+            {results.feedback_summary}
+          </p>
+        </div>
+      )}
+
+      {/* Review items added */}
+      {results.review_items_added.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-semantic-text-muted mb-2">
+            Review items added ({results.review_items_added.length})
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {results.review_items_added.map((word) => (
+              <span
+                key={word}
+                className="px-2 py-0.5 rounded-full text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700"
+              >
+                {word}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CTAs */}
+      <div className="flex items-center gap-2 pt-1">
+        <Link
+          to="/conversations"
+          className="flex-1 text-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors"
+        >
+          {t("conversations.mission.tryAnother", { defaultValue: "Try another mission" })}
+        </Link>
+        <Link
+          to="/review"
+          className="flex-1 text-center px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-semantic-text text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        >
+          Go to review
+        </Link>
+      </div>
+    </div>
   );
 }
 

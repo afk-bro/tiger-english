@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from ...core.security import get_current_user
 from ...core.supabase import get_supabase_admin
+from ...core import pending_reviews as _pending_store
 
 logger = logging.getLogger(__name__)
 
@@ -73,21 +74,43 @@ async def get_due_items(
     user_id: UUID = Depends(get_current_user),
     supabase=Depends(get_supabase_admin),
 ) -> list[ReviewItem]:
-    """Return review items based on incorrect exercise attempts (last 30 days)."""
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    """Return review items due for review.
 
-    # Try review_items table first; fall back to exercise_attempts
+    Merges three sources (highest priority first):
+    1. In-memory pending vocab items (added by conversation missions)
+    2. DB review_items table (if it exists and has data)
+    3. exercise_attempts fallback (incorrect answers in last 30 days)
+    """
+    uid = str(user_id)
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    items: list[ReviewItem] = []
+
+    # Source 1: in-memory pending vocab (from conversation missions)
+    pending = _pending_store.get_due_items(uid)
+    for row in pending:
+        items.append(ReviewItem(
+            id=row["id"],
+            item_type=row.get("item_type", "word"),
+            prompt=row.get("prompt", ""),
+            answer=row.get("answer", ""),
+            note=row.get("note", ""),
+            ease_factor=float(row.get("ease_factor", 2.5)),
+            interval_days=int(row.get("interval_days", 1)),
+            streak_correct=int(row.get("streak_correct", 0)),
+            next_review_at=row.get("next_review_at", now_iso),
+        ))
+
+    # Source 2: DB review_items table (if it exists)
     try:
         result = supabase.table("review_items") \
             .select("*") \
-            .eq("user_id", str(user_id)) \
-            .lte("next_review_at", datetime.now(timezone.utc).isoformat()) \
+            .eq("user_id", uid) \
+            .lte("next_review_at", now_iso) \
             .limit(20) \
             .execute()
         if result.data:
-            # If review_items table exists and has data, return from there
-            now_iso = datetime.now(timezone.utc).isoformat()
-            items = []
             for row in result.data:
                 items.append(ReviewItem(
                     id=str(row["id"]),
@@ -100,24 +123,26 @@ async def get_due_items(
                     streak_correct=int(row.get("streak_correct", 0)),
                     next_review_at=row.get("next_review_at", now_iso),
                 ))
-            return items
+            return items[:20]
     except Exception:
-        pass  # Table doesn't exist or error — fall back to exercise_attempts
+        pass  # Table doesn't exist — fall back to exercise_attempts
 
-    # Fall back: query exercise_attempts for incorrect answers in last 30 days
-    try:
-        result = supabase.table("exercise_attempts") \
-            .select("id, unit_slug, section_key, exercise_id, attempted_at") \
-            .eq("user_id", str(user_id)) \
-            .eq("is_correct", False) \
-            .gte("attempted_at", cutoff) \
-            .order("attempted_at", desc=True) \
-            .limit(20) \
-            .execute()
-        return _build_review_items_from_attempts(result.data or [])
-    except Exception as exc:
-        logger.error("Failed to fetch review items: %s", exc)
-        return []
+    # Source 3: exercise_attempts fallback
+    if len(items) < 20:
+        try:
+            result = supabase.table("exercise_attempts") \
+                .select("id, unit_slug, section_key, exercise_id, attempted_at") \
+                .eq("user_id", uid) \
+                .eq("is_correct", False) \
+                .gte("attempted_at", cutoff) \
+                .order("attempted_at", desc=True) \
+                .limit(20 - len(items)) \
+                .execute()
+            items.extend(_build_review_items_from_attempts(result.data or []))
+        except Exception as exc:
+            logger.error("Failed to fetch review items: %s", exc)
+
+    return items[:20]
 
 
 @router.get("/count", response_model=ReviewCountResponse)
@@ -125,33 +150,40 @@ async def get_due_count(
     user_id: UUID = Depends(get_current_user),
     supabase=Depends(get_supabase_admin),
 ) -> ReviewCountResponse:
-    """Return count of due review items."""
+    """Return count of due review items (pending + DB)."""
+    uid = str(user_id)
     cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    now_iso = datetime.now(timezone.utc).isoformat()
 
-    # Try review_items table first
+    # Start with in-memory pending count
+    count = _pending_store.get_count(uid)
+
+    # Add DB review_items table count if available
     try:
         result = supabase.table("review_items") \
             .select("id", count="exact") \
-            .eq("user_id", str(user_id)) \
-            .lte("next_review_at", datetime.now(timezone.utc).isoformat()) \
+            .eq("user_id", uid) \
+            .lte("next_review_at", now_iso) \
             .execute()
         if result.count is not None:
-            return ReviewCountResponse(count=result.count)
+            count += result.count
+            return ReviewCountResponse(count=count)
     except Exception:
         pass
 
-    # Fall back: count incorrect exercise_attempts in last 30 days
+    # Fall back: count incorrect exercise_attempts
     try:
         result = supabase.table("exercise_attempts") \
             .select("id", count="exact") \
-            .eq("user_id", str(user_id)) \
+            .eq("user_id", uid) \
             .eq("is_correct", False) \
             .gte("attempted_at", cutoff) \
             .execute()
-        return ReviewCountResponse(count=result.count or 0)
+        count += result.count or 0
     except Exception as exc:
         logger.error("Failed to fetch review count: %s", exc)
-        return ReviewCountResponse(count=0)
+
+    return ReviewCountResponse(count=count)
 
 
 def _sm2_update(
@@ -195,14 +227,52 @@ def _sm2_update(
 
 
 @router.post("/{item_id}/rate", response_model=RateDifficultyResponse)
-async def rate_item(
+async def rate_item(  # noqa: C901
     item_id: str,
     body: RateDifficultyRequest,
     user_id: UUID = Depends(get_current_user),
     supabase=Depends(get_supabase_admin),
 ) -> RateDifficultyResponse:
     """Record a difficulty rating for a review item, applying SM-2 scheduling."""
+    uid = str(user_id)
     logger.info("Review rating: user=%s item=%s difficulty=%s", user_id, item_id, body.difficulty)
+
+    # Check in-memory pending store first
+    pending_items = _pending_store.get_due_items(uid)
+    pending_match = next((i for i in pending_items if i["id"] == item_id), None)
+    if pending_match:
+        new_ef, new_interval, new_streak = _sm2_update(
+            float(pending_match["ease_factor"]),
+            int(pending_match["interval_days"]),
+            int(pending_match["streak_correct"]),
+            body.difficulty,
+        )
+        quality_map = {"incorrect": 0, "difficult": 2, "got_it": 4, "easy": 5}
+        if quality_map.get(body.difficulty, 3) < 3:
+            # Remove from queue (will resurface later)
+            from datetime import timedelta
+            next_review = (datetime.now(timezone.utc) + timedelta(days=new_interval)).isoformat()
+            _pending_store.update_item(uid, item_id, {
+                "ease_factor": new_ef,
+                "interval_days": new_interval,
+                "streak_correct": new_streak,
+                "next_review_at": next_review,
+            })
+        else:
+            # Correct — remove from due queue (advance next_review_at)
+            from datetime import timedelta
+            next_review = (datetime.now(timezone.utc) + timedelta(days=new_interval)).isoformat()
+            _pending_store.update_item(uid, item_id, {
+                "ease_factor": new_ef,
+                "interval_days": new_interval,
+                "streak_correct": new_streak,
+                "next_review_at": next_review,
+            })
+        return RateDifficultyResponse(
+            success=True,
+            next_interval_days=new_interval,
+            new_ease_factor=new_ef,
+        )
 
     # Try to update review_items table if it exists
     try:

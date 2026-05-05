@@ -235,7 +235,7 @@
       "Verify the AI opening line appears in the chat area",
       "Verify the target vocabulary panel shows vocab chips on the right"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 18,
@@ -249,7 +249,7 @@
       "Verify the turn is recorded in the chat history",
       "Verify target vocab chips update when matching vocab is used"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 19,
@@ -263,7 +263,7 @@
       "Verify feedback_summary text is shown",
       "Verify review items added list is shown (words/patterns the learner missed)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 20,
@@ -276,7 +276,7 @@
       "Navigate to /review",
       "Verify the missed vocab words appear in the review queue"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 21,
@@ -376,7 +376,7 @@
       "Verify skill scores are shown with non-zero values for grammar_accuracy, vocabulary_accuracy, etc.",
       "Verify the 'Sample size' tooltip shows the number of attempts"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 28,

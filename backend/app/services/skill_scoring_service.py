@@ -13,6 +13,7 @@ import logging
 from uuid import UUID
 
 from ..models.skills import ALL_SKILL_KEYS, SkillKey, SkillScore
+from ..core import in_memory_skills as _mem
 
 logger = logging.getLogger(__name__)
 
@@ -71,14 +72,17 @@ class SkillScoringService:
         observed = 4.0 if is_correct else 1.5
         affected = self.SECTION_SKILL_MAP.get(section_key, [("task_completion", 0.5)])
 
+        uid = str(user_id)
+
+        # First, try to update the DB skill_scores table
+        db_ok = False
         try:
-            # Fetch current scores for this user's affected skills
             skill_keys = [s for s, _ in affected]
             result = (
                 self._db
                 .table("skill_scores")
                 .select("skill, score, sample_size")
-                .eq("user_id", str(user_id))
+                .eq("user_id", uid)
                 .in_("skill", skill_keys)
                 .execute()
             )
@@ -92,47 +96,71 @@ class SkillScoringService:
                 current_score = float(row["score"]) if row else 0.0
                 current_size = int(row["sample_size"]) if row else 0
 
-                # Weight the observation
                 weighted_observed = min(max(observed * weight + current_score * (1 - weight), 0), 5.0)
                 new_score, new_size = update_skill_score(current_score, current_size, weighted_observed)
 
-                # Upsert the skill score
                 self._db.table("skill_scores").upsert({
-                    "user_id": str(user_id),
+                    "user_id": uid,
                     "skill": skill_key,
                     "score": new_score,
                     "sample_size": new_size,
                     "last_updated_at": now,
                 }, on_conflict="user_id,skill").execute()
 
+                # Mirror to in-memory store
+                _mem.upsert_skill(uid, skill_key, new_score, new_size)
+
+            db_ok = True
+
         except Exception as exc:
-            logger.warning("Could not update skill score for user %s: %s", user_id, exc)
+            logger.warning("DB skill_scores unavailable for user %s: %s — using in-memory store", uid, exc)
+
+        # If DB failed, update the in-memory store so skills page still shows data
+        if not db_ok:
+            for skill_key, weight in affected:
+                mem_row = _mem.get_skill(uid, skill_key)
+                current_score = float(mem_row["score"]) if mem_row else 0.0
+                current_size = int(mem_row["sample_size"]) if mem_row else 0
+
+                weighted_observed = min(max(observed * weight + current_score * (1 - weight), 0), 5.0)
+                new_score, new_size = update_skill_score(current_score, current_size, weighted_observed)
+                _mem.upsert_skill(uid, skill_key, new_score, new_size)
 
     def get_summary(self, user_id: UUID) -> list[SkillScore]:
         """Return all 11 skill scores for the given user.
 
-        If the `skill_scores` table does not exist yet (migration pending),
-        returns zero-initialized scores so the frontend can render cleanly.
+        Merges DB data with in-memory scores (DB takes priority when available).
+        If the `skill_scores` table does not exist yet, falls back to in-memory store.
         """
+        uid = str(user_id)
+
+        # Try DB first
+        db_rows: list[dict] = []
         try:
             result = (
                 self._db
                 .table("skill_scores")
                 .select("skill, score, sample_size, last_updated_at")
-                .eq("user_id", str(user_id))
+                .eq("user_id", uid)
                 .execute()
             )
-            rows = result.data or []
+            db_rows = result.data or []
         except Exception as exc:
             logger.warning("skill_scores table unavailable: %s", exc)
-            rows = []
 
-        score_map = {row["skill"]: row for row in rows}
+        score_map = {row["skill"]: row for row in db_rows}
+
+        # Fill missing skills from in-memory store
+        mem_rows = _mem.get_all_skills(uid)
+        for mem_row in mem_rows:
+            key = mem_row["skill"]
+            if key not in score_map:
+                score_map[key] = mem_row
 
         skills: list[SkillScore] = []
         for key in ALL_SKILL_KEYS:
             row = score_map.get(key)
-            if row:
+            if row and (float(row.get("score", 0.0)) > 0 or int(row.get("sample_size", 0)) > 0):
                 skills.append(
                     SkillScore(
                         skill=key,
