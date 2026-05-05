@@ -799,7 +799,7 @@
       "Verify modules include: First English Sounds and Greetings, Personal Information, Classroom Instructions, Food and Ordering, Family and People, Numbers and Time, Common Objects and Places, Likes and Abilities",
       "Verify each unit shows status (available/coming-soon/locked)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 57,
@@ -812,7 +812,7 @@
       "Verify at least 12 lesson units in the A1-A2 section",
       "Verify modules include at least 3 of: Daily Life and Routines, Shopping and Prices, Health and Problems, Past Weekend, Travel Basics"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 58,
