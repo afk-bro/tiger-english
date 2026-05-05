@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { aiTutorAPI } from "@/lib/api/aiTutor";
@@ -18,6 +18,9 @@ export default function CorrectTab() {
   const profile = useUserStore((s) => s.profile);
   const [sentence, setSentence] = useState("");
   const [state, setState] = useState<State>({ status: "idle" });
+  const [tryAgainValue, setTryAgainValue] = useState("");
+  const [tryAgainRevealed, setTryAgainRevealed] = useState(false);
+  const tryAgainId = useId();
 
   const learnerLanguage = getLearnerLanguage(i18n.language) ?? "en";
   const cefrLevel = profile?.cefr_estimate ?? "A1";
@@ -32,6 +35,9 @@ export default function CorrectTab() {
       learner_language: learnerLanguage,
       cefr_level: cefrLevel,
     });
+
+    setTryAgainValue("");
+    setTryAgainRevealed(false);
 
     if (!result) {
       setState({ status: "error" });
@@ -84,13 +90,43 @@ export default function CorrectTab() {
               <p className="font-medium text-primary-700 dark:text-primary-300 mb-1">
                 {t("aiTutor.correct.result.try_again", { defaultValue: "Try again" })}
               </p>
-              <p className="text-semantic-text">{state.data.try_again_prompt}</p>
-              <details className="mt-2">
-                <summary className="text-xs text-semantic-text-muted cursor-pointer">
-                  {t("aiTutor.correct.result.show_answer", { defaultValue: "Show answer" })}
-                </summary>
-                <p className="mt-1 font-medium text-semantic-text">{state.data.try_again_answer}</p>
-              </details>
+              <p className="text-semantic-text mb-2">{state.data.try_again_prompt}</p>
+              <div className="flex items-center gap-2">
+                <input
+                  id={tryAgainId}
+                  type="text"
+                  value={tryAgainValue}
+                  onChange={(e) => setTryAgainValue(e.target.value)}
+                  placeholder={t("aiTutor.correct.result.try_again_placeholder", { defaultValue: "Type your answer…" })}
+                  aria-label={t("aiTutor.correct.result.try_again", { defaultValue: "Try again" })}
+                  className="flex-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-semantic-text px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setTryAgainRevealed((r) => !r)}
+                  className="text-xs text-primary-600 dark:text-primary-400 hover:underline whitespace-nowrap"
+                >
+                  {tryAgainRevealed
+                    ? t("aiTutor.correct.result.hide_answer", { defaultValue: "Hide" })
+                    : t("aiTutor.correct.result.show_answer", { defaultValue: "Check" })}
+                </button>
+              </div>
+              {tryAgainRevealed && (
+                <p className="mt-2 font-semibold text-semantic-text">
+                  {t("aiTutor.correct.result.answer", { defaultValue: "Answer" })}:{" "}
+                  <span className={tryAgainValue.trim().toLowerCase() === state.data.try_again_answer.trim().toLowerCase()
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-semantic-text"
+                  }>
+                    {state.data.try_again_answer}
+                  </span>
+                  {tryAgainValue.trim().toLowerCase() === state.data.try_again_answer.trim().toLowerCase() && (
+                    <span className="ml-2 text-green-600 dark:text-green-400">
+                      {t("aiTutor.correct.result.correct", { defaultValue: "Correct!" })}
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Home, LayoutDashboard, GraduationCap, BookOpen, Users, Bell,
   Layers, MousePointer2, FileText, MessageCircleQuestion,
+  RotateCcw, Zap, MessageSquare,
   Settings, HelpCircle, User, LogOut,
   ChevronLeft, ChevronRight, X,
 } from "lucide-react";
@@ -19,15 +20,18 @@ interface AppSidebarProps {
 }
 
 const NAV_ITEMS = [
-  { to: "/home",          labelKey: "common.sidebar.nav.home",           icon: Home,           end: true },
-  { to: "/dashboard",     labelKey: "common.sidebar.nav.dashboard",      icon: LayoutDashboard },
-  { to: "/lessons",       labelKey: "common.sidebar.nav.lessons",        icon: GraduationCap },
-  { to: "/library",       labelKey: "common.sidebar.nav.library",        icon: BookOpen },
-  { to: "/study-groups",  labelKey: "common.sidebar.nav.study_groups",   icon: Users },
-  { to: "/notifications", labelKey: "common.sidebar.nav.notifications",  icon: Bell },
-  { to: "/flashcards",    labelKey: "common.sidebar.nav.flashcards",     icon: Layers },
-  { to: "/drag-drop",     labelKey: "common.sidebar.nav.drag_drop",      icon: MousePointer2 },
-  { to: "/ad-libs",       labelKey: "common.sidebar.nav.ad_libs",        icon: FileText },
+  { to: "/home",              labelKey: "common.sidebar.nav.home",            icon: Home,             end: true },
+  { to: "/dashboard",         labelKey: "common.sidebar.nav.dashboard",       icon: LayoutDashboard },
+  { to: "/lessons",           labelKey: "common.sidebar.nav.lessons",         icon: GraduationCap },
+  { to: "/review",            labelKey: "common.sidebar.nav.review",          icon: RotateCcw },
+  { to: "/skills",            labelKey: "common.sidebar.nav.skills",          icon: Zap },
+  { to: "/conversations",     labelKey: "common.sidebar.nav.conversations",   icon: MessageSquare },
+  { to: "/library",           labelKey: "common.sidebar.nav.library",         icon: BookOpen },
+  { to: "/study-groups",      labelKey: "common.sidebar.nav.study_groups",    icon: Users },
+  { to: "/notifications",     labelKey: "common.sidebar.nav.notifications",   icon: Bell },
+  { to: "/flashcards",        labelKey: "common.sidebar.nav.flashcards",      icon: Layers },
+  { to: "/drag-drop",         labelKey: "common.sidebar.nav.drag_drop",       icon: MousePointer2 },
+  { to: "/ad-libs",           labelKey: "common.sidebar.nav.ad_libs",         icon: FileText },
 ] as const;
 
 const UTILITY_ITEMS = [

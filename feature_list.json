@@ -179,7 +179,7 @@
         "Verify the 'Better sentence' shows in green text",
         "Verify the 'Try again' section has a fill-in input field"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 14,
@@ -208,7 +208,7 @@
         "Verify 'Conversations' item appears",
         "Verify 'AI Tutor' item appears"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 16,
