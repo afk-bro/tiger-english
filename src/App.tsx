@@ -29,6 +29,7 @@ const ReviewPage                = lazy(() => import("@/features/review/pages/Rev
 const ConversationsPage         = lazy(() => import("@/features/conversations/pages/ConversationsPage"));
 const MissionRunnerPage         = lazy(() => import("@/features/conversations/pages/MissionRunnerPage"));
 const ConversationHistoryPage   = lazy(() => import("@/features/conversations/pages/ConversationHistoryPage"));
+const ConversationDetailPage    = lazy(() => import("@/features/conversations/pages/ConversationDetailPage"));
 
 // Stub pages for new authenticated routes
 const StubPage = ({ titleKey }: { titleKey: string }) => {
@@ -94,6 +95,7 @@ export function AppRoutes() {
           <Route path="/conversations" element={<ConversationsPage />} />
           <Route path="/conversations/:slug" element={<MissionRunnerPage />} />
           <Route path="/u/:username/conversations" element={<ConversationHistoryPage />} />
+          <Route path="/u/:username/conversations/:sessionId" element={<ConversationDetailPage />} />
           <Route path="/library" element={<StubPage titleKey="common.sidebar.nav.library" />} />
           <Route path="/study-groups" element={<StubPage titleKey="common.sidebar.nav.study_groups" />} />
           <Route path="/notifications" element={<StubPage titleKey="common.sidebar.nav.notifications" />} />

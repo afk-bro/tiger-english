@@ -334,7 +334,7 @@
       "Verify 'Cancel' returns to the conversation",
       "Verify 'End anyway' proceeds to results"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 25,
@@ -913,7 +913,7 @@
       "Verify the drawer slides in showing target vocab and grammar checklist",
       "Verify the chat messages are readable at 360px"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 65,
@@ -927,7 +927,7 @@
       "Verify 6-criteria scores are displayed: task_success, comprehension, response_relevance, language_control, repair_ability, independence",
       "Verify 'Try again' and 'Next mission' CTAs are present"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 66,

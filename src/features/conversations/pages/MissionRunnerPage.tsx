@@ -93,6 +93,7 @@ export default function MissionRunnerPage() {
   const [vocabChips, setVocabChips] = useState<VocabChip[]>([]);
   const [vocabDrawerOpen, setVocabDrawerOpen] = useState(false);
   const [missionEnded, setMissionEnded] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -195,7 +196,18 @@ export default function MissionRunnerPage() {
     }
   }
 
-  function handleEndMission() {
+  function handleEndMissionClick() {
+    const unusedCount = vocabChips.filter((c) => c.status === "unused").length;
+    // Show confirm modal if any success criteria not met (unused vocab words)
+    if (unusedCount > 0 && messages.length < 4) {
+      setShowEndConfirm(true);
+    } else {
+      doEndMission();
+    }
+  }
+
+  function doEndMission() {
+    setShowEndConfirm(false);
     // Mark unused chips as missed
     setVocabChips((prev) =>
       prev.map((chip) =>
@@ -267,7 +279,7 @@ export default function MissionRunnerPage() {
           {!missionEnded && (
             <button
               type="button"
-              onClick={handleEndMission}
+              onClick={handleEndMissionClick}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 text-xs font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             >
               <Flag className="w-3.5 h-3.5" aria-hidden />
@@ -355,6 +367,15 @@ export default function MissionRunnerPage() {
           <VocabPanel chips={vocabChips} grammarTargets={scenario.target_grammar} />
         </div>
       </div>
+
+      {/* End mission confirm modal */}
+      {showEndConfirm && (
+        <EndMissionModal
+          unusedChips={vocabChips.filter((c) => c.status === "unused")}
+          onConfirm={doEndMission}
+          onCancel={() => setShowEndConfirm(false)}
+        />
+      )}
     </div>
   );
 }
@@ -477,6 +498,77 @@ function MissionEndedCard({ usedCount, totalCount }: { usedCount: number; totalC
       >
         {t("conversations.mission.tryAnother", { defaultValue: "Try another mission" })}
       </Link>
+    </div>
+  );
+}
+
+// ─── End mission confirm modal ───────────────────────────────────────────────
+
+type EndMissionModalProps = {
+  unusedChips: VocabChip[];
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+function EndMissionModal({ unusedChips, onConfirm, onCancel }: EndMissionModalProps) {
+  const { t } = useTranslation();
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="end-mission-title"
+      className="fixed inset-0 z-60 flex items-center justify-center p-4"
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onCancel} aria-hidden />
+      {/* Modal card */}
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4">
+        <h2 id="end-mission-title" className="text-base font-semibold text-semantic-text">
+          {t("conversations.mission.confirmEnd.title", {
+            defaultValue: "End mission early?",
+          })}
+        </h2>
+        <p className="text-sm text-semantic-text-muted">
+          {t("conversations.mission.confirmEnd.body", {
+            defaultValue: "You haven't met all the success criteria yet:",
+          })}
+        </p>
+        {unusedChips.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-semantic-text-muted mb-2 uppercase tracking-wide">
+              {t("conversations.mission.confirmEnd.unused", {
+                defaultValue: "Unused vocabulary:",
+              })}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {unusedChips.map((c) => (
+                <span
+                  key={c.word}
+                  className="px-2 py-0.5 rounded-full text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700"
+                >
+                  {c.word}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-semantic-text text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            {t("conversations.mission.confirmEnd.cancel", { defaultValue: "Keep going" })}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+          >
+            {t("conversations.mission.confirmEnd.confirm", { defaultValue: "End anyway" })}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
