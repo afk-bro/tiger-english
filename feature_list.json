@@ -547,7 +547,7 @@
       "Verify the assessment runner shows 'Section 1 of 6' progress indicator",
       "Verify the first section (Listening) appears with audio + multiple choice UI"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 40,
@@ -563,7 +563,7 @@
       "Verify speaking section uses the AI conversation runner",
       "Verify writing section shows textarea with word count target"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 41,
@@ -578,7 +578,7 @@
       "Verify 'Continue A1 assessment' CTA appears",
       "Click it and verify assessment resumes from section 3 (not the beginning)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 42,
@@ -593,7 +593,7 @@
       "Navigate to /dashboard and verify the CEFR estimate badge now shows 'A1'",
       "Verify confetti auto-dismisses after 3 seconds; manual dismiss also works"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 43,
@@ -607,7 +607,7 @@
       "Verify skills below 2.0 are highlighted as areas needing improvement",
       "Verify 'Try again' and 'Back to dashboard' CTAs appear"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 44,
@@ -622,7 +622,7 @@
       "Return to /dashboard",
       "Verify 'Take A1 exit assessment' CTA appears"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 45,
@@ -637,7 +637,7 @@
       "Navigate to /teacher",
       "Verify the teacher portal loads"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 46,
@@ -651,7 +651,7 @@
       "Verify per-class progress cards appear",
       "Verify sidebar shows 'Teacher Portal' nav item"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 47,
@@ -666,7 +666,7 @@
       "Submit and verify the new class appears in the list",
       "Click on the class to see roster and assignments tabs"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 48,
@@ -681,7 +681,7 @@
       "Submit and verify invited list shows the emails",
       "Verify a success message appears"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 49,
@@ -696,7 +696,7 @@
       "Verify tabs appear: Activity, Conversations, Writing, Errors",
       "Click each tab and verify relevant data appears"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 50,
@@ -711,7 +711,7 @@
       "Verify 'Refresh' button allows regenerating the recommendation",
       "Verify 'Apply suggestion' button creates an assignment if relevant"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 51,
@@ -727,7 +727,7 @@
       "Log in as a student in that class",
       "Navigate to /lessons and verify 'Assigned by your teacher' rail appears at top"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 52,
@@ -741,7 +741,7 @@
       "Verify tabs or sections for: Overview, Teachers, Classes, Billing, Usage",
       "Verify 'Org Admin' item appears in sidebar for this user"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 53,
@@ -756,7 +756,7 @@
       "Click 'Upgrade' and verify a contact-us modal opens",
       "Verify the modal has contact information and no Stripe integration"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 54,
@@ -970,7 +970,7 @@
       "Verify completed section dots are filled green, current is filled primary blue, pending are border-only",
       "Verify clicking a completed dot allows jumping back to review that section"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 69,
@@ -984,7 +984,7 @@
       "Verify progress counter shows (e.g. '15/30 words')",
       "Complete all 30 and verify auto-advance to grammar section"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 70,
@@ -1087,7 +1087,7 @@
       "Verify automatic reconnect happens and conversation can continue",
       "Verify the partial turn is recovered (not lost)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 77,
@@ -1144,6 +1144,6 @@
       "Each row shows: student name, CEFR estimate badge, target level, last active date",
       "Verify rows are clickable to navigate to student deep-dive"
     ],
-    "passes": false
+    "passes": true
   }
 ]
