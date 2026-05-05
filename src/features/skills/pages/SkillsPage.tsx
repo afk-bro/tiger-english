@@ -9,6 +9,8 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Zap } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useUserStore } from "@/stores/useUserStore";
+import CefrBadge from "@/components/CefrBadge";
 import SkillBar from "../components/SkillBar";
 import { SKILL_KEYS, SKILL_LABELS } from "../skills.types";
 import type { SkillScore } from "../skills.types";
@@ -48,6 +50,8 @@ function buildZeroScores(): SkillScore[] {
 
 export default function SkillsPage() {
   const { t } = useTranslation();
+  const profile = useUserStore((s) => s.profile);
+  const cefrEstimate = profile?.cefr_estimate ?? null;
   const [state, setState] = useState<LoadingState>({ status: "loading" });
 
   useEffect(() => {
@@ -82,6 +86,9 @@ export default function SkillsPage() {
         <h1 className="text-2xl font-bold text-semantic-text">
           {t("skills.title", { defaultValue: "My Skills" })}
         </h1>
+        {cefrEstimate && (
+          <CefrBadge level={cefrEstimate} />
+        )}
       </div>
       <p className="text-semantic-text-muted mb-8">
         {t("skills.subtitle", {

@@ -192,7 +192,7 @@
       "Verify the submitted text is shown with highlighted spans for errors",
       "Verify a collapsed 'Show stronger version' section appears"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 15,
@@ -305,7 +305,7 @@
       "Verify learner bubbles are right-aligned with primary blue background",
       "Verify tutor bubbles are left-aligned with surface background"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 23,
@@ -319,7 +319,7 @@
       "Verify the 'please' chip turns green with a checkmark",
       "After ending mission, verify missed words show in yellow with ! icon"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 24,
@@ -348,7 +348,7 @@
       "Each row shows: scenario title, CEFR level badge, score summary, started_at, status",
       "Verify empty state shows friendly 'Try your first AI conversation' CTA for new users"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 26,
@@ -362,7 +362,7 @@
       "Verify the block has a 'Start mission' button",
       "Click the button and verify it navigates to the conversation scenario"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 27,
@@ -869,7 +869,7 @@
       "Verify the previously typed content is still there",
       "Verify the panel closes on logout"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 62,
@@ -941,7 +941,7 @@
       "Return to /skills and verify the estimate may have changed",
       "Navigate to /dashboard and verify the same estimate shows in YourProgressCard"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 67,

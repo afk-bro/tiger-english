@@ -134,6 +134,14 @@ const activities: Section = {
         "zh-CN": "写一段简短的自我介绍。包括：你的名字、你来自哪里，以及你做的一件事（例如工作、学习或爱好）。",
       },
     },
+    {
+      id: "u1-act-mission-1",
+      type: "ai-mission",
+      scenarioSlug: "introduce-yourself-a1",
+      title: "Introduce Yourself",
+      description: "Practice introducing yourself in a real conversation. Tell the AI tutor your name, where you're from, and what you do — just like the dialogues in this unit.",
+      estimatedMinutes: 5,
+    },
   ],
 };
 

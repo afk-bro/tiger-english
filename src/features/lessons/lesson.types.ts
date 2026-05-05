@@ -75,7 +75,8 @@ export type SectionBlock =
   | { id: string; type: "dialogue"; lines: DialogueLine[]; imagePrompt?: string; imageUrl?: string }
   | { id: string; type: "exercise"; exerciseType: ExerciseType; exerciseId: string; imagePrompt?: string; imageUrl?: string }
   | { id: string; type: "callout"; variant: "tip" | "note" | "warning"; content: string; translations?: Partial<Record<LearnerLanguage, string>> }
-  | { id: string; type: "output-task"; prompt: string; minWords?: number; maxWords?: number; translations?: Partial<Record<LearnerLanguage, string>> };
+  | { id: string; type: "output-task"; prompt: string; minWords?: number; maxWords?: number; translations?: Partial<Record<LearnerLanguage, string>> }
+  | { id: string; type: "ai-mission"; scenarioSlug: string; title: string; description: string; estimatedMinutes?: number };
 
 export type ExampleItem = {
   id: string;

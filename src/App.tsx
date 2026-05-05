@@ -25,8 +25,10 @@ const UnitHub        = lazy(() => import("@/features/lessons/pages/UnitHub"));
 const SectionPage    = lazy(() => import("@/features/lessons/pages/SectionPage"));
 const SkillsPage       = lazy(() => import("@/features/skills/pages/SkillsPage"));
 const SkillDetailPage  = lazy(() => import("@/features/skills/pages/SkillDetailPage"));
-const ReviewPage          = lazy(() => import("@/features/review/pages/ReviewPage"));
-const ConversationsPage   = lazy(() => import("@/features/conversations/pages/ConversationsPage"));
+const ReviewPage                = lazy(() => import("@/features/review/pages/ReviewPage"));
+const ConversationsPage         = lazy(() => import("@/features/conversations/pages/ConversationsPage"));
+const MissionRunnerPage         = lazy(() => import("@/features/conversations/pages/MissionRunnerPage"));
+const ConversationHistoryPage   = lazy(() => import("@/features/conversations/pages/ConversationHistoryPage"));
 
 // Stub pages for new authenticated routes
 const StubPage = ({ titleKey }: { titleKey: string }) => {
@@ -90,7 +92,8 @@ export function AppRoutes() {
           <Route path="/skills/:skillKey" element={<SkillDetailPage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/conversations" element={<ConversationsPage />} />
-          <Route path="/conversations/:slug" element={<StubPage titleKey="common.stub.mission_coming_soon" />} />
+          <Route path="/conversations/:slug" element={<MissionRunnerPage />} />
+          <Route path="/u/:username/conversations" element={<ConversationHistoryPage />} />
           <Route path="/library" element={<StubPage titleKey="common.sidebar.nav.library" />} />
           <Route path="/study-groups" element={<StubPage titleKey="common.sidebar.nav.study_groups" />} />
           <Route path="/notifications" element={<StubPage titleKey="common.sidebar.nav.notifications" />} />

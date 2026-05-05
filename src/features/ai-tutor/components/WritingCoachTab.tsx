@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PenLine, Loader2, AlertCircle } from "lucide-react";
+import { PenLine, Loader2, AlertCircle, ChevronDown, ChevronRight } from "lucide-react";
 import { aiTutorAPI } from "@/lib/api/aiTutor";
 import { useUserStore } from "@/stores/useUserStore";
 import { getLearnerLanguage } from "@/features/lessons/utils/learnerLanguage";
@@ -18,6 +18,7 @@ export default function WritingCoachTab() {
   const profile = useUserStore((s) => s.profile);
   const [text, setText] = useState("");
   const [state, setState] = useState<State>({ status: "idle" });
+  const [exemplarExpanded, setExemplarExpanded] = useState(false);
 
   const learnerLanguage = getLearnerLanguage(i18n.language) ?? "en";
   const cefrLevel = profile?.cefr_estimate ?? "A1";
@@ -100,15 +101,27 @@ export default function WritingCoachTab() {
             </div>
           )}
 
-          {/* Rewritten exemplar */}
+          {/* Rewritten exemplar — collapsed by default */}
           {state.data.rewritten_exemplar && (
             <div>
-              <p className="font-semibold text-semantic-text mb-2">
-                {t("aiTutor.writingCoach.rewritten", { defaultValue: "Improved version" })}
-              </p>
-              <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-3 text-semantic-text whitespace-pre-wrap">
-                {state.data.rewritten_exemplar}
-              </div>
+              <button
+                type="button"
+                onClick={() => setExemplarExpanded((v) => !v)}
+                className="flex items-center gap-1.5 text-sm font-semibold text-semantic-text hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                aria-expanded={exemplarExpanded}
+              >
+                {exemplarExpanded ? (
+                  <ChevronDown className="w-4 h-4" aria-hidden />
+                ) : (
+                  <ChevronRight className="w-4 h-4" aria-hidden />
+                )}
+                {t("aiTutor.writingCoach.rewritten", { defaultValue: "Show stronger version" })}
+              </button>
+              {exemplarExpanded && (
+                <div className="mt-2 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-3 text-semantic-text whitespace-pre-wrap text-sm">
+                  {state.data.rewritten_exemplar}
+                </div>
+              )}
             </div>
           )}
 
