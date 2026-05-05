@@ -340,6 +340,11 @@
       "check": "Check",
       "fillInTheBlank": "Fill in the blank",
       "apostropheReminder": "Tip: it's spelled with an apostrophe — \"{{form}}\""
+    },
+    "aiMission": {
+      "label": "AI Mission",
+      "duration": "~{{count}} min",
+      "startButton": "Start mission"
     }
   },
   "about": {
@@ -570,13 +575,6 @@
         "completed": "Completed",
         "abandoned": "Abandoned"
       }
-    }
-  },
-  "lessons": {
-    "aiMission": {
-      "label": "AI Mission",
-      "duration": "~{{count}} min",
-      "startButton": "Start mission"
     }
   },
   "aiTutor": {

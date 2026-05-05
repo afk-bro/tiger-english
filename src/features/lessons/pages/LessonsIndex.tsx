@@ -1,11 +1,14 @@
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { GraduationCap, BookOpen, Calendar } from "lucide-react";
-import { units } from "../data/units";
+import { GraduationCap, BookOpen, Calendar, Loader2 } from "lucide-react";
+import { units as staticUnits } from "../data/units";
 import UnitCard from "../components/UnitCard";
 import { CEFR_LEVELS, CEFR_LEVEL_LABELS } from "../lesson.types";
-import type { CefrLevel } from "../lesson.types";
+import type { CefrLevel, Unit } from "../lesson.types";
 import { getCefrColorClasses, CefrBadge } from "@/components/CefrBadge";
 import { Link } from "react-router-dom";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
 /** Stub teacher assignment — would come from API in production. */
 const STUB_ASSIGNED_LESSONS: Array<{ unitSlug: string; title: string; level: CefrLevel; dueDate: string | null }> = [
@@ -15,8 +18,65 @@ const STUB_ASSIGNED_LESSONS: Array<{ unitSlug: string; title: string; level: Cef
 /** Flag to toggle the teacher-assigned rail — flip to true to test Feature 70. */
 const SHOW_ASSIGNED_RAIL = STUB_ASSIGNED_LESSONS.length > 0;
 
+/**
+ * Merge API unit metadata (slug, status, cefr_level) with the rich static
+ * unit data (sections, translations) so UnitCard gets everything it needs.
+ * API data takes precedence for status/cefr_level so the backend is the
+ * authoritative source.
+ */
+function mergeWithStatic(apiUnits: Array<Record<string, unknown>>): Unit[] {
+  const staticBySlug = new Map(staticUnits.map((u) => [u.slug, u]));
+  return apiUnits.map((apiUnit): Unit => {
+    const slug = String(apiUnit.slug);
+    const base = staticBySlug.get(slug);
+    return {
+      slug,
+      number: (apiUnit.number as number) ?? base?.number ?? 0,
+      title: String(apiUnit.title ?? base?.title ?? slug),
+      topic: String(apiUnit.topic ?? base?.topic ?? ""),
+      grammarFocus: String(apiUnit.grammar_focus ?? base?.grammarFocus ?? ""),
+      estimatedMinutes: (apiUnit.estimated_minutes as number) ?? base?.estimatedMinutes ?? 40,
+      status: (apiUnit.status as Unit["status"]) ?? base?.status ?? "coming-soon",
+      cefrLevel: (apiUnit.cefr_level as CefrLevel) ?? base?.cefrLevel ?? "A1",
+      sections: base?.sections ?? [],
+      translations: base?.translations ?? {},
+    };
+  });
+}
+
 export default function LessonsIndex() {
   const { t } = useTranslation();
+  const [units, setUnits] = useState<Unit[]>(staticUnits);
+  const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState<"api" | "static">("static");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch(`${API_BASE}/units`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<{ units: Array<Record<string, unknown>> }>;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const merged = mergeWithStatic(data.units);
+        setUnits(merged);
+        setSource("api");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Silently fall back to static data when backend is unavailable
+        setUnits(staticUnits);
+        setSource("static");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Group units by CEFR level; units without a level go into a fallback bucket
   const grouped = CEFR_LEVELS.reduce<Record<CefrLevel, typeof units>>(
@@ -35,6 +95,14 @@ export default function LessonsIndex() {
       <div className="flex items-center gap-3 mb-2">
         <GraduationCap className="w-7 h-7 text-primary-600 dark:text-primary-400" aria-hidden="true" />
         <h1 className="text-2xl font-bold text-semantic-text">{t("lessons.title")}</h1>
+        {loading && (
+          <Loader2 className="w-4 h-4 animate-spin text-semantic-text-muted ml-auto" aria-label="Loading lessons" />
+        )}
+        {!loading && source === "api" && (
+          <span className="ml-auto text-xs text-semantic-text-muted opacity-60">
+            {units.length} units
+          </span>
+        )}
       </div>
       <p className="text-semantic-text-muted mb-8">{t("lessons.subtitle")}</p>
 

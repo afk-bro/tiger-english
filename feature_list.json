@@ -65,7 +65,7 @@
       "Navigate to http://localhost:5173/lessons",
       "Verify lesson units load from the database (not just static TS data)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 6,

@@ -340,6 +340,11 @@
       "check": "Kiểm tra",
       "fillInTheBlank": "Điền vào chỗ trống",
       "apostropheReminder": "Mẹo: cách viết đúng có dấu lược — \"{{form}}\""
+    },
+    "aiMission": {
+      "label": "Nhiệm vụ AI",
+      "duration": "~{{count}} phút",
+      "startButton": "Bắt đầu nhiệm vụ"
     }
   },
   "about": {
@@ -569,13 +574,6 @@
         "completed": "Hoàn thành",
         "abandoned": "Bỏ dở"
       }
-    }
-  },
-  "lessons": {
-    "aiMission": {
-      "label": "Nhiệm vụ AI",
-      "duration": "~{{count}} phút",
-      "startButton": "Bắt đầu nhiệm vụ"
     }
   },
   "aiTutor": {

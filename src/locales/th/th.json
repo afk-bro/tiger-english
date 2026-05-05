@@ -332,6 +332,11 @@
       "flipToRevealEnglishFor": "พลิกการ์ดเพื่อดูภาษาอังกฤษสำหรับ {{nativeText}}",
       "flipToRevealAnswer": "พลิกการ์ดเพื่อดูคำตอบ",
       "flipBackToTranslation": "พลิกการ์ดกลับไปดูคำแปล"
+    },
+    "aiMission": {
+      "label": "ภารกิจ AI",
+      "duration": "~{{count}} นาที",
+      "startButton": "เริ่มภารกิจ"
     }
   },
   "about": {
@@ -561,13 +566,6 @@
         "completed": "เสร็จสมบูรณ์",
         "abandoned": "ละทิ้ง"
       }
-    }
-  },
-  "lessons": {
-    "aiMission": {
-      "label": "ภารกิจ AI",
-      "duration": "~{{count}} นาที",
-      "startButton": "เริ่มภารกิจ"
     }
   },
   "aiTutor": {

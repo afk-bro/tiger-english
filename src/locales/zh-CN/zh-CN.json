@@ -332,6 +332,11 @@
       "flipToRevealEnglishFor": "翻转卡片查看 {{nativeText}} 的英文",
       "flipToRevealAnswer": "翻转卡片查看答案",
       "flipBackToTranslation": "翻转卡片返回翻译"
+    },
+    "aiMission": {
+      "label": "AI任务",
+      "duration": "约{{count}}分钟",
+      "startButton": "开始任务"
     }
   },
   "about": {
@@ -561,13 +566,6 @@
         "completed": "已完成",
         "abandoned": "已放弃"
       }
-    }
-  },
-  "lessons": {
-    "aiMission": {
-      "label": "AI任务",
-      "duration": "约{{count}}分钟",
-      "startButton": "开始任务"
     }
   },
   "aiTutor": {
