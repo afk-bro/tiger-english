@@ -94,6 +94,8 @@ export default function MissionRunnerPage() {
   const [vocabDrawerOpen, setVocabDrawerOpen] = useState(false);
   const [missionEnded, setMissionEnded] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [rateLimitToast, setRateLimitToast] = useState<{ message: string; retryAfter: number } | null>(null);
+  const rateLimitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -169,6 +171,21 @@ export default function MissionRunnerPage() {
       if (res.ok) {
         const data = await res.json();
         replyText = data.reply ?? data.message ?? "...";
+      } else if (res.status === 429) {
+        const data = await res.json().catch(() => ({}));
+        const retryAfter = data.retry_after_seconds ?? 30;
+        setRateLimitToast({
+          message: t("conversations.mission.rateLimited", {
+            seconds: retryAfter,
+            defaultValue: `Slow down — try again in ${retryAfter} seconds`,
+          }),
+          retryAfter,
+        });
+        // Remove the learner's message from display (it won't be processed)
+        setMessages((prev) => prev.filter((m) => m.id !== learnerMsg.id));
+        if (rateLimitTimerRef.current) clearTimeout(rateLimitTimerRef.current);
+        rateLimitTimerRef.current = setTimeout(() => setRateLimitToast(null), retryAfter * 1000);
+        return;
       } else {
         // Stub response when AI is disabled
         replyText = getStubReply(text, scenario);
@@ -367,6 +384,18 @@ export default function MissionRunnerPage() {
           <VocabPanel chips={vocabChips} grammarTargets={scenario.target_grammar} />
         </div>
       </div>
+
+      {/* Rate limit toast */}
+      {rateLimitToast && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-3 rounded-xl bg-orange-600 text-white text-sm font-medium shadow-lg"
+        >
+          <span>⏱</span>
+          <span>{rateLimitToast.message}</span>
+        </div>
+      )}
 
       {/* End mission confirm modal */}
       {showEndConfirm && (

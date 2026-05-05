@@ -1,15 +1,45 @@
 """
 conversations.py — Conversation scenarios endpoints
 
-GET /api/v1/me/conversations/scenarios — list all scenarios (filterable by ?level=A1)
+GET  /api/v1/me/conversations/scenarios — list all scenarios (filterable by ?level=A1)
+POST /api/v1/me/conversations/turn      — send a message; rate-limited to 60 req/min per user
 
 Note: The ai_scenarios table may not exist yet (DB migration blocked in this env).
-We serve 24 hardcoded scenarios that match the spec seed data. When the table exists,
+We serve 25 hardcoded scenarios that match the spec seed data. When the table exists,
 the backend can be updated to query it.
 """
-from fastapi import APIRouter, Depends, Query
-from typing import Optional
+import time
+from collections import defaultdict
+from typing import Optional, Dict, List, Tuple
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
 from app.core.security import get_current_user
+
+# ── Simple in-memory rate limiter ────────────────────────────────────────────
+# Maps user_id → list of request timestamps within the current window.
+_RATE_LIMIT_WINDOW = 60   # seconds
+_RATE_LIMIT_MAX = 60      # max requests per window
+_rate_store: Dict[str, List[float]] = defaultdict(list)
+
+
+def _check_rate_limit(user_id: str) -> Optional[int]:
+    """Return seconds until retry if rate limited, else None."""
+    now = time.monotonic()
+    window_start = now - _RATE_LIMIT_WINDOW
+    timestamps = [t for t in _rate_store[user_id] if t > window_start]
+    _rate_store[user_id] = timestamps
+
+    if len(timestamps) >= _RATE_LIMIT_MAX:
+        oldest = min(timestamps)
+        retry_after = int(_RATE_LIMIT_WINDOW - (now - oldest)) + 1
+        return max(retry_after, 1)
+
+    _rate_store[user_id].append(now)
+    return None
 
 router = APIRouter()
 
@@ -376,6 +406,19 @@ SEED_SCENARIOS = [
 LEVEL_BAND_ORDER = ["A0–A1", "A1–A2", "A2–B1", "B1–B1+", "B1+–B2", "B2–C1"]
 
 
+# ── Request / response models ─────────────────────────────────────────────────
+
+class TurnMessage(BaseModel):
+    role: str
+    text: str
+
+
+class TurnRequest(BaseModel):
+    scenario_slug: str
+    message: str
+    history: List[TurnMessage] = []
+
+
 @router.get("/me/conversations/scenarios")
 async def list_scenarios(
     level: Optional[str] = Query(None, description="Filter by CEFR level band (e.g. A1, B1+–B2)"),
@@ -398,3 +441,64 @@ async def list_scenarios(
         "total": len(scenarios),
         "level_bands": LEVEL_BAND_ORDER,
     }
+
+
+@router.post("/me/conversations/turn")
+async def conversation_turn(
+    body: TurnRequest,
+    user_id: UUID = Depends(get_current_user),
+):
+    """Send one conversational turn.
+
+    Rate limited to 60 requests per minute per user. Returns 429 with
+    Retry-After header when the limit is exceeded.
+
+    Phase 4: When real AI is available, this will call the AI tutor service.
+    For now it returns a stub response so the frontend can exercise the
+    rate-limiting and turn-recording paths.
+    """
+    uid = str(user_id)
+    retry_after = _check_rate_limit(uid)
+    if retry_after is not None:
+        return JSONResponse(
+            status_code=429,
+            content={
+                "code": "rate_limited",
+                "detail": f"Too many requests. Try again in {retry_after} seconds.",
+                "retry_after_seconds": retry_after,
+            },
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    # Find scenario for context
+    scenario = next(
+        (s for s in SEED_SCENARIOS if s["slug"] == body.scenario_slug), None
+    )
+    ai_role = scenario["ai_role"] if scenario else "AI tutor"
+
+    # Stub reply — real Anthropic call goes here in Phase 4
+    stub_reply = _generate_stub_reply(body.message, ai_role)
+
+    return {
+        "reply": stub_reply,
+        "turn_index": len(body.history) + 1,
+        "vocab_used": [],  # will be populated by NLP detection in Phase 4
+    }
+
+
+def _generate_stub_reply(message: str, ai_role: str) -> str:
+    """Generate a contextually aware stub reply for the current turn."""
+    lower = message.lower()
+    if len(lower) < 8:
+        return "Could you say a bit more? I'd love to hear more from you!"
+    if any(w in lower for w in ("hello", "hi", "hey", "good morning", "good afternoon")):
+        return f"Hello! Great to meet you. I'm {ai_role}. How can I help you today?"
+    if any(w in lower for w in ("name", "called", "i am", "i'm")):
+        return "What a lovely name! Nice to meet you properly. Where are you from?"
+    if any(w in lower for w in ("from", "country", "live", "city")):
+        return "How interesting! I'd love to visit there someday. What's the best thing about where you live?"
+    if any(w in lower for w in ("work", "job", "study", "school", "university")):
+        return "That sounds really fulfilling! How long have you been doing that?"
+    if any(w in lower for w in ("thank", "thanks", "great", "good", "nice")):
+        return "You're very welcome! You're doing really well. Keep it up!"
+    return "That's great! Can you tell me a little more about that?"

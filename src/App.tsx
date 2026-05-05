@@ -95,6 +95,7 @@ export function AppRoutes() {
           <Route path="/conversations" element={<ConversationsPage />} />
           <Route path="/conversations/:slug" element={<MissionRunnerPage />} />
           <Route path="/u/:username/conversations" element={<ConversationHistoryPage />} />
+          <Route path="/u/:username/conversations/scenarios" element={<ConversationsPage />} />
           <Route path="/u/:username/conversations/:sessionId" element={<ConversationDetailPage />} />
           <Route path="/library" element={<StubPage titleKey="common.sidebar.nav.library" />} />
           <Route path="/study-groups" element={<StubPage titleKey="common.sidebar.nav.study_groups" />} />

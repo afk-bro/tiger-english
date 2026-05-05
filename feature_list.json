@@ -221,7 +221,7 @@
       "Verify scenarios are grouped by level (A0-A1, A1-A2, etc.)",
       "Verify scenario cards show title, level badge, estimated time"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 17,
@@ -898,7 +898,7 @@
       "Verify the UI shows a toast: 'Slow down \u2014 try again in N seconds'",
       "Verify the input is disabled until the retry-after period expires"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 64,
