@@ -13,6 +13,8 @@ from zoneinfo import ZoneInfo
 
 from supabase import Client
 
+from .skill_scoring_service import SkillScoringService
+
 
 REQUIRED_SECTION_KEYS = frozenset(
     {"overview", "grammar", "vocabulary", "dialogues", "activities"}
@@ -73,6 +75,7 @@ def _count_completed_units(sections: List[dict]) -> int:
 class ProgressService:
     def __init__(self, supabase: Client):
         self.supabase = supabase
+        self._skill_service = SkillScoringService(supabase)
 
     def complete_lesson_section(
         self, user_id: UUID, unit_slug: str, section_key: str
@@ -99,10 +102,10 @@ class ProgressService:
         exercise_id: str,
         is_correct: bool,
     ):
-        """Record a single exercise attempt (correct or incorrect).
+        """Record a single exercise attempt and update skill scores.
         Append-only; multi-attempt is meaningful so no idempotency key.
         """
-        return self.supabase.rpc(
+        result = self.supabase.rpc(
             "submit_exercise_attempt_tx",
             {
                 "p_user_id": str(user_id),
@@ -112,6 +115,11 @@ class ProgressService:
                 "p_is_correct": is_correct,
             },
         ).execute().data
+
+        # Update skill scores based on the attempt (fire-and-forget; errors are logged)
+        self._skill_service.record_exercise_attempt(user_id, section_key, is_correct)
+
+        return result
 
     def review_flashcard(
         self,
