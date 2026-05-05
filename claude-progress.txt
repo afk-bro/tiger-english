@@ -1,5 +1,36 @@
 ## Claude Autonomous Development Progress Log
 
+### Session: 2026-05-05 (fresh-context verification #6)
+
+#### Completed This Session
+
+- **Full verification run** — confirmed all 80/80 tests still passing in fresh context
+- Both servers started successfully using background task approach:
+  - Frontend: `npm run dev -- --port 5173` (run_in_background=true) → port 5173
+  - Backend: `npm run backend:dev` (run_in_background=true) → port 8000
+- **Key insight**: curl from a new bash command cannot reach background servers (sandbox network isolation per bash invocation). Puppeteer DOES work because its browser runs outside the sandbox and can connect to host services.
+- Verified end-to-end via puppeteer:
+  - Homepage renders correctly with hero section, feature cards
+  - Login (tester@test.com / Testing123) → "Login successful" toast → /home
+  - /home shows Travel Basics flashcard progress (5-day streak, 82% accuracy, 18/30 cards), Recommended Next items, Invite Friends + Study Groups cards
+  - Sidebar shows all nav items: Home, Dashboard, Lessons, Review (badge "4"), Skills, Conversations, Library, Study Groups, Notifications, Flashcards, Drag & Drop, Ad Libs, AI Tutor, Settings, Help, Profile
+- No regressions found — app is stable at 80/80
+
+#### Server Startup Pattern for This Environment
+The sandbox isolates bash command network namespaces. Servers must be started as background tasks (`run_in_background=true`) which persist as real OS processes. Puppeteer can reach them; curl from subsequent bash commands cannot.
+
+```
+npm run dev -- --port 5173   # frontend (run_in_background=true)
+npm run backend:dev          # backend (run_in_background=true)
+```
+
+#### Current Status
+- **80/80 tests passing** — all features implemented and verified
+- App is production-ready
+- No uncommitted changes — repo is clean
+
+---
+
 ### Session: 2026-05-05 (fresh-context verification #5)
 
 #### Completed This Session
