@@ -25,6 +25,8 @@ export type ReviewItem = {
   interval_days: number;
   streak_correct: number;
   next_review_at: string;
+  /** Raw exercise ID — used by the frontend to enrich prompt/answer via exerciseLookup */
+  exercise_id?: string | null;
 };
 
 export type ReviewSessionResult = {

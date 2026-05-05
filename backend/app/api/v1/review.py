@@ -25,6 +25,8 @@ class ReviewItem(BaseModel):
     interval_days: int
     streak_correct: int
     next_review_at: str
+    # Optional: raw exercise_id so the frontend can look up rich content
+    exercise_id: str | None = None
 
 
 class ReviewCountResponse(BaseModel):
@@ -40,20 +42,26 @@ class RateDifficultyResponse(BaseModel):
 
 
 def _build_review_items_from_attempts(attempts: list[dict]) -> list[ReviewItem]:
-    """Convert exercise_attempts rows into ReviewItem objects."""
+    """Convert exercise_attempts rows into ReviewItem objects.
+
+    The prompt is intentionally generic here — the frontend enriches it
+    using the exerciseLookup registry once it receives the exercise_id field.
+    """
     now_iso = datetime.now(timezone.utc).isoformat()
     items: list[ReviewItem] = []
     for row in attempts:
+        ex_id = row.get("exercise_id", "")
         items.append(ReviewItem(
             id=str(row["id"]),
             item_type="common_error",
-            prompt=f"You got this wrong: {row['exercise_id']}",
-            answer="Practice this exercise again",
-            note=f"From unit {row['unit_slug']}, section {row['section_key']}",
+            prompt=f"Review exercise from {row.get('unit_slug', 'unit')} / {row.get('section_key', 'section')}",
+            answer="See the correct answer below",
+            note=f"You answered this incorrectly. Try again!",
             ease_factor=2.5,
             interval_days=1,
             streak_correct=0,
             next_review_at=now_iso,
+            exercise_id=ex_id or None,
         ))
     return items
 

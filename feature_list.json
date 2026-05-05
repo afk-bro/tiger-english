@@ -290,7 +290,7 @@
       "Verify each card shows: scenario title, level badge, description, estimated time, 'Start mission' button",
       "Verify level filter buttons at the top allow filtering by level"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 22,
@@ -459,7 +459,7 @@
       "Verify the incorrectly answered item appears in the review queue",
       "Verify the item shows 'Last time you said: X. What's the correct version?'"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 34,

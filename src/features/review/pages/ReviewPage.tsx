@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 import ReviewDrillCard from "../components/ReviewDrillCard";
 import ReviewSessionSummary from "../components/ReviewSessionSummary";
 import type { DifficultyRating, ReviewItem, ReviewSessionResult } from "../review.types";
+import { enrichReviewPrompt } from "@/features/lessons/data/exercises/exerciseLookup";
 
 const API_BASE =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -28,7 +29,17 @@ async function fetchDueItems(): Promise<ReviewItem[]> {
     headers: { Authorization: `Bearer ${session.access_token}` },
   });
   if (!res.ok) return [];
-  return res.json();
+  const raw: ReviewItem[] = await res.json();
+
+  // Enrich items that originated from exercise_attempts with the real
+  // exercise question + correct answer from the client-side exercise registry.
+  return raw.map((item) => {
+    if (item.exercise_id) {
+      const enriched = enrichReviewPrompt(item.exercise_id, item.prompt, item.answer);
+      return { ...item, prompt: enriched.prompt, answer: enriched.answer };
+    }
+    return item;
+  });
 }
 
 async function rateItem(itemId: string, difficulty: DifficultyRating): Promise<void> {

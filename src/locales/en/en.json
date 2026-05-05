@@ -532,7 +532,8 @@
     },
     "stub": {
       "coming_soon": "{{title}} — coming soon",
-      "public_profile": "Public Profile"
+      "public_profile": "Public Profile",
+      "mission_coming_soon": "Mission runner"
     }
   }
 }
