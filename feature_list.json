@@ -78,7 +78,7 @@
         "Verify it responds without 500 errors",
         "Check that ai_tutor_enabled field is present in the response"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 7,
@@ -93,7 +93,7 @@
         "Click submit and verify a response appears",
         "Verify the response is relevant English grammar explanation"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 8,
@@ -107,7 +107,7 @@
         "Enter a sentence with a grammar mistake (e.g. 'I go to market yesterday')",
         "Submit and verify the response shows: Your sentence, Better sentence, Why, Try again"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 9,
@@ -122,7 +122,7 @@
         "Click 'Generate Practice' and verify a list of exercises appears",
         "Verify each exercise has a question and answer"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 10,
@@ -136,7 +136,7 @@
         "Paste a short paragraph (e.g. 'Yesterday I go to market and buyed some food.')",
         "Click 'Get Feedback' and verify the response shows skill scores and annotations"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 11,
