@@ -1,9 +1,10 @@
 """AI tutor API endpoints — /api/v1/me/ai-tutor/…"""
+import json
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from ...core.security import get_current_user
 from ...models.ai_tutor import (
@@ -55,6 +56,51 @@ async def explain(
         )
     except AiDisabledException:
         return _ai_disabled_503()
+
+
+@router.post(
+    "/explain/stream",
+    summary="Explain a grammar concept — SSE streaming response",
+    response_class=StreamingResponse,
+)
+async def explain_stream(
+    body: ExplainRequest,
+    _user_id: UUID = Depends(get_current_user),
+    service: AiTutorService = Depends(get_ai_tutor_service),
+):
+    """Stream the AI explanation token-by-token as Server-Sent Events.
+
+    SSE format:
+        data: {"type": "token", "text": "..."}\\n\\n
+        data: {"type": "done"}\\n\\n
+
+    On AI disabled:
+        data: {"type": "error", "code": "ai_disabled"}\\n\\n
+    """
+    async def _event_generator():
+        try:
+            async for token in service.stream_explain(
+                question=body.question,
+                context=body.context,
+                learner_language=body.learner_language,
+                cefr_level=body.cefr_level,
+            ):
+                yield f"data: {json.dumps({'type': 'token', 'text': token})}\n\n"
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+        except AiDisabledException:
+            yield f"data: {json.dumps({'type': 'error', 'code': 'ai_disabled'})}\n\n"
+        except Exception as exc:
+            logger.exception("Error in explain/stream: %s", exc)
+            yield f"data: {json.dumps({'type': 'error', 'code': 'internal'})}\n\n"
+
+    return StreamingResponse(
+        _event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.post(

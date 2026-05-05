@@ -63,7 +63,7 @@ export default function OutputTaskBlock({ prompt, minWords = 20, maxWords = 80 }
         <div className="flex-1 h-1 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
           <div
             className={clsx(
-              "h-full rounded-full transition-all",
+              "h-full rounded-full transition-all motion-reduce:transition-none",
               exceedsMax
                 ? "bg-red-500"
                 : meetsMin

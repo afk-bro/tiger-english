@@ -56,8 +56,16 @@ export default function SkillBar({
   const [displayWidth, setDisplayWidth] = useState(0);
   const tooltipId = useId();
 
-  // Animate in on mount
+  // Animate in on mount — skip animation if prefers-reduced-motion
   useEffect(() => {
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReduced) {
+      setDisplayWidth(Math.min(Math.max(score, 0), 5) / 5);
+      return;
+    }
     const frame = requestAnimationFrame(() => {
       setDisplayWidth(Math.min(Math.max(score, 0), 5) / 5);
     });
@@ -97,7 +105,7 @@ export default function SkillBar({
       >
         {/* Fill */}
         <div
-          className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${colorClasses} transition-[width] duration-700 ease-out`}
+          className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${colorClasses} transition-[width] duration-700 ease-out motion-reduce:transition-none motion-reduce:duration-0`}
           style={{ width: `${pct}%` }}
         />
       </div>

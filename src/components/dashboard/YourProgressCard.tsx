@@ -111,7 +111,7 @@ export default function YourProgressCard({ activity, lastActiveAt, timezone, cef
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <span
-              className="w-2 h-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0"
+              className="w-2 h-2 rounded-full bg-orange-400 animate-pulse motion-reduce:animate-none flex-shrink-0"
               aria-hidden="true"
             />
             {t("dashboard.yourProgress.reviewDue", {

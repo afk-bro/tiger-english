@@ -110,6 +110,30 @@ class AiTutorService:
         explanation = message.content[0].text if message.content else ""
         return ExplainResponse(explanation=explanation)
 
+    async def stream_explain(
+        self,
+        question: str,
+        context: str | None,
+        learner_language: str,
+        cefr_level: str,
+    ):
+        """Async generator that yields text tokens from the AI explanation stream."""
+        from typing import AsyncGenerator  # noqa: PLC0415
+
+        client = _build_client()
+        user_msg = f"[Learner level: {cefr_level}] [Native language: {learner_language}]\n\nQuestion: {question}"
+        if context:
+            user_msg += f"\n\nLesson context:\n{context}"
+
+        async with client.messages.stream(
+            model=settings.ai_default_model,
+            max_tokens=1024,
+            system=_SYSTEM_EXPLAIN,
+            messages=[{"role": "user", "content": user_msg}],
+        ) as stream:
+            async for text in stream.text_stream:
+                yield text
+
     async def correct(
         self,
         sentence: str,
