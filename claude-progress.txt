@@ -21,6 +21,19 @@
 
 
 
+### Session: 2026-05-05 (fresh-context verification #28)
+
+#### Completed This Session
+
+- **Verification run** — confirmed all 80/80 tests still passing after fresh context window
+- **Servers already running** — frontend port 5173, backend port 8000 (from previous session)
+- **Verified end-to-end** — homepage renders correctly with polished Tiger English branding; login with tester@test.com/Testing123 → "Login successful" toast → /home dashboard shows flashcard progress card, recommended next items, invite/study-group cards, and full sidebar nav; dashboard shows welcome banner, progress stats, skill breakdown
+
+#### Current Status
+- **80/80 tests passing** — all features implemented and verified, no regressions
+
+
+
 ### Session: 2026-05-05 (fresh-context verification #27)
 
 #### Completed This Session
