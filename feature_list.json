@@ -476,7 +476,7 @@
         "Verify answer reveal animation appears with correct answer + explanation",
         "Verify Difficult/Got it/Easy buttons appear after reveal"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 35,
@@ -505,7 +505,7 @@
         "Verify 'Back to dashboard' CTA button is present",
         "Empty queue shows 'All caught up! Next review at <time>' with 'Practice ahead' CTA"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 37,
