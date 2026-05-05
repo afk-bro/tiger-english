@@ -446,7 +446,7 @@
         "Verify all 11 skills appear: vocabulary_range, vocabulary_accuracy, grammar_accuracy, grammar_range, pronunciation, fluency, listening_comprehension, reading_comprehension, writing_organization, task_completion, interaction",
         "Verify each skill has a score between 0-5 and a sample_size"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 33,
