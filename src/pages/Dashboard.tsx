@@ -41,6 +41,7 @@ export default function Dashboard() {
           lastActiveAt={summary.last_active_at}
           timezone={profile?.timezone ?? "UTC"}
           cefrEstimate={profile?.cefr_estimate ?? null}
+          targetCefrLevel={profile?.target_cefr_level ?? null}
           reviewDueCount={reviewDueCount}
           skillScores={skillsSummary?.skills}
         />

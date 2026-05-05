@@ -3,6 +3,7 @@ import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 
 from ...core.security import get_current_user
 from ...models.ai_tutor import (
@@ -27,6 +28,14 @@ def get_ai_tutor_service() -> AiTutorService:
     return AiTutorService()
 
 
+def _ai_disabled_503() -> JSONResponse:
+    """Return a 503 Service Unavailable response with ai_disabled code."""
+    return JSONResponse(
+        status_code=503,
+        content={"code": "ai_disabled", "detail": "AI features are not enabled on this server."},
+    )
+
+
 @router.post(
     "/explain",
     response_model=ExplainResponse | AiDisabledResponse,
@@ -45,7 +54,7 @@ async def explain(
             cefr_level=body.cefr_level,
         )
     except AiDisabledException:
-        return AiDisabledResponse()
+        return _ai_disabled_503()
 
 
 @router.post(
@@ -65,7 +74,7 @@ async def correct(
             cefr_level=body.cefr_level,
         )
     except AiDisabledException:
-        return AiDisabledResponse()
+        return _ai_disabled_503()
 
 
 @router.post(
@@ -87,7 +96,7 @@ async def practice(
             count=body.count,
         )
     except AiDisabledException:
-        return AiDisabledResponse()
+        return _ai_disabled_503()
 
 
 @router.post(
@@ -107,4 +116,4 @@ async def writing_coach(
             cefr_level=body.cefr_level,
         )
     except AiDisabledException:
-        return AiDisabledResponse()
+        return _ai_disabled_503()

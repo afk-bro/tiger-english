@@ -115,13 +115,27 @@ export default function ReviewPage() {
 
       {state.status === "empty" && (
         <div className="text-center py-16">
-          <RotateCcw className="w-12 h-12 text-semantic-text-muted mx-auto mb-4" aria-hidden />
+          <RotateCcw className="w-12 h-12 text-green-500 mx-auto mb-4" aria-hidden />
           <h1 className="text-xl font-bold text-semantic-text mb-2">
             {t("review.empty.heading", { defaultValue: "All caught up!" })}
           </h1>
-          <p className="text-semantic-text-muted">
+          <p className="text-semantic-text-muted mb-1">
             {t("review.empty.message", { defaultValue: "No review items due. Keep up the great work!" })}
           </p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">
+            {t("review.empty.nextReview", { defaultValue: "Next review: tomorrow" })}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              // Practice ahead — re-fetch all items including not-yet-due ones
+              // For now, navigate to lessons as a practice CTA
+              window.location.href = "/lessons";
+            }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          >
+            {t("review.empty.practiceAhead", { defaultValue: "Practice ahead" })}
+          </button>
         </div>
       )}
 

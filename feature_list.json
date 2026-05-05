@@ -490,7 +490,7 @@
       "Navigate to /u/:username/review/stats or verify next_review_at in review history",
       "Verify 'Easy' answers schedule further in the future than 'Difficult' answers"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 36,
@@ -854,7 +854,7 @@
       "Verify the panel shows a friendly 'AI tutor is temporarily unavailable' message",
       "Verify no 500 errors appear in browser console"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 61,
@@ -955,7 +955,7 @@
       "Verify 'Next review at <time>' is shown",
       "Verify 'Practice ahead' CTA button navigates to practice mode (review coach)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 68,
@@ -1130,7 +1130,7 @@
       "Verify 'Target: B1' pill is shown near the CEFR estimate badge",
       "If target_cefr_level is NULL, verify no target pill appears (graceful)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 80,

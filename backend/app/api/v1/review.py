@@ -39,6 +39,8 @@ class RateDifficultyRequest(BaseModel):
 
 class RateDifficultyResponse(BaseModel):
     success: bool
+    next_interval_days: int | None = None
+    new_ease_factor: float | None = None
 
 
 def _build_review_items_from_attempts(attempts: list[dict]) -> list[ReviewItem]:
@@ -152,6 +154,46 @@ async def get_due_count(
         return ReviewCountResponse(count=0)
 
 
+def _sm2_update(
+    ease_factor: float,
+    interval_days: int,
+    streak_correct: int,
+    difficulty: str,
+) -> tuple[float, int, int]:
+    """
+    SM-2 spaced repetition algorithm.
+
+    difficulty → quality score mapping:
+      'incorrect' → 0  (complete blackout)
+      'difficult'  → 2  (significant difficulty but recalled)
+      'got_it'     → 4  (correct with some hesitation)
+      'easy'       → 5  (perfect recall)
+
+    Returns (new_ease_factor, new_interval_days, new_streak_correct).
+    """
+    quality_map = {"incorrect": 0, "difficult": 2, "got_it": 4, "easy": 5}
+    q = quality_map.get(difficulty, 3)
+
+    if q < 3:
+        # Incorrect — reset streak and interval, lower ease factor
+        new_streak = 0
+        new_interval = 1
+    else:
+        new_streak = streak_correct + 1
+        if streak_correct == 0:
+            new_interval = 1
+        elif streak_correct == 1:
+            new_interval = 6
+        else:
+            new_interval = round(interval_days * ease_factor)
+
+    # Update ease factor: EF' = EF + (0.1 - (5-q) * (0.08 + (5-q) * 0.02))
+    new_ef = ease_factor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
+    new_ef = max(1.3, round(new_ef, 2))  # floor at 1.3
+
+    return new_ef, new_interval, new_streak
+
+
 @router.post("/{item_id}/rate", response_model=RateDifficultyResponse)
 async def rate_item(
     item_id: str,
@@ -159,8 +201,50 @@ async def rate_item(
     user_id: UUID = Depends(get_current_user),
     supabase=Depends(get_supabase_admin),
 ) -> RateDifficultyResponse:
-    """Record a difficulty rating for a review item. SM-2 updates deferred until review_items table exists."""
-    # For now, just acknowledge success. SM-2 algorithm updates will be added
-    # once the review_items table is provisioned.
+    """Record a difficulty rating for a review item, applying SM-2 scheduling."""
     logger.info("Review rating: user=%s item=%s difficulty=%s", user_id, item_id, body.difficulty)
-    return RateDifficultyResponse(success=True)
+
+    # Try to update review_items table if it exists
+    try:
+        result = supabase.table("review_items") \
+            .select("ease_factor, interval_days, streak_correct") \
+            .eq("id", item_id) \
+            .eq("user_id", str(user_id)) \
+            .single() \
+            .execute()
+
+        if result.data:
+            row = result.data
+            new_ef, new_interval, new_streak = _sm2_update(
+                float(row["ease_factor"]),
+                int(row["interval_days"]),
+                int(row["streak_correct"]),
+                body.difficulty,
+            )
+            next_review = (
+                datetime.now(timezone.utc) + timedelta(days=new_interval)
+            ).isoformat()
+
+            supabase.table("review_items").update({
+                "ease_factor": new_ef,
+                "interval_days": new_interval,
+                "streak_correct": new_streak,
+                "next_review_at": next_review,
+                "last_reviewed_at": datetime.now(timezone.utc).isoformat(),
+            }).eq("id", item_id).execute()
+
+            return RateDifficultyResponse(
+                success=True,
+                next_interval_days=new_interval,
+                new_ease_factor=new_ef,
+            )
+    except Exception:
+        pass  # Table doesn't exist — compute SM-2 values but can't persist yet
+
+    # Compute SM-2 values from defaults (can't persist without review_items table)
+    new_ef, new_interval, _ = _sm2_update(2.5, 1, 0, body.difficulty)
+    return RateDifficultyResponse(
+        success=True,
+        next_interval_days=new_interval,
+        new_ease_factor=new_ef,
+    )

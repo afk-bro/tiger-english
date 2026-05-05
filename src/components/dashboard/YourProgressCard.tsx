@@ -27,6 +27,8 @@ type Props = {
   timezone: string;
   /** Learner's estimated CEFR proficiency. When provided, a badge is shown in the card header. */
   cefrEstimate?: CefrLevel | null;
+  /** Learner's self-set target CEFR level. When provided, a 'Target: X' pill is shown. */
+  targetCefrLevel?: CefrLevel | null;
   /** Number of review items due. When > 0, a review prompt button is shown. */
   reviewDueCount?: number;
   /** Skill scores for the mini skill breakdown section. */
@@ -50,7 +52,7 @@ function relativeStudyLabel(lastActiveAt: string | null, tz: string, t: TFunctio
   return t("dashboard.yourProgress.lastStudied.daysAgo", { count: diffDays });
 }
 
-export default function YourProgressCard({ activity, lastActiveAt, timezone, cefrEstimate, reviewDueCount, skillScores }: Props) {
+export default function YourProgressCard({ activity, lastActiveAt, timezone, cefrEstimate, targetCefrLevel, reviewDueCount, skillScores }: Props) {
   const { t } = useTranslation();
   const accuracy = activity.exercises_attempted > 0
     ? Math.round((activity.exercises_correct / activity.exercises_attempted) * 100)
@@ -68,13 +70,24 @@ export default function YourProgressCard({ activity, lastActiveAt, timezone, cef
         <h2 className="text-lg font-semibold text-semantic-text">
           {t("dashboard.yourProgress.heading")}
         </h2>
-        {cefrEstimate && (
-          <CefrBadge
-            level={cefrEstimate}
-            size="sm"
-            aria-label={t("dashboard.yourProgress.cefrEstimate", { level: cefrEstimate, defaultValue: `CEFR estimate: ${cefrEstimate}` })}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          {targetCefrLevel && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+              title={t("dashboard.yourProgress.targetLevel", { level: targetCefrLevel, defaultValue: `Target: ${targetCefrLevel}` })}
+            >
+              <span className="text-amber-400" aria-hidden="true">🎯</span>
+              {t("dashboard.yourProgress.targetLabel", { defaultValue: "Target:" })} {targetCefrLevel}
+            </span>
+          )}
+          {cefrEstimate && (
+            <CefrBadge
+              level={cefrEstimate}
+              size="sm"
+              aria-label={t("dashboard.yourProgress.cefrEstimate", { level: cefrEstimate, defaultValue: `CEFR estimate: ${cefrEstimate}` })}
+            />
+          )}
+        </div>
       </div>
 
       <ul className="space-y-2 text-sm text-semantic-text">

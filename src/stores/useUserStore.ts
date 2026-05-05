@@ -14,6 +14,8 @@ type UserProfile = {
   timezone?: string | null;
   /** Learner's estimated CEFR proficiency level — populated once the DB migration adds the column */
   cefr_estimate?: CefrLevel | null;
+  /** Learner's self-set target CEFR level — e.g. 'B1' */
+  target_cefr_level?: CefrLevel | null;
 };
 
 export type UserStore = {
