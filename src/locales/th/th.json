@@ -484,6 +484,7 @@
   },
   "common": {
     "loading": "กำลังโหลด...",
+    "close": "ปิด",
     "language_switcher": {
       "change_language": "เปลี่ยนภาษา",
       "select_language": "เลือกภาษา"
@@ -536,6 +537,17 @@
   },
   "conversations": {
     "backToScenarios": "กลับไปที่รายการสถานการณ์",
+    "index": {
+      "heading": "ภารกิจสนทนา",
+      "subheading": "ฝึกสนทนาในสถานการณ์จริงกับคู่หูภาษา AI ของคุณ เลือกสถานการณ์ที่เหมาะกับระดับของคุณ",
+      "searchPlaceholder": "ค้นหาสถานการณ์…",
+      "allLevels": "ทุกระดับ",
+      "loadError": "โหลดสถานการณ์ไม่สำเร็จ",
+      "emptyTitle": "ไม่พบสถานการณ์",
+      "emptyHint": "ลองปรับคำค้นหาหรือตัวกรอง",
+      "scenarioCount_one": "{{count}} สถานการณ์",
+      "scenarioCount_other": "{{count}} สถานการณ์"
+    },
     "mission": {
       "notFound": "ไม่พบภารกิจ",
       "roles": "คุณ: {{learnerRole}} · AI: {{aiRole}}",

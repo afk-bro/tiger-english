@@ -484,6 +484,7 @@
   },
   "common": {
     "loading": "加载中...",
+    "close": "关闭",
     "language_switcher": {
       "change_language": "切换语言",
       "select_language": "选择语言"
@@ -536,6 +537,17 @@
   },
   "conversations": {
     "backToScenarios": "返回情景列表",
+    "index": {
+      "heading": "对话任务",
+      "subheading": "与您的 AI 语言伙伴练习真实场景对话。选择一个符合您水平的情景。",
+      "searchPlaceholder": "搜索情景…",
+      "allLevels": "全部级别",
+      "loadError": "加载情景失败",
+      "emptyTitle": "未找到情景",
+      "emptyHint": "请尝试调整搜索条件或筛选项。",
+      "scenarioCount_one": "{{count}} 个情景",
+      "scenarioCount_other": "{{count}} 个情景"
+    },
     "mission": {
       "notFound": "未找到任务。",
       "roles": "你：{{learnerRole}} · AI：{{aiRole}}",

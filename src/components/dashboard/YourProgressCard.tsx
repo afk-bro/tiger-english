@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { CefrBadge } from "@/components/CefrBadge";
 import type { CefrLevel } from "@/features/lessons/lesson.types";
-import { getSkillBarColor } from "@/features/skills/components/SkillBar";
+import { getSkillBarColor } from "@/features/skills/components/skillBar.utils";
 import { SKILL_LABELS } from "@/features/skills/skills.types";
 import type { SkillScore } from "@/features/skills/skills.types";
 

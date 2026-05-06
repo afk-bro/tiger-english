@@ -5,7 +5,8 @@ import { units as staticUnits } from "../data/units";
 import UnitCard from "../components/UnitCard";
 import { CEFR_LEVELS, CEFR_LEVEL_LABELS } from "../lesson.types";
 import type { CefrLevel, Unit } from "../lesson.types";
-import { getCefrColorClasses, CefrBadge } from "@/components/CefrBadge";
+import { CefrBadge } from "@/components/CefrBadge";
+import { getCefrColorClasses } from "@/components/cefrBadge.utils";
 import { Link } from "react-router-dom";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
