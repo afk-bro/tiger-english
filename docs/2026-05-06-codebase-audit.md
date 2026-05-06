@@ -201,7 +201,7 @@ vi     missing 1 key:  common.stub.mission_coming_soon
 
 The English fallback masks these at runtime, so they aren't visible bugs — but they are real translation gaps for non-English users.
 
-**Recommendation.** A `src/test/__tests__/i18n-parity.test.ts` already exists; it should fail on these instead of warning. Then add the missing keys.
+**Recommendation.** `src/__tests__/i18n.test.ts` already exists and asserts top-level key parity for Vietnamese ("vi locale has all top-level keys that en locale has — top-level check only"). Extend it to walk the *full* nested key tree across all three non-English locales (th, vi, zh-CN) and fail when any are missing — that would catch all 7 of the gaps above as a hard test failure rather than a runtime fallback. Then add the missing keys.
 
 **Effort: S.**
 
@@ -354,7 +354,7 @@ These collapse to single fires in production builds (StrictMode is dev-only), so
 
 ### 6.1 Bundle vendor split — closed <a id="61"></a>
 
-PR #127 split the main JS chunk from 746 kB → 150 kB by adding `manualChunks` to `vite.config.ts`. The `chunks > 500 kB` warning is gone. **No further action.**
+The main JS chunk was split from 746 kB → 150 kB via `manualChunks` in `vite.config.ts` (six named vendor chunks: react, supabase, ui, forms, i18n, router). The `chunks > 500 kB` warning is gone. **No further action.**
 
 ### 6.2 Tree-shaking audit candidate <a id="62"></a>
 
