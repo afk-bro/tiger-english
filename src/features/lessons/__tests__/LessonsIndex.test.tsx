@@ -34,7 +34,8 @@ describe("LessonsIndex", () => {
 
   it("renders unit-1 under the A1 section", () => {
     render(<MemoryRouter><LessonsIndex /></MemoryRouter>);
-    expect(screen.getByText("To Be: Introduction")).toBeInTheDocument();
+    // Title also appears in the teacher-assigned rail, so >=1 match is the correct invariant.
+    expect(screen.getAllByText("To Be: Introduction").length).toBeGreaterThan(0);
   });
 
   it("renders unit-2 under the A1 section", () => {

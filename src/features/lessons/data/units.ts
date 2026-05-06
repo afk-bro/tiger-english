@@ -85,7 +85,21 @@ export const units: Unit[] = [
       },
     },
   },
-  stub("unit-3", 3, "Greetings & Saying Goodbye", "Common greetings and farewells", "Hello / Hi / Good morning / Goodbye / See you", "A1"),
+  {
+    ...stub("unit-3", 3, "Greetings & Saying Goodbye", "Common greetings and farewells", "Hello / Hi / Good morning / Goodbye / See you", "A1"),
+    translations: {
+      th: {
+        title: "การทักทายและการกล่าวลา",
+        topic: "คำทักทายและคำอำลาที่ใช้บ่อย",
+        grammarFocus: "Hello / Hi / Good morning / Goodbye / See you",
+      },
+      vi: {
+        title: "Chào hỏi và Tạm biệt",
+        topic: "Các cách chào hỏi và tạm biệt thông dụng",
+        grammarFocus: "Hello / Hi / Good morning / Goodbye / See you",
+      },
+    },
+  },
   stub("unit-4", 4, "The Alphabet & Spelling", "Spelling your name out loud", "English alphabet pronunciation; asking 'How do you spell that?'", "A1"),
 
   // ─── A0–A1 Module 2: Personal Information ────────────────────────────────
