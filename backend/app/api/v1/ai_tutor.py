@@ -149,7 +149,7 @@ async def explain(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/explain",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=300,
             output_tokens=len(result.explanation.split()),
         )
@@ -158,7 +158,7 @@ async def explain(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/explain",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=0,
             output_tokens=0,
             status="ai_disabled",
@@ -192,7 +192,7 @@ async def explain_stream(
             ai_usage_log.record(
                 user_id=str(user_id),
                 endpoint="/me/ai-tutor/explain/stream",
-                model="claude-sonnet-4-6",
+                model=settings.ai_default_model,
                 input_tokens=300,
                 output_tokens=token_count,
             )
@@ -200,7 +200,7 @@ async def explain_stream(
             ai_usage_log.record(
                 user_id=str(user_id),
                 endpoint="/me/ai-tutor/explain/stream",
-                model="claude-sonnet-4-6",
+                model=settings.ai_default_model,
                 input_tokens=0,
                 output_tokens=0,
                 status="ai_disabled",
@@ -239,7 +239,7 @@ async def correct(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/correct",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=200,
             output_tokens=120,
         )
@@ -248,7 +248,7 @@ async def correct(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/correct",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=0,
             output_tokens=0,
             status="ai_disabled",
@@ -277,7 +277,7 @@ async def practice(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/practice",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=250,
             output_tokens=400,
         )
@@ -286,7 +286,7 @@ async def practice(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/practice",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=0,
             output_tokens=0,
             status="ai_disabled",
@@ -313,7 +313,7 @@ async def writing_coach(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/writing-coach",
-            model="claude-haiku-4-5",
+            model=settings.ai_haiku_model,
             input_tokens=len(body.text.split()) * 2,
             output_tokens=600,
         )
@@ -328,7 +328,7 @@ async def writing_coach(
             ai_usage_log.record(
                 user_id=str(user_id),
                 endpoint="/me/ai-tutor/writing-coach",
-                model="claude-haiku-4-5",
+                model=settings.ai_haiku_model,
                 input_tokens=len(body.text.split()) * 2,
                 output_tokens=250,
                 status="mock",
@@ -337,7 +337,7 @@ async def writing_coach(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/writing-coach",
-            model="claude-haiku-4-5",
+            model=settings.ai_haiku_model,
             input_tokens=0,
             output_tokens=0,
             status="ai_disabled",

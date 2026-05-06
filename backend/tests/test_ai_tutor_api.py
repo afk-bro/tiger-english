@@ -193,6 +193,45 @@ class TestWritingCoachEndpoint:
         res = client.post("/api/v1/me/ai-tutor/writing-coach", json={"text": "Hi."})
         assert res.status_code == 422  # min_length=10
 
+    def test_writing_coach_logs_model_from_settings_not_hardcoded(
+        self, app_with_ai_tutor, monkeypatch
+    ):
+        """Regression: ai_usage_log should record settings.ai_haiku_model so
+        env overrides flow through to the cost dashboard. Previously the
+        endpoint hardcoded the model name, which silently mis-attributed
+        usage when AI_HAIKU_MODEL was overridden."""
+        from app.api.v1 import ai_tutor as ai_tutor_module
+        from app.core import ai_usage_log
+        from app.models.ai_tutor import (
+            InlineAnnotation,
+            WritingCoachResponse,
+            WritingScore,
+        )
+
+        client, service = app_with_ai_tutor
+        service.writing_coach = AsyncMock(return_value=WritingCoachResponse(
+            scores=[WritingScore(skill="Grammar", score=8, comment="ok")],
+            inline_annotations=[InlineAnnotation(offset=0, length=1, issue="x", suggestion="y")],
+            rewritten_exemplar="ok",
+        ))
+
+        monkeypatch.setattr(
+            ai_tutor_module.settings, "ai_haiku_model", "claude-haiku-test-override"
+        )
+        recorded: list[dict] = []
+        monkeypatch.setattr(
+            ai_usage_log,
+            "record",
+            lambda **kwargs: recorded.append(kwargs),
+        )
+
+        res = client.post("/api/v1/me/ai-tutor/writing-coach", json={
+            "text": "Some sufficiently long writing sample.",
+        })
+        assert res.status_code == 200
+        assert recorded
+        assert recorded[-1]["model"] == "claude-haiku-test-override"
+
     def test_writing_coach_returns_ai_disabled(self, app_with_ai_disabled):
         """Default behavior: writing-coach matches sibling endpoints with 503+ai_disabled."""
         client, _ = app_with_ai_disabled
