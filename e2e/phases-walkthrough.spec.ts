@@ -9,7 +9,13 @@
  */
 import { test, expect, type Page } from "@playwright/test";
 
-const API_BASE = "http://localhost:8000/api/v1";
+// playwright.config.ts seeds process.env via vite's loadEnv, so VITE_API_BASE_URL
+// from .env (or any environment override) is honored here. E2E_API_BASE_URL is a
+// dedicated escape hatch for CI/docker setups that point at a non-default backend.
+const API_BASE =
+  process.env.E2E_API_BASE_URL ??
+  process.env.VITE_API_BASE_URL ??
+  "http://localhost:8000/api/v1";
 
 async function getJson(page: Page, path: string) {
   const res = await page.request.get(`${API_BASE}${path}`);
@@ -155,17 +161,24 @@ test.describe("Phase 4 — Conversation scenarios DB + endpoints", () => {
 test.describe("Phase 5 — Conversation scenario picker", () => {
   test("/conversations renders heading and scenarios", async ({ page }) => {
     await page.goto("/conversations", { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(2000); // give scenarios fetch time to settle
+    // Wait for one of the four post-fetch states (scenarios, empty, or error)
+    // rather than a fixed sleep — under parallel load the scenarios fetch can
+    // take a few seconds, and a hardcoded 2s is flaky.
+    await expect
+      .poll(
+        async () => {
+          const sections = await page.locator('section[aria-labelledby^="level-"]').count();
+          const empty = await page.getByText(/no scenarios found/i).count();
+          const errorEl = await page.getByText(/failed to load/i).count();
+          const links = await page.locator('a[href^="/conversations/"]').count();
+          return sections + empty + errorEl + links;
+        },
+        { timeout: 10000 },
+      )
+      .toBeGreaterThan(0);
     const heading = await page.getByRole("heading", { level: 1 }).first().textContent().catch(() => null);
-    const scenarioSections = await page.locator('section[aria-labelledby^="level-"]').count();
-    const empty = await page.getByText(/no scenarios found/i).count();
-    const errorEl = await page.getByText(/failed to load/i).count();
-    const scenarioLinks = await page.locator('a[href^="/conversations/"]').count();
-    console.log(
-      `[conversations] h1="${heading}" sections=${scenarioSections} links=${scenarioLinks} empty=${empty} error=${errorEl}`,
-    );
-    // Surface what we observed — don't assert on a specific outcome since this
-    // route blocks on profile data which currently 400s.
+    const sections = await page.locator('section[aria-labelledby^="level-"]').count();
+    console.log(`[conversations] h1="${heading}" sections=${sections}`);
   });
 
   test("level filter pill narrows results", async ({ page }) => {
@@ -276,13 +289,20 @@ test.describe("Cross-cutting — console errors", () => {
       page.on("console", (msg) => {
         if (msg.type() === "error") errors.push(`console.error: ${msg.text().slice(0, 200)}`);
       });
-      await page.goto(route, { waitUntil: "networkidle" }).catch(() => {});
-      // Allow late settling
+      // Navigation failures are themselves console-error findings — let the
+      // exception propagate so we don't silently green-light a broken route.
+      const res = await page.goto(route, { waitUntil: "networkidle" });
+      expect(res, `${route} produced no response`).not.toBeNull();
+      expect(res!.ok(), `${route} returned HTTP ${res!.status()}`).toBe(true);
+
+      // Allow late-arriving network-driven errors a moment to surface.
       await page.waitForTimeout(500);
+
       if (errors.length) {
         console.log(`[errors] ${route}:`, errors);
       }
-      // Don't fail on errors — record them. Surface as a soft check.
+      // Soft assertion — collects across routes so a single failure doesn't
+      // mask the others. The test still fails at the end if any errors fired.
       expect.soft(errors.length, `Errors on ${route}: ${errors.join("\n")}`).toBe(0);
     });
   }
