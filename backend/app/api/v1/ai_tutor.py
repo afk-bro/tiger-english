@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from ...core.config import settings
 from ...core.security import get_current_user
 from ...core import ai_usage_log
 from ...models.ai_tutor import (
@@ -148,7 +149,7 @@ async def explain(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/explain",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=300,
             output_tokens=len(result.explanation.split()),
         )
@@ -157,7 +158,7 @@ async def explain(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/explain",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=0,
             output_tokens=0,
             status="ai_disabled",
@@ -191,7 +192,7 @@ async def explain_stream(
             ai_usage_log.record(
                 user_id=str(user_id),
                 endpoint="/me/ai-tutor/explain/stream",
-                model="claude-sonnet-4-6",
+                model=settings.ai_default_model,
                 input_tokens=300,
                 output_tokens=token_count,
             )
@@ -199,7 +200,7 @@ async def explain_stream(
             ai_usage_log.record(
                 user_id=str(user_id),
                 endpoint="/me/ai-tutor/explain/stream",
-                model="claude-sonnet-4-6",
+                model=settings.ai_default_model,
                 input_tokens=0,
                 output_tokens=0,
                 status="ai_disabled",
@@ -238,7 +239,7 @@ async def correct(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/correct",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=200,
             output_tokens=120,
         )
@@ -247,7 +248,7 @@ async def correct(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/correct",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=0,
             output_tokens=0,
             status="ai_disabled",
@@ -276,7 +277,7 @@ async def practice(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/practice",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=250,
             output_tokens=400,
         )
@@ -285,7 +286,7 @@ async def practice(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/practice",
-            model="claude-sonnet-4-6",
+            model=settings.ai_default_model,
             input_tokens=0,
             output_tokens=0,
             status="ai_disabled",
@@ -312,21 +313,33 @@ async def writing_coach(
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/writing-coach",
-            model="claude-haiku-4-5",
+            model=settings.ai_haiku_model,
             input_tokens=len(body.text.split()) * 2,
             output_tokens=600,
         )
         return result
     except AiDisabledException:
-        # Instead of 503, return realistic mock data so the full UI can be exercised
-        # even in development environments without an Anthropic API key.
-        mock = _mock_writing_coach(body.text)
+        # Default behavior matches sibling endpoints: 503 + ai_disabled.
+        # Opt-in: AI_WRITING_COACH_MOCK_WHEN_DISABLED=true returns realistic
+        # heuristic mock data so reviewers without an API key can demo the
+        # full Writing Coach UI flow.
+        if settings.ai_writing_coach_mock_when_disabled:
+            mock = _mock_writing_coach(body.text)
+            ai_usage_log.record(
+                user_id=str(user_id),
+                endpoint="/me/ai-tutor/writing-coach",
+                model=settings.ai_haiku_model,
+                input_tokens=len(body.text.split()) * 2,
+                output_tokens=250,
+                status="mock",
+            )
+            return mock
         ai_usage_log.record(
             user_id=str(user_id),
             endpoint="/me/ai-tutor/writing-coach",
-            model="claude-haiku-4-5",
-            input_tokens=len(body.text.split()) * 2,
-            output_tokens=250,
-            status="mock",
+            model=settings.ai_haiku_model,
+            input_tokens=0,
+            output_tokens=0,
+            status="ai_disabled",
         )
-        return mock
+        return _ai_disabled_503()
