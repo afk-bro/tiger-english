@@ -28,7 +28,9 @@ export default function AiTutorPanel() {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Trap focus inside the panel when open
+  // Move focus to the close button when the panel opens. This is not a true
+  // focus trap — Tab can still escape into the underlying page. Switch to
+  // Headless UI Dialog or focus-lock if a real trap is needed.
   useEffect(() => {
     if (isOpen) {
       closeButtonRef.current?.focus();

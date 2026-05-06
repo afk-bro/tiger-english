@@ -8,6 +8,7 @@
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { RotateCcw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ReviewDrillCard from "../components/ReviewDrillCard";
@@ -66,6 +67,7 @@ type PageState =
 
 export default function ReviewPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [state, setState] = useState<PageState>({ status: "loading" });
 
   useEffect(() => {
@@ -127,11 +129,7 @@ export default function ReviewPage() {
           </p>
           <button
             type="button"
-            onClick={() => {
-              // Practice ahead — re-fetch all items including not-yet-due ones
-              // For now, navigate to lessons as a practice CTA
-              window.location.href = "/lessons";
-            }}
+            onClick={() => navigate("/lessons")}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             {t("review.empty.practiceAhead", { defaultValue: "Practice ahead" })}

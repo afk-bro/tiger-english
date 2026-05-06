@@ -19,7 +19,7 @@ function renderBlock(block: SectionBlock, onExerciseCorrect: (() => void) | unde
     case "callout": return <CalloutBlock variant={block.variant} content={block.content} translations={block.translations} />;
     case "exercise": return <ExerciseBlock exerciseType={block.exerciseType} exerciseId={block.exerciseId} imageUrl={block.imageUrl} onCorrect={onExerciseCorrect} unitSlug={unitSlug} sectionKey={sectionKey} />;
     case "output-task": return <OutputTaskBlock prompt={block.prompt} minWords={block.minWords} maxWords={block.maxWords} translations={block.translations} />;
-    case "ai-mission": return <AiMissionBlock scenarioSlug={block.scenarioSlug} title={block.title} description={block.description} estimatedMinutes={block.estimatedMinutes} />;
+    case "ai-mission": return <AiMissionBlock scenarioSlug={block.scenarioSlug} title={block.title} description={block.description} estimatedMinutes={block.estimatedMinutes} cefrLevel={block.cefrLevel} />;
     default: return null;
   }
 }

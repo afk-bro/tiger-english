@@ -5,7 +5,8 @@ import json
 
 import os as _os
 _HERE = _os.path.dirname(_os.path.abspath(__file__))
-_BACKEND_ENV = _os.path.join(_HERE, "..", "..", ".env")
+# backend/app/core/../../.env  →  backend/.env (where .env.example lives).
+_BACKEND_ENV = _os.path.normpath(_os.path.join(_HERE, "..", "..", ".env"))
 
 class Settings(BaseSettings):
     model_config = ConfigDict(

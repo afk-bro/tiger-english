@@ -492,6 +492,7 @@
   },
   "common": {
     "loading": "Loading...",
+    "close": "Close",
     "language_switcher": {
       "change_language": "Change language",
       "select_language": "Select language"
@@ -545,6 +546,17 @@
   },
   "conversations": {
     "backToScenarios": "Back to scenarios",
+    "index": {
+      "heading": "Conversation missions",
+      "subheading": "Practice real-world conversations with your AI language partner. Choose a scenario that matches your level.",
+      "searchPlaceholder": "Search scenarios…",
+      "allLevels": "All levels",
+      "loadError": "Failed to load scenarios",
+      "emptyTitle": "No scenarios found",
+      "emptyHint": "Try adjusting your search or filter.",
+      "scenarioCount_one": "{{count}} scenario",
+      "scenarioCount_other": "{{count}} scenarios"
+    },
     "mission": {
       "notFound": "Mission not found.",
       "roles": "You: {{learnerRole}} · AI: {{aiRole}}",

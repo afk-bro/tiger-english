@@ -274,7 +274,7 @@
         "yesterday": "เมื่อวาน",
         "daysAgo": "{{count}} วันที่แล้ว"
       },
-      "takeAssessment": "Take {{level}} exit assessment"
+      "takeAssessment": "ทำแบบทดสอบจบระดับ {{level}}"
     },
     "error": "โหลดความก้าวหน้าไม่ได้ ลองรีเฟรชอีกครั้ง"
   },

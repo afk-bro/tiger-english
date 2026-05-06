@@ -1,7 +1,7 @@
 // src/features/admin/pages/AdminAiUsagePage.tsx
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BarChart2, TrendingUp, Zap, Users, RefreshCw, Clock } from "lucide-react";
+import { BarChart2, TrendingUp, Zap, RefreshCw, Clock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const API_BASE =

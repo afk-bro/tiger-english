@@ -61,6 +61,7 @@ const setProfile = (profile: UserStore['profile']) => {
     fetchProfile: vi.fn(),
     clearProfile: vi.fn(),
     setNativeLanguage: vi.fn(),
+    setTargetCefrLevel: vi.fn(),
   };
   vi.mocked(useUserStore).mockImplementation((selector?: (s: typeof mockStore) => unknown) =>
     selector ? selector(mockStore) : mockStore,

@@ -274,7 +274,7 @@
         "yesterday": "hôm qua",
         "daysAgo": "{{count}} ngày trước"
       },
-      "takeAssessment": "Take {{level}} exit assessment"
+      "takeAssessment": "Làm bài kiểm tra đầu ra {{level}}"
     },
     "error": "Không thể tải tiến độ của bạn. Hãy thử làm mới."
   },

@@ -7,15 +7,17 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { MessageSquare, Clock, ArrowRight } from "lucide-react";
 import CefrBadge from "@/components/CefrBadge";
+import type { CefrLevel } from "../../lesson.types";
 
 type Props = {
   scenarioSlug: string;
   title: string;
   description: string;
   estimatedMinutes?: number;
+  cefrLevel?: CefrLevel;
 };
 
-export default function AiMissionBlock({ scenarioSlug, title, description, estimatedMinutes }: Props) {
+export default function AiMissionBlock({ scenarioSlug, title, description, estimatedMinutes, cefrLevel = "A1" }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -33,7 +35,7 @@ export default function AiMissionBlock({ scenarioSlug, title, description, estim
             <h3 className="text-sm font-semibold text-semantic-text leading-tight">{title}</h3>
           </div>
         </div>
-        <CefrBadge level="A1" />
+        <CefrBadge level={cefrLevel} />
       </div>
 
       {/* Description */}

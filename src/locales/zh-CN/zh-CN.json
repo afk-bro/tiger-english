@@ -274,7 +274,7 @@
         "yesterday": "昨天",
         "daysAgo": "{{count}} 天前"
       },
-      "takeAssessment": "Take {{level}} exit assessment"
+      "takeAssessment": "参加 {{level}} 出口测试"
     },
     "error": "无法加载您的进度，请刷新重试"
   },
@@ -575,27 +575,27 @@
   },
   "assessment": {
     "runner": {
-      "title": "Exit Assessment",
-      "section": "Section {{current}} of {{total}}",
-      "pause": "Pause",
-      "next": "Next section",
+      "title": "出口测试",
+      "section": "第 {{current}} 部分，共 {{total}} 部分",
+      "pause": "暂停",
+      "next": "下一部分",
       "sections": {
-        "listening": "Listening",
-        "reading": "Reading",
-        "vocabulary": "Vocabulary",
-        "grammar": "Grammar",
-        "speaking": "Speaking",
-        "writing": "Writing"
+        "listening": "听力",
+        "reading": "阅读",
+        "vocabulary": "词汇",
+        "grammar": "语法",
+        "speaking": "口语",
+        "writing": "写作"
       }
     },
     "results": {
-      "passed": "Passed!",
-      "needsWork": "Needs more work",
-      "congratulations": "Congratulations! You've passed the {{level}} assessment.",
-      "keepPracticing": "Keep practicing! Here's what to focus on:",
-      "tryAgain": "Try again",
-      "backToDashboard": "Back to dashboard",
-      "yourScores": "Your scores"
+      "passed": "通过！",
+      "needsWork": "仍需加强",
+      "congratulations": "恭喜！您已通过 {{level}} 测试。",
+      "keepPracticing": "继续努力！以下是重点改进方向：",
+      "tryAgain": "再试一次",
+      "backToDashboard": "返回仪表板",
+      "yourScores": "您的成绩"
     }
   },
   "teacher": {

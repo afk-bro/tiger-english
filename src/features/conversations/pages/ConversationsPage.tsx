@@ -6,6 +6,7 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { MessageCircle, Search } from "lucide-react";
 import { useScenarios } from "../hooks/useScenarios";
 import { ScenarioCard } from "../components/ScenarioCard";
@@ -22,6 +23,7 @@ const ALL_LEVEL_BANDS: LevelBand[] = [
 
 export default function ConversationsPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<LevelBand | null>(null);
   const [search, setSearch] = useState("");
 
@@ -63,11 +65,15 @@ export default function ConversationsPage() {
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <MessageCircle className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-          <h1 className="text-2xl font-bold text-semantic-text">Conversation missions</h1>
+          <h1 className="text-2xl font-bold text-semantic-text">
+            {t("conversations.index.heading", { defaultValue: "Conversation missions" })}
+          </h1>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Practice real-world conversations with your AI language partner. Choose a scenario
-          that matches your level.
+          {t("conversations.index.subheading", {
+            defaultValue:
+              "Practice real-world conversations with your AI language partner. Choose a scenario that matches your level.",
+          })}
         </p>
       </div>
 
@@ -78,7 +84,8 @@ export default function ConversationsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="search"
-            placeholder="Search scenarios…"
+            placeholder={t("conversations.index.searchPlaceholder", { defaultValue: "Search scenarios…" })}
+            aria-label={t("conversations.index.searchPlaceholder", { defaultValue: "Search scenarios…" })}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-semantic-text placeholder-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
@@ -96,7 +103,7 @@ export default function ConversationsPage() {
                 : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
             }`}
           >
-            All levels
+            {t("conversations.index.allLevels", { defaultValue: "All levels" })}
           </button>
           {ALL_LEVEL_BANDS.map((band) => (
             <button
@@ -125,7 +132,9 @@ export default function ConversationsPage() {
       {/* Error state */}
       {error && !isLoading && (
         <div className="text-center py-12 text-red-500 dark:text-red-400">
-          <p className="font-medium">Failed to load scenarios</p>
+          <p className="font-medium">
+            {t("conversations.index.loadError", { defaultValue: "Failed to load scenarios" })}
+          </p>
           <p className="text-sm mt-1 text-gray-400">{error}</p>
         </div>
       )}
@@ -134,8 +143,12 @@ export default function ConversationsPage() {
       {!isLoading && !error && visible.length === 0 && (
         <div className="text-center py-12 text-gray-400 dark:text-gray-500">
           <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
-          <p className="font-medium">No scenarios found</p>
-          <p className="text-sm mt-1">Try adjusting your search or filter.</p>
+          <p className="font-medium">
+            {t("conversations.index.emptyTitle", { defaultValue: "No scenarios found" })}
+          </p>
+          <p className="text-sm mt-1">
+            {t("conversations.index.emptyHint", { defaultValue: "Try adjusting your search or filter." })}
+          </p>
         </div>
       )}
 
@@ -155,7 +168,12 @@ export default function ConversationsPage() {
                     {band}
                   </h2>
                   <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-                  <span className="text-xs text-gray-400">{group.length} scenario{group.length !== 1 ? "s" : ""}</span>
+                  <span className="text-xs text-gray-400">
+                    {t("conversations.index.scenarioCount", {
+                      count: group.length,
+                      defaultValue: `${group.length} scenario${group.length !== 1 ? "s" : ""}`,
+                    })}
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {group.map((scenario) => (

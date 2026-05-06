@@ -61,7 +61,7 @@ export default function YourProgressCard({ activity, lastActiveAt, timezone, cef
     : 0;
   const relative = relativeStudyLabel(lastActiveAt, timezone, t);
 
-  // Filter to only the 3 dashboard skill keys, in order
+  // Order skill scores by DASHBOARD_SKILL_KEYS, dropping any that aren't present.
   const miniSkills = DASHBOARD_SKILL_KEYS
     .map((key) => skillScores?.find((s) => s.skill === key))
     .filter((s): s is SkillScore => s != null);

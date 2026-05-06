@@ -140,7 +140,7 @@ export default function TeacherClassDetailPage() {
                 type="button"
                 onClick={() => setShowInviteModal(false)}
                 className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-400"
-                aria-label="Close"
+                aria-label={t("common.close", { defaultValue: "Close" })}
               >
                 <X className="w-4 h-4" />
               </button>

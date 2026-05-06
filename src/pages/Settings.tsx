@@ -28,10 +28,10 @@ export default function Settings() {
     vi: t('flashcards.language.vi'),
   };
 
-  const { profile, setNativeLanguage } = useUserStore();
+  const { profile, setNativeLanguage, setTargetCefrLevel } = useUserStore();
   const [selectedLang, setSelectedLang] = useState<string | null>(profile?.native_language ?? null);
   const [selectedTarget, setSelectedTarget] = useState<CefrLevel | null>(
-    (profile?.target_cefr_level as CefrLevel) ?? null
+    profile?.target_cefr_level ?? null
   );
   const [saving, setSaving] = useState(false);
   const [savingTarget, setSavingTarget] = useState(false);
@@ -45,7 +45,7 @@ export default function Settings() {
       setSelectedLang(profile.native_language);
     }
     if (profile?.target_cefr_level != null) {
-      setSelectedTarget(profile.target_cefr_level as CefrLevel);
+      setSelectedTarget(profile.target_cefr_level);
     }
   }, [profile?.native_language, profile?.target_cefr_level]);
 
@@ -94,6 +94,7 @@ export default function Settings() {
         return;
       }
 
+      setTargetCefrLevel(selectedTarget);
       setTargetSaved(true);
     } catch (err) {
       setTargetError(err instanceof Error ? err.message : t('common.error.message'));

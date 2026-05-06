@@ -1,8 +1,12 @@
 /**
  * Frontend API client for the AI Tutor endpoints.
- * All methods return typed responses or throw on network/server error.
- * When the server returns { code: 'ai_disabled' }, the result is returned
- * as-is so callers can degrade gracefully.
+ *
+ * Methods return the typed response on success, or `null` when there is no
+ * authenticated session or a network/server error occurred (errors are
+ * caught and logged so callers can render a degraded UI without try/catch).
+ *
+ * When the server returns { code: 'ai_disabled' } that payload is returned
+ * verbatim (it is a normal 200 response, not an error).
  */
 import { supabase } from "@/lib/supabase";
 

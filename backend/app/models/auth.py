@@ -28,7 +28,7 @@ class UserRegister(BaseModel):
         return validate_native_language(v)
 
 
-VALID_CEFR_LEVELS = {"A1", "A2", "B1", "B1+", "B2", "C1"}
+VALID_CEFR_LEVELS = {"A0", "A1", "A2", "B1", "B1+", "B2", "C1"}
 
 
 class UpdateProfile(BaseModel):
