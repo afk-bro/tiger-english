@@ -52,12 +52,16 @@ async function getAuthedJson(page: Page, path: string) {
 }
 
 /**
- * Synchronously read the first <h1> text without triggering Playwright's
- * auto-retry. Some routes legitimately render no h1 in some states (e.g.
- * /review during the active drill phase, /teacher redirected to /home for
- * non-teachers). `getByRole(...).first().textContent().catch(() => null)`
- * looks safe but blocks until the test timeout — `.catch()` only intercepts
- * thrown errors, not the auto-retry's wait. count() is a single sync read.
+ * Read the first <h1> text without triggering Playwright's locator
+ * auto-retry. Some routes legitimately render no h1 in some states
+ * (e.g. /review during the active drill phase, /teacher redirected
+ * to /home for non-teachers).
+ *
+ * The `count()` + conditional `textContent()` shape avoids a common
+ * trap: `getByRole(...).first().textContent().catch(() => null)`
+ * looks safe but blocks until the test timeout, because `.catch()`
+ * only intercepts thrown errors — Playwright's auto-retry waits
+ * silently. `count()` returns immediately with 0 instead.
  */
 async function readH1OrNull(page: Page): Promise<string | null> {
   const count = await page.locator("h1").count();
@@ -247,11 +251,18 @@ test.describe("Phase 7 — Review system", () => {
 });
 
 test.describe("Phase 8 — Assessment", () => {
-  test("/assessment runner page renders", async ({ page }) => {
-    const res = await page.goto("/assessment", { waitUntil: "networkidle" });
+  test("/assessment/:level runner renders the first section", async ({ page }) => {
+    // Assessment routes are /assessment/:level (or /u/:username/assessment/:level).
+    // Bare /assessment is unmatched and renders the SPA shell — go to a real
+    // level so we exercise the runner.
+    const res = await page.goto("/assessment/a1", { waitUntil: "networkidle" });
     const h1 = await readH1OrNull(page);
     console.log(`[assessment] http=${res?.status()} url=${page.url()} h1="${h1}"`);
-    expect(page.url()).toContain("/assessment");
+    expect(page.url()).toContain("/assessment/a1");
+    // Runner shows the level + title in the top bar (e.g. "A1 Exit Assessment")
+    // and the first section's name as the h1 (Listening). Assert one of those
+    // so the test fails if the runner doesn't actually render.
+    await expect(page.getByText(/A1\s+Exit Assessment/i)).toBeVisible();
   });
 });
 
@@ -314,7 +325,7 @@ test.describe("Cross-cutting — console errors", () => {
     "/conversations",
     "/skills",
     "/review",
-    "/assessment",
+    "/assessment/a1",
     "/settings",
   ];
 
