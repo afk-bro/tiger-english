@@ -46,10 +46,10 @@ describe("ProgressAPI", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0];
-    expect((init as RequestInit).headers).toMatchObject({
-      Authorization: "Bearer test-token-abc",
-      "Content-Type": "application/json",
-    });
+    // Headers come through as a `Headers` instance (case-insensitive lookup).
+    const headers = new Headers((init as RequestInit).headers);
+    expect(headers.get("authorization")).toBe("Bearer test-token-abc");
+    expect(headers.get("content-type")).toBe("application/json");
   });
 
   it("completeSection sends the right body", async () => {

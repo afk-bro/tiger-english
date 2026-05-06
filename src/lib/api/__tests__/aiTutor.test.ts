@@ -131,7 +131,9 @@ describe("aiTutorAPI authedFetch", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0];
-    expect(init.headers.Authorization).toBe("Bearer tok-123");
-    expect(init.headers["Content-Type"]).toBe("application/json");
+    // Headers come through as a `Headers` instance (case-insensitive lookup).
+    const headers = new Headers(init.headers);
+    expect(headers.get("authorization")).toBe("Bearer tok-123");
+    expect(headers.get("content-type")).toBe("application/json");
   });
 });

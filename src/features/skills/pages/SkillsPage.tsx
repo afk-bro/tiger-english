@@ -8,16 +8,12 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Zap } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { authedGet } from "@/lib/api/authedFetch";
 import { useUserStore } from "@/stores/useUserStore";
 import CefrBadge from "@/components/CefrBadge";
 import SkillBar from "../components/SkillBar";
 import { SKILL_KEYS, SKILL_LABELS } from "../skills.types";
 import type { SkillScore } from "../skills.types";
-
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:8000/api/v1";
 
 type LoadingState =
   | { status: "loading" }
@@ -25,17 +21,15 @@ type LoadingState =
   | { status: "error" };
 
 async function fetchSkillSummary(): Promise<SkillScore[] | null> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session) return null;
-
-  const res = await fetch(`${API_BASE}/me/skills/summary`, {
-    headers: { Authorization: `Bearer ${session.access_token}` },
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return (Array.isArray(data) ? data : data?.skills ?? []) as SkillScore[];
+  try {
+    const data = await authedGet<SkillScore[] | { skills?: SkillScore[] }>(
+      "/me/skills/summary",
+    );
+    if (!data) return null;
+    return (Array.isArray(data) ? data : data.skills ?? []) as SkillScore[];
+  } catch {
+    return null;
+  }
 }
 
 /** Build zero-score placeholders for all 11 skills. */

@@ -10,27 +10,20 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { RotateCcw } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { authedGet, authedPostJson } from "@/lib/api/authedFetch";
 import ReviewDrillCard from "../components/ReviewDrillCard";
 import ReviewSessionSummary from "../components/ReviewSessionSummary";
 import type { DifficultyRating, ReviewItem, ReviewSessionResult } from "../review.types";
 import { enrichReviewPrompt } from "@/features/lessons/data/exercises/exerciseLookup";
 
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:8000/api/v1";
-
 async function fetchDueItems(): Promise<ReviewItem[]> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session) return [];
-
-  const res = await fetch(`${API_BASE}/me/review/due`, {
-    headers: { Authorization: `Bearer ${session.access_token}` },
-  });
-  if (!res.ok) return [];
-  const raw: ReviewItem[] = await res.json();
+  let raw: ReviewItem[] | null;
+  try {
+    raw = await authedGet<ReviewItem[]>("/me/review/due");
+  } catch {
+    return [];
+  }
+  if (!raw) return [];
 
   // Enrich items that originated from exercise_attempts with the real
   // exercise question + correct answer from the client-side exercise registry.
@@ -44,19 +37,9 @@ async function fetchDueItems(): Promise<ReviewItem[]> {
 }
 
 async function rateItem(itemId: string, difficulty: DifficultyRating): Promise<void> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session) return;
-
-  await fetch(`${API_BASE}/me/review/${itemId}/rate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify({ difficulty }),
-  });
+  // Fire-and-forget; swallow errors so a flaky network doesn't break the
+  // local state machine. The caller already wraps this in .catch(console.error).
+  await authedPostJson(`/me/review/${itemId}/rate`, { difficulty }).catch(() => null);
 }
 
 type PageState =

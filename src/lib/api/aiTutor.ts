@@ -6,25 +6,21 @@
  * caught and logged so callers can render a degraded UI without try/catch).
  *
  * When AI features are disabled (no ANTHROPIC_API_KEY on the backend), the
- * server returns 503 with { code: 'ai_disabled', detail: '...' }. authedFetch
- * recognizes that specific shape and returns the payload as a normal value
- * so callers can branch on `result.code === 'ai_disabled'` instead of seeing
- * a generic error.
+ * server returns 503 with { code: 'ai_disabled', detail: '...' }. The shared
+ * authedFetch helper recognizes that specific shape and surfaces the payload
+ * as a normal value (instead of throwing). This module then normalizes the
+ * body so both `detail` (the canonical backend field) and `message` (the
+ * historical alias kept for any older readers) are populated.
  */
-import { supabase } from "@/lib/supabase";
-
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:8000/api/v1";
+import { authedPostJson } from "@/lib/api/authedFetch";
 
 // ── Response types ────────────────────────────────────────────────────────
 
 /**
  * Shape returned by the backend when AI features are disabled. `detail` is
  * FastAPI's default key for an HTTPException body and is always present.
- * `message` is a normalized alias populated by `authedFetch` so any caller
- * still reading the older field name keeps working — see the 503 branch in
- * authedFetch below.
+ * `message` is a normalized alias populated by `normalizeIfDisabled` so any
+ * caller still reading the older field name keeps working.
  */
 export type AiDisabledResponse = {
   code: "ai_disabled";
@@ -59,70 +55,53 @@ export type WritingCoachResponse = {
   rewritten_exemplar: string;
 };
 
+// ── Helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * If the result is the ai_disabled graceful-degrade body, return a copy
+ * with both `detail` and `message` populated (older callers may still
+ * read either). Pass-through for any other shape.
+ */
+function normalizeIfDisabled<T>(result: T | null): T | null {
+  if (!result || typeof result !== "object" || !("code" in result)) return result;
+  const r = result as { code?: string; detail?: string; message?: string };
+  if (r.code !== "ai_disabled") return result;
+  const detail = r.detail ?? r.message ?? "";
+  return {
+    code: "ai_disabled",
+    detail,
+    message: r.message ?? detail,
+  } as T;
+}
+
+async function postWithDisableNormalization<T>(
+  path: string,
+  params: unknown,
+  label: string,
+): Promise<T | AiDisabledResponse | null> {
+  try {
+    const result = await authedPostJson<T | AiDisabledResponse>(path, params);
+    return normalizeIfDisabled(result);
+  } catch (err) {
+    console.error(`[aiTutorApi] ${label} error:`, err);
+    return null;
+  }
+}
+
 // ── Client ───────────────────────────────────────────────────────────────
 
 class AiTutorAPIClass {
-  private async authedFetch<T>(path: string, body: unknown): Promise<T | null> {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) return null;
-
-    const res = await fetch(`${API_BASE}${path}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    // 503 with {code: "ai_disabled"} is a documented graceful-degrade signal,
-    // not an error — surface it as a normal value so the tab UIs can render
-    // the "AI is disabled" state instead of a generic failure. We normalize
-    // the payload so both `detail` (the actual backend field) and `message`
-    // (the historical alias) are populated.
-    if (res.status === 503) {
-      const body = (await res.json().catch(() => null)) as
-        | { code?: string; detail?: string; message?: string }
-        | null;
-      if (body && body.code === "ai_disabled") {
-        const detail = body.detail ?? body.message ?? "";
-        const normalized: AiDisabledResponse = {
-          code: "ai_disabled",
-          detail,
-          message: body.message ?? detail,
-        };
-        return normalized as T;
-      }
-      console.error(`[aiTutorApi] ${path} → 503 (no ai_disabled payload)`, body);
-      throw new Error(`AI tutor request failed: 503`);
-    }
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.error(`[aiTutorApi] ${path} → ${res.status}`, text);
-      throw new Error(`AI tutor request failed: ${res.status}`);
-    }
-
-    return (await res.json()) as T;
-  }
-
   async explain(params: {
     question: string;
     context?: string;
     learner_language?: string;
     cefr_level?: string;
   }): Promise<ExplainResponse | AiDisabledResponse | null> {
-    try {
-      return await this.authedFetch<ExplainResponse | AiDisabledResponse>(
-        "/me/ai-tutor/explain",
-        params
-      );
-    } catch (err) {
-      console.error("[aiTutorApi] explain error:", err);
-      return null;
-    }
+    return postWithDisableNormalization<ExplainResponse>(
+      "/me/ai-tutor/explain",
+      params,
+      "explain",
+    );
   }
 
   async correct(params: {
@@ -130,15 +109,11 @@ class AiTutorAPIClass {
     learner_language?: string;
     cefr_level?: string;
   }): Promise<CorrectionResponse | AiDisabledResponse | null> {
-    try {
-      return await this.authedFetch<CorrectionResponse | AiDisabledResponse>(
-        "/me/ai-tutor/correct",
-        params
-      );
-    } catch (err) {
-      console.error("[aiTutorApi] correct error:", err);
-      return null;
-    }
+    return postWithDisableNormalization<CorrectionResponse>(
+      "/me/ai-tutor/correct",
+      params,
+      "correct",
+    );
   }
 
   async practice(params: {
@@ -148,15 +123,11 @@ class AiTutorAPIClass {
     learner_language?: string;
     count?: number;
   }): Promise<PracticeResponse | AiDisabledResponse | null> {
-    try {
-      return await this.authedFetch<PracticeResponse | AiDisabledResponse>(
-        "/me/ai-tutor/practice",
-        params
-      );
-    } catch (err) {
-      console.error("[aiTutorApi] practice error:", err);
-      return null;
-    }
+    return postWithDisableNormalization<PracticeResponse>(
+      "/me/ai-tutor/practice",
+      params,
+      "practice",
+    );
   }
 
   async writingCoach(params: {
@@ -164,15 +135,11 @@ class AiTutorAPIClass {
     learner_language?: string;
     cefr_level?: string;
   }): Promise<WritingCoachResponse | AiDisabledResponse | null> {
-    try {
-      return await this.authedFetch<WritingCoachResponse | AiDisabledResponse>(
-        "/me/ai-tutor/writing-coach",
-        params
-      );
-    } catch (err) {
-      console.error("[aiTutorApi] writing-coach error:", err);
-      return null;
-    }
+    return postWithDisableNormalization<WritingCoachResponse>(
+      "/me/ai-tutor/writing-coach",
+      params,
+      "writing-coach",
+    );
   }
 }
 

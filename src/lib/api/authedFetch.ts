@@ -86,21 +86,22 @@ export async function authedFetch<T>(
   // callers can branch on `result.code === 'ai_disabled'` instead of
   // catching a generic error. See PR #122.
   //
-  // Cloning lets us speculatively try res.json() without consuming the
-  // body, then fall back to res.text() for the error path if the body
-  // wasn't JSON (preserves "Service Unavailable" or similar diagnostics).
+  // Read as text first and JSON.parse manually rather than calling
+  // res.clone() + res.json(): equivalent behavior, simpler, and avoids
+  // depending on clone() in tests (which need to mock both paths).
+  // The raw text is preserved for the error branch so non-JSON bodies
+  // like "Service Unavailable" stay readable in AuthedFetchError.body.
   if (res.status === 503) {
-    const jsonClone = res.clone();
+    const text = await res.text().catch(() => "");
     let parsed: { code?: string } | null = null;
     try {
-      parsed = (await jsonClone.json()) as { code?: string };
+      parsed = JSON.parse(text) as { code?: string };
     } catch {
-      // Not JSON — fall through to the error path with the raw body text.
+      // Body wasn't JSON; fall through to the error path with raw text.
     }
     if (parsed && parsed.code === "ai_disabled") {
       return parsed as T;
     }
-    const text = await res.text().catch(() => "");
     throw new AuthedFetchError(path, 503, text);
   }
 

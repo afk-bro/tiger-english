@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { authedGet } from "@/lib/api/authedFetch";
 import type { ConversationScenario, LevelBand, ScenariosResponse } from "../conversations.types";
-
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:8000/api/v1";
 
 export function useScenarios(filterLevel?: LevelBand | null) {
   const [scenarios, setScenarios] = useState<ConversationScenario[]>([]);
@@ -19,30 +15,18 @@ export function useScenarios(filterLevel?: LevelBand | null) {
 
     (async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
+        const path = filterLevel
+          ? `/me/conversations/scenarios?level=${encodeURIComponent(filterLevel)}`
+          : "/me/conversations/scenarios";
+        const data = await authedGet<ScenariosResponse>(path);
+
+        if (cancelled) return;
+        if (!data) {
           setError("Not authenticated");
-          setIsLoading(false);
           return;
         }
-
-        const url = filterLevel
-          ? `${API_BASE}/me/conversations/scenarios?level=${encodeURIComponent(filterLevel)}`
-          : `${API_BASE}/me/conversations/scenarios`;
-
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: ScenariosResponse = await res.json();
-
-        if (!cancelled) {
-          setScenarios(data.scenarios);
-          setLevelBands(data.level_bands);
-        }
+        setScenarios(data.scenarios);
+        setLevelBands(data.level_bands);
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Failed to load scenarios");
