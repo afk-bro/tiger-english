@@ -111,7 +111,7 @@ describe("CorrectTab", () => {
   });
 
   it("shows disabled notice when AI is off", async () => {
-    mockCorrect.mockResolvedValue({ code: "ai_disabled", message: "no key" });
+    mockCorrect.mockResolvedValue({ code: "ai_disabled", detail: "no key", message: "no key" });
     renderTab();
     fireEvent.change(screen.getByRole("textbox"), {
       target: { value: "I go market" },
