@@ -51,8 +51,20 @@ async function readSessionToken(): Promise<string | null> {
 
 /**
  * Generic authed fetch. Caller controls method / body / headers via
- * `init`. The helper injects `Authorization: Bearer …` and merges callers'
- * headers on top. JSON parsing is automatic — callers expecting a
+ * `init`. The helper injects `Authorization: Bearer …` on top of any
+ * caller-supplied headers; otherwise it doesn't touch the request shape.
+ *
+ * Headers are normalized via the `Headers` constructor so all three
+ * `HeadersInit` shapes work (plain object, `string[][]`, `Headers`
+ * instance) and lookups are case-insensitive (HTTP semantics).
+ *
+ * `Content-Type` is NOT auto-set here. Callers passing a JSON body
+ * should use `authedPostJson` (which sets it). Callers passing
+ * `FormData` / `Blob` / `URLSearchParams` rely on `fetch` to set the
+ * appropriate header (with multipart boundary, etc.) — auto-setting
+ * `application/json` here would corrupt those requests.
+ *
+ * JSON parsing on the response is automatic; callers expecting a
  * non-JSON response should switch to a custom fetch.
  */
 export async function authedFetch<T>(
@@ -62,28 +74,33 @@ export async function authedFetch<T>(
   const token = await readSessionToken();
   if (!token) return null;
 
+  const headers = new Headers(init?.headers);
+  headers.set("Authorization", `Bearer ${token}`);
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(init?.body !== undefined && !(init?.headers && "Content-Type" in (init.headers as Record<string, string>))
-        ? { "Content-Type": "application/json" }
-        : {}),
-      ...(init?.headers as Record<string, string> | undefined),
-    },
+    headers,
   });
 
   // Documented graceful-degrade signal — surface the body as a value so
   // callers can branch on `result.code === 'ai_disabled'` instead of
   // catching a generic error. See PR #122.
+  //
+  // Cloning lets us speculatively try res.json() without consuming the
+  // body, then fall back to res.text() for the error path if the body
+  // wasn't JSON (preserves "Service Unavailable" or similar diagnostics).
   if (res.status === 503) {
-    const body = (await res.json().catch(() => null)) as
-      | { code?: string }
-      | null;
-    if (body && body.code === "ai_disabled") {
-      return body as T;
+    const jsonClone = res.clone();
+    let parsed: { code?: string } | null = null;
+    try {
+      parsed = (await jsonClone.json()) as { code?: string };
+    } catch {
+      // Not JSON — fall through to the error path with the raw body text.
     }
-    const text = JSON.stringify(body);
+    if (parsed && parsed.code === "ai_disabled") {
+      return parsed as T;
+    }
+    const text = await res.text().catch(() => "");
     throw new AuthedFetchError(path, 503, text);
   }
 
@@ -100,19 +117,24 @@ export function authedGet<T>(path: string, init?: RequestInit): Promise<T | null
   return authedFetch<T>(path, { ...init, method: "GET" });
 }
 
-/** Convenience wrapper for POST + JSON body — the most common write shape. */
+/**
+ * Convenience wrapper for POST + JSON body — the most common write shape.
+ * Sets `Content-Type: application/json` only when the caller hasn't
+ * already supplied one (case-insensitive).
+ */
 export function authedPostJson<T>(
   path: string,
   body: unknown,
   init?: RequestInit,
 ): Promise<T | null> {
+  const headers = new Headers(init?.headers);
+  if (!headers.has("content-type")) {
+    headers.set("Content-Type", "application/json");
+  }
   return authedFetch<T>(path, {
     ...init,
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers as Record<string, string> | undefined),
-    },
+    headers,
     body: JSON.stringify(body),
   });
 }
