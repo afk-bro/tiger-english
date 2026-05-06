@@ -51,6 +51,20 @@ async function getAuthedJson(page: Page, path: string) {
   return { status: res.status(), body: res.ok() ? await res.json() : await res.text() };
 }
 
+/**
+ * Synchronously read the first <h1> text without triggering Playwright's
+ * auto-retry. Some routes legitimately render no h1 in some states (e.g.
+ * /review during the active drill phase, /teacher redirected to /home for
+ * non-teachers). `getByRole(...).first().textContent().catch(() => null)`
+ * looks safe but blocks until the test timeout — `.catch()` only intercepts
+ * thrown errors, not the auto-retry's wait. count() is a single sync read.
+ */
+async function readH1OrNull(page: Page): Promise<string | null> {
+  const count = await page.locator("h1").count();
+  if (count === 0) return null;
+  return page.locator("h1").first().textContent();
+}
+
 async function postAuthedJson(page: Page, path: string, data: unknown) {
   const token = await getAccessToken(page);
   const res = await page.request.post(`${API_BASE}${path}`, {
@@ -176,7 +190,7 @@ test.describe("Phase 5 — Conversation scenario picker", () => {
         { timeout: 10000 },
       )
       .toBeGreaterThan(0);
-    const heading = await page.getByRole("heading", { level: 1 }).first().textContent().catch(() => null);
+    const heading = await readH1OrNull(page);
     const sections = await page.locator('section[aria-labelledby^="level-"]').count();
     console.log(`[conversations] h1="${heading}" sections=${sections}`);
   });
@@ -218,6 +232,13 @@ test.describe("Phase 6 — Skills system", () => {
 });
 
 test.describe("Phase 7 — Review system", () => {
+  test("/review renders without error", async ({ page }) => {
+    await page.goto("/review", { waitUntil: "networkidle" });
+    const h1Text = await readH1OrNull(page);
+    console.log(`[review] url=${page.url()} h1="${h1Text}"`);
+    expect(page.url()).toContain("/review");
+  });
+
   test("GET /me/review/due returns the due-items envelope", async ({ page }) => {
     const { status, body } = await getAuthedJson(page, "/me/review/due");
     console.log(`[review/due] status=${status} body=`, body);
@@ -225,11 +246,25 @@ test.describe("Phase 7 — Review system", () => {
   });
 });
 
-// /review, /assessment, /teacher page-render checks are intentionally omitted:
-// these routes hold an open connection (Supabase realtime / SSE / similar) that
-// blocks Playwright's per-test teardown for ~30s and turns the tests flaky.
-// The cross-cutting console-error block below exercises /review with networkidle
-// without flake, so we still get error coverage on that route.
+test.describe("Phase 8 — Assessment", () => {
+  test("/assessment runner page renders", async ({ page }) => {
+    const res = await page.goto("/assessment", { waitUntil: "networkidle" });
+    const h1 = await readH1OrNull(page);
+    console.log(`[assessment] http=${res?.status()} url=${page.url()} h1="${h1}"`);
+    expect(page.url()).toContain("/assessment");
+  });
+});
+
+test.describe("Phase 9 — Teacher portal (gated)", () => {
+  test("/teacher renders or redirects (role gate)", async ({ page }) => {
+    await page.goto("/teacher", { waitUntil: "networkidle" });
+    const url = page.url();
+    const h1 = await readH1OrNull(page);
+    console.log(`[teacher] landed=${url} h1="${h1}"`);
+    // Tester is not a teacher — RequireTeacher should redirect away.
+    expect(url).toMatch(/\/(teacher|home|dashboard|login)/);
+  });
+});
 
 test.describe("Phase 10 — Org admin (gated)", () => {
   test("/admin/orgs/:slug renders or redirects", async ({ page }) => {
@@ -279,6 +314,7 @@ test.describe("Cross-cutting — console errors", () => {
     "/conversations",
     "/skills",
     "/review",
+    "/assessment",
     "/settings",
   ];
 
