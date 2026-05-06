@@ -492,6 +492,7 @@
   },
   "common": {
     "loading": "Đang tải...",
+    "close": "Đóng",
     "language_switcher": {
       "change_language": "Thay đổi ngôn ngữ",
       "select_language": "Chọn ngôn ngữ"
@@ -544,6 +545,17 @@
   },
   "conversations": {
     "backToScenarios": "Quay lại danh sách kịch bản",
+    "index": {
+      "heading": "Nhiệm vụ hội thoại",
+      "subheading": "Luyện hội thoại thực tế với đối tác ngôn ngữ AI của bạn. Chọn một kịch bản phù hợp với trình độ của bạn.",
+      "searchPlaceholder": "Tìm kịch bản…",
+      "allLevels": "Tất cả trình độ",
+      "loadError": "Không thể tải kịch bản",
+      "emptyTitle": "Không tìm thấy kịch bản",
+      "emptyHint": "Hãy thử điều chỉnh tìm kiếm hoặc bộ lọc.",
+      "scenarioCount_one": "{{count}} kịch bản",
+      "scenarioCount_other": "{{count}} kịch bản"
+    },
     "mission": {
       "notFound": "Không tìm thấy nhiệm vụ.",
       "roles": "Bạn: {{learnerRole}} · AI: {{aiRole}}",

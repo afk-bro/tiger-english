@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { CefrBadge, getCefrColorClasses } from "../CefrBadge";
+import { CefrBadge } from "../CefrBadge";
+import { getCefrColorClasses } from "../cefrBadge.utils";
 
 describe("CefrBadge", () => {
   it("renders the CEFR level text", () => {

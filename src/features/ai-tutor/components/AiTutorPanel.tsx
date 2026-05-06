@@ -27,20 +27,55 @@ export default function AiTutorPanel() {
   const { isOpen, activeTab, close, setTab } = useAiTutorStore();
   const panelRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
-  // Move focus to the close button when the panel opens. This is not a true
-  // focus trap — Tab can still escape into the underlying page. Switch to
-  // Headless UI Dialog or focus-lock if a real trap is needed.
+  // On open: capture the element that opened the panel and focus the close
+  // button. On close: restore focus to the original element.
   useEffect(() => {
     if (isOpen) {
+      previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
       closeButtonRef.current?.focus();
+    } else if (previouslyFocusedRef.current) {
+      previouslyFocusedRef.current.focus();
+      previouslyFocusedRef.current = null;
     }
   }, [isOpen]);
 
-  // Close on Escape
+  // Close on Escape + trap Tab focus inside the dialog while open.
   useEffect(() => {
+    if (!isOpen) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && isOpen) close();
+      if (e.key === "Escape") {
+        close();
+        return;
+      }
+      if (e.key !== "Tab" || !panelRef.current) return;
+
+      // We deliberately don't filter by `offsetParent`: the panel is always
+      // mounted (only transformed), and offsetParent isn't reliable in jsdom.
+      const focusables = Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      const insidePanel = active != null && panelRef.current.contains(active);
+
+      if (e.shiftKey) {
+        if (!insidePanel || active === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (!insidePanel || active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);

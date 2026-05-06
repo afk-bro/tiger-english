@@ -97,4 +97,38 @@ describe("AiTutorPanel", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(useAiTutorStore.getState().isOpen).toBe(false);
   });
+
+  it("Tab from the last focusable element wraps back to the first (focus trap)", () => {
+    useAiTutorStore.setState({ isOpen: true });
+    renderPanel();
+    const focusables = screen
+      .getByRole("dialog")
+      .querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+    expect(focusables.length).toBeGreaterThan(1);
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    last.focus();
+    expect(document.activeElement).toBe(last);
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(document.activeElement).toBe(first);
+  });
+
+  it("Shift+Tab from the first focusable element wraps to the last", () => {
+    useAiTutorStore.setState({ isOpen: true });
+    renderPanel();
+    const focusables = screen
+      .getByRole("dialog")
+      .querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    first.focus();
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(last);
+  });
 });

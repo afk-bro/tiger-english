@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import SkillBar, { getSkillBarColor, getSkillLevel } from "../components/SkillBar";
+import SkillBar from "../components/SkillBar";
+import { getSkillBarColor, getSkillLevel } from "../components/skillBar.utils";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
