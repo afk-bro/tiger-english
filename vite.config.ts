@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import os from 'os';
+import { vendorChunkFor } from './scripts/lib/vendor-chunks';
 
 // Redirect Vite's cache outside node_modules so it works in environments
 // where node_modules/.vite isn't writable (sandboxes, read-only mounts).
@@ -15,6 +16,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: vendorChunkFor,
+      },
     },
   },
   test: {
