@@ -107,31 +107,43 @@ def test_get_summary_handles_db_exception(mock_supabase):
     assert all(s.score == 0.0 for s in skills)
 
 
-# ── Regression: autouse fixture clears the in-memory store between tests ────
+# ── Regression: in-memory stores can be reset on demand ─────────────────────
 #
-# These two tests pin the test-pollution fix from PR addressing the flaky
-# test_get_summary_handles_db_exception. They MUST run in this order (pytest
-# collects in source order by default) and the *_a / *_b naming makes that
-# explicit so a future re-sort of the file or alphabetical-collection plugin
-# would surface the dependency.
+# Pins the test-pollution fix from PR #126: the cleanup helper actually
+# clears every store registered with it. Order-independent so it survives
+# pytest randomization / parallelization / file reordering.
 
 
-def test_in_memory_store_cleanup_a_writes_state():
-    """Populate in_memory_skills._store for a unique user UUID."""
-    from app.core import in_memory_skills
+def test_reset_in_memory_stores_clears_all_three_stores():
+    """The conftest helper is the single source of truth for which
+    process-lifetime stores get cleaned between tests. If a new in-memory
+    fallback is added without registering it in reset_in_memory_stores(),
+    it'll silently leak across tests until someone hits the same flake we
+    fixed for skill_scores. This test populates all three currently-known
+    stores, calls the helper, and asserts they're empty — making the
+    failure mode loud and obvious."""
+    from app.core import ai_usage_log, in_memory_skills, pending_reviews
+    from tests.conftest import reset_in_memory_stores
 
-    in_memory_skills.upsert_skill(
-        "f1ee1abe-0000-4000-8000-000000000001", "grammar_accuracy", 4.2, 12
-    )
-    assert in_memory_skills.has_any_data("f1ee1abe-0000-4000-8000-000000000001")
+    user_id = "f1ee1abe-0000-4000-8000-000000000001"
 
+    in_memory_skills.upsert_skill(user_id, "grammar_accuracy", 4.2, 12)
+    pending_reviews._pending[user_id] = [{"skill": "x"}]
+    ai_usage_log._log.append({"endpoint": "test", "user_id": user_id})
 
-def test_in_memory_store_cleanup_b_starts_clean():
-    """The autouse _reset_in_memory_stores fixture should have cleared the
-    store before this test runs. If this fails, the conftest fixture isn't
-    wired up correctly and the original flake will re-emerge."""
-    from app.core import in_memory_skills
+    assert in_memory_skills.has_any_data(user_id)
+    assert pending_reviews._pending
+    assert ai_usage_log._log
 
-    assert not in_memory_skills.has_any_data(
-        "f1ee1abe-0000-4000-8000-000000000001"
-    ), "in_memory_skills._store leaked from the previous test"
+    cleared = reset_in_memory_stores()
+
+    assert not in_memory_skills.has_any_data(user_id)
+    assert not pending_reviews._pending
+    assert not ai_usage_log._log
+    # Helper reports which modules it actually cleared — guards against
+    # silent drop if a module is renamed and the helper falls through.
+    assert set(cleared) == {
+        "app.core.in_memory_skills",
+        "app.core.pending_reviews",
+        "app.core.ai_usage_log",
+    }

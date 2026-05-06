@@ -35,6 +35,37 @@ def mock_supabase():
     return MagicMock()
 
 
+def reset_in_memory_stores() -> list[str]:
+    """Clear all known module-level in-memory stores. Returns the list of
+    modules that were actually cleared (useful for diagnostics and as the
+    callable surface for the regression test in test_skill_scoring.py).
+
+    Each store is cleared independently via try/except so a future
+    rename/removal of any one module doesn't break the whole test suite.
+    Three stores are known today; add new entries to STORES below as
+    new in-memory caches are introduced.
+    """
+    cleared: list[str] = []
+    # (module path, attribute holding the store)
+    STORES = [
+        ("app.core.in_memory_skills", "_store"),
+        ("app.core.pending_reviews", "_pending"),
+        ("app.core.ai_usage_log", "_log"),
+    ]
+    for module_path, attr in STORES:
+        try:
+            module = __import__(module_path, fromlist=[attr])
+            store = getattr(module, attr)
+            store.clear()
+            cleared.append(module_path)
+        except (ImportError, AttributeError):
+            # Module renamed/removed or attribute renamed — skip silently.
+            # Tests that depend on this store being clean will fail loudly
+            # on their own, which is the right escalation path.
+            continue
+    return cleared
+
+
 @pytest.fixture(autouse=True)
 def _reset_in_memory_stores():
     """Clear module-level in-memory stores before each test to prevent
@@ -48,14 +79,6 @@ def _reset_in_memory_stores():
     test_skill_scoring::test_get_summary_handles_db_exception read non-zero
     scores via the same fallback path it intends to exercise. Same risk
     applies to the other two stores even if no current test hits it.
-
-    Runs before every test (autouse) and is self-contained: imports happen
-    inside the fixture so a missing module doesn't break collection.
     """
-    from app.core import in_memory_skills, pending_reviews, ai_usage_log
-
-    in_memory_skills._store.clear()
-    pending_reviews._pending.clear()
-    ai_usage_log._log.clear()
+    reset_in_memory_stores()
     yield
-    # No teardown needed — the next test's setup will clear again.
