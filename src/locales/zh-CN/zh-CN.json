@@ -273,7 +273,8 @@
         "today": "今天",
         "yesterday": "昨天",
         "daysAgo": "{{count}} 天前"
-      }
+      },
+      "takeAssessment": "参加 {{level}} 出口测试"
     },
     "error": "无法加载您的进度，请刷新重试"
   },
@@ -331,6 +332,11 @@
       "flipToRevealEnglishFor": "翻转卡片查看 {{nativeText}} 的英文",
       "flipToRevealAnswer": "翻转卡片查看答案",
       "flipBackToTranslation": "翻转卡片返回翻译"
+    },
+    "aiMission": {
+      "label": "AI任务",
+      "duration": "约{{count}}分钟",
+      "startButton": "开始任务"
     }
   },
   "about": {
@@ -504,12 +510,16 @@
         "home": "首页",
         "dashboard": "仪表盘",
         "lessons": "课程",
+        "review": "复习",
+        "skills": "技能",
+        "conversations": "对话",
         "library": "资料库",
         "study_groups": "学习小组",
         "notifications": "通知",
         "flashcards": "闪卡",
         "drag_drop": "拖放练习",
-        "ad_libs": "填空练习"
+        "ad_libs": "填空练习",
+        "ai_tutor": "AI导师"
       },
       "utility": {
         "settings": "设置",
@@ -521,6 +531,90 @@
     "stub": {
       "coming_soon": "{{title}} — 即将推出",
       "public_profile": "公开资料"
+    },
+    "back": "返回"
+  },
+  "conversations": {
+    "backToScenarios": "返回情景列表",
+    "mission": {
+      "notFound": "未找到任务。",
+      "roles": "你：{{learnerRole}} · AI：{{aiRole}}",
+      "toggleVocab": "切换词汇面板",
+      "endMission": "结束任务",
+      "thinking": "思考中…",
+      "targetVocab": "目标词汇",
+      "grammarFocus": "语法重点",
+      "tipHeading": "💡 提示",
+      "tipBody": "尝试使用至少3个目标词汇。不要担心语法是否完美——专注于沟通！",
+      "endedTitle": "任务完成！",
+      "vocabScore": "你使用了 {{used}}/{{total}} 个目标词汇（{{pct}}%）",
+      "tryAnother": "尝试其他任务",
+      "inputPlaceholder": "输入你的回答…",
+      "send": "发送"
+    },
+    "history": {
+      "title": "我的对话",
+      "subtitle": "你的AI对话任务历史记录。",
+      "newMission": "新任务",
+      "vocabUsed": "{{used}}/{{total}} 词汇",
+      "empty": {
+        "title": "还没有对话",
+        "body": "尝试你的第一个AI对话任务！在有引导的情景中练习真实英语。",
+        "cta": "浏览情景"
+      },
+      "status": {
+        "completed": "已完成",
+        "abandoned": "已放弃"
+      }
     }
+  },
+  "aiTutor": {
+    "explain": {
+      "thinking": "思考中…"
+    }
+  },
+  "assessment": {
+    "runner": {
+      "title": "出口测试",
+      "section": "第 {{current}} 部分，共 {{total}} 部分",
+      "pause": "暂停",
+      "next": "下一部分",
+      "sections": {
+        "listening": "听力",
+        "reading": "阅读",
+        "vocabulary": "词汇",
+        "grammar": "语法",
+        "speaking": "口语",
+        "writing": "写作"
+      }
+    },
+    "results": {
+      "passed": "通过！",
+      "needsWork": "仍需加强",
+      "congratulations": "恭喜！您已通过 {{level}} 测试。",
+      "keepPracticing": "继续努力！以下是重点改进方向：",
+      "tryAgain": "再试一次",
+      "backToDashboard": "返回仪表板",
+      "yourScores": "您的成绩"
+    }
+  },
+  "teacher": {
+    "portal": "Teacher Portal",
+    "overview": "Overview",
+    "students": "Students",
+    "classes": "Classes",
+    "createClass": "Create class",
+    "inviteStudents": "Invite students",
+    "noStudents": "No students yet",
+    "noClasses": "No classes yet",
+    "recommendedAction": "Get recommended action"
+  },
+  "orgAdmin": {
+    "portal": "Org Admin",
+    "overview": "Overview",
+    "billing": "Billing",
+    "usage": "Usage",
+    "upgrade": "Upgrade",
+    "contactUs": "Contact us to upgrade"
   }
 }

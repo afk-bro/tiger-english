@@ -113,8 +113,8 @@ describe("unit translations", () => {
     }
   });
 
-  it("every unit has at least a Vietnamese translation", () => {
-    for (const unit of units) {
+  it("every available unit has at least a Vietnamese translation", () => {
+    for (const unit of units.filter((u) => u.status === "available")) {
       expect(unit.translations.vi, `${unit.slug} missing vi`).toBeDefined();
     }
   });

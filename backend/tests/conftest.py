@@ -1,9 +1,16 @@
 """Shared pytest fixtures for the backend test suite."""
 
+import os
 from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
 import pytest
+
+# ── Provide required Settings values so tests don't need a real .env file ───
+# These are set before any app module is imported (conftest is loaded first).
+os.environ.setdefault("SUPABASE_URL", "https://test.supabase.co")
+os.environ.setdefault("SUPABASE_SECRET_KEY", "test-secret-key")
+os.environ.setdefault("SECRET_KEY", "test-secret-signing-key")
 
 
 @pytest.fixture

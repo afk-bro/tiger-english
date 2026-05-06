@@ -2,11 +2,14 @@ import { useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Home, LayoutDashboard, GraduationCap, BookOpen, Users, Bell,
-  Layers, MousePointer2, FileText,
+  Layers, MousePointer2, FileText, MessageCircleQuestion,
+  RotateCcw, Zap, MessageSquare,
   Settings, HelpCircle, User, LogOut,
   ChevronLeft, ChevronRight, X,
 } from "lucide-react";
 import SidebarNavItem from "./SidebarNavItem";
+import { useAiTutorStore } from "@/stores/useAiTutorStore";
+import { useReviewCount } from "@/features/review/useReviewCount";
 import Logo from "@/assets/TE-logo.png";
 
 interface AppSidebarProps {
@@ -18,15 +21,18 @@ interface AppSidebarProps {
 }
 
 const NAV_ITEMS = [
-  { to: "/home",          labelKey: "common.sidebar.nav.home",           icon: Home,           end: true },
-  { to: "/dashboard",     labelKey: "common.sidebar.nav.dashboard",      icon: LayoutDashboard },
-  { to: "/lessons",       labelKey: "common.sidebar.nav.lessons",        icon: GraduationCap },
-  { to: "/library",       labelKey: "common.sidebar.nav.library",        icon: BookOpen },
-  { to: "/study-groups",  labelKey: "common.sidebar.nav.study_groups",   icon: Users },
-  { to: "/notifications", labelKey: "common.sidebar.nav.notifications",  icon: Bell },
-  { to: "/flashcards",    labelKey: "common.sidebar.nav.flashcards",     icon: Layers },
-  { to: "/drag-drop",     labelKey: "common.sidebar.nav.drag_drop",      icon: MousePointer2 },
-  { to: "/ad-libs",       labelKey: "common.sidebar.nav.ad_libs",        icon: FileText },
+  { to: "/home",              labelKey: "common.sidebar.nav.home",            icon: Home,             end: true },
+  { to: "/dashboard",         labelKey: "common.sidebar.nav.dashboard",       icon: LayoutDashboard },
+  { to: "/lessons",           labelKey: "common.sidebar.nav.lessons",         icon: GraduationCap },
+  { to: "/review",            labelKey: "common.sidebar.nav.review",          icon: RotateCcw },
+  { to: "/skills",            labelKey: "common.sidebar.nav.skills",          icon: Zap },
+  { to: "/conversations",     labelKey: "common.sidebar.nav.conversations",   icon: MessageSquare },
+  { to: "/library",           labelKey: "common.sidebar.nav.library",         icon: BookOpen },
+  { to: "/study-groups",      labelKey: "common.sidebar.nav.study_groups",    icon: Users },
+  { to: "/notifications",     labelKey: "common.sidebar.nav.notifications",   icon: Bell },
+  { to: "/flashcards",        labelKey: "common.sidebar.nav.flashcards",      icon: Layers },
+  { to: "/drag-drop",         labelKey: "common.sidebar.nav.drag_drop",       icon: MousePointer2 },
+  { to: "/ad-libs",           labelKey: "common.sidebar.nav.ad_libs",         icon: FileText },
 ] as const;
 
 const UTILITY_ITEMS = [
@@ -38,6 +44,8 @@ const UTILITY_ITEMS = [
 
 export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClose, triggerRef }: AppSidebarProps) {
   const { t } = useTranslation();
+  const openAiTutor = useAiTutorStore((s) => s.open);
+  const { count: reviewCount } = useReviewCount();
   // Return focus to the trigger (hamburger) button on drawer close
   const prevIsOpen = useRef(isOpen);
   useEffect(() => {
@@ -88,9 +96,23 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
             icon={item.icon}
             collapsed={collapsed}
             end={'end' in item ? item.end : false}
+            badge={item.to === "/review" ? reviewCount : undefined}
           />
         ))}
       </nav>
+
+      {/* AI Tutor button */}
+      <div className="px-2 py-2 border-t border-gray-200 dark:border-gray-700">
+        <button
+          onClick={() => openAiTutor()}
+          aria-label={collapsed ? t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" }) : undefined}
+          title={collapsed ? t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" }) : undefined}
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
+        >
+          <MessageCircleQuestion className="w-5 h-5 flex-shrink-0" aria-hidden />
+          {!collapsed && <span>{t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" })}</span>}
+        </button>
+      </div>
 
       {/* Bottom utility zone */}
       <div className="px-2 py-3 border-t border-gray-200 dark:border-gray-700 space-y-1">

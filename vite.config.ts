@@ -2,8 +2,15 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import os from 'os';
+
+// Redirect Vite's cache outside node_modules so it works in environments
+// where node_modules/.vite isn't writable (sandboxes, read-only mounts).
+// Falls back to OS tmpdir, which is portable across Linux/macOS/Windows/CI.
+const cacheDir = process.env.VITE_CACHE_DIR ?? path.join(os.tmpdir(), 'tiger-english-vite-cache');
 
 export default defineConfig({
+  cacheDir,
   plugins: [react()],
   resolve: {
     alias: {

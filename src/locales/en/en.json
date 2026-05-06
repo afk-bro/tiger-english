@@ -273,7 +273,8 @@
         "today": "today",
         "yesterday": "yesterday",
         "daysAgo": "{{count}} days ago"
-      }
+      },
+      "takeAssessment": "Take {{level}} exit assessment"
     },
     "error": "Couldn't load your progress. Try refreshing."
   },
@@ -339,6 +340,11 @@
       "check": "Check",
       "fillInTheBlank": "Fill in the blank",
       "apostropheReminder": "Tip: it's spelled with an apostrophe — \"{{form}}\""
+    },
+    "aiMission": {
+      "label": "AI Mission",
+      "duration": "~{{count}} min",
+      "startButton": "Start mission"
     }
   },
   "about": {
@@ -486,6 +492,7 @@
   },
   "common": {
     "loading": "Loading...",
+    "close": "Close",
     "language_switcher": {
       "change_language": "Change language",
       "select_language": "Select language"
@@ -512,12 +519,16 @@
         "home": "Home",
         "dashboard": "Dashboard",
         "lessons": "Lessons",
+        "review": "Review",
+        "skills": "Skills",
+        "conversations": "Conversations",
         "library": "Library",
         "study_groups": "Study Groups",
         "notifications": "Notifications",
         "flashcards": "Flashcards",
         "drag_drop": "Drag & Drop",
-        "ad_libs": "Ad Libs"
+        "ad_libs": "Ad Libs",
+        "ai_tutor": "AI Tutor"
       },
       "utility": {
         "settings": "Settings",
@@ -528,7 +539,103 @@
     },
     "stub": {
       "coming_soon": "{{title}} — coming soon",
-      "public_profile": "Public Profile"
+      "public_profile": "Public Profile",
+      "mission_coming_soon": "Mission runner"
+    },
+    "back": "Back"
+  },
+  "conversations": {
+    "backToScenarios": "Back to scenarios",
+    "index": {
+      "heading": "Conversation missions",
+      "subheading": "Practice real-world conversations with your AI language partner. Choose a scenario that matches your level.",
+      "searchPlaceholder": "Search scenarios…",
+      "allLevels": "All levels",
+      "loadError": "Failed to load scenarios",
+      "emptyTitle": "No scenarios found",
+      "emptyHint": "Try adjusting your search or filter.",
+      "scenarioCount_one": "{{count}} scenario",
+      "scenarioCount_other": "{{count}} scenarios"
+    },
+    "mission": {
+      "notFound": "Mission not found.",
+      "roles": "You: {{learnerRole}} · AI: {{aiRole}}",
+      "toggleVocab": "Toggle vocabulary panel",
+      "endMission": "End mission",
+      "thinking": "Thinking…",
+      "targetVocab": "Target vocabulary",
+      "grammarFocus": "Grammar focus",
+      "tipHeading": "💡 Tip",
+      "tipBody": "Try to use at least 3 vocabulary words. Don't worry about perfect grammar — focus on communication!",
+      "endedTitle": "Mission complete!",
+      "vocabScore": "You used {{used}}/{{total}} target words ({{pct}}%)",
+      "tryAnother": "Try another mission",
+      "inputPlaceholder": "Type your response…",
+      "send": "Send"
+    },
+    "history": {
+      "title": "My Conversations",
+      "subtitle": "Your past AI conversation missions and results.",
+      "newMission": "New mission",
+      "vocabUsed": "{{used}}/{{total}} vocab",
+      "empty": {
+        "title": "No conversations yet",
+        "body": "Try your first AI conversation mission! Practice real English in a guided scenario.",
+        "cta": "Browse scenarios"
+      },
+      "status": {
+        "completed": "Completed",
+        "abandoned": "Abandoned"
+      }
     }
+  },
+  "aiTutor": {
+    "explain": {
+      "thinking": "Thinking…"
+    }
+  },
+  "assessment": {
+    "runner": {
+      "title": "Exit Assessment",
+      "section": "Section {{current}} of {{total}}",
+      "pause": "Pause",
+      "next": "Next section",
+      "sections": {
+        "listening": "Listening",
+        "reading": "Reading",
+        "vocabulary": "Vocabulary",
+        "grammar": "Grammar",
+        "speaking": "Speaking",
+        "writing": "Writing"
+      }
+    },
+    "results": {
+      "passed": "Passed!",
+      "needsWork": "Needs more work",
+      "congratulations": "Congratulations! You've passed the {{level}} assessment.",
+      "keepPracticing": "Keep practicing! Here's what to focus on:",
+      "tryAgain": "Try again",
+      "backToDashboard": "Back to dashboard",
+      "yourScores": "Your scores"
+    }
+  },
+  "teacher": {
+    "portal": "Teacher Portal",
+    "overview": "Overview",
+    "students": "Students",
+    "classes": "Classes",
+    "createClass": "Create class",
+    "inviteStudents": "Invite students",
+    "noStudents": "No students yet",
+    "noClasses": "No classes yet",
+    "recommendedAction": "Get recommended action"
+  },
+  "orgAdmin": {
+    "portal": "Org Admin",
+    "overview": "Overview",
+    "billing": "Billing",
+    "usage": "Usage",
+    "upgrade": "Upgrade",
+    "contactUs": "Contact us to upgrade"
   }
 }

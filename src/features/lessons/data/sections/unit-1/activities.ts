@@ -122,6 +122,26 @@ const activities: Section = {
       },
     },
     { id: "u1-act-9", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u1-activities-mcq-4" },
+    {
+      id: "u1-act-write-1",
+      type: "output-task",
+      prompt: "Write a short introduction about yourself. Include: your name, where you are from, and one thing you do (e.g. work, study, or a hobby). Use the vocabulary and grammar from this unit.",
+      minWords: 20,
+      maxWords: 60,
+      translations: {
+        vi: "Viết một đoạn giới thiệu ngắn về bản thân. Bao gồm: tên, quê hương và một điều bạn làm (ví dụ: công việc, học tập hoặc sở thích).",
+        th: "เขียนแนะนำตัวเองสั้นๆ รวมถึง: ชื่อ มาจากไหน และสิ่งที่คุณทำ (เช่น งาน การเรียน หรืองานอดิเรก)",
+        "zh-CN": "写一段简短的自我介绍。包括：你的名字、你来自哪里，以及你做的一件事（例如工作、学习或爱好）。",
+      },
+    },
+    {
+      id: "u1-act-mission-1",
+      type: "ai-mission",
+      scenarioSlug: "introduce-yourself-a1",
+      title: "Introduce Yourself",
+      description: "Practice introducing yourself in a real conversation. Tell the AI tutor your name, where you're from, and what you do — just like the dialogues in this unit.",
+      estimatedMinutes: 5,
+    },
   ],
 };
 

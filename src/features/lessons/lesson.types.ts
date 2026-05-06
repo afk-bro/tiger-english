@@ -3,6 +3,20 @@ import type { LearnerLanguage } from "./utils/learnerLanguage";
 
 export type { LearnerLanguage } from "./utils/learnerLanguage";
 
+export type CefrLevel = "A0" | "A1" | "A2" | "B1" | "B1+" | "B2" | "C1";
+
+export const CEFR_LEVELS: CefrLevel[] = ["A0", "A1", "A2", "B1", "B1+", "B2", "C1"];
+
+export const CEFR_LEVEL_LABELS: Record<CefrLevel, string> = {
+  A0: "A0 – Absolute Beginner",
+  A1: "A1 – Beginner",
+  A2: "A2 – Elementary",
+  B1: "B1 – Intermediate",
+  "B1+": "B1+ – Upper Intermediate (Early)",
+  B2: "B2 – Upper Intermediate",
+  C1: "C1 – Advanced",
+};
+
 export type UnitStatus = "available" | "coming-soon" | "locked";
 
 export type SectionKey =
@@ -28,6 +42,7 @@ export type Unit = {
   grammarFocus: string;
   estimatedMinutes: number;
   status: UnitStatus;
+  cefrLevel?: CefrLevel;
   sections: SectionMeta[];
   translations: Partial<Record<LearnerLanguage, {
     title: string;
@@ -59,7 +74,9 @@ export type SectionBlock =
   | { id: string; type: "vocab-list"; items: VocabItem[] }
   | { id: string; type: "dialogue"; lines: DialogueLine[]; imagePrompt?: string; imageUrl?: string }
   | { id: string; type: "exercise"; exerciseType: ExerciseType; exerciseId: string; imagePrompt?: string; imageUrl?: string }
-  | { id: string; type: "callout"; variant: "tip" | "note" | "warning"; content: string; translations?: Partial<Record<LearnerLanguage, string>> };
+  | { id: string; type: "callout"; variant: "tip" | "note" | "warning"; content: string; translations?: Partial<Record<LearnerLanguage, string>> }
+  | { id: string; type: "output-task"; prompt: string; minWords?: number; maxWords?: number; translations?: Partial<Record<LearnerLanguage, string>> }
+  | { id: string; type: "ai-mission"; scenarioSlug: string; title: string; description: string; estimatedMinutes?: number; cefrLevel?: CefrLevel };
 
 export type ExampleItem = {
   id: string;

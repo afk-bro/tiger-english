@@ -273,7 +273,8 @@
         "today": "hôm nay",
         "yesterday": "hôm qua",
         "daysAgo": "{{count}} ngày trước"
-      }
+      },
+      "takeAssessment": "Làm bài kiểm tra đầu ra {{level}}"
     },
     "error": "Không thể tải tiến độ của bạn. Hãy thử làm mới."
   },
@@ -339,6 +340,11 @@
       "check": "Kiểm tra",
       "fillInTheBlank": "Điền vào chỗ trống",
       "apostropheReminder": "Mẹo: cách viết đúng có dấu lược — \"{{form}}\""
+    },
+    "aiMission": {
+      "label": "Nhiệm vụ AI",
+      "duration": "~{{count}} phút",
+      "startButton": "Bắt đầu nhiệm vụ"
     }
   },
   "about": {
@@ -512,12 +518,16 @@
         "home": "Trang chủ",
         "dashboard": "Bảng điều khiển",
         "lessons": "Bài học",
+        "review": "Ôn tập",
+        "skills": "Kỹ năng",
+        "conversations": "Hội thoại",
         "library": "Thư viện",
         "study_groups": "Nhóm học",
         "notifications": "Thông báo",
         "flashcards": "Thẻ học",
         "drag_drop": "Kéo & Thả",
-        "ad_libs": "Điền từ"
+        "ad_libs": "Điền từ",
+        "ai_tutor": "Trợ lý AI"
       },
       "utility": {
         "settings": "Cài đặt",
@@ -529,6 +539,90 @@
     "stub": {
       "coming_soon": "{{title}} — sắp ra mắt",
       "public_profile": "Hồ sơ công khai"
+    },
+    "back": "Quay lại"
+  },
+  "conversations": {
+    "backToScenarios": "Quay lại danh sách kịch bản",
+    "mission": {
+      "notFound": "Không tìm thấy nhiệm vụ.",
+      "roles": "Bạn: {{learnerRole}} · AI: {{aiRole}}",
+      "toggleVocab": "Ẩn/hiện bảng từ vựng",
+      "endMission": "Kết thúc nhiệm vụ",
+      "thinking": "Đang suy nghĩ…",
+      "targetVocab": "Từ vựng mục tiêu",
+      "grammarFocus": "Trọng tâm ngữ pháp",
+      "tipHeading": "💡 Mẹo",
+      "tipBody": "Cố gắng dùng ít nhất 3 từ vựng mục tiêu. Đừng lo về ngữ pháp — tập trung vào giao tiếp!",
+      "endedTitle": "Hoàn thành nhiệm vụ!",
+      "vocabScore": "Bạn đã dùng {{used}}/{{total}} từ mục tiêu ({{pct}}%)",
+      "tryAnother": "Thử nhiệm vụ khác",
+      "inputPlaceholder": "Nhập câu trả lời của bạn…",
+      "send": "Gửi"
+    },
+    "history": {
+      "title": "Hội thoại của tôi",
+      "subtitle": "Lịch sử các nhiệm vụ hội thoại AI của bạn.",
+      "newMission": "Nhiệm vụ mới",
+      "vocabUsed": "{{used}}/{{total}} từ",
+      "empty": {
+        "title": "Chưa có hội thoại nào",
+        "body": "Thử nhiệm vụ hội thoại AI đầu tiên! Luyện tiếng Anh thực tế trong kịch bản có hướng dẫn.",
+        "cta": "Xem kịch bản"
+      },
+      "status": {
+        "completed": "Hoàn thành",
+        "abandoned": "Bỏ dở"
+      }
     }
+  },
+  "aiTutor": {
+    "explain": {
+      "thinking": "Đang suy nghĩ…"
+    }
+  },
+  "assessment": {
+    "runner": {
+      "title": "Exit Assessment",
+      "section": "Section {{current}} of {{total}}",
+      "pause": "Pause",
+      "next": "Next section",
+      "sections": {
+        "listening": "Listening",
+        "reading": "Reading",
+        "vocabulary": "Vocabulary",
+        "grammar": "Grammar",
+        "speaking": "Speaking",
+        "writing": "Writing"
+      }
+    },
+    "results": {
+      "passed": "Passed!",
+      "needsWork": "Needs more work",
+      "congratulations": "Congratulations! You've passed the {{level}} assessment.",
+      "keepPracticing": "Keep practicing! Here's what to focus on:",
+      "tryAgain": "Try again",
+      "backToDashboard": "Back to dashboard",
+      "yourScores": "Your scores"
+    }
+  },
+  "teacher": {
+    "portal": "Teacher Portal",
+    "overview": "Overview",
+    "students": "Students",
+    "classes": "Classes",
+    "createClass": "Create class",
+    "inviteStudents": "Invite students",
+    "noStudents": "No students yet",
+    "noClasses": "No classes yet",
+    "recommendedAction": "Get recommended action"
+  },
+  "orgAdmin": {
+    "portal": "Org Admin",
+    "overview": "Overview",
+    "billing": "Billing",
+    "usage": "Usage",
+    "upgrade": "Upgrade",
+    "contactUs": "Contact us to upgrade"
   }
 }

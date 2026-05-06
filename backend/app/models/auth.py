@@ -28,9 +28,13 @@ class UserRegister(BaseModel):
         return validate_native_language(v)
 
 
+VALID_CEFR_LEVELS = {"A0", "A1", "A2", "B1", "B1+", "B2", "C1"}
+
+
 class UpdateProfile(BaseModel):
     native_language: Optional[str] = None
     timezone: Optional[str] = None
+    target_cefr_level: Optional[str] = None
 
     @field_validator('native_language')
     @classmethod
@@ -44,6 +48,15 @@ class UpdateProfile(BaseModel):
             return None
         if v not in available_timezones():
             raise ValueError(f"Invalid IANA timezone: {v}")
+        return v
+
+    @field_validator('target_cefr_level')
+    @classmethod
+    def check_cefr_level(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        if v not in VALID_CEFR_LEVELS:
+            raise ValueError(f"Invalid CEFR level: {v}. Must be one of {sorted(VALID_CEFR_LEVELS)}")
         return v
 
 

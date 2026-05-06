@@ -1,0 +1,1149 @@
+[
+  {
+    "id": 1,
+    "phase": 1,
+    "title": "Health endpoint returns AI status",
+    "description": "GET /api/v1/health returns JSON with status, ai_tutor_enabled, voice_enabled, db_reachable fields",
+    "steps": [
+      "Navigate to http://localhost:8000/api/v1/health in a browser or via fetch",
+      "Verify the response contains status, ai_tutor_enabled, voice_enabled, db_reachable fields",
+      "Verify ai_tutor_enabled is false when ANTHROPIC_API_KEY is missing"
+    ],
+    "passes": true
+  },
+  {
+    "id": 2,
+    "phase": 1,
+    "title": "CefrBadge component renders with correct colors",
+    "description": "CefrBadge component renders A0/A1 (stone), A2/B1 (sky), B1+/B2 (indigo), C1 (violet) with correct pill shape",
+    "steps": [
+      "Navigate to http://localhost:5173",
+      "Log in with test account",
+      "Navigate to /lessons",
+      "Look for CEFR level badges displayed on units (e.g. 'A1', 'A2')",
+      "Verify A0/A1 badges have stone/gray colors, A2/B1 have sky/blue colors",
+      "Verify badges are pill-shaped with rounded corners"
+    ],
+    "passes": true
+  },
+  {
+    "id": 3,
+    "phase": 1,
+    "title": "Lessons page groups units by CEFR level",
+    "description": "The /lessons page shows units grouped under CEFR level headings (A0-A1, A1-A2, etc.)",
+    "steps": [
+      "Navigate to http://localhost:5173/lessons",
+      "Log in if needed",
+      "Verify the page shows units grouped by CEFR level headers",
+      "Verify unit-1 and unit-2 appear under A0-A1 section",
+      "Verify each level section has a heading with the CEFR level name"
+    ],
+    "passes": true
+  },
+  {
+    "id": 4,
+    "phase": 1,
+    "title": "Dashboard shows CEFR estimate badge",
+    "description": "Dashboard YourProgressCard shows the learner's cefr_estimate badge (e.g. 'A0') from profile",
+    "steps": [
+      "Navigate to http://localhost:5173/dashboard",
+      "Log in if needed",
+      "Find the YourProgressCard widget",
+      "Verify it shows a CEFR estimate badge (e.g. 'A0' or 'A1')",
+      "Verify the badge uses the correct color scheme for that level"
+    ],
+    "passes": true
+  },
+  {
+    "id": 5,
+    "phase": 1,
+    "title": "Database migration creates units and modules tables",
+    "description": "Supabase has units table with slug, cefr_level, title, status columns; modules table exists; profiles has cefr_estimate and role columns",
+    "steps": [
+      "Check backend can query units table by calling GET /api/v1/levels",
+      "Verify the response lists CEFR levels and their unit counts",
+      "Navigate to http://localhost:5173/lessons",
+      "Verify lesson units load from the database (not just static TS data)"
+    ],
+    "passes": true
+  },
+  {
+    "id": 6,
+    "phase": 2,
+    "title": "Anthropic package installed in backend",
+    "description": "anthropic>=0.40 is in requirements.txt and importable",
+    "steps": [
+      "Navigate to http://localhost:8000/api/v1/health",
+      "Verify it responds without 500 errors",
+      "Check that ai_tutor_enabled field is present in the response"
+    ],
+    "passes": true
+  },
+  {
+    "id": 7,
+    "phase": 2,
+    "title": "AI tutor /explain endpoint returns explanation",
+    "description": "POST /api/v1/me/ai-tutor/explain returns { explanation } JSON when ANTHROPIC_API_KEY present, or { code: 'ai_disabled' } when absent",
+    "steps": [
+      "Log in to the app",
+      "Navigate to a lesson section",
+      "Click the 'Ask Tutor' button",
+      "Type a question in the Explain tab (e.g. 'What does present simple mean?')",
+      "Click submit and verify a response appears",
+      "Verify the response is relevant English grammar explanation"
+    ],
+    "passes": true
+  },
+  {
+    "id": 8,
+    "phase": 2,
+    "title": "AI tutor /correct endpoint returns 4-block correction",
+    "description": "POST /api/v1/me/ai-tutor/correct returns { original, corrected, explanation, explanation_l1, try_again_prompt, try_again_answer }",
+    "steps": [
+      "Log in to the app",
+      "Open the AI Tutor panel",
+      "Click the Correct tab",
+      "Enter a sentence with a grammar mistake (e.g. 'I go to market yesterday')",
+      "Submit and verify the response shows: Your sentence, Better sentence, Why, Try again"
+    ],
+    "passes": true
+  },
+  {
+    "id": 9,
+    "phase": 2,
+    "title": "AI tutor /practice endpoint returns drill items",
+    "description": "POST /api/v1/me/ai-tutor/practice returns { items[] } array of drill questions",
+    "steps": [
+      "Log in to the app",
+      "Open the AI Tutor panel",
+      "Click the Practice tab",
+      "Select a skill to practice (e.g. 'Grammar')",
+      "Click 'Generate Practice' and verify a list of exercises appears",
+      "Verify each exercise has a question and answer"
+    ],
+    "passes": true
+  },
+  {
+    "id": 10,
+    "phase": 2,
+    "title": "AI tutor /writing-coach endpoint returns feedback",
+    "description": "POST /api/v1/me/ai-tutor/writing-coach returns { scores, inline_annotations, rewritten_exemplar }",
+    "steps": [
+      "Log in to the app",
+      "Open the AI Tutor panel",
+      "Click the Writing Coach tab",
+      "Paste a short paragraph (e.g. 'Yesterday I go to market and buyed some food.')",
+      "Click 'Get Feedback' and verify the response shows skill scores and annotations"
+    ],
+    "passes": true
+  },
+  {
+    "id": 11,
+    "phase": 3,
+    "title": "AI Tutor Panel slide-out renders correctly",
+    "description": "Global slide-out AiTutorPanel opens from sidebar button or 'Ask Tutor' FAB; has 4 tabs: Explain, Correct, Practice, Writing Coach",
+    "steps": [
+      "Log in and navigate to /home",
+      "Look for 'AI Tutor' item in the sidebar nav",
+      "Click it and verify a right slide-out panel appears",
+      "Verify the panel has tabs: Explain, Correct, Practice, Writing Coach",
+      "Verify the panel has a close button",
+      "Navigate to a lesson page and verify floating 'Ask Tutor' button appears (bottom-right)"
+    ],
+    "passes": true
+  },
+  {
+    "id": 12,
+    "phase": 3,
+    "title": "Explain tab streams AI response",
+    "description": "In the Explain tab, typing a question and submitting shows streamed text response appearing token by token",
+    "steps": [
+      "Open AI Tutor panel and click Explain tab",
+      "Type 'What is the difference between present simple and present continuous?'",
+      "Click submit",
+      "Verify text appears progressively (streaming), not all at once",
+      "Verify the explanation is relevant and complete"
+    ],
+    "passes": true
+  },
+  {
+    "id": 13,
+    "phase": 3,
+    "title": "Correct tab shows AiCorrectionBlock format",
+    "description": "Correction response renders as 4 blocks: Your sentence / Better sentence / Why / Try again with fill-in input",
+    "steps": [
+      "Open AI Tutor panel, click Correct tab",
+      "Enter 'She don't like coffee' and submit",
+      "Verify 4 sections appear: 'Your sentence:', 'Better sentence:', 'Why:', 'Try again:'",
+      "Verify the 'Better sentence' shows in green text",
+      "Verify the 'Try again' section has a fill-in input field"
+    ],
+    "passes": true
+  },
+  {
+    "id": 14,
+    "phase": 3,
+    "title": "Writing Coach tab renders AiFeedbackPanel",
+    "description": "Writing Coach response shows scores grid, inline annotations on submitted text, and collapsed rewritten exemplar",
+    "steps": [
+      "Open AI Tutor panel, click Writing Coach tab",
+      "Paste a paragraph with errors and click 'Get Feedback'",
+      "Verify a scores grid appears with skill bars (vocabulary, grammar, organization, etc.)",
+      "Verify the submitted text is shown with highlighted spans for errors",
+      "Verify a collapsed 'Show stronger version' section appears"
+    ],
+    "passes": true
+  },
+  {
+    "id": 15,
+    "phase": 3,
+    "title": "Sidebar has new nav items (Review, Skills, Conversations, AI Tutor)",
+    "description": "AppSidebar shows: Review (with badge), Skills, Conversations, AI Tutor after Lessons",
+    "steps": [
+      "Log in and navigate to /home",
+      "Look at the sidebar navigation",
+      "Verify 'Review' item appears with a badge showing due item count (or hidden when 0)",
+      "Verify 'Skills' item appears",
+      "Verify 'Conversations' item appears",
+      "Verify 'AI Tutor' item appears"
+    ],
+    "passes": true
+  },
+  {
+    "id": 16,
+    "phase": 4,
+    "title": "Database has 24 seed AI conversation scenarios",
+    "description": "ai_scenarios table has all 24 scenarios from spec including: introduce-yourself-a1, order-coffee-a1, ask-name-age-a1, etc.",
+    "steps": [
+      "Navigate to http://localhost:5173/u/:username/conversations/scenarios",
+      "Log in if needed",
+      "Verify the scenarios picker shows at least 24 scenarios",
+      "Verify scenarios are grouped by level (A0-A1, A1-A2, etc.)",
+      "Verify scenario cards show title, level badge, estimated time"
+    ],
+    "passes": true
+  },
+  {
+    "id": 17,
+    "phase": 4,
+    "title": "Start conversation session endpoint works",
+    "description": "POST /api/v1/me/conversations/start with { scenario_id } returns { session_id, opening_line, target_vocabulary, target_grammar }",
+    "steps": [
+      "Navigate to the scenarios picker page",
+      "Click 'Start mission' on a scenario (e.g. 'Order a coffee')",
+      "Verify the app navigates to the live mission page",
+      "Verify the AI opening line appears in the chat area",
+      "Verify the target vocabulary panel shows vocab chips on the right"
+    ],
+    "passes": true
+  },
+  {
+    "id": 18,
+    "phase": 4,
+    "title": "Conversation turn endpoint streams SSE response",
+    "description": "POST /api/v1/me/conversations/:id/turn streams SSE events (metadata, token, done) for AI response",
+    "steps": [
+      "Start a conversation session",
+      "Type a message (e.g. 'Can I have a coffee, please?') and send",
+      "Verify AI response text appears progressively (streaming)",
+      "Verify the turn is recorded in the chat history",
+      "Verify target vocab chips update when matching vocab is used"
+    ],
+    "passes": true
+  },
+  {
+    "id": 19,
+    "phase": 4,
+    "title": "End conversation session returns scoring",
+    "description": "POST /api/v1/me/conversations/:id/end returns { scores, feedback_summary, review_items_added, target_vocab_hits, target_vocab_misses }",
+    "steps": [
+      "Complete a short conversation (2-3 turns)",
+      "Click 'End mission' button",
+      "Verify a results screen appears with 6 criteria scores",
+      "Verify feedback_summary text is shown",
+      "Verify review items added list is shown (words/patterns the learner missed)"
+    ],
+    "passes": true
+  },
+  {
+    "id": 20,
+    "phase": 4,
+    "title": "Review items auto-created from missed conversation vocab",
+    "description": "After ending a conversation session, target_vocab_misses become review_items in the user's queue",
+    "steps": [
+      "Complete a conversation mission (end it early without using all target vocab)",
+      "Verify the results screen shows 'Review items added: [list of missed vocab]'",
+      "Navigate to /review",
+      "Verify the missed vocab words appear in the review queue"
+    ],
+    "passes": true
+  },
+  {
+    "id": 21,
+    "phase": 5,
+    "title": "Conversation scenario picker page loads and shows grouped scenarios",
+    "description": "/u/:username/conversations/scenarios shows scenario cards grouped by CEFR level with filters",
+    "steps": [
+      "Log in and navigate to /conversations (from sidebar)",
+      "Click 'Browse scenarios' or navigate to /u/:username/conversations/scenarios",
+      "Verify scenarios are grouped by level (A0-A1, A1-A2, etc.)",
+      "Verify each card shows: scenario title, level badge, description, estimated time, 'Start mission' button",
+      "Verify level filter buttons at the top allow filtering by level"
+    ],
+    "passes": true
+  },
+  {
+    "id": 22,
+    "phase": 5,
+    "title": "Live mission runner has two-column layout on desktop",
+    "description": "Mission page shows: left chat column (60%) with bubbles + input, right panel (40%) with target vocab chips + grammar checklist",
+    "steps": [
+      "Start a conversation mission",
+      "On a desktop-sized browser, verify two-column layout",
+      "Left: chat area with tutor and learner bubbles",
+      "Right: target vocabulary chips + grammar checklist + tips section",
+      "Verify learner bubbles are right-aligned with primary blue background",
+      "Verify tutor bubbles are left-aligned with surface background"
+    ],
+    "passes": true
+  },
+  {
+    "id": 23,
+    "phase": 5,
+    "title": "Target vocab chips update state during conversation",
+    "description": "Vocab chips change from gray (to use) to green check (used) or yellow ! (missed) as conversation progresses",
+    "steps": [
+      "Start 'Order a coffee' scenario",
+      "Verify all target vocab chips start gray",
+      "Type a message containing target vocab word (e.g. 'please')",
+      "Verify the 'please' chip turns green with a checkmark",
+      "After ending mission, verify missed words show in yellow with ! icon"
+    ],
+    "passes": true
+  },
+  {
+    "id": 24,
+    "phase": 5,
+    "title": "End mission confirm modal appears when criteria not met",
+    "description": "Clicking 'End mission' when not all success criteria are met shows a modal listing incomplete criteria",
+    "steps": [
+      "Start a conversation mission",
+      "Click 'End mission' button after only 1-2 turns (incomplete)",
+      "Verify a confirmation modal appears",
+      "Verify the modal lists unmet success criteria",
+      "Verify 'Cancel' returns to the conversation",
+      "Verify 'End anyway' proceeds to results"
+    ],
+    "passes": true
+  },
+  {
+    "id": 25,
+    "phase": 5,
+    "title": "Conversation history page shows past sessions",
+    "description": "/u/:username/conversations shows list of past sessions with title, level, score, date, status",
+    "steps": [
+      "Complete at least one conversation mission",
+      "Navigate to /u/:username/conversations (from sidebar 'Conversations')",
+      "Verify a list of past sessions appears",
+      "Each row shows: scenario title, CEFR level badge, score summary, started_at, status",
+      "Verify empty state shows friendly 'Try your first AI conversation' CTA for new users"
+    ],
+    "passes": true
+  },
+  {
+    "id": 26,
+    "phase": 5,
+    "title": "AiMissionBlock appears in lesson activities section",
+    "description": "Lesson activities section shows an AI conversation mission block with 'Start mission' CTA",
+    "steps": [
+      "Navigate to /lessons/unit-1/activities",
+      "Log in if needed",
+      "Verify an 'AI Mission' block appears with a scenario description",
+      "Verify the block has a 'Start mission' button",
+      "Click the button and verify it navigates to the conversation scenario"
+    ],
+    "passes": true
+  },
+  {
+    "id": 27,
+    "phase": 6,
+    "title": "Skill scores updated after completing an exercise",
+    "description": "After attempting exercises, skill_scores table updates with EWMA-smoothed scores for relevant skills",
+    "steps": [
+      "Log in and navigate to a lesson with exercises",
+      "Complete several exercises (both correct and incorrect answers)",
+      "Navigate to /u/:username/skills",
+      "Verify skill scores are shown with non-zero values for grammar_accuracy, vocabulary_accuracy, etc.",
+      "Verify the 'Sample size' tooltip shows the number of attempts"
+    ],
+    "passes": true
+  },
+  {
+    "id": 28,
+    "phase": 6,
+    "title": "Skills page shows 11-skill grid",
+    "description": "/u/:username/skills shows all 11 skill cards with SkillBar, score 0-5, sample_size, last updated",
+    "steps": [
+      "Navigate to http://localhost:5173/u/:username/skills (replace :username with actual username)",
+      "Or click 'Skills' in the sidebar",
+      "Verify 11 skill cards are shown in a grid layout",
+      "Each card shows: skill name, score bar (0-5), sample size, last updated",
+      "Verify skill bars fill with animation on page load"
+    ],
+    "passes": true
+  },
+  {
+    "id": 29,
+    "phase": 6,
+    "title": "SkillBar component shows gradient color based on score",
+    "description": "SkillBar shows red gradient (0-1), yellow (2-3), green (4-5) and animates to score on mount",
+    "steps": [
+      "Navigate to the /skills page",
+      "Verify skill bars with low scores (0-1) appear in red/orange",
+      "Verify skill bars with medium scores (2-3) appear in yellow",
+      "Verify skill bars with high scores (4-5) appear in green",
+      "Hover over a skill bar and verify tooltip shows 'Sample size: N \u00b7 Last updated: <date>'"
+    ],
+    "passes": true
+  },
+  {
+    "id": 30,
+    "phase": 6,
+    "title": "Per-skill deep-dive page shows history and recommended drills",
+    "description": "/u/:username/skills/:skill shows history graph, recent activities, and recommended drills",
+    "steps": [
+      "Navigate to /skills and click on a skill (e.g. 'Grammar Accuracy')",
+      "Verify the deep-dive page loads",
+      "Verify a history graph shows score over time",
+      "Verify a list of recent activities shows events that affected this skill",
+      "Verify a 'Recommended drills' section shows practice items targeting this weakness"
+    ],
+    "passes": true
+  },
+  {
+    "id": 31,
+    "phase": 6,
+    "title": "Dashboard shows skill breakdown mini-row",
+    "description": "YourProgressCard on dashboard shows 11 compact skill bars in a mini-row under the main card",
+    "steps": [
+      "Navigate to /dashboard",
+      "Find the YourProgressCard widget",
+      "Verify a 'Skill breakdown' section appears with 11 small bars",
+      "Verify clicking the skill breakdown row or 'View all skills' navigates to /skills",
+      "Verify the compact bars show in the correct colors for each skill's score"
+    ],
+    "passes": true
+  },
+  {
+    "id": 32,
+    "phase": 6,
+    "title": "GET /api/v1/me/skills/summary returns all 11 skills",
+    "description": "Skills summary endpoint returns all 11 skills with score, sample_size, last_updated_at, cefr_estimate",
+    "steps": [
+      "Log in to the app",
+      "Navigate to /skills page and verify it loads data",
+      "Verify all 11 skills appear: vocabulary_range, vocabulary_accuracy, grammar_accuracy, grammar_range, pronunciation, fluency, listening_comprehension, reading_comprehension, writing_organization, task_completion, interaction",
+      "Verify each skill has a score between 0-5 and a sample_size"
+    ],
+    "passes": true
+  },
+  {
+    "id": 33,
+    "phase": 7,
+    "title": "Review items auto-created from wrong exercise answers",
+    "description": "When a learner gets an exercise answer wrong, a review_item of type 'common_error' is created",
+    "steps": [
+      "Navigate to a lesson with exercises (e.g. /lessons/unit-1/grammar)",
+      "Answer an exercise incorrectly (deliberately give wrong answer)",
+      "Navigate to /u/:username/review",
+      "Verify the incorrectly answered item appears in the review queue",
+      "Verify the item shows 'Last time you said: X. What's the correct version?'"
+    ],
+    "passes": true
+  },
+  {
+    "id": 34,
+    "phase": 7,
+    "title": "Review page shows drill cards with correct UI per item_type",
+    "description": "/u/:username/review shows ReviewDrillCard for each item; UI varies by item_type (word, phrase, grammar_pattern, etc.)",
+    "steps": [
+      "Navigate to /u/:username/review (or click 'Review' in sidebar)",
+      "Verify a full-screen card stack appears",
+      "Verify the top progress bar shows current position (e.g. '1/12')",
+      "Verify the drill card shows item content with input field",
+      "Type an answer and click Submit",
+      "Verify answer reveal animation appears with correct answer + explanation",
+      "Verify Difficult/Got it/Easy buttons appear after reveal"
+    ],
+    "passes": true
+  },
+  {
+    "id": 35,
+    "phase": 7,
+    "title": "Review difficulty buttons update SM-2 scheduling",
+    "description": "Clicking Difficult/Got it/Easy after a review answer updates ease_factor and interval_days correctly",
+    "steps": [
+      "Complete a review item",
+      "After reveal, click 'Got it'",
+      "Verify next card appears",
+      "Complete the same item again on a different day (or check stats)",
+      "Navigate to /u/:username/review/stats or verify next_review_at in review history",
+      "Verify 'Easy' answers schedule further in the future than 'Difficult' answers"
+    ],
+    "passes": true
+  },
+  {
+    "id": 36,
+    "phase": 7,
+    "title": "Review session summary screen shows after completing all items",
+    "description": "After answering all review items, summary screen shows count correct, due breakdown, mastered count",
+    "steps": [
+      "Complete all items in the review queue",
+      "Verify a summary screen appears (not just another card)",
+      "Summary shows: count correct/total, next 5 items due tomorrow, mastered count",
+      "Verify 'Back to dashboard' CTA button is present",
+      "Empty queue shows 'All caught up! Next review at <time>' with 'Practice ahead' CTA"
+    ],
+    "passes": true
+  },
+  {
+    "id": 37,
+    "phase": 7,
+    "title": "Dashboard shows 'Today's review: N due' badge",
+    "description": "YourProgressCard shows a pulsing 'Today's review: N due' button when review items are due",
+    "steps": [
+      "Navigate to /dashboard after completing some lessons (to generate review items)",
+      "Find the YourProgressCard",
+      "Verify 'Today's review: N due' button appears with item count",
+      "Verify the button has a subtle pulse animation",
+      "Click it and verify navigation to /review page"
+    ],
+    "passes": true
+  },
+  {
+    "id": 38,
+    "phase": 7,
+    "title": "Sidebar 'Review' item shows due count badge",
+    "description": "AppSidebar 'Review' nav item shows a badge with the count of due review items (hidden when 0)",
+    "steps": [
+      "Log in with an account that has due review items",
+      "Look at the sidebar navigation",
+      "Verify 'Review' item shows a badge number (e.g. '12')",
+      "When all items are reviewed, verify the badge disappears",
+      "Verify clicking 'Review' navigates to /u/:username/review"
+    ],
+    "passes": true
+  },
+  {
+    "id": 39,
+    "phase": 8,
+    "title": "Assessment start endpoint creates assessment session",
+    "description": "POST /api/v1/me/assessments/start with { level_target: 'A1' } creates assessment with 6 sections",
+    "steps": [
+      "Complete all required A1 lesson sections to become eligible",
+      "Navigate to /dashboard and find 'Take A1 exit assessment' CTA",
+      "Click the CTA",
+      "Verify navigation to /u/:username/assessment/A1",
+      "Verify the assessment runner shows 'Section 1 of 6' progress indicator",
+      "Verify the first section (Listening) appears with audio + multiple choice UI"
+    ],
+    "passes": true
+  },
+  {
+    "id": 40,
+    "phase": 8,
+    "title": "Assessment runner shows all 6 sections sequentially",
+    "description": "Assessment runs listening \u2192 reading \u2192 vocabulary \u2192 grammar \u2192 speaking \u2192 writing sections in order",
+    "steps": [
+      "Start an A1 exit assessment",
+      "Complete the Listening section (10 items)",
+      "Verify auto-advance to Reading section (article + 5 questions)",
+      "Verify auto-advance to Vocabulary section (30 word recognition items)",
+      "Verify auto-advance to Grammar section (15 cloze items)",
+      "Verify speaking section uses the AI conversation runner",
+      "Verify writing section shows textarea with word count target"
+    ],
+    "passes": true
+  },
+  {
+    "id": 41,
+    "phase": 8,
+    "title": "Assessment supports pause and resume",
+    "description": "Learner can pause mid-assessment; state is persisted; returning shows 'Continue assessment' from where they left off",
+    "steps": [
+      "Start an assessment and complete 2 sections",
+      "Click the exit/pause button",
+      "Navigate away from the assessment",
+      "Return to /dashboard",
+      "Verify 'Continue A1 assessment' CTA appears",
+      "Click it and verify assessment resumes from section 3 (not the beginning)"
+    ],
+    "passes": true
+  },
+  {
+    "id": 42,
+    "phase": 8,
+    "title": "Assessment pass shows confetti and updates cefr_estimate",
+    "description": "Passing an assessment triggers confetti animation, badge unlock, and updates profile.cefr_estimate",
+    "steps": [
+      "Complete all 6 sections of the A1 assessment with passing scores (avg >= 3.0)",
+      "Verify results screen shows 'Passed' verdict",
+      "Verify subtle confetti animation plays for 3 seconds",
+      "Verify 'You're now A1!' badge unlock animation",
+      "Navigate to /dashboard and verify the CEFR estimate badge now shows 'A1'",
+      "Verify confetti auto-dismisses after 3 seconds; manual dismiss also works"
+    ],
+    "passes": true
+  },
+  {
+    "id": 43,
+    "phase": 8,
+    "title": "Assessment fail shows needs-work verdict with skill breakdown",
+    "description": "Failing assessment shows 'Needs more work' verdict with per-skill scores and recommendations",
+    "steps": [
+      "Complete an assessment with low scores (some skills below 2.0)",
+      "Verify results screen shows 'Needs more work' verdict",
+      "Verify per-skill score breakdown is shown",
+      "Verify skills below 2.0 are highlighted as areas needing improvement",
+      "Verify 'Try again' and 'Back to dashboard' CTAs appear"
+    ],
+    "passes": true
+  },
+  {
+    "id": 44,
+    "phase": 8,
+    "title": "Dashboard shows 'Take exit assessment' CTA when eligible",
+    "description": "YourProgressCard shows 'Take A1 exit assessment' CTA only when all required A1 sections are completed",
+    "steps": [
+      "Log in with an account that has NOT completed all A1 sections",
+      "Navigate to /dashboard",
+      "Verify the assessment CTA does NOT appear",
+      "Complete all required A1 sections",
+      "Return to /dashboard",
+      "Verify 'Take A1 exit assessment' CTA appears"
+    ],
+    "passes": true
+  },
+  {
+    "id": 45,
+    "phase": 9,
+    "title": "Teacher role gating works in backend",
+    "description": "Teacher endpoints (GET /api/v1/teacher/*) return 403 for student role users; accessible for teacher role",
+    "steps": [
+      "Log in with a student account",
+      "Try to navigate to /teacher",
+      "Verify access is denied (redirect to /home or error message)",
+      "Log in with a teacher account (role='teacher')",
+      "Navigate to /teacher",
+      "Verify the teacher portal loads"
+    ],
+    "passes": true
+  },
+  {
+    "id": 46,
+    "phase": 9,
+    "title": "Teacher portal overview shows class stats",
+    "description": "/teacher shows total students, active classes, this-week activity, and per-class progress cards",
+    "steps": [
+      "Log in as a teacher",
+      "Navigate to /teacher",
+      "Verify overview shows: total students count, active classes count, this-week activity",
+      "Verify per-class progress cards appear",
+      "Verify sidebar shows 'Teacher Portal' nav item"
+    ],
+    "passes": true
+  },
+  {
+    "id": 47,
+    "phase": 9,
+    "title": "Teacher can create a class",
+    "description": "POST /api/v1/teacher/classes creates a new class; it appears in the teacher's class list",
+    "steps": [
+      "Log in as a teacher",
+      "Navigate to /teacher/classes",
+      "Click 'Create class' button",
+      "Fill in class name (e.g. 'Morning A1 Group') and level target",
+      "Submit and verify the new class appears in the list",
+      "Click on the class to see roster and assignments tabs"
+    ],
+    "passes": true
+  },
+  {
+    "id": 48,
+    "phase": 9,
+    "title": "Teacher can invite students to a class",
+    "description": "POST /api/v1/teacher/classes/:id/invite with { emails[] } sends invitations",
+    "steps": [
+      "Log in as a teacher with at least one class",
+      "Navigate to the class roster",
+      "Click 'Invite students' button",
+      "Enter student email addresses (one per line or comma-separated)",
+      "Submit and verify invited list shows the emails",
+      "Verify a success message appears"
+    ],
+    "passes": true
+  },
+  {
+    "id": 49,
+    "phase": 9,
+    "title": "Teacher can view student deep-dive",
+    "description": "/teacher/students/:id shows student profile with cefr_estimate, skill breakdown, activity tabs",
+    "steps": [
+      "Log in as a teacher with students in a class",
+      "Navigate to /teacher/students",
+      "Click on a student row",
+      "Verify the deep-dive page shows: cefr_estimate badge, skill breakdown row",
+      "Verify tabs appear: Activity, Conversations, Writing, Errors",
+      "Click each tab and verify relevant data appears"
+    ],
+    "passes": true
+  },
+  {
+    "id": 50,
+    "phase": 9,
+    "title": "Recommended action generates AI one-liner for teacher",
+    "description": "GET /api/v1/teacher/students/:id/recommended-action returns a Claude-generated one-line suggestion",
+    "steps": [
+      "Navigate to a student deep-dive page",
+      "Click 'Get recommended action' button",
+      "Verify a loading state appears (spinner/skeleton)",
+      "Verify a one-liner suggestion appears (e.g. 'Run a 10-minute past-weekend activity...')",
+      "Verify 'Refresh' button allows regenerating the recommendation",
+      "Verify 'Apply suggestion' button creates an assignment if relevant"
+    ],
+    "passes": true
+  },
+  {
+    "id": 51,
+    "phase": 9,
+    "title": "Teacher can assign a lesson to a class",
+    "description": "POST /api/v1/teacher/classes/:id/assign-lesson creates an assignment; students see it on /lessons",
+    "steps": [
+      "Log in as a teacher",
+      "Navigate to /teacher/classes/:id",
+      "Click 'Assign lesson' button",
+      "Select a lesson and optionally set a due date",
+      "Submit and verify the assignment appears in the class assignments list",
+      "Log in as a student in that class",
+      "Navigate to /lessons and verify 'Assigned by your teacher' rail appears at top"
+    ],
+    "passes": true
+  },
+  {
+    "id": 52,
+    "phase": 10,
+    "title": "Organization portal exists at /admin/orgs/:slug",
+    "description": "/admin/orgs/:slug shows org overview with members, classes, plan, and billing mock",
+    "steps": [
+      "Log in as an org admin user",
+      "Navigate to /admin/orgs/:slug (replace :slug with org slug)",
+      "Verify org overview shows: org name, plan badge (free/starter/pro/enterprise), seat count",
+      "Verify tabs or sections for: Overview, Teachers, Classes, Billing, Usage",
+      "Verify 'Org Admin' item appears in sidebar for this user"
+    ],
+    "passes": true
+  },
+  {
+    "id": 53,
+    "phase": 10,
+    "title": "Billing page shows mock plan with upgrade CTA",
+    "description": "Billing tab shows plan badge, seat usage bar, and 'Upgrade' CTA that opens contact-us modal",
+    "steps": [
+      "Navigate to /admin/orgs/:slug/billing",
+      "Verify the current plan badge is displayed (e.g. 'Starter')",
+      "Verify seat usage bar shows (e.g. '15/30 seats used')",
+      "Verify 'Upgrade' button is present",
+      "Click 'Upgrade' and verify a contact-us modal opens",
+      "Verify the modal has contact information and no Stripe integration"
+    ],
+    "passes": true
+  },
+  {
+    "id": 54,
+    "phase": 10,
+    "title": "Plan tier limits AI conversation access",
+    "description": "Free plan users see AI conversation missions as disabled; starter/pro/enterprise can access them",
+    "steps": [
+      "Set up a free-plan organization",
+      "Log in as a student in that org",
+      "Navigate to a conversation scenario",
+      "Verify 'Start mission' button shows upgrade prompt instead of starting the session",
+      "Log in as a starter/pro plan user",
+      "Verify 'Start mission' works normally"
+    ],
+    "passes": true
+  },
+  {
+    "id": 55,
+    "phase": 10,
+    "title": "Org admin can manage teachers",
+    "description": "POST /api/v1/orgs/:slug/teachers invites a teacher; they appear in org teacher list",
+    "steps": [
+      "Log in as an org admin",
+      "Navigate to /admin/orgs/:slug/teachers",
+      "Click 'Invite teacher' and enter an email",
+      "Verify the teacher appears in the pending/active list",
+      "Verify the teacher account gets teacher role in the org"
+    ],
+    "passes": true
+  },
+  {
+    "id": 56,
+    "phase": 1,
+    "title": "32 A0-A1 lesson stubs seeded in database",
+    "description": "Database has 32 lesson units for A0-A1 level (8 modules \u00d7 4 lessons) in stub form",
+    "steps": [
+      "Navigate to /lessons",
+      "Log in and look at the lesson list",
+      "Verify A0-A1 section shows multiple modules and 32+ lesson units",
+      "Verify modules include: First English Sounds and Greetings, Personal Information, Classroom Instructions, Food and Ordering, Family and People, Numbers and Time, Common Objects and Places, Likes and Abilities",
+      "Verify each unit shows status (available/coming-soon/locked)"
+    ],
+    "passes": true
+  },
+  {
+    "id": 57,
+    "phase": 1,
+    "title": "12 A1-A2 lesson stubs seeded in database",
+    "description": "Database has 12 lesson units for A1-A2 level (3 modules \u00d7 4 lessons) in stub form",
+    "steps": [
+      "Navigate to /lessons",
+      "Verify A1-A2 section shows modules with lesson stubs",
+      "Verify at least 12 lesson units in the A1-A2 section",
+      "Verify modules include at least 3 of: Daily Life and Routines, Shopping and Prices, Health and Problems, Past Weekend, Travel Basics"
+    ],
+    "passes": true
+  },
+  {
+    "id": 58,
+    "phase": 1,
+    "title": "Lessons page shows 'coming soon' locked units correctly",
+    "description": "Units with status='coming-soon' or 'locked' show with visual distinction (lock icon, grayed out, no clickable link)",
+    "steps": [
+      "Navigate to /lessons",
+      "Verify some units are shown with 'Coming soon' label or lock icon",
+      "Verify locked/coming-soon units are visually distinct (grayed out, different style)",
+      "Verify clicking a locked/coming-soon unit does NOT navigate to the lesson",
+      "Verify available units can still be clicked normally"
+    ],
+    "passes": true
+  },
+  {
+    "id": 59,
+    "phase": 2,
+    "title": "Backend /health endpoint present and working",
+    "description": "GET /api/v1/health returns JSON { status: 'ok', ai_tutor_enabled: bool, voice_enabled: bool, db_reachable: bool }",
+    "steps": [
+      "Start the backend server",
+      "Navigate to http://localhost:8000/api/v1/health in a browser",
+      "Verify JSON response with status: 'ok'",
+      "Verify ai_tutor_enabled, voice_enabled, db_reachable fields are present",
+      "Verify db_reachable is true when Supabase is accessible"
+    ],
+    "passes": true
+  },
+  {
+    "id": 60,
+    "phase": 2,
+    "title": "AI endpoints return 503 gracefully when API key missing",
+    "description": "Without ANTHROPIC_API_KEY, /me/ai-tutor/* endpoints return 503 with { code: 'ai_disabled' }, not 500",
+    "steps": [
+      "Remove ANTHROPIC_API_KEY from backend/.env (or test with empty key)",
+      "Navigate to /health and verify ai_tutor_enabled: false",
+      "Open AI Tutor panel in the app",
+      "Verify the panel shows a friendly 'AI tutor is temporarily unavailable' message",
+      "Verify no 500 errors appear in browser console"
+    ],
+    "passes": true
+  },
+  {
+    "id": 61,
+    "phase": 3,
+    "title": "AI Tutor panel persists across route changes",
+    "description": "Opening the AI Tutor panel and navigating to a different page keeps the panel open and its content intact",
+    "steps": [
+      "Open the AI Tutor panel from the sidebar",
+      "Type something in the Explain tab",
+      "Navigate to /dashboard (using sidebar or browser)",
+      "Verify the AI Tutor panel is still open",
+      "Verify the previously typed content is still there",
+      "Verify the panel closes on logout"
+    ],
+    "passes": true
+  },
+  {
+    "id": 62,
+    "phase": 3,
+    "title": "OutputTaskBlock appears in lesson activities with word count",
+    "description": "Lesson activities section has an OutputTaskBlock with textarea, live word count, and 'Get feedback' button",
+    "steps": [
+      "Navigate to a lesson's activities section",
+      "Scroll to find the 'Write about...' task block",
+      "Verify a textarea is shown with a placeholder prompt",
+      "Type some text and verify live word count updates (e.g. '15/40 words')",
+      "Verify 'Get feedback' button is present",
+      "Verify the block shows min/max word targets"
+    ],
+    "passes": true
+  },
+  {
+    "id": 63,
+    "phase": 4,
+    "title": "Conversation rate limiting returns 429 when exceeded",
+    "description": "Conversation /turn endpoint returns 429 with Retry-After header when rate limit (60/min) is exceeded",
+    "steps": [
+      "Start a conversation session",
+      "Send many messages rapidly (>60 in one minute)",
+      "Verify a 429 error response occurs",
+      "Verify the UI shows a toast: 'Slow down \u2014 try again in N seconds'",
+      "Verify the input is disabled until the retry-after period expires"
+    ],
+    "passes": true
+  },
+  {
+    "id": 64,
+    "phase": 5,
+    "title": "Conversation mobile layout is single-column on small screens",
+    "description": "On mobile (360px wide), conversation mission shows single-column layout with vocab panel as a drawer",
+    "steps": [
+      "Start a conversation mission on a mobile-sized browser (360px width)",
+      "Verify single-column chat layout (no side panel visible by default)",
+      "Verify chat input area is accessible",
+      "Tap a button/icon to open the vocab/tips drawer",
+      "Verify the drawer slides in showing target vocab and grammar checklist",
+      "Verify the chat messages are readable at 360px"
+    ],
+    "passes": true
+  },
+  {
+    "id": 65,
+    "phase": 5,
+    "title": "Conversation session detail page shows transcript and scores",
+    "description": "/u/:username/conversations/:sessionId shows full transcript, 6-criteria scores, and 'Try again' CTA",
+    "steps": [
+      "Complete a conversation mission",
+      "From the history page, click on a completed session",
+      "Verify the transcript is shown in chat bubble format",
+      "Verify 6-criteria scores are displayed: task_success, comprehension, response_relevance, language_control, repair_ability, independence",
+      "Verify 'Try again' and 'Next mission' CTAs are present"
+    ],
+    "passes": true
+  },
+  {
+    "id": 66,
+    "phase": 6,
+    "title": "CEFR estimate badge updated in profile after skill changes",
+    "description": "Profile.cefr_estimate updates as learner completes activities; nightly recompute or immediate estimate shown in /skills header",
+    "steps": [
+      "Navigate to /skills",
+      "Verify a CEFR estimate badge appears at the top of the page",
+      "Complete exercises and conversation missions",
+      "Return to /skills and verify the estimate may have changed",
+      "Navigate to /dashboard and verify the same estimate shows in YourProgressCard"
+    ],
+    "passes": true
+  },
+  {
+    "id": 67,
+    "phase": 7,
+    "title": "Review page empty state shows correct message",
+    "description": "When no items are due, /review shows 'All caught up! Next review at <time>' with 'Practice ahead' CTA",
+    "steps": [
+      "Complete all review items (or access an account with no due items)",
+      "Navigate to /u/:username/review",
+      "Verify the empty state message: 'All caught up!'",
+      "Verify 'Next review at <time>' is shown",
+      "Verify 'Practice ahead' CTA button navigates to practice mode (review coach)"
+    ],
+    "passes": true
+  },
+  {
+    "id": 68,
+    "phase": 8,
+    "title": "Assessment progress indicator shows section progress",
+    "description": "Assessment runner top bar shows 'Section 2 of 6' progress with ProgressDots component",
+    "steps": [
+      "Start an exit assessment",
+      "Verify the top bar shows 'Section 1 of 6'",
+      "Also verify ProgressDots (small circles) at top of page",
+      "Complete a section and verify progress updates to 'Section 2 of 6'",
+      "Verify completed section dots are filled green, current is filled primary blue, pending are border-only",
+      "Verify clicking a completed dot allows jumping back to review that section"
+    ],
+    "passes": true
+  },
+  {
+    "id": 69,
+    "phase": 8,
+    "title": "Vocabulary section shows 30 word recognition items",
+    "description": "Assessment vocabulary section shows 30 word cards for recognition drill with progress counter",
+    "steps": [
+      "Progress to the vocabulary section in an A1 assessment",
+      "Verify 30 word recognition items are shown (or shown progressively)",
+      "Verify each item asks learner to recognize/define the word",
+      "Verify progress counter shows (e.g. '15/30 words')",
+      "Complete all 30 and verify auto-advance to grammar section"
+    ],
+    "passes": true
+  },
+  {
+    "id": 70,
+    "phase": 9,
+    "title": "Student assignments show on /lessons as teacher-assigned rail",
+    "description": "When a teacher assigns lessons, the student sees 'Assigned by your teacher' rail at top of /lessons",
+    "steps": [
+      "As a teacher, assign a lesson to a class",
+      "Log in as a student in that class",
+      "Navigate to /lessons",
+      "Verify 'Assigned by your teacher' rail appears at the top of the lessons list",
+      "Verify the assigned lesson is shown in the rail with due date (if set)",
+      "Verify clicking the assigned lesson navigates to it normally"
+    ],
+    "passes": true
+  },
+  {
+    "id": 71,
+    "phase": 10,
+    "title": "Org-level usage reports show class progress",
+    "description": "/admin/orgs/:slug/usage shows class-level aggregate: skill scores, completion rates, recent activity",
+    "steps": [
+      "Log in as org admin",
+      "Navigate to /admin/orgs/:slug/usage",
+      "Verify per-class stats show: total students, completion rate, average skill scores",
+      "Verify a recent activity feed shows org-wide events",
+      "Verify seat usage (e.g. '45/200 seats used') is shown"
+    ],
+    "passes": true
+  },
+  {
+    "id": 72,
+    "phase": 13,
+    "title": "Admin AI usage dashboard shows daily cost breakdown",
+    "description": "/admin/ai-usage shows daily cost graph, per-endpoint breakdown, cache hit rate trend",
+    "steps": [
+      "Log in as a super-admin user (in env allowlist)",
+      "Navigate to /admin/ai-usage",
+      "Verify a line graph of daily AI costs is shown",
+      "Verify per-endpoint cost table (explain, correct, practice, etc.)",
+      "Verify cache hit rate trend graph",
+      "Verify top-N expensive users table"
+    ],
+    "passes": true
+  },
+  {
+    "id": 73,
+    "phase": 13,
+    "title": "All new surfaces have dark mode parity",
+    "description": "Skills page, conversations, review, assessment, teacher portal all render correctly in dark mode",
+    "steps": [
+      "Toggle dark mode in settings",
+      "Navigate to /skills \u2014 verify cards and bars are readable in dark mode",
+      "Navigate to /review \u2014 verify drill cards render in dark mode",
+      "Start a conversation \u2014 verify chat bubbles, vocab chips show in dark mode",
+      "Navigate to /teacher \u2014 verify tables and cards render in dark mode",
+      "Verify no white-on-white or invisible text in any new surface"
+    ],
+    "passes": true
+  },
+  {
+    "id": 74,
+    "phase": 13,
+    "title": "All new animations respect prefers-reduced-motion",
+    "description": "When prefers-reduced-motion is enabled, skill bars, streaming text, conversation bubbles, confetti skip animations",
+    "steps": [
+      "Enable 'Reduce motion' in OS accessibility settings (or use browser devtools to emulate)",
+      "Navigate to /skills \u2014 verify skill bars fill instantly without animation",
+      "Complete an assessment and pass \u2014 verify no confetti animation plays",
+      "Start a conversation \u2014 verify AI response appears instantly without character-by-character animation",
+      "Verify ReviewDrillCard reveal is instant without slide animation"
+    ],
+    "passes": true
+  },
+  {
+    "id": 75,
+    "phase": 13,
+    "title": "All new copy has i18n keys in en/vi/th/zh-CN",
+    "description": "Every new UI surface has translation keys; vi/th/zh-CN locales are populated (no English fallback key paths visible)",
+    "steps": [
+      "Switch app language to Vietnamese (vi) in settings",
+      "Navigate to /skills \u2014 verify all text is in Vietnamese (or in English as fallback, not key paths)",
+      "Navigate to /review \u2014 verify all UI text is translated",
+      "Switch to Thai (th) and verify same",
+      "Switch to Chinese (zh-CN) and verify same",
+      "Verify no raw key paths appear (e.g. 'skills.page.title' as visible text is a failure)"
+    ],
+    "passes": true
+  },
+  {
+    "id": 76,
+    "phase": 5,
+    "title": "SSE stream reconnects on network drop with exponential backoff",
+    "description": "If SSE connection drops mid-conversation, UI reconnects with 200ms, 800ms, 3200ms backoff; shows 'Tutor disconnected \u2014 retrying' toast",
+    "steps": [
+      "Start a conversation session",
+      "Using browser devtools, simulate offline network state mid-stream",
+      "Verify 'Tutor disconnected \u2014 retrying...' toast appears",
+      "Re-enable network",
+      "Verify automatic reconnect happens and conversation can continue",
+      "Verify the partial turn is recovered (not lost)"
+    ],
+    "passes": true
+  },
+  {
+    "id": 77,
+    "phase": 2,
+    "title": "AI usage log records every API call",
+    "description": "Every call to /me/ai-tutor/* writes a row to ai_usage_log with endpoint, model, tokens, cost_estimate",
+    "steps": [
+      "Make several requests to AI tutor endpoints",
+      "As super-admin, navigate to /admin/ai-usage",
+      "Verify each API call appears in the usage log",
+      "Verify input_tokens, output_tokens, cache_hit_rate are recorded",
+      "Verify cost_estimate_usd is calculated correctly"
+    ],
+    "passes": true
+  },
+  {
+    "id": 78,
+    "phase": 4,
+    "title": "Writing submissions saved with skill scores and annotations",
+    "description": "After Writing Coach feedback, a writing_submissions row is created with scores, inline_annotations, and rewritten_exemplar",
+    "steps": [
+      "Open Writing Coach tab in AI Tutor panel",
+      "Submit a paragraph with grammar errors",
+      "Verify the feedback shows inline annotations (highlighted errors in the text)",
+      "Hover over a highlighted annotation and verify correction tooltip appears",
+      "Click 'Show stronger version' and verify the rewritten exemplar expands",
+      "Verify writing submission is saved (navigate away and return \u2014 submission appears in history)"
+    ],
+    "passes": true
+  },
+  {
+    "id": 79,
+    "phase": 1,
+    "title": "Profile target CEFR level shows in dashboard",
+    "description": "Dashboard YourProgressCard shows 'Target: B1' pill from profile.target_cefr_level",
+    "steps": [
+      "Set a target CEFR level in profile settings (e.g. 'B1')",
+      "Navigate to /dashboard",
+      "Find the YourProgressCard",
+      "Verify 'Target: B1' pill is shown near the CEFR estimate badge",
+      "If target_cefr_level is NULL, verify no target pill appears (graceful)"
+    ],
+    "passes": true
+  },
+  {
+    "id": 80,
+    "phase": 9,
+    "title": "Teacher students list shows cefr_estimate and last active",
+    "description": "/teacher/students shows a table with columns: name, level, target, last active, action recommendation",
+    "steps": [
+      "Log in as a teacher with students in a class",
+      "Navigate to /teacher/students",
+      "Verify a table with student rows",
+      "Each row shows: student name, CEFR estimate badge, target level, last active date",
+      "Verify rows are clickable to navigate to student deep-dive"
+    ],
+    "passes": true
+  }
+]

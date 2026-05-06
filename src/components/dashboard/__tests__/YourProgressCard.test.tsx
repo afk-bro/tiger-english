@@ -89,4 +89,21 @@ describe("YourProgressCard", () => {
     expect(html).not.toContain("undefined");
     expect(screen.getByText(/count=0/)).toBeInTheDocument();
   });
+
+  it("shows a CEFR badge when cefrEstimate is provided", () => {
+    render(<YourProgressCard activity={baseActivity} lastActiveAt={null} timezone="UTC" cefrEstimate="A1" />);
+    expect(screen.getByText("A1")).toBeInTheDocument();
+    expect(screen.getByLabelText(/CEFR level A1/i)).toBeInTheDocument();
+  });
+
+  it("does not show a CEFR badge when cefrEstimate is null", () => {
+    render(<YourProgressCard activity={baseActivity} lastActiveAt={null} timezone="UTC" cefrEstimate={null} />);
+    // There should be no element with aria-label matching CEFR level
+    expect(screen.queryByLabelText(/CEFR level/i)).not.toBeInTheDocument();
+  });
+
+  it("does not show a CEFR badge when cefrEstimate is omitted", () => {
+    render(<YourProgressCard activity={baseActivity} lastActiveAt={null} timezone="UTC" />);
+    expect(screen.queryByLabelText(/CEFR level/i)).not.toBeInTheDocument();
+  });
 });
