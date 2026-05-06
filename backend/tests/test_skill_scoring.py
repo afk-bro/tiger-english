@@ -105,3 +105,33 @@ def test_get_summary_handles_db_exception(mock_supabase):
     # Should fall back to 11 zero-score items rather than raising
     assert len(skills) == 11
     assert all(s.score == 0.0 for s in skills)
+
+
+# ── Regression: autouse fixture clears the in-memory store between tests ────
+#
+# These two tests pin the test-pollution fix from PR addressing the flaky
+# test_get_summary_handles_db_exception. They MUST run in this order (pytest
+# collects in source order by default) and the *_a / *_b naming makes that
+# explicit so a future re-sort of the file or alphabetical-collection plugin
+# would surface the dependency.
+
+
+def test_in_memory_store_cleanup_a_writes_state():
+    """Populate in_memory_skills._store for a unique user UUID."""
+    from app.core import in_memory_skills
+
+    in_memory_skills.upsert_skill(
+        "f1ee1abe-0000-4000-8000-000000000001", "grammar_accuracy", 4.2, 12
+    )
+    assert in_memory_skills.has_any_data("f1ee1abe-0000-4000-8000-000000000001")
+
+
+def test_in_memory_store_cleanup_b_starts_clean():
+    """The autouse _reset_in_memory_stores fixture should have cleared the
+    store before this test runs. If this fails, the conftest fixture isn't
+    wired up correctly and the original flake will re-emerge."""
+    from app.core import in_memory_skills
+
+    assert not in_memory_skills.has_any_data(
+        "f1ee1abe-0000-4000-8000-000000000001"
+    ), "in_memory_skills._store leaked from the previous test"

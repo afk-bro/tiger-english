@@ -33,3 +33,29 @@ def mock_supabase():
     values per test using `mock_supabase.rpc.return_value.execute.return_value.data = ...`.
     """
     return MagicMock()
+
+
+@pytest.fixture(autouse=True)
+def _reset_in_memory_stores():
+    """Clear module-level in-memory stores before each test to prevent
+    state leaking across tests in the same suite run.
+
+    Three modules keep process-lifetime stores as fallbacks for when their
+    backing Supabase tables are absent: in_memory_skills, pending_reviews,
+    and ai_usage_log. Without this fixture, tests that exercise the
+    skill-scoring write path (e.g. test_progress_service) populate
+    in_memory_skills._store, which then makes
+    test_skill_scoring::test_get_summary_handles_db_exception read non-zero
+    scores via the same fallback path it intends to exercise. Same risk
+    applies to the other two stores even if no current test hits it.
+
+    Runs before every test (autouse) and is self-contained: imports happen
+    inside the fixture so a missing module doesn't break collection.
+    """
+    from app.core import in_memory_skills, pending_reviews, ai_usage_log
+
+    in_memory_skills._store.clear()
+    pending_reviews._pending.clear()
+    ai_usage_log._log.clear()
+    yield
+    # No teardown needed — the next test's setup will clear again.
