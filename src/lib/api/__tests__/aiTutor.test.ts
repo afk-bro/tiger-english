@@ -6,14 +6,20 @@ vi.mock("@/lib/supabase", () => ({
 }));
 
 const fetchMock = vi.fn();
+let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   fetchMock.mockReset();
   mockGetSession.mockReset();
+  // The aiTutor client logs errors on the server-error paths exercised below.
+  // Silence them to keep test output clean (matches progress.test.ts).
+  consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  consoleErrorSpy.mockRestore();
 });
 
 function jsonResponse(status: number, body: unknown): Response {
@@ -39,18 +45,38 @@ describe("aiTutorAPI authedFetch", () => {
     mockGetSession.mockResolvedValue({
       data: { session: { access_token: "tok" } },
     });
-    const aiDisabled = {
+    const backendBody = {
       code: "ai_disabled",
       detail: "AI features are not enabled on this server.",
     };
-    fetchMock.mockResolvedValue(jsonResponse(503, aiDisabled));
+    fetchMock.mockResolvedValue(jsonResponse(503, backendBody));
     const { aiTutorAPI } = await import("../aiTutor");
 
     const result = await aiTutorAPI.explain({ question: "x" });
-    expect(result).toEqual(aiDisabled);
     expect(result).not.toBeNull();
     if (result && "code" in result) {
       expect(result.code).toBe("ai_disabled");
+      expect(result.detail).toBe("AI features are not enabled on this server.");
+      // `message` is a normalized alias populated from `detail` so existing
+      // readers of the older field name still work at runtime.
+      expect(result.message).toBe("AI features are not enabled on this server.");
+    }
+  });
+
+  it("normalizes a legacy ai_disabled payload that only has `message`", async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: "tok" } },
+    });
+    fetchMock.mockResolvedValue(
+      jsonResponse(503, { code: "ai_disabled", message: "no key" }),
+    );
+    const { aiTutorAPI } = await import("../aiTutor");
+
+    const result = await aiTutorAPI.correct({ sentence: "x" });
+    expect(result).not.toBeNull();
+    if (result && "code" in result) {
+      expect(result.detail).toBe("no key");
+      expect(result.message).toBe("no key");
     }
   });
 

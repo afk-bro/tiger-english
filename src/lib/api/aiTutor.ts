@@ -20,15 +20,16 @@ const API_BASE =
 // ── Response types ────────────────────────────────────────────────────────
 
 /**
- * Shape returned by the backend when AI features are disabled. The `detail`
- * field is FastAPI's default key for the body of an HTTPException; older
- * docs/types referred to it as `message`, kept as an alias to avoid breaking
- * any caller that still reads it.
+ * Shape returned by the backend when AI features are disabled. `detail` is
+ * FastAPI's default key for an HTTPException body and is always present.
+ * `message` is a normalized alias populated by `authedFetch` so any caller
+ * still reading the older field name keeps working — see the 503 branch in
+ * authedFetch below.
  */
 export type AiDisabledResponse = {
   code: "ai_disabled";
-  detail?: string;
-  message?: string;
+  detail: string;
+  message: string;
 };
 
 export type ExplainResponse = { explanation: string };
@@ -78,11 +79,21 @@ class AiTutorAPIClass {
 
     // 503 with {code: "ai_disabled"} is a documented graceful-degrade signal,
     // not an error — surface it as a normal value so the tab UIs can render
-    // the "AI is disabled" state instead of a generic failure.
+    // the "AI is disabled" state instead of a generic failure. We normalize
+    // the payload so both `detail` (the actual backend field) and `message`
+    // (the historical alias) are populated.
     if (res.status === 503) {
-      const body = await res.json().catch(() => null);
-      if (body && typeof body === "object" && (body as { code?: string }).code === "ai_disabled") {
-        return body as T;
+      const body = (await res.json().catch(() => null)) as
+        | { code?: string; detail?: string; message?: string }
+        | null;
+      if (body && body.code === "ai_disabled") {
+        const detail = body.detail ?? body.message ?? "";
+        const normalized: AiDisabledResponse = {
+          code: "ai_disabled",
+          detail,
+          message: body.message ?? detail,
+        };
+        return normalized as T;
       }
       console.error(`[aiTutorApi] ${path} → 503 (no ai_disabled payload)`, body);
       throw new Error(`AI tutor request failed: 503`);
