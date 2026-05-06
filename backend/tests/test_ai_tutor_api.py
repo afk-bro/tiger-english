@@ -83,7 +83,7 @@ class TestExplainEndpoint:
         res = client.post("/api/v1/me/ai-tutor/explain", json={
             "question": "What is grammar?",
         })
-        assert res.status_code == 200
+        assert res.status_code == 503
         assert res.json()["code"] == "ai_disabled"
 
 
@@ -118,7 +118,7 @@ class TestCorrectEndpoint:
     def test_correct_returns_ai_disabled_when_no_key(self, app_with_ai_disabled):
         client, _ = app_with_ai_disabled
         res = client.post("/api/v1/me/ai-tutor/correct", json={"sentence": "I go market."})
-        assert res.status_code == 200
+        assert res.status_code == 503
         assert res.json()["code"] == "ai_disabled"
 
 
@@ -153,7 +153,7 @@ class TestPracticeEndpoint:
     def test_practice_returns_ai_disabled_when_no_key(self, app_with_ai_disabled):
         client, _ = app_with_ai_disabled
         res = client.post("/api/v1/me/ai-tutor/practice", json={"skill": "grammar"})
-        assert res.status_code == 200
+        assert res.status_code == 503
         assert res.json()["code"] == "ai_disabled"
 
 
@@ -194,12 +194,35 @@ class TestWritingCoachEndpoint:
         assert res.status_code == 422  # min_length=10
 
     def test_writing_coach_returns_ai_disabled(self, app_with_ai_disabled):
+        """Default behavior: writing-coach matches sibling endpoints with 503+ai_disabled."""
+        client, _ = app_with_ai_disabled
+        res = client.post("/api/v1/me/ai-tutor/writing-coach", json={
+            "text": "Yesterday I go to market and buyed some food.",
+        })
+        assert res.status_code == 503
+        assert res.json()["code"] == "ai_disabled"
+
+    def test_writing_coach_serves_mock_when_flag_enabled(self, app_with_ai_disabled, monkeypatch):
+        """Opt-in: setting AI_WRITING_COACH_MOCK_WHEN_DISABLED=true returns
+        heuristic mock data instead of 503 so the full Writing Coach UI can
+        be demoed without an Anthropic API key."""
+        from app.api.v1 import ai_tutor as ai_tutor_module
+        monkeypatch.setattr(
+            ai_tutor_module.settings,
+            "ai_writing_coach_mock_when_disabled",
+            True,
+        )
         client, _ = app_with_ai_disabled
         res = client.post("/api/v1/me/ai-tutor/writing-coach", json={
             "text": "Yesterday I go to market and buyed some food.",
         })
         assert res.status_code == 200
-        assert res.json()["code"] == "ai_disabled"
+        body = res.json()
+        # Mock should detect at least one of the seeded error patterns
+        # ("yesterday i go", "buyed") and produce inline annotations.
+        assert "scores" in body
+        assert "inline_annotations" in body
+        assert len(body["inline_annotations"]) > 0
 
 
 # ── Auth guard ───────────────────────────────────────────────────────────────

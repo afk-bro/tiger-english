@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     ai_default_model: str = "claude-sonnet-4-6"
     ai_haiku_model: str = "claude-haiku-4-5"
     ai_voice_enabled: bool = False
+    # When AI is disabled, return a heuristic mock from /me/ai-tutor/writing-coach
+    # so reviewers without an API key can demo the full Writing Coach UI flow.
+    # Off by default — keeps the endpoint consistent with sibling AI tutor
+    # routes (503 + ai_disabled). Opt in via AI_WRITING_COACH_MOCK_WHEN_DISABLED=true.
+    ai_writing_coach_mock_when_disabled: bool = False
 
     # Admin settings
     super_admin_user_ids: str = "[]"  # JSON array of user UUIDs allowed to access /admin endpoints
