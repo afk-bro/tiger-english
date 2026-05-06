@@ -15,28 +15,38 @@ test.describe("Lessons area", () => {
     ).toBeVisible();
   });
 
-  test("renders 4 unit cards with Unit 1 available and Units 2-4 coming soon", async ({
+  test("renders the 44-unit curriculum with 2 available and 42 coming soon", async ({
     page,
   }) => {
     await page.goto("/lessons");
+    // Both seeded units are available. Use .first() because the assigned-rail
+    // can also link to unit-1 with the same accessible name.
     await expect(
-      page.getByRole("link", { name: /To Be: Introduction/ }),
+      page.getByRole("link", { name: /To Be: Introduction/ }).first(),
     ).toBeVisible();
-    await expect(page.getByText("Available")).toHaveCount(1);
-    await expect(page.getByText("Coming soon")).toHaveCount(3);
+    await expect(
+      page.getByRole("link", { name: /To Be \+ Location/ }).first(),
+    ).toBeVisible();
+    // Status badge totals reflect the curriculum: 2 available, 42 coming soon
+    await expect(page.getByText("Available")).toHaveCount(2);
+    await expect(page.getByText("Coming soon")).toHaveCount(42);
+    // CEFR grouping: A1 + A2 sections both render
+    await expect(page.getByRole("region", { name: /A1/i })).toBeVisible();
+    await expect(page.getByRole("region", { name: /A2/i })).toBeVisible();
   });
 
   test("coming-soon cards are disabled divs, not navigable links", async ({
     page,
   }) => {
     await page.goto("/lessons");
+    // unit-3 is the first coming-soon stub ("Greetings & Saying Goodbye")
     await expect(
-      page.getByRole("link", { name: /To Be: Yes\/No Questions/ }),
+      page.getByRole("link", { name: /Greetings & Saying Goodbye/ }),
     ).toHaveCount(0);
-    const unit2Card = page
+    const unit3Card = page
       .locator("[aria-disabled='true']")
-      .filter({ hasText: "To Be: Yes/No Questions" });
-    await expect(unit2Card).toBeVisible();
+      .filter({ hasText: "Greetings & Saying Goodbye" });
+    await expect(unit3Card).toBeVisible();
   });
 
   // ── UnitHub ────────────────────────────────────────────────────────────────
@@ -47,9 +57,12 @@ test.describe("Lessons area", () => {
       page.getByRole("heading", { level: 1, name: /Unit 1.*To Be: Introduction/ }),
     ).toBeVisible();
 
-    // All 5 section cards visible
+    // All 5 section cards visible. Each section is a link — anchor by role
+    // so we don't collide with the AI Tutor panel's "Ask a grammar..." copy.
     for (const section of ["Overview", "Grammar", "Vocabulary", "Dialogues", "Activities"]) {
-      await expect(page.getByText(section)).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: new RegExp(section, "i") }).first(),
+      ).toBeVisible();
     }
 
     // Start Unit CTA
@@ -65,7 +78,8 @@ test.describe("Lessons area", () => {
   });
 
   test("coming-soon unit hub shows placeholder message", async ({ page }) => {
-    await page.goto("/lessons/unit-2");
+    // unit-3 is a coming-soon stub; unit-2 is now available.
+    await page.goto("/lessons/unit-3");
     await expect(
       page.getByText(/This unit isn.?t ready yet/),
     ).toBeVisible();
@@ -114,7 +128,8 @@ test.describe("Lessons area", () => {
 
   test("activities section renders fill-blank exercise", async ({ page }) => {
     await page.goto("/lessons/unit-1/activities");
-    await expect(page.getByPlaceholder("...")).toBeVisible();
+    // Multiple fill-blanks per the activities section; just assert at least one.
+    await expect(page.getByPlaceholder("...").first()).toBeVisible();
   });
 
   test("prev/next navigation works through all sections", async ({ page }) => {
@@ -136,9 +151,12 @@ test.describe("Lessons area", () => {
     await page.getByRole("link", { name: /Next/i }).click();
     await expect(page).toHaveURL("/lessons/unit-1/activities");
 
-    // activities → back to unit (last section, nav button not header link)
-    await page.getByRole("link", { name: "Back to Unit", exact: true }).click();
-    await expect(page).toHaveURL("/lessons/unit-1");
+    // activities is the last section; because unit-2 is now also available,
+    // the section nav at the bottom renders a "Next: Unit 2 — …" continue
+    // CTA instead of a "Back to Unit" fallback. Clicking it should land on
+    // unit-2's overview.
+    await page.getByRole("link", { name: /Next:.*Unit 2/i }).click();
+    await expect(page).toHaveURL("/lessons/unit-2/overview");
   });
 
   test("mark as complete toggles section completion", async ({ page }) => {
@@ -168,7 +186,7 @@ test.describe("Lessons area", () => {
   test("coming-soon unit section URL shows coming-soon message", async ({
     page,
   }) => {
-    await page.goto("/lessons/unit-2/overview");
+    await page.goto("/lessons/unit-3/overview");
     await expect(
       page.getByText(/This unit isn.?t ready yet/),
     ).toBeVisible();
