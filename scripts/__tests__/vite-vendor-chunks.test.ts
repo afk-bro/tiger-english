@@ -19,6 +19,8 @@ describe("vendorChunkFor — package routing", () => {
     ["@supabase/supabase-js/dist/index.js", "vendor-supabase"],
     ["react-router-dom/dist/index.js", "vendor-router"],
     ["i18next/dist/cjs/i18next.js", "vendor-i18n"],
+    ["i18next-browser-languagedetector/dist/cjs/index.js", "vendor-i18n"],
+    ["i18next-http-backend/cjs/index.js", "vendor-i18n"],
     ["react-i18next/dist/index.js", "vendor-react"],
     ["react-hook-form/dist/index.js", "vendor-forms"],
     ["@hookform/resolvers/zod/index.js", "vendor-forms"],

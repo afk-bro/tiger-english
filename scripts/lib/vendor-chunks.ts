@@ -15,14 +15,16 @@ export function vendorChunkFor(id: string): string | undefined {
   if (!normalized.includes("/node_modules/")) return undefined;
   if (normalized.includes("/react-router")) return "vendor-router";
   if (normalized.includes("/@supabase/")) return "vendor-supabase";
-  // i18next core only — react-i18next is collocated with React below.
-  // Splitting react-i18next into its own chunk produced a runtime
-  // "Cannot read properties of undefined (reading 'createContext')"
-  // because its module init dereferences React's default import before
-  // the vendor-react chunk was reliably ready in the loader.
+  // i18next core + framework-agnostic plugins (i18next-browser-
+  // languagedetector, i18next-http-backend, etc.). react-i18next is
+  // intentionally excluded — see the vendor-react bucket below.
+  // Path semantics:
+  //   /i18next/          → core
+  //   /i18next-<plugin>/ → plugin (matches the second condition)
+  //   /react-i18next/    → matches neither (different leading char)
   if (
-    normalized.includes("/i18next/") &&
-    !normalized.includes("/react-i18next/")
+    normalized.includes("/i18next/") ||
+    normalized.includes("/i18next-")
   ) {
     return "vendor-i18n";
   }
