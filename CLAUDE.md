@@ -71,7 +71,7 @@ React Router DOM v7. Pages are lazy-loaded with `Suspense`. Three layout buckets
 
 - **`PublicLayout`** (Header + Footer): `/`, `/about`, `/contact`, `/login`, `/register`, `/u/:username` (public profile stub)
 - **`FlashcardsLayout`** (auth-aware): `/flashcards` — picks `AuthLayout` when `useUserStore.profile` is non-null, `PublicLayout` otherwise. Anonymous users still get the preview path; logged-in users keep the sidebar
-- **`AuthLayout` + `RequireAuth`** (sidebar + slim header): `/home`, `/dashboard`, `/lessons`, `/lessons/:unitSlug`, `/lessons/:unitSlug/:sectionKey`, `/practice` (hub), `/conversations`, `/conversations/:slug`, `/u/:username/conversations`, `/u/:username/conversations/scenarios`, `/u/:username/conversations/:sessionId`, `/review`, `/skills`, `/skills/:skillKey`, `/library`, `/study-groups`, `/notifications`, `/settings`, `/drag-drop`, `/ad-libs`
+- **`AuthLayout` + `RequireAuth`** (sidebar + slim header): `/home`, `/dashboard`, `/lessons`, `/lessons/:unitSlug`, `/lessons/:unitSlug/:sectionKey`, `/practice` (hub), `/conversations`, `/conversations/:slug`, `/u/:username/conversations`, `/u/:username/conversations/scenarios`, `/u/:username/conversations/:sessionId`, `/review`, `/skills`, `/skills/:skillKey`, `/library`, `/study-groups`, `/notifications`, `/settings`, `/drag-drop`, `/ad-libs`, `/assessment/:level`, `/assessment/:level/results`, `/u/:username/assessment/:level`, `/u/:username/assessment/:level/results`, `/admin/orgs/:slug`, `/admin/orgs/:slug/billing`, `/admin/ai-usage`, plus `/teacher/*` (gated by an additional `RequireTeacher` wrapper inside `AuthLayout`): `/teacher`, `/teacher/classes`, `/teacher/classes/:classId`, `/teacher/students`, `/teacher/students/:studentId`
 - **No layout wrapper**: `/auth/callback` (OAuth completion handler — top-level sibling route)
 
 ### Forms
@@ -108,7 +108,9 @@ backend/app/
 │   └── supabase.py        # Supabase admin client (uses SUPABASE_SECRET_KEY)
 ├── models/
 │   ├── auth.py            # Pydantic auth models (UpdateProfile validates timezone)
-│   └── progress.py        # Pydantic progress models (SectionKey Literal, regex-validated unit_slug + exercise_id)
+│   ├── progress.py        # Pydantic progress models (SectionKey Literal, regex-validated unit_slug + exercise_id)
+│   ├── ai_tutor.py        # ExplainResponse, CorrectionResponse, PracticeItem/Response, WritingCoach* shapes
+│   └── skills.py          # ALL_SKILL_KEYS, SkillSummary, scoring shapes
 └── services/
     ├── auth_service.py        # create user, verify credentials
     ├── progress_service.py    # complete_lesson_section, submit_exercise_attempt, review_flashcard, get_summary
@@ -121,7 +123,7 @@ backend/tests/             # pytest infrastructure; tests are mock-based — rea
 
 **Top-level routes:**
 - `GET /health` — lightweight liveness probe (no I/O), used by Railway healthcheck
-- `GET /api/v1/health` — application-level readiness (checks DB + AI reachability)
+- `GET /api/v1/health` — application-level readiness. Checks DB connectivity (one `profiles` SELECT) and reports `ai_tutor_enabled` from settings (i.e. *configured*, not an outbound Anthropic call) and `ai_voice_enabled`.
 - `GET /` — version banner
 
 Note: there is no `/auth/login` HTTP endpoint. `login_user()` exists on `AuthService` for future internal use (org membership checks, invite-only flows, admin tooling) but is not exposed as a route.

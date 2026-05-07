@@ -24,20 +24,27 @@ Live at **https://tiger-english.com**.
 - **Hosting** — Vercel (frontend), Railway (backend)
 - **Image generation** (author-time) — Leonardo AI
 
-## Project structure
+## Project structure (key directories)
+
+Not exhaustive — there are also `src/{__tests__, assets, data, docs, mocks, pages, schemas, test, types, utils}/` plus `src/App.tsx` and `src/main.tsx` at the root.
 
 ```
 src/
 ├── components/         # Cross-feature UI (sidebar, exercises, header/footer, …)
 ├── features/
+│   ├── admin/          # Org admin pages (billing, overview)
+│   ├── ai-tutor/       # Standalone AI tutor surface (Explain / Correct / Practice / Writing Coach)
+│   ├── assessment/     # CEFR-level placement assessment + results
 │   ├── auth/           # Login / Register / RequireAuth / RequireGuest
 │   ├── conversations/  # AI roleplay scenarios + mission runner
 │   ├── dashboard/      # Progress summary, stats, streak
 │   ├── flashcards/     # Curated + user-created flashcard sets
 │   ├── lessons/        # Units, sections, blocks, registry, image hydration
+│   ├── org-admin/      # Cross-org admin views (e.g. AI usage)
 │   ├── practice/       # /practice hub (Conversation + Writing cards)
 │   ├── review/         # SM-2 review queue UI
-│   └── skills/         # 11-skill summary + per-skill drill-in
+│   ├── skills/         # 11-skill summary + per-skill drill-in
+│   └── teacher/        # Teacher dashboard (classes, students)
 ├── lib/
 │   ├── api/            # Backend HTTP clients (auth, progress, ai-tutor, …)
 │   ├── storageImage.ts # Supabase Storage URL → render-image transform helper
