@@ -83,6 +83,62 @@ _SYSTEM_WRITING = (
 )
 
 
+def _history_to_anthropic_messages(
+    history: list[dict],
+    latest_user_message: str,
+) -> list[dict]:
+    """Convert our domain conversation history into a valid Anthropic
+    `messages` array for `client.messages.create`.
+
+    Handles three concrete invariants Anthropic enforces:
+
+    1. Role mapping: domain roles are {"tutor", "learner"} (matching the
+       frontend's ChatMessage shape). Map tutor → assistant, learner →
+       user.
+    2. Must start with a user turn: if the history begins with one or
+       more assistant turns (the seeded scenario opening line is one of
+       these), drop them. The opening line is preserved as context in
+       the system prompt by the caller.
+    3. Must alternate roles: collapse consecutive same-role turns by
+       joining their text with newlines. This is defensive — a
+       well-behaved frontend shouldn't produce same-role runs, but the
+       cost of guarding is one pass and the failure mode (HTTP 400 from
+       Anthropic) is hard to debug at runtime.
+    """
+    # Step 1: map roles, ignore unknown role values defensively.
+    mapped: list[dict] = []
+    for turn in history:
+        role = turn.get("role")
+        if role == "tutor":
+            mapped.append({"role": "assistant", "content": turn.get("text", "")})
+        elif role == "learner":
+            mapped.append({"role": "user", "content": turn.get("text", "")})
+        # Unknown roles are skipped silently — better to lose a turn than
+        # to send an invalid sequence.
+
+    # Step 2: drop leading assistant turns so the array starts with user.
+    while mapped and mapped[0]["role"] == "assistant":
+        mapped.pop(0)
+
+    # Step 3: collapse consecutive same-role turns (defensive).
+    collapsed: list[dict] = []
+    for turn in mapped:
+        if collapsed and collapsed[-1]["role"] == turn["role"]:
+            collapsed[-1]["content"] = collapsed[-1]["content"] + "\n" + turn["content"]
+        else:
+            collapsed.append(turn)
+
+    # Append the latest user message. If the previous turn is also a
+    # user turn (e.g. history was empty after stripping), merge into it
+    # to maintain alternation.
+    if collapsed and collapsed[-1]["role"] == "user":
+        collapsed[-1]["content"] = collapsed[-1]["content"] + "\n" + latest_user_message
+    else:
+        collapsed.append({"role": "user", "content": latest_user_message})
+
+    return collapsed
+
+
 def _build_conversation_system_prompt(
     scenario: dict,
     remaining_targets: list[str],
@@ -112,10 +168,19 @@ def _build_conversation_system_prompt(
             "Wrap the scenario up with a friendly, in-character closing exchange."
         )
 
+    # The scenario's seeded opening line is shown to the learner in the UI
+    # but isn't part of the messages array (Anthropic requires the array
+    # to start with a user turn, so any leading assistant turn is folded
+    # into the system prompt instead). Include it here so the model knows
+    # what the learner is responding to in their first message.
+    opening = scenario.get("opening_line")
+    opening_clause = f'You opened the scenario by saying: "{opening}"\n\n' if opening else ""
+
     return (
         f"You are roleplaying as: {scenario.get('ai_role', 'an English tutor')}. "
         f"The learner is roleplaying as: {scenario.get('learner_role', 'an English learner')}. "
         f"Scenario: {scenario.get('description', '')}\n\n"
+        f"{opening_clause}"
         f"Target grammar to practice: {target_grammar}.\n"
         f"Learner CEFR level: {cefr_level} — keep your English at or just above this level. "
         f"Use short sentences and concrete vocabulary for A0-A2; richer structures and "
@@ -299,16 +364,7 @@ class AiTutorService:
             scenario, remaining_targets, cefr_level
         )
 
-        # Translate our domain {"ai","learner"} roles into Anthropic's
-        # {"assistant","user"}. Anthropic also requires alternating roles
-        # starting with "user"; if history is empty, the latest message
-        # is the first user turn.
-        msgs: list[dict] = []
-        for turn in history:
-            role = "assistant" if turn.get("role") == "ai" else "user"
-            text = turn.get("text", "")
-            msgs.append({"role": role, "content": text})
-        msgs.append({"role": "user", "content": message})
+        msgs = _history_to_anthropic_messages(history, message)
 
         response = await client.messages.create(
             model=settings.ai_default_model,

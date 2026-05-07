@@ -62,6 +62,118 @@ def test_system_prompt_switches_to_closing_message_when_no_targets_left():
     assert "Wrap" in prompt or "wrap" in prompt
 
 
+def test_system_prompt_includes_opening_line_so_model_knows_context():
+    from app.services.ai_tutor_service import _build_conversation_system_prompt
+
+    scenario = {
+        "ai_role": "Barista",
+        "learner_role": "Customer",
+        "description": "",
+        "opening_line": "Good morning! What can I get for you?",
+    }
+    prompt = _build_conversation_system_prompt(scenario, [], "A1")
+    # The opening line is shown to the user in the UI but isn't in the
+    # messages array (Anthropic requires the array to start with a user
+    # turn). Carrying it in the system prompt is what keeps the model
+    # consistent with what the learner just saw.
+    assert "Good morning! What can I get for you?" in prompt
+
+
+# ── _history_to_anthropic_messages helper ────────────────────────────────
+
+
+class TestHistoryToAnthropicMessages:
+    """Pin the role-mapping + alternation invariants. Anthropic's
+    messages.create rejects sequences that don't start with `user` or
+    that have consecutive same-role turns; we ensure neither can leak
+    out of the service layer."""
+
+    def test_maps_tutor_to_assistant_and_learner_to_user(self):
+        from app.services.ai_tutor_service import _history_to_anthropic_messages
+
+        msgs = _history_to_anthropic_messages(
+            history=[
+                {"role": "learner", "text": "Hello"},
+                {"role": "tutor", "text": "Hi! How are you?"},
+            ],
+            latest_user_message="I'm good, thanks.",
+        )
+        assert msgs == [
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi! How are you?"},
+            {"role": "user", "content": "I'm good, thanks."},
+        ]
+
+    def test_drops_leading_assistant_turns(self):
+        """The seeded scenario opening line lives in `history` as a
+        tutor turn at index 0. Anthropic requires the array to start
+        with a user turn, so we drop leading assistant entries. The
+        opening is preserved separately in the system prompt."""
+        from app.services.ai_tutor_service import _history_to_anthropic_messages
+
+        msgs = _history_to_anthropic_messages(
+            history=[
+                {"role": "tutor", "text": "Welcome to the café."},
+                {"role": "tutor", "text": "What would you like?"},
+            ],
+            latest_user_message="A coffee, please.",
+        )
+        assert msgs == [{"role": "user", "content": "A coffee, please."}]
+
+    def test_collapses_consecutive_same_role_turns(self):
+        from app.services.ai_tutor_service import _history_to_anthropic_messages
+
+        msgs = _history_to_anthropic_messages(
+            history=[
+                {"role": "learner", "text": "Hi"},
+                {"role": "learner", "text": "I want coffee"},
+                {"role": "tutor", "text": "Sure!"},
+            ],
+            latest_user_message="Black, please.",
+        )
+        # Consecutive learner messages are merged
+        assert msgs == [
+            {"role": "user", "content": "Hi\nI want coffee"},
+            {"role": "assistant", "content": "Sure!"},
+            {"role": "user", "content": "Black, please."},
+        ]
+
+    def test_merges_latest_message_into_trailing_user_turn(self):
+        """If after stripping we'd end on a user turn followed by
+        another user turn, merge so the array stays alternating."""
+        from app.services.ai_tutor_service import _history_to_anthropic_messages
+
+        msgs = _history_to_anthropic_messages(
+            history=[
+                {"role": "tutor", "text": "Welcome!"},  # leading, dropped
+                {"role": "learner", "text": "Hi"},
+            ],
+            latest_user_message="I want coffee.",
+        )
+        assert msgs == [{"role": "user", "content": "Hi\nI want coffee."}]
+
+    def test_skips_unknown_roles_without_failing(self):
+        """An unknown role would 422 at the request layer, but defend
+        the service layer too in case a future caller bypasses
+        TurnRequest validation."""
+        from app.services.ai_tutor_service import _history_to_anthropic_messages
+
+        msgs = _history_to_anthropic_messages(
+            history=[
+                {"role": "system", "text": "internal note"},  # unknown
+                {"role": "learner", "text": "Hello"},
+            ],
+            latest_user_message="follow-up",
+        )
+        assert msgs == [{"role": "user", "content": "Hello\nfollow-up"}]
+
+    def test_empty_history_yields_single_user_message(self):
+        from app.services.ai_tutor_service import _history_to_anthropic_messages
+
+        msgs = _history_to_anthropic_messages([], latest_user_message="Hi.")
+        assert msgs == [{"role": "user", "content": "Hi."}]
+
+
 def test_system_prompt_handles_missing_optional_scenario_fields():
     from app.services.ai_tutor_service import _build_conversation_system_prompt
 
@@ -146,6 +258,9 @@ class TestConversationTurn:
     def test_calls_service_with_scenario_history_and_remaining_targets(
         self, client_with_mocked_service
     ):
+        """Mirrors the actual frontend payload: ChatMessage uses
+        role values "tutor" / "learner" (NOT "ai" / "user"). The service
+        layer is responsible for mapping these onto Anthropic's roles."""
         client, service = client_with_mocked_service
         service.conversation_turn = AsyncMock(return_value="Welcome to our café!")
 
@@ -155,7 +270,7 @@ class TestConversationTurn:
                 "scenario_slug": "order-coffee-a1",
                 "message": "I want coffee please.",
                 "history": [
-                    {"role": "ai", "text": "Hi! What can I get for you?"},
+                    {"role": "tutor", "text": "Hi! What can I get for you?"},
                 ],
                 "remaining_targets": ["thank you", "how much"],
             },
@@ -173,8 +288,26 @@ class TestConversationTurn:
         assert kwargs["message"] == "I want coffee please."
         assert kwargs["remaining_targets"] == ["thank you", "how much"]
         assert kwargs["cefr_level"] == "A1"
-        # History was forwarded as a list of dicts (not Pydantic models)
-        assert kwargs["history"] == [{"role": "ai", "text": "Hi! What can I get for you?"}]
+        # History forwarded with the frontend roles intact; service does the mapping
+        assert kwargs["history"] == [{"role": "tutor", "text": "Hi! What can I get for you?"}]
+
+    def test_rejects_unknown_role_value(self, client_with_mocked_service):
+        """TurnMessage.role is now Literal["tutor","learner"] — anything
+        else (e.g. an old "ai" or "user") should fail validation rather
+        than silently producing a broken Anthropic call."""
+        client, _ = client_with_mocked_service
+        resp = client.post(
+            "/api/v1/me/conversations/turn",
+            json={
+                "scenario_slug": "introduce-yourself-a1",
+                "message": "Hi.",
+                "history": [
+                    {"role": "ai", "text": "Hello!"},  # legacy/wrong role
+                ],
+                "remaining_targets": [],
+            },
+        )
+        assert resp.status_code == 422  # Pydantic validation error
 
     def test_returns_503_when_service_raises_ai_disabled_at_runtime(
         self, client_with_mocked_service

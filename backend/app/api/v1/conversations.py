@@ -13,7 +13,7 @@ import logging
 import time
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Literal, Tuple
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -418,7 +418,11 @@ LEVEL_BAND_ORDER = ["A0–A1", "A1–A2", "A2–B1", "B1–B1+", "B1+–B2", "B2
 # ── Request / response models ─────────────────────────────────────────────────
 
 class TurnMessage(BaseModel):
-    role: str
+    # Domain roles match the frontend's ChatMessage shape ("tutor" =
+    # the AI / scenario partner, "learner" = the user). The service
+    # layer maps these onto Anthropic's user/assistant roles before
+    # building the messages array.
+    role: Literal["tutor", "learner"]
     text: str
 
 
