@@ -114,36 +114,32 @@ def test_get_summary_handles_db_exception(mock_supabase):
 # pytest randomization / parallelization / file reordering.
 
 
-def test_reset_in_memory_stores_clears_all_three_stores():
+def test_reset_in_memory_stores_clears_all_known_stores():
     """The conftest helper is the single source of truth for which
     process-lifetime stores get cleaned between tests. If a new in-memory
     fallback is added without registering it in reset_in_memory_stores(),
     it'll silently leak across tests until someone hits the same flake we
-    fixed for skill_scores. This test populates all three currently-known
-    stores, calls the helper, and asserts they're empty — making the
-    failure mode loud and obvious."""
-    from app.core import ai_usage_log, in_memory_skills, pending_reviews
+    fixed for skill_scores. This test populates all currently-known stores,
+    calls the helper, and asserts they're empty — making the failure mode
+    loud and obvious."""
+    from app.core import ai_usage_log, in_memory_skills
     from tests.conftest import reset_in_memory_stores
 
     user_id = "f1ee1abe-0000-4000-8000-000000000001"
 
     in_memory_skills.upsert_skill(user_id, "grammar_accuracy", 4.2, 12)
-    pending_reviews._pending[user_id] = [{"skill": "x"}]
     ai_usage_log._log.append({"endpoint": "test", "user_id": user_id})
 
     assert in_memory_skills.has_any_data(user_id)
-    assert pending_reviews._pending
     assert ai_usage_log._log
 
     cleared = reset_in_memory_stores()
 
     assert not in_memory_skills.has_any_data(user_id)
-    assert not pending_reviews._pending
     assert not ai_usage_log._log
     # Helper reports which modules it actually cleared — guards against
     # silent drop if a module is renamed and the helper falls through.
     assert set(cleared) == {
         "app.core.in_memory_skills",
-        "app.core.pending_reviews",
         "app.core.ai_usage_log",
     }

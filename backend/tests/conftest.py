@@ -42,14 +42,13 @@ def reset_in_memory_stores() -> list[str]:
 
     Each store is cleared independently via try/except so a future
     rename/removal of any one module doesn't break the whole test suite.
-    Three stores are known today; add new entries to STORES below as
+    Two stores are known today; add new entries to STORES below as
     new in-memory caches are introduced.
     """
     cleared: list[str] = []
     # (module path, attribute holding the store)
     STORES = [
         ("app.core.in_memory_skills", "_store"),
-        ("app.core.pending_reviews", "_pending"),
         ("app.core.ai_usage_log", "_log"),
     ]
     for module_path, attr in STORES:
@@ -71,14 +70,12 @@ def _reset_in_memory_stores():
     """Clear module-level in-memory stores before each test to prevent
     state leaking across tests in the same suite run.
 
-    Three modules keep process-lifetime stores as fallbacks for when their
-    backing Supabase tables are absent: in_memory_skills, pending_reviews,
-    and ai_usage_log. Without this fixture, tests that exercise the
-    skill-scoring write path (e.g. test_progress_service) populate
-    in_memory_skills._store, which then makes
-    test_skill_scoring::test_get_summary_handles_db_exception read non-zero
-    scores via the same fallback path it intends to exercise. Same risk
-    applies to the other two stores even if no current test hits it.
+    Two modules keep process-lifetime stores as fallbacks for when their
+    backing Supabase tables are absent: in_memory_skills and ai_usage_log.
+    Without this fixture, tests that exercise the skill-scoring write path
+    (e.g. test_progress_service) populate in_memory_skills._store, which
+    then makes test_skill_scoring::test_get_summary_handles_db_exception
+    read non-zero scores via the same fallback path it intends to exercise.
     """
     reset_in_memory_stores()
     yield
