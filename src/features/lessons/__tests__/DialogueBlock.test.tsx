@@ -70,4 +70,19 @@ describe("DialogueBlock", () => {
     const img = container.querySelector("img")!;
     expect(img).toHaveAttribute("alt", "Two friends greeting each other on a busy street");
   });
+
+  it("emits a srcSet with 1× and 2× densities so retina screens get a sharper variant", () => {
+    // External URL — srcSetFor passes through unchanged for 1× and 2×,
+    // so both densities point at the same string. Asserting that the
+    // attribute exists at all guards against a future revert that
+    // dropped the helper call.
+    const { container } = render(
+      <DialogueBlock lines={[]} imageUrl="https://example.com/d.png" />,
+    );
+    const img = container.querySelector("img")!;
+    expect(img).toHaveAttribute(
+      "srcset",
+      "https://example.com/d.png 1x, https://example.com/d.png 2x",
+    );
+  });
 });
