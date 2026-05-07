@@ -521,6 +521,7 @@
         "lessons": "Lessons",
         "review": "Review",
         "skills": "Skills",
+        "practice": "Practice",
         "conversations": "Conversations",
         "library": "Library",
         "study_groups": "Study Groups",
@@ -543,6 +544,19 @@
       "mission_coming_soon": "Mission runner"
     },
     "back": "Back"
+  },
+  "practice": {
+    "title": "Practice",
+    "subtitle": "Apply what you've learned with AI.",
+    "conversation": {
+      "title": "AI Conversation",
+      "description": "Hold real conversations with an AI partner across guided scenarios."
+    },
+    "writing": {
+      "title": "Guided Writing",
+      "description": "Strengthen your writing with AI-guided prompts and feedback.",
+      "comingSoon": "Coming soon"
+    }
   },
   "conversations": {
     "backToScenarios": "Back to scenarios",

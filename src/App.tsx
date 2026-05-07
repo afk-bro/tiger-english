@@ -27,6 +27,7 @@ const SectionPage    = lazy(() => import("@/features/lessons/pages/SectionPage")
 const SkillsPage       = lazy(() => import("@/features/skills/pages/SkillsPage"));
 const SkillDetailPage  = lazy(() => import("@/features/skills/pages/SkillDetailPage"));
 const ReviewPage                = lazy(() => import("@/features/review/pages/ReviewPage"));
+const PracticeHub               = lazy(() => import("@/features/practice/pages/PracticeHub"));
 const ConversationsPage         = lazy(() => import("@/features/conversations/pages/ConversationsPage"));
 const MissionRunnerPage         = lazy(() => import("@/features/conversations/pages/MissionRunnerPage"));
 const ConversationHistoryPage   = lazy(() => import("@/features/conversations/pages/ConversationHistoryPage"));
@@ -103,6 +104,7 @@ export function AppRoutes() {
           <Route path="/skills" element={<SkillsPage />} />
           <Route path="/skills/:skillKey" element={<SkillDetailPage />} />
           <Route path="/review" element={<ReviewPage />} />
+          <Route path="/practice" element={<PracticeHub />} />
           <Route path="/conversations" element={<ConversationsPage />} />
           <Route path="/conversations/:slug" element={<MissionRunnerPage />} />
           <Route path="/u/:username/conversations" element={<ConversationHistoryPage />} />

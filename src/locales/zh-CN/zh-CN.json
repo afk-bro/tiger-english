@@ -513,6 +513,7 @@
         "lessons": "课程",
         "review": "复习",
         "skills": "技能",
+        "practice": "练习",
         "conversations": "对话",
         "library": "资料库",
         "study_groups": "学习小组",
@@ -534,6 +535,19 @@
       "public_profile": "公开资料"
     },
     "back": "返回"
+  },
+  "practice": {
+    "title": "练习",
+    "subtitle": "用 AI 运用你所学到的知识。",
+    "conversation": {
+      "title": "AI 对话",
+      "description": "通过引导式情景与 AI 伙伴进行真实对话练习。"
+    },
+    "writing": {
+      "title": "引导式写作",
+      "description": "通过 AI 引导的提示和反馈提升你的写作能力。",
+      "comingSoon": "即将推出"
+    }
   },
   "conversations": {
     "backToScenarios": "返回情景列表",
