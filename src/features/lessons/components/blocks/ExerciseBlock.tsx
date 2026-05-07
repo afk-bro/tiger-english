@@ -11,6 +11,7 @@ type Props = {
   exerciseType: ExerciseType;
   exerciseId: string;
   imageUrl?: string;
+  imageAlt?: string;
   onCorrect?: () => void;
   unitSlug: string;
   sectionKey: string;
@@ -50,7 +51,7 @@ const exerciseMap: Record<string, TaggedExercise> = {
   "u2-activities-mcq-9": { type: "multiple-choice", data: unit2Exercises.activitiesContractionCorrectMcq },
 };
 
-export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, onCorrect, unitSlug, sectionKey }: Props) {
+export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, imageAlt, onCorrect, unitSlug, sectionKey }: Props) {
   const handleAttempt = (isCorrect: boolean) => {
     void ProgressAPI.attemptExercise({
       unitSlug,
@@ -79,9 +80,12 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, onCo
 
   return (
     <div className="card p-6 shadow-sm border border-semantic-border">
-      {/* TODO(a11y): alt="" assumes the image is decorative. Image-prompt
-          exercises ("choose what's in the picture") need real alt text
-          from the exercise data — separate from the sizing fix below. */}
+      {/* alt is intentionally empty when imageAlt isn't provided — the
+          image is decorative in that case and screen readers should
+          skip it. Image-prompt exercises ("choose what's in the
+          picture") MUST set imageAlt on the block data so the question
+          remains answerable for screen reader users. See SectionBlock
+          in lesson.types.ts for the full convention. */}
       {imageUrl && (() => {
         // Card body renders ~700–800px wide on desktop and full-width on
         // mobile. Request 768 for 1×; the 2× variant (1536) is capped by
@@ -91,7 +95,7 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, onCo
           <img
             src={src}
             srcSet={srcSet}
-            alt=""
+            alt={imageAlt ?? ""}
             width={1024}
             height={1024}
             loading="lazy"

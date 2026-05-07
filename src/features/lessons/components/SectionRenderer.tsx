@@ -13,9 +13,9 @@ function renderBlock(block: SectionBlock, onExerciseCorrect: (() => void) | unde
     case "heading": return <HeadingBlock content={block.content} translations={block.translations} />;
     case "examples": return <ExamplesBlock items={block.items} />;
     case "vocab-list": return <VocabListBlock items={block.items} />;
-    case "dialogue": return <DialogueBlock lines={block.lines} imageUrl={block.imageUrl} />;
+    case "dialogue": return <DialogueBlock lines={block.lines} imageUrl={block.imageUrl} imageAlt={block.imageAlt} />;
     case "callout": return <CalloutBlock variant={block.variant} content={block.content} translations={block.translations} />;
-    case "exercise": return <ExerciseBlock exerciseType={block.exerciseType} exerciseId={block.exerciseId} imageUrl={block.imageUrl} onCorrect={onExerciseCorrect} unitSlug={unitSlug} sectionKey={sectionKey} />;
+    case "exercise": return <ExerciseBlock exerciseType={block.exerciseType} exerciseId={block.exerciseId} imageUrl={block.imageUrl} imageAlt={block.imageAlt} onCorrect={onExerciseCorrect} unitSlug={unitSlug} sectionKey={sectionKey} />;
     default: return null;
   }
 }

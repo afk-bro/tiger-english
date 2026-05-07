@@ -52,4 +52,22 @@ describe("DialogueBlock", () => {
     const { container } = render(<DialogueBlock lines={[]} />);
     expect(container.querySelector("img")).toBeNull();
   });
+
+  it("renders alt='' (decorative) when imageAlt is not provided", () => {
+    const { container } = render(<DialogueBlock lines={[]} imageUrl="https://example.com/d.png" />);
+    const img = container.querySelector("img")!;
+    expect(img).toHaveAttribute("alt", "");
+  });
+
+  it("uses imageAlt when provided so the image is described, not skipped", () => {
+    const { container } = render(
+      <DialogueBlock
+        lines={[]}
+        imageUrl="https://example.com/d.png"
+        imageAlt="Two friends greeting each other on a busy street"
+      />,
+    );
+    const img = container.querySelector("img")!;
+    expect(img).toHaveAttribute("alt", "Two friends greeting each other on a busy street");
+  });
 });
