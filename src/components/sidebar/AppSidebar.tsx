@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Home, LayoutDashboard, GraduationCap, BookOpen, Users, Bell,
   Layers, MousePointer2, FileText, MessageCircleQuestion,
-  RotateCcw, Zap, MessageSquare,
+  RotateCcw, Zap, Sparkles,
   Settings, HelpCircle, User, LogOut,
   ChevronLeft, ChevronRight, X,
 } from "lucide-react";
@@ -26,7 +26,7 @@ const NAV_ITEMS = [
   { to: "/lessons",           labelKey: "common.sidebar.nav.lessons",         icon: GraduationCap },
   { to: "/review",            labelKey: "common.sidebar.nav.review",          icon: RotateCcw },
   { to: "/skills",            labelKey: "common.sidebar.nav.skills",          icon: Zap },
-  { to: "/conversations",     labelKey: "common.sidebar.nav.conversations",   icon: MessageSquare },
+  { to: "/practice",          labelKey: "common.sidebar.nav.practice",        icon: Sparkles },
   { to: "/library",           labelKey: "common.sidebar.nav.library",         icon: BookOpen },
   { to: "/study-groups",      labelKey: "common.sidebar.nav.study_groups",    icon: Users },
   { to: "/notifications",     labelKey: "common.sidebar.nav.notifications",   icon: Bell },

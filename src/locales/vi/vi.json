@@ -521,6 +521,7 @@
         "lessons": "Bài học",
         "review": "Ôn tập",
         "skills": "Kỹ năng",
+        "practice": "Luyện tập",
         "conversations": "Hội thoại",
         "library": "Thư viện",
         "study_groups": "Nhóm học",
@@ -542,6 +543,19 @@
       "public_profile": "Hồ sơ công khai"
     },
     "back": "Quay lại"
+  },
+  "practice": {
+    "title": "Luyện tập",
+    "subtitle": "Áp dụng những gì bạn đã học với AI.",
+    "conversation": {
+      "title": "Hội thoại AI",
+      "description": "Thực hành hội thoại thực tế với đối tác AI qua các kịch bản có hướng dẫn."
+    },
+    "writing": {
+      "title": "Viết có hướng dẫn",
+      "description": "Cải thiện kỹ năng viết với gợi ý và phản hồi từ AI.",
+      "comingSoon": "Sắp ra mắt"
+    }
   },
   "conversations": {
     "backToScenarios": "Quay lại danh sách kịch bản",
