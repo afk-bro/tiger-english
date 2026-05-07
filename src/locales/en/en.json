@@ -585,7 +585,12 @@
       "vocabScore": "You used {{used}}/{{total}} target words ({{pct}}%)",
       "tryAnother": "Try another mission",
       "inputPlaceholder": "Type your response…",
-      "send": "Send"
+      "send": "Send",
+      "allTargetsHit": {
+        "title": "All target words used!",
+        "subtitle": "Wrap up to see your scores, or keep practicing.",
+        "cta": "Finish & see results"
+      }
     },
     "history": {
       "title": "My Conversations",
