@@ -466,7 +466,12 @@ export default function MissionRunnerPage() {
               can keep practicing past the minimum bar if they want. */}
           {allTargetsHit && !missionEnded && (
             <div className="flex-shrink-0 px-3 pt-3">
-              <div className="flex items-center gap-3 rounded-lg border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 p-3">
+              <div
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className="flex items-center gap-3 rounded-lg border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 p-3"
+              >
                 <PartyPopper
                   className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0"
                   aria-hidden
