@@ -190,17 +190,23 @@ export default function MissionRunnerPage() {
     setInputText("");
     setSending(true);
 
-    // Update vocab chip statuses client-side
+    // Update vocab chip statuses client-side. Compute the next state
+    // synchronously so we can also derive `remaining_targets` from the
+    // same snapshot for this turn's request body — setVocabChips is
+    // async and would lag a turn behind.
     const lower = text.toLowerCase();
-    setVocabChips((prev) =>
-      prev.map((chip) => ({
-        ...chip,
-        status:
-          chip.status === "unused" && lower.includes(chip.word.toLowerCase())
-            ? "used"
-            : chip.status,
-      }))
-    );
+    const updatedChips = vocabChips.map((chip) => ({
+      ...chip,
+      status:
+        chip.status === "unused" && lower.includes(chip.word.toLowerCase())
+          ? ("used" as const)
+          : chip.status,
+    }));
+    setVocabChips(updatedChips);
+
+    const remainingTargets = updatedChips
+      .filter((c) => c.status === "unused")
+      .map((c) => c.word);
 
     try {
       const {
@@ -208,7 +214,6 @@ export default function MissionRunnerPage() {
       } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Try real API first; fall back to stub if AI is disabled
       const res = await fetchWithRetry(`${API_BASE}/me/conversations/turn`, {
         method: "POST",
         headers: {
@@ -219,6 +224,7 @@ export default function MissionRunnerPage() {
           scenario_slug: slug,
           message: text,
           history: messages.map((m) => ({ role: m.role, text: m.text })),
+          remaining_targets: remainingTargets,
         }),
       });
       // Clear reconnect toast on success

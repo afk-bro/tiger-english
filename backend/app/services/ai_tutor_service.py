@@ -83,6 +83,50 @@ _SYSTEM_WRITING = (
 )
 
 
+def _build_conversation_system_prompt(
+    scenario: dict,
+    remaining_targets: list[str],
+    cefr_level: str,
+) -> str:
+    """Build the system prompt for one conversation turn.
+
+    Includes scenario roleplay context, target vocabulary still to elicit,
+    and CEFR-appropriate language difficulty. The 'remaining targets'
+    line is the steering signal — it tells the model which vocab the
+    learner has not yet practiced this session, so the model can set up
+    situations that naturally elicit those words rather than running in
+    generic loops.
+    """
+    target_grammar = ", ".join(scenario.get("target_grammar", [])) or "natural conversational English"
+    if remaining_targets:
+        steering = (
+            "Vocabulary the learner has NOT yet used in this session: "
+            + ", ".join(remaining_targets)
+            + ". Naturally guide the conversation toward situations where they would "
+            "produce these words. Do NOT say the words for them — set up prompts that "
+            "elicit them. Once a target word appears in the learner's reply, move on."
+        )
+    else:
+        steering = (
+            "The learner has used every target word at least once. "
+            "Wrap the scenario up with a friendly, in-character closing exchange."
+        )
+
+    return (
+        f"You are roleplaying as: {scenario.get('ai_role', 'an English tutor')}. "
+        f"The learner is roleplaying as: {scenario.get('learner_role', 'an English learner')}. "
+        f"Scenario: {scenario.get('description', '')}\n\n"
+        f"Target grammar to practice: {target_grammar}.\n"
+        f"Learner CEFR level: {cefr_level} — keep your English at or just above this level. "
+        f"Use short sentences and concrete vocabulary for A0-A2; richer structures and "
+        f"idioms for B1+.\n\n"
+        f"{steering}\n\n"
+        "Stay in character. Keep replies short (1-3 sentences). Do not lecture, do not "
+        "translate, do not break the fourth wall. Vary your wording — never repeat your "
+        "previous reply verbatim or near-verbatim."
+    )
+
+
 # ── Public service class ─────────────────────────────────────────────────────
 
 
@@ -235,3 +279,41 @@ class AiTutorService:
             inline_annotations=annotations,
             rewritten_exemplar=rewritten,
         )
+
+    async def conversation_turn(
+        self,
+        scenario: dict,
+        history: list[dict],
+        message: str,
+        remaining_targets: list[str],
+        cefr_level: str,
+    ) -> str:
+        """Generate one in-character roleplay reply for a /turn request.
+
+        `history` is a list of {role, text} turns where role ∈ {"ai", "learner"}.
+        Returns the reply text. Caller is responsible for ai_disabled
+        gating and rate-limiting.
+        """
+        client = _build_client()
+        system_prompt = _build_conversation_system_prompt(
+            scenario, remaining_targets, cefr_level
+        )
+
+        # Translate our domain {"ai","learner"} roles into Anthropic's
+        # {"assistant","user"}. Anthropic also requires alternating roles
+        # starting with "user"; if history is empty, the latest message
+        # is the first user turn.
+        msgs: list[dict] = []
+        for turn in history:
+            role = "assistant" if turn.get("role") == "ai" else "user"
+            text = turn.get("text", "")
+            msgs.append({"role": role, "content": text})
+        msgs.append({"role": "user", "content": message})
+
+        response = await client.messages.create(
+            model=settings.ai_default_model,
+            max_tokens=300,
+            system=system_prompt,
+            messages=msgs,
+        )
+        return response.content[0].text if response.content else ""
