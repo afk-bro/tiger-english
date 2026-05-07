@@ -72,8 +72,13 @@ export type SectionBlock =
   | { id: string; type: "text"; content: string; translations?: Partial<Record<LearnerLanguage, string>> }
   | { id: string; type: "examples"; items: ExampleItem[] }
   | { id: string; type: "vocab-list"; items: VocabItem[] }
-  | { id: string; type: "dialogue"; lines: DialogueLine[]; imagePrompt?: string; imageUrl?: string }
-  | { id: string; type: "exercise"; exerciseType: ExerciseType; exerciseId: string; imagePrompt?: string; imageUrl?: string }
+  // imageAlt convention: omit / empty string → image is decorative
+  // (rendered as `alt=""` so screen readers skip it). Provide a
+  // non-empty string when the image carries information the learner
+  // needs to answer correctly — e.g. image-prompt exercises ("choose
+  // what's in the picture") or scenes that anchor a dialogue's setting.
+  | { id: string; type: "dialogue"; lines: DialogueLine[]; imagePrompt?: string; imageUrl?: string; imageAlt?: string }
+  | { id: string; type: "exercise"; exerciseType: ExerciseType; exerciseId: string; imagePrompt?: string; imageUrl?: string; imageAlt?: string }
   | { id: string; type: "callout"; variant: "tip" | "note" | "warning"; content: string; translations?: Partial<Record<LearnerLanguage, string>> };
 
 export type ExampleItem = {

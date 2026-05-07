@@ -3,9 +3,9 @@ import { clsx } from "clsx";
 import type { DialogueLine } from "../../lesson.types";
 import { getLearnerLanguage } from "../../utils/learnerLanguage";
 
-type Props = { lines: DialogueLine[]; imageUrl?: string };
+type Props = { lines: DialogueLine[]; imageUrl?: string; imageAlt?: string };
 
-export default function DialogueBlock({ lines, imageUrl }: Props) {
+export default function DialogueBlock({ lines, imageUrl, imageAlt }: Props) {
   const { i18n } = useTranslation();
   const learnerLang = getLearnerLanguage(i18n.language);
 
@@ -14,7 +14,7 @@ export default function DialogueBlock({ lines, imageUrl }: Props) {
       {imageUrl && (
         <img
           src={imageUrl}
-          alt=""
+          alt={imageAlt ?? ""}
           width={1024}
           height={1024}
           loading="lazy"
