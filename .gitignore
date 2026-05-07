@@ -32,6 +32,8 @@ dist-ssr
 .mcp.json
 skills-lock.json
 .claude/
+.claude_settings.json
+.dev_url
 
 # Git worktrees
 .worktrees/
