@@ -15,9 +15,16 @@ export function vendorChunkFor(id: string): string | undefined {
   if (!normalized.includes("/node_modules/")) return undefined;
   if (normalized.includes("/react-router")) return "vendor-router";
   if (normalized.includes("/@supabase/")) return "vendor-supabase";
+  // i18next core + framework-agnostic plugins (i18next-browser-
+  // languagedetector, i18next-http-backend, etc.). react-i18next is
+  // intentionally excluded — see the vendor-react bucket below.
+  // Path semantics:
+  //   /i18next/          → core
+  //   /i18next-<plugin>/ → plugin (matches the second condition)
+  //   /react-i18next/    → matches neither (different leading char)
   if (
-    normalized.includes("/i18next") ||
-    normalized.includes("/react-i18next")
+    normalized.includes("/i18next/") ||
+    normalized.includes("/i18next-")
   ) {
     return "vendor-i18n";
   }
@@ -35,11 +42,14 @@ export function vendorChunkFor(id: string): string | undefined {
   ) {
     return "vendor-ui";
   }
-  // React itself goes last so the more specific buckets above (which
-  // include react-* packages depending on react) catch first.
+  // React core + libs whose module init dereferences React (must share a
+  // chunk so the dereference is in-scope at evaluation time). Goes last so
+  // the more specific buckets above (router, forms, ui) catch their own
+  // react-* packages first.
   if (
     normalized.includes("/react/") ||
     normalized.includes("/react-dom/") ||
+    normalized.includes("/react-i18next/") ||
     normalized.includes("/scheduler/")
   ) {
     return "vendor-react";
