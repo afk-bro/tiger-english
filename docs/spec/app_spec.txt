@@ -1,0 +1,2572 @@
+<project_specification>
+  <project_name>Tiger English — AI-Assisted CEFR Learning Path (A0 → C1)</project_name>
+
+  <overview>
+    Extend the existing Tiger English platform from "lessons + flashcards + dashboard" into a full
+    AI-assisted English learning system that guides a learner from A0 (absolute beginner) through
+    C1 (advanced independent user). The work is additive on top of an already-deployed React 19 +
+    FastAPI + Supabase codebase. The platform should feel like a guided personal tutor combining
+    CEFR-grounded structured progression, AI conversation missions, multi-skill scoring, an adaptive
+    spaced-repetition review system, level exit assessments, and a teacher/school SaaS layer.
+    Source plan: `docs/ai-assisted-english-learning-path.md`. The current state ships unit-1 and
+    unit-2 content with a five-section structure (overview/grammar/vocabulary/dialogues/activities),
+    a progress event log + projection tables, multi-locale UI (en/vi/th/zh-CN), and a flashcard
+    review path. Do not rebuild any of that — extend it.
+  </overview>
+
+  <autonomous_agent_instructions>
+    CRITICAL: This specification describes work on an EXISTING, already-deployed project.
+    The codebase is at your working directory — do NOT build from scratch.
+
+    BEFORE creating feature_list.json, you MUST explore the existing codebase:
+      1. Run `ls -la` to see top-level files and directories
+      2. Run `cat package.json` to confirm the frontend tech stack and scripts
+      3. Run `ls src/features/` to see which feature modules already exist
+      4. Run `ls backend/app/api/v1/` and `ls backend/app/services/` to see existing backend
+      5. Run `git log --oneline -10` to understand recent history
+    Only then generate feature_list.json focused exclusively on NEW features not yet present.
+
+    GIT: This project is already a git repository. DO NOT run `git init`. Your initial commit
+    should use message "Agent setup: feature_list.json and init.sh" (not "Initial setup").
+    DO NOT overwrite README.md — if you need to document agent state, write to AGENT_README.md.
+
+    INIT.SH: Must start BOTH servers. Use this template as a starting point:
+      #!/bin/bash
+      set -e
+      cd "$(dirname "$0")"
+      echo "=== Installing frontend dependencies ==="
+      npm install
+      echo "=== Starting backend server (port 8000) ==="
+      cd backend
+      pip install -r requirements.txt
+      uvicorn app.main:app --reload --port 8000 &
+      echo "Backend PID: $!"
+      cd ..
+      echo "=== Starting frontend dev server (port 5173) ==="
+      npm run dev &
+      echo ""
+      echo "Frontend: http://localhost:5173"
+      echo "Backend:  http://localhost:8000"
+      wait
+
+    EXISTING ARCHITECTURE to extend (not rebuild):
+      - Frontend entry: src/main.tsx, routing in src/App.tsx
+      - Backend entry: backend/app/main.py, API routes under backend/app/api/v1/
+      - Auth: JWT via backend/app/core/security.py + Supabase
+      - Supabase project: lndqijpppdzjkzvrvymh.supabase.co
+      - Run backend with: cd backend && uvicorn app.main:app --reload (or python run.py)
+      - Run frontend with: npm run dev
+  </autonomous_agent_instructions>
+
+  <product_vision>
+    The platform must answer three questions clearly for every learner:
+    1. What can this learner do in English right now?  → surfaced via /skills + cefr_estimate badge
+    2. What exactly is holding them back?              → recurring-errors panel + per-skill weak areas
+    3. What should they practice next?                 → daily review queue + recommended drills + AI Tutor practice mode
+
+    The learning model is: Learn → Practice → Use → Get Feedback → Review → Re-test → Progress.
+
+    For teachers, the deep-dive shows ability + risk areas + recommended intervention.
+    For schools, org-level reports show class progress, seat usage, and engagement metrics —
+    enough to justify a SaaS purchase.
+  </product_vision>
+
+  <technology_stack>
+    <frontend>
+      <framework>React 19 + TypeScript + Vite (existing)</framework>
+      <styling>Tailwind CSS with class-based dark mode (existing); custom `primary` blue (#326de2) + `accent` gold (#fcd34d) palette in `tailwind.config.js`</styling>
+      <state_management>Zustand stores under `src/stores/` and `src/features/*/use*Store.ts` (existing pattern: one store per feature, expose selector hooks not raw state)</state_management>
+      <routing>React Router DOM v7, lazy-loaded pages, `RequireAuth` + `RequireGuest` route guards (existing)</routing>
+      <forms>React Hook Form + Zod schemas (existing pattern)</forms>
+      <i18n>react-i18next with browser language detection; locales en/vi/th/zh-CN; `fallbackLng: 'en'`; `t(key, { defaultValue })` pattern for graceful key fallback (canonical example: `useSetCopy` in `src/features/flashcards/hooks/useSetCopy.ts`)</i18n>
+      <markdown>Use the existing lesson `Block` system (`heading`, `text`, `examples`, `vocab-list`, `dialogue`, `exercise`) — extend with new block types instead of introducing a generic markdown renderer</markdown>
+      <api_client>Centralized API clients in `src/lib/api/*.ts` (`AuthAPI`, `ProgressAPI`); add new clients (`AiTutorAPI`, `ConversationAPI`, `ReviewAPI`, `SkillsAPI`, `AssessmentAPI`, `TeacherAPI`, `OrgAPI`) following the same `authedFetch` pattern with `defaultValue`-fallback for graceful degradation</api_client>
+      <streaming>EventSource for SSE consumption; abort via AbortController; UI shows partial tokens as they arrive with character-by-character reveal</streaming>
+      <audio>MediaRecorder API for voice capture (mic permission gated); HTMLAudioElement for TTS playback; cache TTS responses by content hash</audio>
+      <port>Vite dev server on `localhost:5173` (existing)</port>
+    </frontend>
+    <backend>
+      <framework>FastAPI on Python 3.13 with Pydantic v2 + pydantic-settings (existing)</framework>
+      <database>Supabase Postgres, accessed via `supabase-py` admin client (uses `SUPABASE_SECRET_KEY`); writes go through transactional `*_tx` Postgres functions, REVOKEd from PUBLIC/anon/authenticated and GRANTed only to service_role (existing pattern from Phase 1 progress tracking)</database>
+      <auth>JWT bearer tokens validated via `app.core.security.get_current_user` dependency, returning `UUID`. Single auth path for the whole app (consolidated in PR #116). Add `require_teacher` and `require_org_admin` role-checking dependencies in `app/core/security.py`</auth>
+      <ai_integration>Anthropic Claude API via `anthropic` Python SDK (>=0.40). Use streaming via Server-Sent Events for tutor and conversation endpoints. Default model: `claude-sonnet-4-6`. Cheaper model for review-coach and short tasks: `claude-haiku-4-5-20251001`. API key stored as `ANTHROPIC_API_KEY` in `backend/.env`, accessed only server-side, never exposed to frontend</ai_integration>
+      <prompt_caching>Use Anthropic prompt caching (`cache_control: { type: 'ephemeral' }`) on system prompts and scenario context blocks. Target ≥80% cache hit rate on repeat tutor calls within a 5-minute window. Cache the system prompt + scenario JSON + target vocab/grammar list as one cached block</prompt_caching>
+      <speech>For voice conversation missions, use a streaming STT/TTS combination (provider TBD per cost study; default plan: Whisper API for STT, ElevenLabs or OpenAI TTS for tutor voice). Treat voice as a feature flag (`AI_VOICE_ENABLED`) so the system can ship text-first conversation missions before voice lands</speech>
+      <port>FastAPI dev server on `localhost:8000` with `--reload` (existing)</port>
+    </backend>
+    <communication>
+      <api>RESTful endpoints under `/api/v1`; auth-required endpoints under `/api/v1/me/*` namespace (existing convention from Phase 1)</api>
+      <streaming>SSE for AI tutor responses and live conversation feedback. Standard event types: `token` (partial text), `done` (stream complete), `error` (with `code` + `message`), `metadata` (initial scenario info / scoring on done). Mirror the streaming pattern Anthropic SDK provides</streaming>
+      <internal_pattern>All progress writes go through transactional `*_tx` Postgres functions; service-layer Python functions in `backend/app/services/*.py` are the single write path. Frontend never writes the projection tables directly</internal_pattern>
+    </communication>
+    <hosting>
+      <database>Hosted Supabase project (`lndqijpppdzjkzvrvymh.supabase.co`); migration history reconciled — `supabase db push` is safe</database>
+      <storage>Supabase Storage buckets: `lesson-images` (existing, public), `voice-recordings` (private, learner audio), `tts-cache` (public, cached tutor speech), `lesson-audio` (public, generated listening clips)</storage>
+      <frontend>Vercel auto-deploys main branch (existing)</frontend>
+    </hosting>
+  </technology_stack>
+
+  <prerequisites>
+    <environment_setup>
+      - `backend/.env` must contain `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (sb_secret_… format), `SECRET_KEY` (JWT), `ANTHROPIC_API_KEY` (new), `AI_VOICE_ENABLED` (default `false`)
+      - Frontend `.env` contains `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_BASE_URL` (existing)
+      - `npm install` for frontend; `pip install -r backend/requirements.txt` for backend (existing setup)
+      - Supabase CLI linked to the hosted project (`supabase link --project-ref lndqijpppdzjkzvrvymh`); `supabase db push` applies new migrations
+      - Add `anthropic` (>=0.40) to `backend/requirements.txt` for the AI tutor integration
+      - For voice mode (later phase): add `openai-whisper` or call OpenAI Whisper API; add `elevenlabs` or call OpenAI TTS API
+    </environment_setup>
+    <existing_state>
+      - 2 units of lesson content live (unit-1 "To Be: Introduction" and unit-2 "To Be: Location"), both A0/A1 level
+      - 17 curated flashcard sets with per-card translations for vi/th/zh
+      - Phase 1 progress tracking: `user_activity_log` (event stream) + 3 projection tables (`lesson_section_progress`, `exercise_attempts`, `flashcard_reviews`)
+      - Sidebar navigation: Home, Dashboard, Lessons, Library, Study Groups, Notifications, Flashcards, Drag-drop, Ad-libs (some are stub pages)
+      - YourProgressCard widget on the dashboard reads real progress data
+      - Section structure hardcoded as `'overview' | 'grammar' | 'vocabulary' | 'dialogues' | 'activities'` in 4 places (Pydantic Literal, Python frozenset, SQL CHECK constraint, TS Literal) — DO NOT add a sixth section type without updating all four
+    </existing_state>
+  </prerequisites>
+
+  <learning_path_blueprint>
+    Encodes the CEFR scaffolding from the source plan. The agent uses this blueprint when seeding
+    units, modules, lessons, vocabulary, grammar targets, and assessment content. Treat the tables
+    below as authoritative — do not invent new themes/grammar; if the agent finds them insufficient
+    while authoring content, raise the gap as a note rather than silently extending.
+
+    <level_map>
+      Stage             | From | To   | Identity                  | Main goal
+      ------------------|------|------|---------------------------|---------------------------------------------------------------
+      Foundation        | A0   | A1   | Absolute beginner         | Understand sounds, survival words, basic sentence patterns
+      Elementary        | A1   | A2   | Basic user                | Handle simple everyday exchanges and predictable routines
+      Pre-Intermediate  | A2   | B1   | Emerging independent user | Talk about familiar topics, past events, plans, opinions
+      Intermediate      | B1   | B1+  | Functional communicator   | Communicate confidently across routine and non-routine situations
+      Upper-Intermediate| B1+  | B2   | Strong independent user   | Discuss abstract, work, academic, and social topics clearly
+      Advanced          | B2   | C1   | Advanced user             | Communicate fluently, flexibly, and precisely in complex contexts
+    </level_map>
+
+    <recommended_course_length>
+      Path        | Modules | Lessons/Module | Total | Exit Assessment Type
+      ------------|--------:|---------------:|------:|---------------------------------------
+      A0 → A1     | 8       | 4              | 32    | Survival interaction assessment
+      A1 → A2     | 10      | 4              | 40    | Everyday routine assessment
+      A2 → B1     | 12      | 4              | 48    | Independent familiar-topic assessment
+      B1 → B1+    | 10      | 4              | 40    | Confidence and expansion assessment
+      B1+ → B2    | 12      | 4              | 48    | Fluency and accuracy assessment
+      B2 → C1     | 12      | 4              | 48    | Advanced performance assessment
+
+      Full path is ~256 lessons. The MVP launches a subset (see <mvp_scope>); later content
+      expansion fills the rest level by level.
+    </recommended_course_length>
+
+    <a0_a1_blueprint>
+      <can_do_statements>
+        - Understand simple greetings and instructions
+        - Ask and answer basic questions
+        - Use basic phrases for immediate needs
+        - Recognize common vocabulary for people, places, objects, numbers, daily situations
+        - Use a small number of simple grammar patterns
+      </can_do_statements>
+      <vocabulary_themes>
+        Greetings: hello, hi, good morning, goodbye, see you, nice to meet you
+        Personal information: name, age, country, phone number, address, email
+        Classroom English: listen, repeat, read, write, open, close, choose, match
+        Numbers: one, two, three, ten, twenty, hundred
+        Family: mother, father, brother, sister, wife, husband, child
+        Common objects: phone, bag, book, pen, table, chair, key, wallet
+        Food and drinks: water, coffee, tea, rice, chicken, bread, fruit
+        Places: home, school, work, market, restaurant, bathroom
+        Basic adjectives: big, small, good, bad, hot, cold, easy, difficult
+        Time basics: today, tomorrow, morning, afternoon, night, Monday
+      </vocabulary_themes>
+      <grammar_targets>
+        - Subject pronouns (I, you, he, she, we, they)
+        - `be` verb (I am Tom. She is a teacher.)
+        - Simple questions with `be` (Are you ready? Is he your brother?)
+        - Possessive adjectives (my, your, his, her)
+        - Articles a/an/the
+        - Singular/plural nouns
+        - Basic imperatives (Listen. Repeat. Sit down.)
+        - this/that
+        - Basic `like` (I like coffee. I don't like tea.)
+        - `can` for ability
+      </grammar_targets>
+      <suggested_modules>
+        1. First English Sounds and Greetings    (Lessons: greetings, names, introductions, polite responses)
+        2. Personal Information                  (Lessons: country, city, age, phone/email)
+        3. Classroom and App Instructions        (Lessons: imperatives for app navigation)
+        4. Food and Ordering                     (Lessons: drinks, simple food, please/thank you)
+        5. Family and People                     (Lessons: family members, descriptions)
+        6. Numbers and Time                      (Lessons: counting, time of day, days of week)
+        7. Common Objects and Places             (Lessons: things you carry, places you go)
+        8. Likes and Abilities                   (Lessons: like/don't like, can/can't)
+      </suggested_modules>
+      <exit_assessment>
+        - Listening: 10 short sentences
+        - Vocabulary: 80–100 high-frequency word recognition
+        - Grammar: build basic sentences using `be`, `like`, `can`, simple nouns (15 items)
+        - Speaking: 2-minute guided AI conversation (introduce yourself)
+        - Writing: 5 basic sentences about themselves
+      </exit_assessment>
+    </a0_a1_blueprint>
+
+    <a1_a2_blueprint>
+      <can_do_statements>
+        - Handle simple routine exchanges
+        - Ask and answer questions about daily life
+        - Describe people, routines, places, likes, needs
+        - Understand simple written materials
+        - Use simple grammar with expected mistakes
+      </can_do_statements>
+      <vocabulary_themes>
+        Daily routines: wake up, get dressed, eat breakfast, go to work, sleep
+        Jobs: teacher, student, driver, cook, nurse, engineer, worker
+        Transportation: bus, taxi, motorbike, train, airport, ticket
+        Shopping: price, cheap, expensive, size, cash, card, receipt
+        Health: sick, headache, stomachache, medicine, doctor, appointment
+        Home: kitchen, bedroom, bathroom, rent, apartment, furniture
+        Weather: sunny, rainy, cloudy, hot, cold, windy
+        Hobbies: music, movies, football, cooking, reading, travel
+        Time: yesterday, tomorrow, weekend, last week, next month
+        Directions: left, right, straight, near, far, across from
+      </vocabulary_themes>
+      <grammar_targets>
+        - Present simple (I work every day. She lives in Hanoi.)
+        - Present simple questions (Do you like coffee? Where do you work?)
+        - Adverbs of frequency (always, usually, sometimes, never)
+        - There is / There are
+        - Countable / uncountable (many apples, much water, some rice)
+        - Past simple regular verbs
+        - Past simple common irregulars (went, ate, saw, bought, had)
+        - Future with `going to`
+        - Comparatives (bigger, cheaper, better, more expensive)
+        - Modal `should`
+      </grammar_targets>
+      <suggested_modules>
+        1. Daily Life and Routines
+        2. Shopping and Prices
+        3. Health and Problems
+        4. Past Weekend
+        5. Travel Basics
+        6. Work and Jobs
+        7. Weather and Hobbies
+        8. Directions and Places
+        9. Future Plans
+        10. Comparisons and Preferences
+      </suggested_modules>
+      <exit_assessment>
+        - Listening: short conversations about shopping, daily routines, health, travel
+        - Reading: find specific information in a short article/message/notice
+        - Speaking: 5-minute AI roleplay in a predictable situation
+        - Writing: short paragraph about daily life or past weekend
+        - Grammar: present simple, past simple, future plans, comparatives, `should` (15 items)
+      </exit_assessment>
+    </a1_a2_blueprint>
+
+    <a2_b1_blueprint>
+      <can_do_statements>
+        - Understand main points of clear standard speech on familiar topics
+        - Enter conversations on familiar topics without preparation
+        - Express opinions and reasons
+        - Tell stories; describe hopes, plans, ambitions
+        - Write connected texts on familiar subjects
+      </can_do_statements>
+      <vocabulary_themes>
+        Work and study: meeting, deadline, coworker, schedule, assignment, project
+        Travel: reservation, luggage, passport, delay, check in, destination
+        Relationships: friend, neighbor, colleague, partner, argument, invitation
+        Opinions: I think, I believe, in my opinion, agree, disagree, prefer
+        Feelings: excited, nervous, disappointed, proud, worried, relaxed
+        Plans and goals: goal, hope, dream, plan, improve, save money, apply
+        Experiences: once, before, recently, already, never, ever
+        Media: news, article, movie, series, episode, review
+        Problems: mistake, issue, solution, advice, decision, choice
+        Current events: environment, technology, education, transport, health
+      </vocabulary_themes>
+      <grammar_targets>
+        - Past continuous (I was studying when you called.)
+        - Present perfect (I have visited Bangkok.)
+        - Present perfect vs past simple
+        - Future forms (going to, will)
+        - Modals (must, have to, should, might)
+        - First conditional (If it rains, I will stay home.)
+        - Gerunds and infinitives (I enjoy cooking. I want to learn.)
+        - Relative clauses (This is the person who helped me.)
+        - Connectors (because, so, but, although, however)
+        - Question forms (What did you do? How long have you studied?)
+      </grammar_targets>
+      <suggested_modules>
+        1. Talking About Experiences
+        2. Opinions and Reasons
+        3. Problems and Advice
+        4. Narrating a Story
+        5. Plans and Goals
+        6. Feelings and Reactions
+        7. Media and Reviews
+        8. Cause and Effect
+        9. Comparisons and Conditions
+        10. Travel and Mobility
+        11. Work Conversations
+        12. Daily Decisions
+      </suggested_modules>
+      <exit_assessment>
+        - Listening: main points of short narrative or conversation
+        - Reading: straightforward factual texts on familiar topics
+        - Speaking: 7-minute AI conversation on familiar topics
+        - Writing: connected 120–150 word text
+        - Grammar: past, present, future, modals, conditionals, connectors (15 items)
+      </exit_assessment>
+    </a2_b1_blueprint>
+
+    <b1_b1plus_blueprint>
+      <can_do_statements>
+        - Understand factual information about everyday and job-related topics
+        - Communicate confidently on routine and some non-routine matters
+        - Discuss abstract cultural topics (movies, books, music, technology)
+        - Maintain a conversation despite imperfect phrasing
+        - Write better-organized connected texts
+      </can_do_statements>
+      <vocabulary_themes>
+        Workplace: task, update, report, issue, request, confirm, clarify
+        Education: course, skill, exam, assignment, feedback, progress
+        Culture: movie, character, plot, scene, artist, performance
+        Technology: app, device, account, password, update, feature, bug
+        Social situations: invitation, plan, cancel, reschedule, apologize
+        Money: budget, cost, income, expense, save, spend, afford
+        Travel problems: delay, refund, cancellation, lost luggage, booking
+        Environment: pollution, recycling, climate, public transport
+        Abstract adjectives: convenient, stressful, reliable, effective, boring
+        Communication phrases: What I mean is..., Let me explain..., To be honest...
+      </vocabulary_themes>
+      <grammar_targets>
+        - Present perfect continuous
+        - Second conditional
+        - Passive voice basics
+        - Reported speech basics
+        - Modals of possibility (might, could)
+        - Used to
+        - Comparatives expansion (far better, much cheaper)
+        - Discourse markers (anyway, actually, on the other hand)
+        - Clarifying language (Do you mean...? Let me check.)
+        - Softening language (Could you possibly...? Would it be okay if...?)
+      </grammar_targets>
+      <suggested_modules>
+        1. Workplace Updates
+        2. Explaining Preferences and Tradeoffs
+        3. Cultural Opinions
+        4. Technology and Habits
+        5. Money and Decisions
+        6. Travel Problems
+        7. Environment and Society
+        8. Communication and Clarification
+        9. Stories with Reflection
+        10. Hopes and Hypotheticals
+      </suggested_modules>
+      <exit_assessment>
+        - Listening: detail in clear speech on familiar/job-related topics
+        - Reading: scan factual texts for general/specific info
+        - Speaking: 10-minute AI conversation with clarification + follow-up
+        - Writing: structured 180–220 word text
+        - Grammar: B1 grammar + B1+ structures (15 items)
+      </exit_assessment>
+    </b1_b1plus_blueprint>
+
+    <b1plus_b2_blueprint>
+      <can_do_statements>
+        - Understand standard speech on familiar/unfamiliar topics
+        - Read independently for different purposes
+        - Communicate fluently on a wide range of topics
+        - Explain ideas with supporting examples
+        - Use grammar accurately enough that mistakes rarely cause misunderstanding
+        - Adapt formality to the situation
+      </can_do_statements>
+      <vocabulary_themes>
+        Careers: application, promotion, responsibility, leadership, performance
+        Business: customer, revenue, strategy, market, competitor, proposal
+        Academic skills: evidence, argument, source, research, conclusion, analysis
+        Society: inequality, housing, education, healthcare, immigration
+        Technology and AI: automation, privacy, algorithm, platform, productivity
+        Environment: sustainability, emissions, renewable energy, waste reduction
+        Communication: negotiate, persuade, summarize, clarify, emphasize
+        Formality: I would appreciate..., Could you clarify..., Please find attached...
+        Idioms: on the other hand, the main issue is, it depends on
+        Nuance: slightly, considerably, relatively, approximately, arguably
+      </vocabulary_themes>
+      <grammar_targets>
+        - Third conditional
+        - Mixed conditionals
+        - Advanced passive
+        - Relative clauses expansion
+        - Participle clauses (Having finished the report, I sent it.)
+        - Modals of deduction (must have, might have)
+        - Advanced linking (nevertheless, whereas, despite, therefore)
+        - Hedging (It seems that..., This may suggest...)
+        - Formal requests (I was wondering if you could...)
+        - Emphasis (What I found most interesting was...)
+      </grammar_targets>
+      <suggested_modules>
+        1. Professional Communication
+        2. Discussing Social Issues
+        3. Explaining Data and Trends
+        4. Interview and Career Communication
+        5. Negotiation and Persuasion
+        6. Academic Reading and Argument
+        7. Technology Ethics
+        8. Reflective Storytelling
+        9. Hypotheticals and Regret
+        10. Formality and Register
+        11. Critical Reactions
+        12. Long-Form Discussion
+      </suggested_modules>
+      <exit_assessment>
+        - Listening: standard speech on familiar/unfamiliar topics
+        - Reading: articles and reports independently
+        - Speaking: 12–15 minute AI discussion with follow-up + disagreement
+        - Writing: 250–300 word essay/report/professional email
+        - Grammar: complex structures with rare misunderstanding (15 items)
+        - Pragmatics: adjust formality and politeness depending on context
+      </exit_assessment>
+    </b1plus_b2_blueprint>
+
+    <b2_c1_blueprint>
+      <can_do_statements>
+        - Understand complex spoken and written English
+        - Communicate fluently and spontaneously
+        - Express ideas precisely and flexibly
+        - Adapt register, tone, and style
+        - Handle professional/academic/social communication confidently
+        - Produce clear, well-structured, detailed speech and writing
+      </can_do_statements>
+      <vocabulary_themes>
+        Abstract argument: assumption, implication, tradeoff, perspective, framework
+        Strategy: stakeholder, constraint, objective, implementation, alignment
+        Academic: hypothesis, methodology, validity, limitation, interpretation
+        Persuasion: compelling, convincing, undermine, reinforce, justify
+        Nuance: arguably, broadly speaking, to some extent, in practical terms
+        Leadership: accountability, delegation, initiative, conflict resolution
+        Negotiation: compromise, leverage, alternative, priority, concession
+        Risk: likelihood, consequence, mitigation, scenario, contingency
+        Media and rhetoric: bias, framing, narrative, credibility, source
+        Style: concise, elaborate, ambiguous, assertive, diplomatic
+      </vocabulary_themes>
+      <grammar_targets>
+        - Advanced clause control (concession, although, despite)
+        - Nominalization (The implementation of the policy...)
+        - Inversion for emphasis (Rarely have we seen...)
+        - Cleft sentences (What matters most is...)
+        - Advanced hedging (The findings appear to indicate...)
+        - Register control (casual ↔ neutral ↔ formal ↔ diplomatic ↔ academic)
+        - Cohesion (lexical chains, referencing, paragraph flow)
+        - Argument structure (claim, evidence, reasoning, counterargument)
+        - Rhetorical questions
+        - Precision editing (remove vague language)
+      </grammar_targets>
+      <suggested_modules>
+        1. Advanced Discussion and Debate
+        2. Executive and Professional Communication
+        3. Academic and Analytical Writing
+        4. Nuance, Tone, and Register
+        5. Argumentation and Counterargument
+        6. Negotiation and Diplomacy
+        7. Critical Analysis of Media
+        8. Strategic Recommendations
+        9. Long-Form Persuasion
+        10. Précis and Summary
+        11. Cross-Cultural Communication
+        12. Final Synthesis
+      </suggested_modules>
+      <exit_assessment>
+        - Listening: extended speech, interviews, lectures, professional discussions
+        - Reading: complex articles, reports, essays, opinion pieces
+        - Speaking: 20-minute AI discussion (abstract topics, disagreement, persuasion)
+        - Writing: 400–600 word structured essay/report/professional document
+        - Grammar: complex structures naturally and accurately (15 items)
+        - Discourse: organize ideas with logic, nuance, audience awareness
+      </exit_assessment>
+    </b2_c1_blueprint>
+  </learning_path_blueprint>
+
+  <module_lesson_structure>
+    The current codebase has a flat `units` structure where each unit has 5 sections
+    (overview/grammar/vocabulary/dialogues/activities). To support the full CEFR path, introduce
+    a Module → Lesson hierarchy that the current Unit structure becomes a special case of.
+
+    <hierarchy>
+      Level (CEFR band, e.g. A1)
+        Module (theme group, e.g. "Daily Life and Routines")
+          Lesson (single learning unit, ~20-30 min)
+            Section (overview / grammar / vocabulary / dialogues / activities — unchanged)
+              Block (heading / text / examples / vocab-list / dialogue / exercise / [new types])
+    </hierarchy>
+
+    <migration_strategy>
+      - Existing `units.ts` data → seed into new `units` table (one row per existing unit)
+      - Add `modules` table; create one default module per existing unit during backfill
+        (e.g. unit-1 maps to module "To Be: Introduction" with one lesson — preserves URLs)
+      - New content authored as Lesson rows under proper Modules
+      - Keep `unit_slug` in URLs; introduce `lesson_slug` as a sibling. Routes become:
+        /lessons/:unitSlug                  → unit overview (existing)
+        /lessons/:unitSlug/:sectionKey      → section page (existing)
+        /levels/:level                       → level overview with modules (new)
+        /levels/:level/:moduleSlug           → module overview with lessons (new)
+        /lessons/:unitSlug/:sectionKey       → unchanged URL; agent treats Unit ≈ Lesson for now
+      - For Phase 1 of the CEFR work, the agent can treat `units` ≈ `lessons` (1:1) and defer
+        full module hierarchy until enough lessons exist to warrant modules
+    </migration_strategy>
+
+    <fixture_seeding>
+      A0 → A1 path:  8 modules × 4 lessons = 32 lessons
+      A1 → A2 path:  3 modules × 4 lessons = 12 lessons  (sample — full path is later content work)
+      Each lesson has 5 sections (the existing canonical structure)
+      Each section has its blocks; each AI-mission block links to an `ai_scenarios` row
+    </fixture_seeding>
+  </module_lesson_structure>
+
+  <lesson_template_canonical>
+    Every lesson follows this template. The agent uses it when generating new lesson content.
+    Encoded as the existing 5-section structure (overview/grammar/vocabulary/dialogues/activities)
+    with new block types layered in to cover warm-up, AI mission, and output task.
+
+    <section name="overview">
+      Block 1: heading — "Lesson goal" panel (prominent)
+      Block 2: text — "By the end of this section, you can…" (the can-do statement)
+      Block 3: warmup — short prompt with one-question AI conversation kickoff (NEW block type)
+      Block 4: text — short input text (dialogue or reading)
+    </section>
+
+    <section name="grammar">
+      Block 1: heading — grammar target name (e.g. "Present Simple")
+      Block 2: text — explanation (level-appropriate; A0-A1 = ≤80 words; B2-C1 = ≤300 words)
+      Block 3: examples — 4–8 examples with translations for vi/th/zh
+      Block 4: exercise — controlled practice (multiple choice or fill-in-blank, 5–10 items)
+    </section>
+
+    <section name="vocabulary">
+      Block 1: heading — theme name (e.g. "Daily Routines")
+      Block 2: vocab-list — 6–12 words/phrases with translations + example sentences
+      Block 3: exercise — match / picture-match / context-gap (5–10 items)
+    </section>
+
+    <section name="dialogues">
+      Block 1: heading — scenario name
+      Block 2: dialogue — short exchange (4–8 turns)
+      Block 3: listening-clip — TTS-generated audio of the dialogue (NEW block type)
+      Block 4: text — comprehension questions (3–5 items)
+      Block 5: exercise — fill-in-blank from the dialogue
+    </section>
+
+    <section name="activities">
+      Block 1: heading — "Practice and produce"
+      Block 2: ai-mission — references an `ai_scenarios` row; renders "Start mission" CTA (NEW block type)
+      Block 3: output-task — free-form writing/speaking with AI-coached feedback (NEW block type)
+      Block 4: heading — "Review items added"
+      Block 5: text — list of vocab/grammar/errors that will enter spaced review
+    </section>
+
+    <new_block_types>
+      Add to the `SectionBlock` union in `src/features/lessons/lesson.types.ts` and to the
+      backend `progress.py` block-type definitions:
+
+      - warmup:           { type: 'warmup', prompt: string, scenarioRef?: string }
+      - ai-mission:       { type: 'ai-mission', scenarioSlug: string, level: CefrLevel }
+      - output-task:      { type: 'output-task', prompt: string, taskType: 'writing' | 'speaking', minWords?: number, maxWords?: number, targetSkill: SkillCategory }
+      - pronunciation-pair: { type: 'pronunciation-pair', pairs: Array<{ a: string, b: string }>, audioUrlA?: string, audioUrlB?: string }
+      - listening-clip:   { type: 'listening-clip', audioUrl: string, transcript: string, questions: Array<{ q: string, choices: string[], answerIndex: number }> }
+      - dictation:        { type: 'dictation', audioUrl: string, expectedTranscript: string }
+    </new_block_types>
+
+    <per_block_target_skill>
+      Every block has an optional `target_skill` field driving skill-score routing:
+      - vocabulary, grammar, listening, speaking, reading, writing
+      - Defaults inferred from section: overview=reading, grammar=grammar, vocabulary=vocabulary,
+        dialogues=listening, activities=speaking|writing
+    </per_block_target_skill>
+  </lesson_template_canonical>
+
+  <exercise_types_matrix>
+    Reference for the agent when authoring exercises. Each row: type → example → CEFR range.
+
+    <vocabulary>
+      Picture match              | Match "apple" to image                  | A0–A1
+      L1 → English                | Vietnamese "nước" → water               | A0–A2
+      English → meaning          | "appointment" → meeting with a doctor   | A1–B1
+      Collocation match          | make a decision, take a break           | B1–C1
+      Word family                | decide, decision, decisive              | B1+–C1
+      Context gap                | I need to ___ an appointment.           | A2–C1
+      AI-generated example       | "I drink coffee every morning."         | All levels
+    </vocabulary>
+
+    <grammar>
+      Multiple choice            | She ___ coffee. → drinks                | A0–B1
+      Sentence builder           | work / I / every day → I work every day | A0–A2
+      Error correction           | He go to school. → He goes to school.   | A1–C1
+      Transformation             | "Send me the file." → polite request    | B1+–C1
+      Contrast practice          | past simple vs present perfect          | A2–B2
+      AI grammar interview       | AI asks Qs requiring target grammar     | A1–C1
+    </grammar>
+
+    <listening>
+      Sound discrimination       | ship vs sheep                           | A0–A2
+      Dictation                  | Type what you hear                      | A0–B2
+      Main idea                  | What is the conversation about?         | A2–C1
+      Detail listening           | What time is the meeting?               | A1–C1
+      Accent exposure            | Same phrase, different accents          | B1–C1
+      AI listening check         | AI speaks; learner answers orally       | All levels
+    </listening>
+
+    <speaking>
+      Repeat after model         | "Good morning."                         | A0–A1
+      Read aloud                 | Short sentence or dialogue              | A0–B1
+      Guided Q&amp;A                 | "Where do you live?"                    | A0–A2
+      Roleplay                   | ordering food, booking hotel            | A1–B2
+      Storytelling               | Tell me about last weekend              | A2–B2
+      Opinion discussion         | Should students use AI?                 | B1–C1
+      Formal simulation          | job interview, meeting, presentation    | B2–C1
+    </speaking>
+
+    <reading>
+      Word recognition           | find "coffee" in a menu                 | A0–A1
+      Simple notices             | opening hours, signs, directions        | A1–A2
+      Short messages             | texts, emails, invitations              | A1–B1
+      Factual articles           | travel, health, work, education         | A2–B2
+      Opinion articles           | identify argument and support           | B1+–C1
+      Academic/professional      | summarize and critique                  | B2–C1
+    </reading>
+
+    <writing>
+      Copy and complete          | My name is ___.                         | A0–A1
+      Sentence writing           | Write 5 sentences about your family     | A1–A2
+      Short paragraph            | Describe your weekend                   | A2–B1
+      Email writing              | Ask for information politely            | B1–B2
+      Opinion paragraph          | Give reasons and examples               | B1–B2
+      Report or essay            | Analyze a problem; recommend solutions  | B2–C1
+    </writing>
+  </exercise_types_matrix>
+
+  <core_features>
+    <cefr_level_system>
+      - Add `cefr_level` enum: `'A0' | 'A1' | 'A2' | 'B1' | 'B1+' | 'B2' | 'C1'` (encoded as TEXT + CHECK constraint in Postgres; TS Literal in `lesson.types.ts`)
+      - Add `cefr_level` column to `flashcard_sets` and a new `units` table; `units` and `modules` carry CEFR positioning so the backend reasons about level
+      - Group lessons by CEFR level on `/lessons` index; show progress badges per level
+      - Each level page shows the "Learner Identity" header (e.g., "A1 — Basic User") and target outcomes copy
+      - Level transition is a soft gate: warn if exit assessment not passed, but allow override (the user can choose to attempt higher-level lessons before passing)
+      - `profile.cefr_estimate` (TEXT NULL) — current estimated level (e.g., 'A2.3' = solidly in A2 with progress toward B1); updated by the skill scoring engine nightly + on assessment pass
+      - Color semantics: A0/A1 stone, A2/B1 sky, B1+/B2 indigo, C1 violet (Tailwind palette tokens)
+    </cefr_level_system>
+
+    <module_lesson_hierarchy>
+      - New `modules` table: id, level (cefr enum), slug, title, theme, order_index, estimated_minutes
+      - New `lessons` table: id, module_id, slug, title, goal, vocabulary_items (jsonb), grammar_targets (jsonb), skill_focus (jsonb), order_index
+      - Existing `units` table backfilled to be functionally equivalent to `lessons` (1:1 during MVP); module hierarchy ships when content density warrants it
+      - URL structure preserved: /lessons/:unitSlug stays canonical for individual lessons
+      - New /levels/:level page lists modules for that level; each module page lists its lessons
+    </module_lesson_hierarchy>
+
+    <lesson_content_extensions>
+      - Existing `Section` (overview/grammar/vocabulary/dialogues/activities) stays as the canonical 5-section structure
+      - Extend `SectionBlock` union with new block types: `warmup`, `ai-mission`, `output-task`, `pronunciation-pair`, `listening-clip`, `dictation` (see <lesson_template_canonical>)
+      - Lesson Goal stored on the `Section` type; renders as a prominent "By the end of this section, you can…" panel
+      - Per-block `target_skill` field drives skill-score routing
+      - Standard scaffolding per lesson: Warm-up → Input → Controlled Practice → Guided Practice → AI Mission → Output Task → Feedback → Review Items Created
+      - All new copy translated to vi/th/zh-CN; en used as fallbackLng
+    </lesson_content_extensions>
+
+    <ai_tutor_modes>
+      - **Explain mode**: learner types a question; AI returns level-appropriate explanation. Surfaced via "Ask Tutor" panel reachable from any section page.
+      - **Practice mode**: AI generates N drill items targeting a specific grammar/vocabulary item (uses level + topic from calling context).
+      - **Conversation mode**: real-time roleplay against a scenario (see <ai_conversation_missions>).
+      - **Correction mode**: learner submits sentence; AI returns the canonical 4-block correction (see <ai_correction_format>).
+      - **Pronunciation Coach**: minimal-pair drills, target-sound feedback. Records learner audio (browser MediaRecorder), transcribes server-side, returns scoring per phoneme. Voice-mode-gated.
+      - **Writing Coach**: learner submits text; AI returns CEFR-level feedback (vocab range/accuracy, grammar range/accuracy, organization, task completion), inline suggestions, rewritten exemplar.
+      - **Review Coach**: looks at learner's recent error history (`user_activity_log` + `review_items`) and generates a targeted review session.
+
+      All AI feedback follows the principles:
+      - Level-appropriate (no C1 grammar to A1 learners)
+      - Actionable (tell learner exactly what to improve)
+      - Encouraging but honest (no artificially high/low scores)
+      - Skill-specific (separate vocab, grammar, pronunciation, fluency, comprehension, task)
+      - Evidence-based (show examples from learner's own answer)
+
+      All AI calls use prompt caching keyed on the system prompt + scenario context (see <ai_implementation_details>).
+    </ai_tutor_modes>
+
+    <ai_correction_format>
+      Canonical correction format the AI must produce when in Correction mode or when correcting
+      a sentence inside Conversation/Writing Coach. Renders as a structured `AiFeedbackPanel`
+      component on the frontend.
+
+      ```
+      Your sentence:
+      I go to market yesterday.
+
+      Better sentence:
+      I went to the market yesterday.
+
+      Why:
+      Use past simple for a finished action in the past. "Go" becomes "went."
+
+      Try again:
+      I ___ to the market yesterday.
+      ```
+
+      Backend response shape:
+      {
+        "original": "I go to market yesterday.",
+        "corrected": "I went to the market yesterday.",
+        "explanation": "Use past simple for a finished action in the past. 'Go' becomes 'went.'",
+        "explanation_l1": "<translated to learner's native_language if not 'en'>",
+        "try_again_prompt": "I ___ to the market yesterday.",
+        "try_again_answer": "went"
+      }
+
+      Explanation length scales with level: A0-A1 ≤30 words; A2-B1 ≤60 words; B1+-C1 ≤120 words.
+    </ai_correction_format>
+
+    <ai_conversation_missions>
+      - Each lesson surfaces 0+ AI conversation missions (e.g., "Order a coffee" attached to A1 food-ordering)
+      - Missions are first-class data: `ai_scenarios` rows
+      - Mission session lifecycle: start → multi-turn exchange (text or voice) → scoring → review items generated → mission marked complete
+      - Text-first launch (typed turns); voice mode behind `AI_VOICE_ENABLED` flag
+      - During the conversation:
+        - AI streams responses (SSE)
+        - Learner sees a side panel showing target vocabulary they've used, missed, and could still try
+        - "End mission" button triggers scoring; "Restart" allows another attempt
+      - Scoring on mission complete: task_success, comprehension, response_relevance, language_control, repair_ability, independence (0–5 each)
+        — also rolled up into the 11 skill_scores
+      - Mission completion writes a `user_activity_log` event of type `ai_mission_completed` plus a row in `ai_conversation_sessions` (header) and `ai_conversation_turns` (per turn)
+      - Failed-mission ergonomics: if learner can't complete the mission, the system shows missed criteria and offers a guided practice from Practice mode
+      - Adaptive AI behavior: if learner says only "coffee", AI asks "Can you say the full sentence?"; if learner forgets "please", AI says "Good. Now try again politely."; on success, AI adds a small challenge ("For here or takeaway?")
+    </ai_conversation_missions>
+
+    <conversation_scenarios_seed>
+      Full scenario list to seed at project start. Each becomes an `ai_scenarios` row with the
+      shape defined in <database_schema>. The agent authors `ai_role`, `learner_role`,
+      `success_criteria`, `target_vocabulary`, `target_grammar`, `opening_line` per scenario.
+
+      A0–A1:
+        - introduce-yourself-a1     (Introduce yourself; success: name, country, simple greeting)
+        - order-coffee-a1            (Order a drink; success: greet, order, please/thank you, anything-else)
+        - ask-name-age-a1            (Ask basic personal info; success: name, age, country)
+        - classroom-instructions-a0  (Respond to app instructions; success: click/repeat/choose)
+        - meet-someone-a1            (Meet a stranger; success: introduce + ask back)
+
+      A1–A2:
+        - order-food-a2              (Order full meal; success: starter, main, drink, payment)
+        - ask-directions-a1a2        (Ask + understand directions; success: left/right/near/far)
+        - shopping-clothes-a2        (Buy clothes; success: price, size, payment)
+        - describe-routine-a2        (Talk about a normal day; success: present simple + frequency)
+        - past-weekend-a2            (Talk about last weekend; success: past simple + sequence)
+        - health-clinic-a2           (Describe a health problem; success: symptoms + advice received)
+
+      A2–B1:
+        - life-experiences-b1        (Talk about experiences; success: present perfect + past simple)
+        - give-opinion-b1            (Give opinion + reason + example; success: structure)
+        - explain-problem-b1         (Explain problem and ask advice; success: clarity + follow-up)
+        - tell-a-story-b1            (Narrate connected story; success: tense control + sequence)
+
+      B1–B1+:
+        - work-update-b1plus         (Standup-style update; success: done/in-progress/blocker)
+        - cultural-opinion-b1plus    (Discuss a movie or book; success: opinion + nuance)
+        - decision-tradeoffs-b1plus  (Compare two options; success: comparatives + reasoning)
+
+      B1+–B2:
+        - job-interview-b2           (STAR-format interview answers; success: structure + examples)
+        - debate-social-issue-b2     (Take a side, defend with examples; success: counterargument)
+        - explain-data-trend-b2      (Describe a chart; success: trend vocab + hedging)
+        - professional-email-b2      (Compose professional email; success: tone + clarity)
+
+      B2–C1:
+        - executive-summary-c1       (Summarize a problem + recommend; success: precision + diplomacy)
+        - academic-discussion-c1     (Discuss research finding; success: hedging + nuance)
+        - tone-shift-c1              (Adapt one message across casual/neutral/formal/diplomatic)
+        - long-form-debate-c1        (20-min debate with counterarguments; success: structure + persuasion)
+
+      Total: ~24 seed scenarios across 6 level bands. The agent generates the scenario row content
+      programmatically using the level blueprints (vocabulary themes + grammar targets) as inputs.
+    </conversation_scenarios_seed>
+
+    <multi_skill_scoring>
+      11 skill categories (per source plan section 13):
+      1. vocabulary_range          — Does the learner know enough words for the task?
+      2. vocabulary_accuracy       — Are words used correctly?
+      3. grammar_accuracy          — Are structures correct enough for the level?
+      4. grammar_range             — Does the learner use varied structures?
+      5. pronunciation             — Are sounds, stress, rhythm understandable?
+      6. fluency                   — Can the learner continue without too many pauses?
+      7. listening_comprehension   — Did the learner understand the input?
+      8. reading_comprehension     — Did the learner understand the text?
+      9. writing_organization      — Are ideas connected clearly?
+      10. task_completion          — Did the learner accomplish the communicative goal?
+      11. interaction              — Can the learner respond, ask, clarify, continue?
+
+      0–5 rubric per skill:
+      0 = no evidence (no answer or unrelated)
+      1 = very limited (isolated words only)
+      2 = emerging (basic meaning with many errors)
+      3 = functional (task completed with some errors but understandable)
+      4 = strong (clear, mostly accurate, minor errors)
+      5 = excellent for level (natural, accurate, flexible, complete)
+
+      Scoring is **level-relative**: the same answer might score 4/5 at A1 and 2/5 at B2.
+      The AI scoring prompt always includes the target CEFR level so scoring matches.
+
+      Storage: `skill_scores` table per (user_id, skill); EWMA-smoothed across last 30 attempts
+      (alpha = 2/(N+1) where N is min(sample_size, 30)). Aggregated `cefr_estimate` recomputed
+      nightly via Supabase Edge Function or pg_cron task.
+
+      Surfaced on:
+      - Dashboard YourProgressCard: "Skill breakdown" mini-row (11 mini-bars)
+      - /u/:username/skills page: full grid + history graphs + per-skill recent errors + recommended drills
+      - Profile cefr_estimate badge throughout the app
+    </multi_skill_scoring>
+
+    <conversation_scoring_criteria>
+      Conversation missions also produce a per-mission score (different from the rolling 11-skill
+      EWMA). Used for the mission results screen and for teacher visibility.
+
+      Per the source plan section 13.4:
+      1. task_success           — Did the learner complete the mission?
+      2. comprehension          — Did they understand the AI's questions?
+      3. response_relevance     — Did they answer the question asked?
+      4. language_control       — Was grammar and vocabulary appropriate for the level?
+      5. repair_ability         — Could they ask for clarification or correct themselves?
+      6. independence           — Did they rely heavily on hints or translation?
+
+      Each scored 0–5 by the AI scoring pass at session end. Stored in
+      `ai_conversation_sessions.scores` (JSONB) alongside a feedback_summary string.
+
+      The 11-skill EWMA is updated as a side-effect: task_success → task_completion;
+      comprehension → listening_comprehension; response_relevance → interaction;
+      language_control → split into grammar_accuracy + vocabulary_accuracy;
+      repair_ability → interaction; independence → task_completion (negative weight if low).
+    </conversation_scoring_criteria>
+
+    <adaptive_review_system>
+      `review_items` table: per-user queue of words, phrases, grammar patterns, pronunciation pairs, common errors, personal sentences.
+
+      Each item has `next_review_at`, `ease_factor` (default 2.5), `interval_days` (integer, capped at 30), `streak_correct`. Modified SM-2 algorithm:
+      - On answer: difficult → 1d; correct-but-slow → 3d; correct-confident → 7d; mastered streak ≥4 → 14d, then 30d
+      - Incorrect → reset interval to 0 (review same session) + 1d
+      - Ease factor adjusts: +0.1 on correct-confident, -0.15 on incorrect, -0.05 on difficult; clamped [1.3, 2.5]
+
+      Items added automatically from:
+      - Wrong multiple-choice or fill-in-blank answers (existing `exercise_attempts.is_correct = false`)
+      - Hesitations during AI conversation (low confidence flag from AI)
+      - Mispronounced words (pronunciation coach feedback)
+      - Words the learner asked the AI to translate
+      - Grammar mistakes in writing-coach feedback
+      - Teacher-assigned vocabulary (via `assigned_lessons`)
+
+      Daily review queue at /u/:username/review pulls due items and runs them through quick drill
+      formats per item_type. Review answers feed back into `skill_scores`.
+
+      Dashboard widget: "Today's review: N due" badge.
+    </adaptive_review_system>
+
+    <review_item_types>
+      Per source plan section 14.2. The `review_items.item_type` CHECK enforces:
+
+      - word                — single vocabulary item (content: { lemma, definition, example, l1_translation })
+      - phrase              — multi-word collocation (content: { phrase, meaning, example })
+      - grammar_pattern     — structure to drill (content: { pattern, example, explanation })
+      - pronunciation_pair  — minimal pair (content: { a, b, ipa_a?, ipa_b? })
+      - common_error        — learner's own past error (content: { wrong, right, why })
+      - personal_sentence   — sentence the learner wrote/said (content: { text, source_session_id? })
+
+      Each type has its own drill UI in the ReviewDrillCard component.
+    </review_item_types>
+
+    <level_assessments>
+      Each level (A1, A2, B1, B1+, B2, C1) has an exit assessment composed of:
+      - Listening: 10 short clips, multiple-choice or short-answer
+      - Reading: 1 article + 5 comprehension questions
+      - Vocabulary: 30 high-frequency word recognition items
+      - Grammar: 15 sentence-builder / cloze / error-correction items
+      - Speaking: AI conversation mission scoped to the level (length scales A1 → C1: 2 min → 20 min)
+      - Writing: prompt with target word count (A1 → C1: 5 sentences → 400-600 words)
+
+      Assessment session is a single sitting; pause-and-resume supported but discouraged
+      (the assessment table tracks `started_at`, `last_section_completed_at`, `completed_at`).
+
+      Final score per skill (0–5) plus an overall pass/needs-work verdict.
+      Pass threshold: average ≥ 3.0 with no skill below 2.0.
+
+      Stored in `assessments` table; pass triggers `cefr_estimate` update on the profile and
+      a level-badge unlock animation (subtle confetti, dismissible, respects prefers-reduced-motion).
+
+      "Take the A1 exit assessment" CTA appears in the dashboard once the learner has completed
+      all required A1 lessons (`lesson_section_progress` query).
+    </level_assessments>
+
+    <teacher_dashboard>
+      New role on `profiles.role` enum: `'student' | 'teacher' | 'admin'` (default `'student'`).
+      Teacher portal at `/teacher` (RequireAuth + role check via `require_teacher` dependency).
+
+      Teacher dashboard surfaces:
+      - List of students in the teacher's classes (paginated)
+      - Each student's `cefr_estimate`, target level, last-active date
+      - Skill breakdown per student
+      - Speaking confidence (from recent AI conversation mission scores)
+      - Grammar/vocab risk areas (recurring errors from `user_activity_log` aggregations)
+      - Recommended teacher action — a one-line suggestion from a small Claude prompt that
+        summarizes the student's recent state. Endpoint: GET /api/v1/teacher/students/:id/recommended-action
+        Example: "Run a 10-minute past-weekend speaking activity. Linh's past-simple irregulars
+        are below 3/5 across the last week."
+
+      Class management: create class, invite students by email, view roster, assign lessons.
+      Per-student deep-dive: chronological activity log + all AI conversation transcripts +
+      writing/speaking output history.
+
+      Canonical teacher view example (from source plan section 16.2):
+      ```
+      Student: Linh
+      Estimated level: A2.3
+      Target: B1
+      Strengths: Daily routines, shopping, food ordering
+      Weaknesses: Past simple irregular verbs, asking follow-up questions
+      Speaking: Understandable but short answers
+      Recommended teacher action: Run a 10-minute past weekend speaking activity
+      AI recommended review: went/ate/saw/bought + sequence words
+      ```
+    </teacher_dashboard>
+
+    <school_saas_layer>
+      `organizations` table: id, name, slug, plan (enum: free/starter/pro/enterprise), seat_count, created_at, updated_at
+      `organization_memberships`: user_id ↔ organization_id with role ('admin' | 'teacher')
+      `classes`: id, organization_id, teacher_user_id, name, level_target
+      `class_memberships`: class_id ↔ student_user_id
+      `assigned_lessons`: class_id, unit_slug, section_key, due_date, assigned_by, assigned_at
+
+      Org admin portal at `/admin/orgs/:slug` for managing teachers, classes, billing (mock), invitations.
+      Student lesson assignments surface on `/lessons` as a top "Assigned by your teacher" rail when memberships exist.
+
+      Plan tier limits (mock for MVP):
+      - free:       1 class, 5 students, no AI conversation missions
+      - starter:    3 classes, 30 students total, AI conversation enabled (text only)
+      - pro:        10 classes, 200 students, AI voice mode enabled
+      - enterprise: unlimited classes, custom seat count, voice + custom branding
+
+      Billing UI is mock (plan badge + seat usage bar + "Upgrade" CTA → contact-us modal).
+      Real Stripe integration is OUT OF SCOPE.
+    </school_saas_layer>
+
+    <existing_features_to_preserve>
+      - Auth flow: register, login, profile, logout — all existing
+      - Lessons: unit-1, unit-2 content stays as-is; gains CEFR badges
+      - Flashcards page: 17 curated sets stay; user-created sets stay
+      - Dashboard YourProgressCard: extend with skill breakdown + due-review badge + cefr_estimate badge + "Take exit assessment" CTA
+      - i18n: extend en/vi/th/zh-CN with new keys for every new surface
+      - Existing routes: /, /about, /contact, /flashcards, /u/:username, /home, /dashboard, /lessons/*, /library, /settings — all stay
+      - All `*_tx` Postgres function patterns from Phase 1 — copy this pattern for new write ops
+    </existing_features_to_preserve>
+  </core_features>
+
+  <ai_implementation_details>
+    <model_selection>
+      - claude-sonnet-4-6   — default for tutor responses, conversation, scoring, writing coach
+      - claude-haiku-4-5    — review coach, recommended-action one-liners, short corrections, practice item generation
+      - claude-opus-4-7     — only for offline content generation (lesson seeding scripts), NOT for runtime user-facing requests
+
+      Per-endpoint defaults:
+      - /me/ai-tutor/explain         → sonnet-4-6
+      - /me/ai-tutor/correct         → haiku-4-5
+      - /me/ai-tutor/practice        → haiku-4-5
+      - /me/ai-tutor/writing-coach   → sonnet-4-6
+      - /me/conversations/:id/turn   → sonnet-4-6
+      - /me/conversations/:id/end (scoring) → sonnet-4-6
+      - /teacher/students/:id/recommended-action → haiku-4-5
+
+      Override available via env: `AI_DEFAULT_MODEL` and per-endpoint `AI_MODEL_<ENDPOINT>` variables.
+    </model_selection>
+
+    <prompt_caching_strategy>
+      Use Anthropic SDK's `cache_control: { type: 'ephemeral' }` on:
+      - System prompt block (always cached)
+      - Scenario context block (cached when scenario_id is in the request)
+      - Lesson context block (cached when unit_slug + section_key in the request)
+
+      Target ≥80% cache hit rate within a 5-minute window. Log cache_creation_input_tokens and
+      cache_read_input_tokens to `ai_usage_log` per call. Alert when 24h cache_hit_rate drops below 60%.
+
+      Cache key construction for conversation turns:
+      [system_prompt] + [scenario_json] + [target_vocab_grammar] + [conversation_history]
+      The first three are cached; conversation_history is the dynamic tail.
+    </prompt_caching_strategy>
+
+    <streaming_protocol>
+      All streaming endpoints emit SSE events of these types:
+
+      event: metadata
+      data: { "session_id": "...", "model": "claude-sonnet-4-6", "scenario_id": "..." }
+
+      event: token
+      data: { "content": "partial text chunk" }
+
+      event: done
+      data: { "total_tokens": 1234, "stop_reason": "end_turn", "cache_hit_rate": 0.87 }
+
+      event: error
+      data: { "code": "rate_limit_exceeded" | "anthropic_unavailable" | "invalid_request", "message": "..." }
+
+      Frontend handling:
+      - EventSource with credentials; AbortController to allow stop-generation
+      - Render partial tokens as they arrive (character-by-character reveal or accumulated text)
+      - On `error`, show toast "Tutor disconnected — retrying" and reconnect with exponential backoff (max 3 attempts)
+      - On `done`, finalize the message and update target-vocab side panel
+    </streaming_protocol>
+
+    <rate_limits>
+      Per-user, per-minute limits enforced via `slowapi` middleware (or in-process token bucket if slowapi unavailable):
+      - /me/ai-tutor/*           → 30/min
+      - /me/conversations/*/turn → 60/min (allows full conversation pace)
+      - /me/conversations/*/end  → 5/min  (scoring is expensive)
+      - /me/ai-tutor/writing-coach → 10/min
+      - /me/assessments/*        → 5/min
+
+      Org-tier overrides: pro/enterprise plans get 3x the per-user limits.
+      On limit breach: 429 response with `Retry-After` header; UI shows toast "Slow down — try again in N seconds".
+    </rate_limits>
+
+    <fallback_behavior>
+      - If `ANTHROPIC_API_KEY` missing at boot: backend boots but all AI endpoints return 503 with body `{ "code": "ai_disabled", "message": "AI tutor is temporarily unavailable." }`. `/api/v1/health` returns `{ "ai_tutor_enabled": false }` so the frontend can hide AI surfaces.
+      - If Anthropic returns 5xx: retry once with exponential backoff (200ms, then 800ms); if still failing, return 502 with `{ "code": "anthropic_unavailable" }`. UI shows "Tutor is having trouble — please try again."
+      - If learner closes the SSE connection mid-stream: backend cancels the Anthropic stream, writes a partial turn to `ai_conversation_turns` with `partial = true`, charges no scoring side-effect.
+      - If audio upload fails (voice mode): fall back to text-only turn; show toast "Couldn't upload audio — please type your reply."
+    </fallback_behavior>
+
+    <system_prompt_templates>
+      Stored in `backend/app/services/ai_prompts/`. Each is a Python module with a single
+      `build_system_prompt(level: CefrLevel, **kwargs) -> str` function that includes
+      cache-friendly static prefix + dynamic tail.
+
+      Files to create:
+      - explain_prompt.py        — Tutor explanation; includes level-appropriate complexity caps
+      - correct_prompt.py        — Returns the canonical 4-block format JSON
+      - practice_prompt.py       — Generates N drill items in JSON
+      - writing_coach_prompt.py  — Returns scored breakdown + inline annotations
+      - conversation_prompt.py   — Builds scenario context, target vocab/grammar, scoring rubric
+      - score_session_prompt.py  — Scores a finished conversation transcript across 6 criteria
+      - review_coach_prompt.py   — Generates a personalized review session from recent errors
+      - recommended_action_prompt.py — One-line teacher recommendation
+
+      Common prefix all prompts share (cached):
+      ```
+      You are a CEFR-grounded English tutor. The learner is at level {level}.
+      Your responses must be level-appropriate: do not use vocabulary or grammar significantly
+      above {level}. Respond in English; if the learner asks, you may briefly translate to {l1}.
+      Feedback principles: actionable, encouraging-but-honest, skill-specific, evidence-based.
+      ```
+
+      Conversation prompt adds:
+      ```
+      Scenario: {scenario_title}
+      Your role: {ai_role}
+      Learner's role: {learner_role}
+      Success criteria the learner must achieve: {success_criteria}
+      Target vocabulary the learner should try to use: {target_vocabulary}
+      Target grammar: {target_grammar}
+      Adapt: if the learner says only one word, ask for a full sentence. If they forget polite
+      forms, gently prompt them. On success, add a small challenge.
+      Stay in character as {ai_role}. Do not break the fourth wall unless the learner explicitly
+      asks for tutor mode.
+      ```
+    </system_prompt_templates>
+
+    <token_cost_telemetry>
+      Every AI call writes a row to `ai_usage_log`:
+      - id BIGSERIAL PK
+      - user_id UUID
+      - endpoint TEXT (e.g. '/me/ai-tutor/explain')
+      - model TEXT
+      - input_tokens INT
+      - output_tokens INT
+      - cache_creation_input_tokens INT
+      - cache_read_input_tokens INT
+      - latency_ms INT
+      - cost_estimate_usd NUMERIC(10,6) (computed from current model pricing — store snapshot)
+      - created_at timestamptz
+
+      Admin dashboard at /admin/ai-usage shows daily/weekly cost breakdown, per-endpoint cost,
+      cache hit rate trend, top-N expensive users.
+    </token_cost_telemetry>
+  </ai_implementation_details>
+
+  <database_schema>
+    <existing_tables_unchanged>
+      - profiles, user_stats, flashcards, flashcard_sets, flashcard_translations, flashcard_reviews, languages
+      - user_activity_log, lesson_section_progress, exercise_attempts, user_card_progress
+      (Source: Phase 1 migration `20260503000001_phase1_progress_tracking.sql` and earlier)
+    </existing_tables_unchanged>
+
+    <existing_tables_to_extend>
+      <profiles>
+        - Add: cefr_estimate TEXT NULL ('A0' through 'C1' or '<level>.<subscore>' like 'A2.3')
+        - Add: role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'teacher', 'admin'))
+        - Add: target_cefr_level TEXT NULL (learner's stated goal, e.g. 'B1' — used in dashboard "Target" badge)
+      </profiles>
+
+      <flashcard_sets>
+        - Add: cefr_level TEXT NULL CHECK (cefr_level IN ('A0','A1','A2','B1','B1+','B2','C1'))
+      </flashcard_sets>
+    </existing_tables_to_extend>
+
+    <new_tables>
+      <units>
+        - Currently units live as TypeScript data in src/features/lessons/data/units.ts. Migrate to a real DB table:
+        - id BIGSERIAL PK
+        - slug TEXT UNIQUE NOT NULL (e.g. 'unit-1')
+        - module_id UUID NULL REFERENCES modules(id) (nullable until module hierarchy fully populated)
+        - number INT NOT NULL
+        - title TEXT NOT NULL
+        - cefr_level TEXT NOT NULL CHECK (cefr_level IN ('A0','A1','A2','B1','B1+','B2','C1'))
+        - topic TEXT
+        - grammar_focus TEXT
+        - vocabulary_themes TEXT[] (array of theme labels)
+        - estimated_minutes INT
+        - status TEXT NOT NULL CHECK (status IN ('available','coming-soon','locked'))
+        - created_at, updated_at timestamptz
+        - Backfill migration seeds unit-1 and unit-2 from current TS data
+        - Note: section keys remain hardcoded in `lesson.types.ts:SectionKey` (overview/grammar/vocabulary/dialogues/activities) — that doesn't move to the DB
+      </units>
+
+      <modules>
+        - id UUID PK DEFAULT gen_random_uuid()
+        - cefr_level TEXT NOT NULL CHECK (cefr_level IN ('A0','A1','A2','B1','B1+','B2','C1'))
+        - slug TEXT UNIQUE NOT NULL (e.g. 'a0-a1-greetings')
+        - title TEXT NOT NULL
+        - theme TEXT
+        - description TEXT
+        - order_index INT NOT NULL
+        - created_at, updated_at
+        - INDEX (cefr_level, order_index)
+      </modules>
+
+      <lessons>
+        - For now, this is a view over `units` while content density is low. When the agent
+          authors enough content to need full Module → Lesson hierarchy, promote to a real table:
+        - id UUID PK DEFAULT gen_random_uuid()
+        - module_id UUID NOT NULL REFERENCES modules(id) ON DELETE CASCADE
+        - slug TEXT UNIQUE NOT NULL
+        - unit_slug TEXT NOT NULL UNIQUE (alias for backward compatibility with existing routes)
+        - title TEXT NOT NULL
+        - goal TEXT NOT NULL (the can-do statement)
+        - vocabulary_items JSONB (array of { word, translations: { vi, th, zh }, example })
+        - grammar_targets JSONB (array of { name, examples[], explanation })
+        - skill_focus TEXT[] (e.g. ['vocabulary','speaking'])
+        - estimated_minutes INT
+        - order_index INT NOT NULL
+        - created_at, updated_at
+      </lessons>
+
+      <ai_scenarios>
+        - id UUID PK DEFAULT gen_random_uuid()
+        - slug TEXT UNIQUE NOT NULL (e.g. 'order-coffee-a1')
+        - cefr_level TEXT NOT NULL
+        - unit_slug TEXT NULL (optional pin to a unit)
+        - section_key TEXT NULL (optional pin to a section)
+        - title TEXT NOT NULL
+        - description TEXT
+        - ai_role TEXT NOT NULL (e.g. 'barista at a busy cafe')
+        - learner_role TEXT NOT NULL
+        - success_criteria JSONB NOT NULL (array of strings)
+        - target_vocabulary JSONB (array of strings)
+        - target_grammar JSONB (array of strings)
+        - scoring_rubric JSONB (per-skill weights)
+        - opening_line TEXT (what the AI says first)
+        - max_turns INT DEFAULT 20
+        - estimated_minutes INT DEFAULT 5
+        - created_at, updated_at
+      </ai_scenarios>
+
+      <ai_conversation_sessions>
+        - id UUID PK DEFAULT gen_random_uuid()
+        - user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+        - scenario_id UUID NOT NULL REFERENCES ai_scenarios(id)
+        - cefr_level TEXT NOT NULL (snapshot of scenario level at start)
+        - started_at timestamptz NOT NULL DEFAULT NOW()
+        - ended_at timestamptz NULL
+        - turn_count INT NOT NULL DEFAULT 0
+        - status TEXT NOT NULL CHECK (status IN ('active','completed','abandoned'))
+        - scores JSONB (filled on completion: { task_success, comprehension, response_relevance, language_control, repair_ability, independence })
+        - feedback_summary TEXT
+        - target_vocab_hits JSONB (array of strings: vocab the learner used correctly)
+        - target_vocab_misses JSONB (array of strings: vocab the learner could have used)
+        - INDEX (user_id, started_at DESC)
+      </ai_conversation_sessions>
+
+      <ai_conversation_turns>
+        - id BIGSERIAL PK
+        - session_id UUID NOT NULL REFERENCES ai_conversation_sessions(id) ON DELETE CASCADE
+        - turn_number INT NOT NULL
+        - role TEXT NOT NULL CHECK (role IN ('learner','tutor'))
+        - content TEXT NOT NULL
+        - audio_url TEXT NULL (Supabase Storage path if voice mode)
+        - transcript_confidence REAL NULL (0–1, for voice)
+        - partial BOOLEAN NOT NULL DEFAULT FALSE (true if learner aborted mid-stream)
+        - created_at timestamptz NOT NULL DEFAULT NOW()
+        - UNIQUE (session_id, turn_number)
+      </ai_conversation_turns>
+
+      <skill_scores>
+        - user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+        - skill TEXT NOT NULL CHECK (skill IN ('vocabulary_range','vocabulary_accuracy','grammar_accuracy','grammar_range','pronunciation','fluency','listening_comprehension','reading_comprehension','writing_organization','task_completion','interaction'))
+        - score REAL NOT NULL (0.0–5.0, EWMA-smoothed)
+        - sample_size INT NOT NULL DEFAULT 0
+        - last_updated_at timestamptz NOT NULL DEFAULT NOW()
+        - PRIMARY KEY (user_id, skill)
+      </skill_scores>
+
+      <skill_score_history>
+        - For graphing per-skill trends over time
+        - id BIGSERIAL PK
+        - user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+        - skill TEXT NOT NULL
+        - score REAL NOT NULL
+        - sample_size INT NOT NULL
+        - source_event_id BIGINT NULL REFERENCES user_activity_log(id) (which activity drove this update)
+        - recorded_at timestamptz NOT NULL DEFAULT NOW()
+        - INDEX (user_id, skill, recorded_at)
+      </skill_score_history>
+
+      <review_items>
+        - id BIGSERIAL PK
+        - user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+        - item_type TEXT NOT NULL CHECK (item_type IN ('word','phrase','grammar_pattern','pronunciation_pair','common_error','personal_sentence'))
+        - content JSONB NOT NULL (item-type-specific structure)
+        - source_event_id BIGINT NULL REFERENCES user_activity_log(id) ON DELETE SET NULL
+        - cefr_level TEXT
+        - ease_factor REAL NOT NULL DEFAULT 2.5
+        - interval_days INT NOT NULL DEFAULT 1
+        - streak_correct INT NOT NULL DEFAULT 0
+        - last_reviewed_at timestamptz NULL
+        - next_review_at timestamptz NOT NULL DEFAULT NOW()
+        - mastered_at timestamptz NULL
+        - INDEX (user_id, next_review_at)
+      </review_items>
+
+      <writing_submissions>
+        - For Writing Coach output that doesn't fit the conversation_sessions shape
+        - id UUID PK DEFAULT gen_random_uuid()
+        - user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+        - prompt TEXT NOT NULL
+        - task_type TEXT NOT NULL (e.g. 'paragraph','email','essay','opinion')
+        - cefr_level TEXT NOT NULL
+        - submitted_text TEXT NOT NULL
+        - scores JSONB (per 11-skill subset relevant to writing)
+        - inline_annotations JSONB (array of { start, end, type, suggestion })
+        - rewritten_exemplar TEXT
+        - submitted_at timestamptz NOT NULL DEFAULT NOW()
+        - INDEX (user_id, submitted_at DESC)
+      </writing_submissions>
+
+      <assessments>
+        - id UUID PK DEFAULT gen_random_uuid()
+        - user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+        - level_target TEXT NOT NULL ('A1' through 'C1')
+        - started_at timestamptz NOT NULL DEFAULT NOW()
+        - last_section_completed_at timestamptz NULL
+        - completed_at timestamptz NULL
+        - status TEXT NOT NULL CHECK (status IN ('in_progress','passed','needs_work','abandoned'))
+        - listening_score REAL NULL, reading_score REAL NULL, vocabulary_score REAL NULL,
+          grammar_score REAL NULL, speaking_score REAL NULL, writing_score REAL NULL
+        - overall_average REAL NULL
+        - feedback_summary TEXT NULL
+        - section_state JSONB (per-section answers + per-section completion flags for resume)
+      </assessments>
+
+      <organizations>
+        - id UUID PK DEFAULT gen_random_uuid()
+        - slug TEXT UNIQUE NOT NULL
+        - name TEXT NOT NULL
+        - plan TEXT NOT NULL CHECK (plan IN ('free','starter','pro','enterprise'))
+        - seat_count INT NOT NULL DEFAULT 0
+        - created_at, updated_at
+      </organizations>
+
+      <organization_memberships>
+        - organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE
+        - user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE
+        - role TEXT NOT NULL CHECK (role IN ('admin','teacher'))
+        - created_at timestamptz NOT NULL DEFAULT NOW()
+        - PRIMARY KEY (organization_id, user_id)
+      </organization_memberships>
+
+      <classes>
+        - id UUID PK DEFAULT gen_random_uuid()
+        - organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE
+        - teacher_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL
+        - name TEXT NOT NULL
+        - level_target TEXT
+        - created_at, updated_at
+      </classes>
+
+      <class_memberships>
+        - class_id UUID REFERENCES classes(id) ON DELETE CASCADE
+        - student_user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE
+        - joined_at timestamptz NOT NULL DEFAULT NOW()
+        - PRIMARY KEY (class_id, student_user_id)
+      </class_memberships>
+
+      <assigned_lessons>
+        - id UUID PK DEFAULT gen_random_uuid()
+        - class_id UUID REFERENCES classes(id) ON DELETE CASCADE
+        - unit_slug TEXT NOT NULL
+        - section_key TEXT NOT NULL CHECK (section_key IN ('overview','grammar','vocabulary','dialogues','activities'))
+        - due_date date NULL
+        - assigned_by UUID REFERENCES auth.users(id)
+        - assigned_at timestamptz NOT NULL DEFAULT NOW()
+      </assigned_lessons>
+
+      <ai_usage_log>
+        - id BIGSERIAL PK
+        - user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL
+        - endpoint TEXT NOT NULL
+        - model TEXT NOT NULL
+        - input_tokens INT NOT NULL
+        - output_tokens INT NOT NULL
+        - cache_creation_input_tokens INT NOT NULL DEFAULT 0
+        - cache_read_input_tokens INT NOT NULL DEFAULT 0
+        - latency_ms INT
+        - cost_estimate_usd NUMERIC(10,6)
+        - created_at timestamptz NOT NULL DEFAULT NOW()
+        - INDEX (created_at)
+        - INDEX (user_id, created_at)
+      </ai_usage_log>
+    </new_tables>
+
+    <new_postgres_functions>
+      All SECURITY DEFINER, SET search_path = public, pg_temp, auth; REVOKE EXECUTE FROM PUBLIC/anon/authenticated; GRANT EXECUTE TO service_role only — same pattern as Phase 1 `*_tx` functions.
+
+      - start_ai_conversation_session_tx(p_user_id, p_scenario_id) → session_id
+        Atomic: insert session row + initial activity_log row.
+
+      - record_ai_conversation_turn_tx(p_session_id, p_role, p_content, p_audio_url, p_transcript_confidence, p_partial)
+        Atomic: insert turn + increment session.turn_count.
+
+      - complete_ai_conversation_session_tx(p_user_id, p_session_id, p_scores, p_feedback, p_vocab_hits, p_vocab_misses)
+        Atomic: update session row + activity_log row + skill_scores updates + skill_score_history rows + auto-create review_items for misses.
+
+      - submit_review_answer_tx(p_user_id, p_review_item_id, p_difficulty)
+        Atomic: update ease_factor / interval_days / streak_correct based on difficulty ('incorrect' | 'difficult' | 'got_it' | 'easy') + activity_log row + skill_scores update.
+
+      - submit_assessment_section_tx(p_user_id, p_assessment_id, p_section, p_answers, p_section_score)
+        Atomic: update assessments.section_state + last_section_completed_at.
+
+      - complete_assessment_tx(p_user_id, p_assessment_id, p_skill_scores, p_overall, p_status)
+        Atomic: update assessment row + skill_scores + cefr_estimate update on profiles.
+
+      - submit_writing_coach_tx(p_user_id, p_prompt, p_task_type, p_cefr_level, p_text, p_scores, p_annotations, p_exemplar)
+        Atomic: insert writing_submission + skill_scores updates + activity_log row.
+
+      - log_ai_usage_tx(p_user_id, p_endpoint, p_model, p_input_tokens, p_output_tokens, p_cache_creation_tokens, p_cache_read_tokens, p_latency_ms, p_cost_estimate_usd)
+        Atomic: insert ai_usage_log row.
+
+      - assign_lesson_tx(p_assigning_teacher_id, p_class_id, p_unit_slug, p_section_key, p_due_date)
+        Atomic: insert assigned_lessons row + verify teacher owns class.
+
+      - update_skill_score_tx(p_user_id, p_skill, p_observed_score, p_source_event_id)
+        Helper: applies EWMA update + writes skill_score_history row. Called from within other tx fns.
+    </new_postgres_functions>
+
+    <rls_policies>
+      All new tables get ENABLE ROW LEVEL SECURITY.
+
+      SELECT-own (auth.uid() = user_id): ai_conversation_sessions, ai_conversation_turns (via session join), skill_scores, skill_score_history, review_items, writing_submissions, assessments, ai_usage_log
+
+      ai_scenarios: SELECT to authenticated (read-only, no per-user filter).
+
+      modules, lessons, units: SELECT to authenticated (content is global).
+
+      Teacher portal access: SELECT policy on student-owned rows where the requesting user is in the same class as the row's user_id (recursive lookup via class_memberships → classes → teacher_user_id):
+      ```
+      CREATE POLICY teacher_can_read_student_progress ON skill_scores
+        FOR SELECT TO authenticated
+        USING (
+          EXISTS (
+            SELECT 1 FROM class_memberships cm
+            JOIN classes c ON c.id = cm.class_id
+            WHERE cm.student_user_id = skill_scores.user_id
+              AND c.teacher_user_id = auth.uid()
+          )
+        );
+      ```
+      (Repeat for ai_conversation_sessions, writing_submissions, assessments, review_items, user_activity_log.)
+
+      organizations / classes / memberships: SELECT-own (membership-based via organization_memberships and class_memberships).
+
+      All write tables granted SELECT to authenticated for the SELECT-own policies; writes always go through service_role via the `*_tx` functions.
+    </rls_policies>
+  </database_schema>
+
+  <api_endpoints_summary>
+    <existing_unchanged>
+      - /api/v1/auth/register, /auth/check-username, /auth/logout, /auth/profile (PATCH)
+      - /api/v1/me/progress/{complete-section, attempt-exercise, review-flashcard, summary}
+    </existing_unchanged>
+
+    <content_navigation_endpoints>
+      - GET /api/v1/levels                              — list all levels with progress per level
+      - GET /api/v1/levels/:level                       — level overview + modules under it
+      - GET /api/v1/levels/:level/modules               — modules for a level
+      - GET /api/v1/modules/:module_slug                — module detail + lessons under it
+      - GET /api/v1/lessons/:unit_slug                  — full lesson content (sections + blocks)
+      - GET /api/v1/lessons/:unit_slug/sections/:section_key — single section
+    </content_navigation_endpoints>
+
+    <ai_tutor_endpoints>
+      - POST /api/v1/me/ai-tutor/explain                — body: { prompt, context: { unitSlug?, sectionKey?, cefrLevel? } } → { explanation }
+      - POST /api/v1/me/ai-tutor/explain/stream         — SSE variant
+      - POST /api/v1/me/ai-tutor/correct                — body: { sentence, cefrLevel } → { original, corrected, explanation, explanation_l1, try_again_prompt, try_again_answer }
+      - POST /api/v1/me/ai-tutor/practice               — body: { skill, target, count, cefrLevel } → { items[] }
+      - POST /api/v1/me/ai-tutor/writing-coach          — body: { text, taskType, cefrLevel, prompt } → { scores, inline_annotations[], rewritten_exemplar }
+      - POST /api/v1/me/ai-tutor/pronunciation/score    — body: { audio_url, target_text } → { phoneme_scores[], overall_score }   [voice-mode-gated]
+      - POST /api/v1/me/ai-tutor/review-coach           — body: { duration_minutes? } → { session: { items[], focus_areas[] } }
+    </ai_tutor_endpoints>
+
+    <conversation_endpoints>
+      - GET  /api/v1/me/conversations/scenarios          — list scenarios for the learner's level (filterable by ?level=A2 or ?unit_slug=unit-2)
+      - GET  /api/v1/scenarios/:slug                     — scenario detail (public to authenticated)
+      - POST /api/v1/me/conversations/start              — body: { scenario_id } → { session_id, opening_line, target_vocabulary, target_grammar }
+      - POST /api/v1/me/conversations/:session_id/turn   — body: { content, audio_url? } → SSE stream (event types: token, metadata, done, error)
+      - POST /api/v1/me/conversations/:session_id/end    — triggers scoring, returns { scores, feedback_summary, review_items_added[], target_vocab_hits, target_vocab_misses }
+      - GET  /api/v1/me/conversations/:session_id        — full transcript + scores
+      - GET  /api/v1/me/conversations                    — paginated history (?cursor=...&limit=20)
+      - DELETE /api/v1/me/conversations/:session_id      — abandon mid-session (sets status='abandoned')
+    </conversation_endpoints>
+
+    <review_endpoints>
+      - GET  /api/v1/me/review/queue                     — items due now (?limit=20, ordered by next_review_at)
+      - POST /api/v1/me/review/answer                    — body: { review_item_id, difficulty: 'incorrect'|'difficult'|'got_it'|'easy', response_time_ms? } → { next_interval_days, ease_factor }
+      - GET  /api/v1/me/review/stats                     — counts by item_type, mastery distribution, due_count
+      - POST /api/v1/me/review/items                     — manually add a review item (rare; mostly auto-created)
+      - DELETE /api/v1/me/review/items/:id               — remove an item from the queue
+    </review_endpoints>
+
+    <skills_endpoints>
+      - GET /api/v1/me/skills/summary                    — all 11 skills with score, sample_size, last_updated_at, cefr_estimate
+      - GET /api/v1/me/skills/:skill/history             — time series for one skill (?since=ISO8601)
+      - GET /api/v1/me/skills/:skill/recent-errors       — last N activity_log events that drove this skill's score
+      - GET /api/v1/me/skills/recommended-drills         — list of practice items based on weak skills
+    </skills_endpoints>
+
+    <assessment_endpoints>
+      - POST /api/v1/me/assessments/start                — body: { level_target } → { assessment_id, sections[] }
+      - GET  /api/v1/me/assessments/:id                  — current state including resumed section
+      - POST /api/v1/me/assessments/:id/submit-section   — body: { section, answers[] }
+      - POST /api/v1/me/assessments/:id/complete         — triggers final scoring → { scores, status, cefr_estimate_after }
+      - POST /api/v1/me/assessments/:id/abandon          — sets status='abandoned'
+      - GET  /api/v1/me/assessments                      — history
+      - GET  /api/v1/me/assessments/eligibility          — which level the learner is ready to test (based on lesson completion)
+    </assessment_endpoints>
+
+    <teacher_endpoints>
+      All require `require_teacher` dependency (profiles.role IN ('teacher','admin')).
+
+      - GET  /api/v1/teacher/students                    — students in classes the teacher owns (paginated)
+      - GET  /api/v1/teacher/students/:id                — full deep-dive (activity log, conversations, writing samples, skill scores)
+      - GET  /api/v1/teacher/students/:id/recommended-action — Claude-summarized one-line suggestion
+      - POST /api/v1/teacher/classes                     — body: { name, level_target } → { class }
+      - GET  /api/v1/teacher/classes                     — list teacher's classes
+      - GET  /api/v1/teacher/classes/:id                 — class detail
+      - GET  /api/v1/teacher/classes/:id/roster          — students in class
+      - POST /api/v1/teacher/classes/:id/invite          — body: { emails[] } → { invited[], failed[] }
+      - DELETE /api/v1/teacher/classes/:id/students/:student_id — remove student
+      - POST /api/v1/teacher/classes/:id/assign-lesson   — body: { unit_slug, section_key, due_date? }
+      - GET  /api/v1/teacher/classes/:id/assignments     — list assigned lessons
+      - DELETE /api/v1/teacher/assignments/:id           — remove an assignment
+    </teacher_endpoints>
+
+    <organization_endpoints>
+      Org admin endpoints require `require_org_admin` (organization_memberships.role = 'admin').
+
+      - GET  /api/v1/orgs/:slug                           — org overview
+      - POST /api/v1/orgs                                 — create org (super-admin only; gated by env-var allowlist)
+      - PATCH /api/v1/orgs/:slug                          — update org details
+      - POST /api/v1/orgs/:slug/teachers                  — invite teacher
+      - DELETE /api/v1/orgs/:slug/teachers/:user_id       — remove teacher
+      - GET  /api/v1/orgs/:slug/usage                     — seat count, active classes, total students
+      - GET  /api/v1/orgs/:slug/billing                   — plan, usage, invoice mock
+    </organization_endpoints>
+
+    <admin_endpoints>
+      Super-admin only (env-var allowlist of user_ids).
+
+      - GET /api/v1/admin/ai-usage/daily                  — daily token + cost breakdown
+      - GET /api/v1/admin/ai-usage/by-endpoint            — cost per endpoint
+      - GET /api/v1/admin/ai-usage/cache-hit-rate         — cache hit rate trend
+      - GET /api/v1/admin/users/top-spenders              — top-N users by AI cost
+    </admin_endpoints>
+
+    <health_endpoint>
+      - GET /api/v1/health → { status, ai_tutor_enabled, voice_enabled, anthropic_reachable, db_reachable }
+    </health_endpoint>
+  </api_endpoints_summary>
+
+  <ui_layout>
+    <existing_layouts_unchanged>
+      - PublicLayout (Header + Footer): used for /, /about, /contact, /login, /register, /u/:username, /auth/callback
+      - AuthLayout (slim header + AppSidebar): used for /home, /dashboard, /lessons/*, /library, /settings
+      - FlashcardsLayout (auth-aware): /flashcards picks AuthLayout when profile is non-null, PublicLayout otherwise
+      - AppSidebar nav items extend per the new pages below
+    </existing_layouts_unchanged>
+
+    <main_structure>
+      The auth-side app remains a two-column layout: AppSidebar (left) + main content area.
+      No change to the structural skeleton — extensions happen inside the sidebar nav and the
+      main content's per-route components.
+
+      Mobile breakpoints (existing): sidebar collapses to bottom nav at &lt;640px; persistent at &gt;=1024px.
+      Tablet (640-1024): sidebar is overlay-toggled.
+    </main_structure>
+
+    <sidebar_extensions>
+      AppSidebar gains new nav items (in this order, gated on auth + role):
+      1. Home
+      2. Dashboard
+      3. Lessons
+      4. Review (NEW; badge with due_count, hidden when due_count = 0)
+      5. Skills (NEW)
+      6. Conversations (NEW; counts active mission if any)
+      7. AI Tutor (NEW; opens the global AiTutorPanel — does not navigate)
+      8. Library
+      9. Flashcards
+      10. Study Groups (existing stub)
+      11. Notifications
+      12. ─────────── (divider; below this is role-gated)
+      13. Teacher Portal (visible when profile.role IN ('teacher','admin'))
+      14. Org Admin (visible when user has organization_memberships.role = 'admin')
+    </sidebar_extensions>
+
+    <new_routes>
+      <ai_tutor_panel>
+        Global slide-out panel (not a route). Triggered by sidebar "AI Tutor" or floating
+        bottom-right "Ask Tutor" button on any /lessons/* page.
+
+        Layout:
+        - Right slide-out, 480px desktop / full-screen mobile
+        - Header: title + close button + minimize-to-floating-bubble button
+        - Tabs: Explain | Correct | Practice | Writing Coach
+        - Body: tab-specific input + streamed response area
+        - Footer: model badge + token-cost hint (subtle)
+
+        Persistent across route changes during a single session; closes on logout.
+      </ai_tutor_panel>
+
+      <conversation_pages>
+        - /u/:username/conversations                    — history list
+          Layout: list of session rows (scenario title, level, score, started_at, status)
+          Empty state: "Try your first AI conversation" CTA → scenarios index
+
+        - /u/:username/conversations/scenarios          — scenario picker (grouped by level)
+          Layout: grid of scenario cards; filters for level + unit; "Start mission" CTA per card
+
+        - /u/:username/conversations/:scenarioSlug/:sessionId — live mission UI
+          Layout: 2-column (desktop) / single-column (mobile)
+          Left column (60% desktop, full mobile):
+            - Top bar: scenario title, "End mission" button (red, top-right), turn count
+            - Chat area: scrollable; learner bubbles right (primary blue), tutor bubbles left (surface)
+            - Input area: textarea (auto-resize) + send button + voice button (when enabled)
+            - Streaming AI text reveals character-by-character
+          Right column (40% desktop, drawer on mobile):
+            - Target vocab progress: chips with states (to use / used correctly / tried but missed)
+            - Target grammar checklist: checkboxes with check on detection
+            - Tips: scenario-specific tutoring tips (collapsible)
+
+        - /u/:username/conversations/:sessionId         — completed session detail (transcript + scores + replay)
+          Layout: full transcript top, scores grid bottom, "Try again" + "Next mission" CTAs
+      </conversation_pages>
+
+      <review_page>
+        - /u/:username/review                            — daily review queue
+          Layout: full-screen card stack
+          - Top bar: progress dots (12 items, 5 done so far)
+          - Center card: ReviewDrillCard with item content + input + submit button
+          - On submit: reveal animation slides down to show correct answer + explanation
+          - Difficulty buttons (Difficult / Got it / Easy) appear after reveal
+          - Next card slides in
+          - End-of-session summary: count correct, ease-factor changes, next-due breakdown
+      </review_page>
+
+      <skills_page>
+        - /u/:username/skills                            — 11-skill grid + history graphs
+          Layout: 3-column grid (desktop) / single-column (mobile)
+          - Each SkillCard: skill name, current 0-5 score (SkillBar), CEFR-level estimate, last_updated, sample_size
+          - Click a skill → /u/:username/skills/:skill (sub-page with history graph + recent errors + recommended drills)
+          - Header: overall cefr_estimate badge + "Take exit assessment" CTA when eligible
+
+        - /u/:username/skills/:skill                     — per-skill deep-dive
+          Layout: history graph (top), recent activities that affected the score (middle), recommended drills (bottom)
+      </skills_page>
+
+      <assessment_page>
+        - /u/:username/assessment/:level                 — exit assessment runner
+          Layout: full-screen, single-column, distraction-free
+          - Top: progress (Section 3 of 6), level badge, exit button
+          - Center: section-specific UI
+            - Listening: audio player + multiple choice
+            - Reading: article + 5 questions
+            - Vocabulary: 30 word-recognition cards
+            - Grammar: 15 cloze/error-correction items
+            - Speaking: AI conversation runner (reuses scenario UI)
+            - Writing: prompt + textarea (live word count)
+          - Pause/resume supported per section
+          - Final results screen: per-skill scores + pass/needs-work verdict
+            On pass: confetti + "You're now A2!" badge unlock animation (respects prefers-reduced-motion)
+      </assessment_page>
+
+      <teacher_portal>
+        - /teacher                                        — overview
+          Layout: top stats row (total students, active classes, this-week activity), recent activity feed,
+          per-class progress cards
+
+        - /teacher/students                               — paginated student list
+          Layout: table with columns (name, level, target, last active, action recommendation)
+
+        - /teacher/students/:id                           — student deep-dive
+          Layout: header with cefr_estimate badge + skill breakdown row, "Get recommended action" button,
+          tabs: Activity | Conversations | Writing | Errors
+          - Activity tab: chronological activity log
+          - Conversations tab: list of all sessions with replay
+          - Writing tab: list of writing submissions with full feedback
+          - Errors tab: recurring error patterns aggregated from activity_log
+
+        - /teacher/classes                                — list teacher's classes
+        - /teacher/classes/:id                            — class detail (roster + assignments)
+        - /teacher/classes/:id/assign                     — pick a lesson, set due date
+      </teacher_portal>
+
+      <org_admin>
+        - /admin/orgs/:slug                               — org overview (members, classes, billing mock)
+        - /admin/orgs/:slug/teachers                      — manage teachers
+        - /admin/orgs/:slug/classes                       — list all classes in org
+        - /admin/orgs/:slug/billing                       — plan badge, seat usage bar, "Upgrade" CTA → modal
+        - /admin/orgs/:slug/usage                         — class-level reports
+      </org_admin>
+
+      <super_admin>
+        - /admin/ai-usage                                 — daily/weekly cost dashboard
+          Layout: line graph of daily cost, bar chart per endpoint, cache hit rate trend, top-spenders table
+      </super_admin>
+    </new_routes>
+
+    <dashboard_extensions>
+      YourProgressCard widget extends with:
+      - Current CEFR estimate badge (e.g., "A2.3") at the top
+      - "Target: B1" pill (from profile.target_cefr_level)
+      - Skill breakdown row (11 mini-bars, click → /skills)
+      - "Today's review" inline button if due_count > 0 (pulses subtly)
+      - "Take exit assessment" CTA when eligible
+      - Recent achievement chips (last 3 conversation missions completed, etc.)
+
+      Sidebar adds rails:
+      - "Assigned by your teacher" rail at the top of /lessons (only shown when class memberships exist)
+      - "Continue learning" rail (last-accessed lesson)
+      - "Recommended next" rail (driven by skill_scores weak areas)
+    </dashboard_extensions>
+
+    <modals_overlays>
+      - AiTutorPanel (slide-out) — described above
+      - AssignLessonModal (teacher portal)
+      - InviteStudentsModal (teacher portal)
+      - UpgradePlanModal (org admin)
+      - AssessmentPauseConfirmModal
+      - LeaveMissionConfirmModal (when learner clicks "End mission" with incomplete success criteria)
+    </modals_overlays>
+  </ui_layout>
+
+  <design_system>
+    <existing_palette_preserved>
+      - Primary blue: #326de2 (used for primary CTAs, learner bubbles, success indicators)
+      - Accent gold: #fcd34d (used sparingly for highlights, completion badges, level badges)
+      - Semantic tokens: text, muted, surface, border, surface-elevated (existing Tailwind config)
+      - Dark mode: class-based; applies to all new surfaces
+      - Code blocks: existing prose-code styling (unchanged)
+    </existing_palette_preserved>
+
+    <typography>
+      - Sans-serif system font stack (existing): Inter, -apple-system, sans-serif
+      - Headings: font-semibold, tracking-tight
+      - Body: font-normal, leading-relaxed
+      - Code/transcripts: monospace (JetBrains Mono if available, else system mono)
+      - Conversation turn text: text-base (16px) with comfortable line-height
+      - Skill score number: tabular-nums for visual alignment
+      - CEFR badge: uppercase, font-semibold, letter-spacing-wide
+    </typography>
+
+    <new_components>
+      <skill_bar>
+        Horizontal bar showing 0–5 skill score.
+        - Width: full container; height: 8px desktop, 6px mobile
+        - Color gradient: red (0–1) → yellow (2–3) → green (4–5); apply via Tailwind from-red-500 via-yellow-400 to-green-500 with width % = score/5*100
+        - Hover tooltip: "Sample size: N · Last updated: <relative time>"
+        - Animate from 0 to score on mount (600ms ease-out); skip animation if prefers-reduced-motion
+        - Variant `compact` (4px tall) for the dashboard mini-row
+      </skill_bar>
+
+      <cefr_badge>
+        Pill-shaped badge with level code.
+        - Sizes: sm (h-5 px-2 text-xs), md (h-6 px-3 text-sm), lg (h-8 px-4 text-base)
+        - Colors:
+          - A0/A1: bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300
+          - A2/B1: bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-200
+          - B1+/B2: bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200
+          - C1: bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-200
+        - Sub-score variant (e.g. "A2.3"): smaller dot indicator showing position within the level
+      </cefr_badge>
+
+      <conversation_turn_bubble>
+        - Learner turns: right-aligned, bg-primary-50 dark:bg-primary-950, text-primary-900 dark:text-primary-100, rounded-2xl rounded-br-sm
+        - Tutor turns: left-aligned, bg-surface dark:bg-surface-elevated, text-foreground, rounded-2xl rounded-bl-sm
+        - Inline correction: red wavy underline on parts the tutor flagged; hover shows the correction tooltip
+        - Streaming caret: blinking | at end of incoming text
+        - Max-width: 600px; word-wrap break
+        - Padding: px-4 py-3
+      </conversation_turn_bubble>
+
+      <target_vocab_chip>
+        Used in conversation side panel.
+        - Three states:
+          - "to use": bg-muted text-muted-foreground (gray)
+          - "used correctly": bg-green-100 text-green-700 with check icon
+          - "tried but missed": bg-yellow-100 text-yellow-700 with exclamation icon
+        - Layout: rounded-full px-3 py-1 text-sm font-medium
+        - Tooltip on hover for missed: "You said 'X' but the target was 'Y'"
+      </target_vocab_chip>
+
+      <review_drill_card>
+        Single-question card with item content + input + submit.
+        - Card: bg-surface, border, rounded-2xl, p-6, max-w-lg
+        - Item content area varies by item_type:
+          - word: large word + "Translate or use in a sentence"
+          - phrase: phrase + "Use in a sentence about your day"
+          - grammar_pattern: pattern + "Build a sentence using this"
+          - pronunciation_pair: two words side-by-side + audio buttons
+          - common_error: "Last time you said: 'X'. What's the correct version?"
+          - personal_sentence: "You wrote: 'X'. Translate or rephrase."
+        - Reveal animation: slide-down (300ms) showing correct answer + explanation
+        - Difficulty buttons after reveal: "Difficult" (red-50), "Got it" (primary-50), "Easy" (green-50)
+        - Auto-focus on next card after difficulty selection
+      </review_drill_card>
+
+      <ai_feedback_panel>
+        Multi-section panel for writing-coach output.
+        - Header: prompt + word count + cefr_level + submitted_at
+        - Section 1: Scores grid (skill bars for relevant skills: vocab_range, vocab_accuracy, grammar_accuracy, grammar_range, writing_organization, task_completion)
+        - Section 2: Inline annotations — submitted text rendered with hoverable highlighted spans; hover shows correction
+        - Section 3: Rewritten exemplar (collapsed by default; click "Show stronger version" to expand)
+        - Footer: "Try again" CTA + "Save to writing portfolio" CTA
+      </ai_feedback_panel>
+
+      <ai_correction_block>
+        Renders the canonical 4-block correction format.
+        - Block 1: "Your sentence:" + the original (text-muted-foreground)
+        - Block 2: "Better sentence:" + the corrected (text-green-700 dark:text-green-300, font-medium)
+        - Block 3: "Why:" + the explanation (text-foreground)
+        - Block 4: "Try again:" + a fill-in prompt (input field with submit; correct answer revealed on submit)
+        - Spacing: each block separated by border-t and py-3
+      </ai_correction_block>
+
+      <scenario_card>
+        Card for the conversations/scenarios picker.
+        - Header: scenario title + level badge (top-right)
+        - Body: description (2-3 lines), target vocab chips (max 5 visible)
+        - Footer: estimated time + "Start mission" button (primary)
+        - Hover: subtle elevation shadow
+      </scenario_card>
+
+      <progress_dots>
+        Used in assessment runner and review session.
+        - Row of small circles (one per item/section)
+        - States: pending (border only), current (filled primary, ring), completed (filled green)
+        - Click on completed → jump back; current/pending not clickable
+      </progress_dots>
+
+      <recommended_action_card>
+        Used in teacher portal student deep-dive.
+        - Compact card with claude-summary one-liner
+        - "Apply suggestion" button (creates an assignment if relevant)
+        - Refresh button to regenerate (rate-limited)
+      </recommended_action_card>
+    </new_components>
+
+    <animations>
+      - Streaming AI text: character-by-character reveal (matches existing Tailwind transition idioms); 8ms per character cap
+      - Skill bars fill on mount: 600ms ease-out
+      - Conversation bubbles fade-and-slide on append: 200ms
+      - Review-drill answer reveal: 300ms slide-down with auto-focus on the next button
+      - Assessment pass: confetti (subtle, dismissible, 3-second auto-dismiss); badge unlock with scale + glow
+      - Sidebar slide-in (mobile): 250ms ease-out
+      - All animations respect `prefers-reduced-motion: reduce` — fall back to instant transitions
+    </animations>
+  </design_system>
+
+  <key_interactions>
+    <ai_conversation_flow>
+      Happy path:
+      1. Learner is on /lessons/unit-1/activities (food-ordering lesson)
+      2. AiMissionBlock renders "Try this conversation: Order a coffee — A1"
+      3. Click "Start mission" → POST /me/conversations/start with scenario_id → response includes session_id + opening_line
+      4. Navigate to /u/:username/conversations/order-coffee-a1/:sessionId
+      5. UI shows tutor opening line ("Hello! What can I get for you today?") rendered as a tutor bubble; target vocab side panel shows "coffee", "tea", "please", "thank you", "small", "large", "anything else" all in gray ("to use")
+      6. Learner types "Can I have a coffee, please?" and presses Enter (or Cmd+Enter)
+      7. Frontend POSTs to /me/conversations/:session_id/turn with content; opens SSE stream
+      8. SSE emits: metadata → token chunks (rendered character-by-character) → done
+      9. Side panel updates: "coffee" → green check, "please" → green check, "Can I have" grammar pattern → green check
+      10. Tutor responds: "Small or large?"
+      11. Learner: "Small, please."
+      12. ... continues through 4-6 turns until success criteria met
+      13. Learner clicks "End mission"
+      14. Confirm modal: "End now? You haven't done step 5 (anything else)." Allow override.
+      15. POST /me/conversations/:session_id/end → backend scores via Claude (sonnet-4-6) → updates skill_scores + auto-creates review items for misses
+      16. Results screen: 6-criteria scores grid + missed criteria highlighted + "Try again" / "Next mission" / "Back to lesson" CTAs
+
+      Edge cases:
+      - Network drop mid-stream: SSE reconnect with exponential backoff (200ms, 800ms, 3200ms); if still failing, show "Tutor disconnected — please retry your turn" toast and roll back the partial turn to "draft"
+      - Learner closes tab mid-session: turn marked partial=true; session status='active'; learner sees "Continue mission" CTA on /conversations next visit
+      - Rate limit hit: 429 with Retry-After; UI shows toast "Slow down — try again in N seconds"; input disabled until expiry
+      - Anthropic 5xx: 502 returned; UI shows "Tutor is having trouble — please try again"; "Retry" button on the failed turn
+      - Voice mode disabled but learner clicks mic: button is hidden when feature flag off
+      - Learner uses inappropriate language: tutor system prompt instructs gentle redirection in-character; no system-level moderation modal needed
+    </ai_conversation_flow>
+
+    <review_flow>
+      1. Dashboard widget shows "Today's review: 12 items due" badge
+      2. Click → /u/:username/review (also reachable from sidebar "Review" item)
+      3. Backend GET /me/review/queue returns up to 20 items ordered by next_review_at ASC
+      4. UI renders progress dots (12) + first ReviewDrillCard
+      5. Card content depends on item_type:
+         - word "appointment": "Translate or use in a sentence: appointment"
+         - common_error "I am agree": "Last time you said: 'I am agree'. What's the correct version?"
+      6. Learner types answer, clicks Submit (or Enter)
+      7. Reveal animation: card slides down to show correct answer + 1-line explanation
+      8. Difficulty buttons appear: Difficult / Got it / Easy
+      9. Click difficulty → POST /me/review/answer with item_id + difficulty
+      10. Backend updates ease_factor, interval_days, streak_correct via submit_review_answer_tx
+      11. Next card slides in (200ms)
+      12. After all items: summary screen — "You did 10/12 correctly. Next 5 items due tomorrow, 3 due in a week, 4 mastered for 14 days."
+      13. "Back to dashboard" CTA
+
+      Edge cases:
+      - User leaves mid-session: items already answered are persisted; remaining items return on next session
+      - User answers item correctly that they got wrong last time: streak_correct increments; ease_factor +0.1
+      - User answers item incorrectly: streak_correct resets to 0; interval_days back to 0 (review again same session at the end); ease_factor -0.15
+      - Empty queue: show "All caught up! Next review at <time>" with "Practice ahead" CTA → review-coach mode
+    </review_flow>
+
+    <writing_coach_flow>
+      1. Lesson section has an OutputTaskBlock: "Write 80–100 words about your weekend"
+      2. Learner types in the textarea; live word count + ranges shown
+      3. Click "Get feedback" → POST /me/ai-tutor/writing-coach with text + taskType + cefrLevel + prompt
+      4. Loading state: inline spinner + "Analyzing your writing..."
+      5. Response: AiFeedbackPanel renders with:
+         - Scores grid (vocab, grammar, organization, task_completion)
+         - Inline annotations: submitted text with highlighted spans (hover for correction tooltips)
+         - Rewritten exemplar (collapsed)
+      6. Backend writes a writing_submissions row + updates skill_scores + auto-creates review_items for grammar errors flagged
+      7. Learner can click "Try again" to revise; new submission scored independently (each submission is a row)
+    </writing_coach_flow>
+
+    <teacher_flow>
+      1. Teacher logs in; sidebar shows "Teacher Portal" item (gated by profile.role)
+      2. Click → /teacher → overview with stats (total students, active classes, this-week activity)
+      3. Click a class → /teacher/classes/:id → roster + assignments tabs
+      4. Click a student row → /teacher/students/:id → deep-dive
+      5. Deep-dive shows:
+         - Header: cefr_estimate badge + skill breakdown row + "Get recommended action" button
+         - Tabs: Activity | Conversations | Writing | Errors
+      6. Click "Get recommended action" → calls /teacher/students/:id/recommended-action (haiku-4-5 with structured summary of recent activity) → renders a one-liner card
+         Example: "Run a 10-minute past-weekend speaking activity. Linh's past-simple irregulars are below 3/5 across the last week."
+      7. Teacher can "Apply suggestion" (creates an assignment) or refresh to regenerate
+      8. Teacher can directly assign a lesson via /teacher/classes/:id/assign-lesson modal
+    </teacher_flow>
+
+    <assessment_flow>
+      1. Dashboard "You're ready for the A1 exit assessment" CTA appears when all required A1 sections are complete (driven by lesson_section_progress query)
+      2. Click → POST /me/assessments/start with level_target='A1' → creates assessment_id and section list
+      3. Navigate to /u/:username/assessment/A1
+      4. Sequential sections: listening (10 items) → reading (article + 5 q's) → vocabulary (30) → grammar (15) → speaking (AI mission) → writing (prompt)
+      5. Each section auto-saves answers via POST /me/assessments/:id/submit-section
+      6. "Pause" button at any time → state persists; learner can resume from /assessments
+      7. On final section completion → POST /me/assessments/:id/complete → backend scores all sections (Claude sonnet-4-6 for speaking + writing scoring; deterministic for listening/reading/vocab/grammar)
+      8. complete_assessment_tx writes assessment row + updates skill_scores + updates cefr_estimate on profile
+      9. Result screen: pass/needs-work verdict + per-skill breakdown + (on pass) confetti + level-badge unlock animation
+      10. On pass: dashboard now shows next-level CTA; sidebar levels view shows the new level unlocked
+    </assessment_flow>
+
+    <skills_review_flow>
+      1. /u/:username/skills shows 11-skill grid
+      2. Click a skill (e.g. "Past Simple") → /u/:username/skills/grammar_accuracy
+      3. Page shows:
+         - History graph: line chart of score over last 30 days
+         - Recent activities: list of last 10 events that affected this skill (with delta indicators)
+         - Recommended drills: 5 practice items targeting this weakness (calls /me/skills/recommended-drills)
+      4. Click a drill → opens the relevant practice mode (grammar drill from Practice mode, or a conversation scenario, etc.)
+    </skills_review_flow>
+  </key_interactions>
+
+  <canonical_lesson_examples>
+    Two full lessons the agent uses as templates when authoring new lesson content. The structure
+    matches <lesson_template_canonical>; the agent copies the structure and substitutes content
+    appropriate to the target level/topic.
+
+    <a1_food_ordering>
+      Unit slug: ordering-coffee-a1
+      Title: Ordering Coffee
+      Level: A1
+      Module: Food and Ordering
+      Goal: The learner can order a drink politely in a cafe.
+      Estimated minutes: 25
+
+      ─── Section: overview ───
+      Block 1 (heading): "Lesson goal"
+      Block 2 (text): "By the end of this lesson, you can order a drink politely in a cafe."
+      Block 3 (warmup): { prompt: "What is your favorite drink?", scenarioRef: null }
+      Block 4 (text): "In English-speaking cafes, you usually greet the barista, order what you want, and say please and thank you."
+
+      ─── Section: vocabulary ───
+      Block 1 (heading): "Drinks and ordering words"
+      Block 2 (vocab-list):
+        - coffee (vi: cà phê, th: กาแฟ, zh: 咖啡) — "I want a coffee."
+        - tea (vi: trà, th: ชา, zh: 茶) — "Can I have a tea?"
+        - water (vi: nước, th: น้ำ, zh: 水) — "Can I have water?"
+        - please (vi: làm ơn, th: ได้โปรด, zh: 请) — "A coffee, please."
+        - thank you (vi: cảm ơn, th: ขอบคุณ, zh: 谢谢) — "Thank you."
+        - small (vi: nhỏ, th: เล็ก, zh: 小) — "A small coffee, please."
+        - large (vi: lớn, th: ใหญ่, zh: 大) — "A large tea, please."
+        - anything else (vi: còn gì nữa không, th: อะไรอีกไหม, zh: 还要别的吗) — "Anything else?"
+      Block 3 (exercise): match drinks to images (5 items)
+
+      ─── Section: grammar ───
+      Block 1 (heading): "Can I have...?"
+      Block 2 (text): "Use 'Can I have...?' to ask for something politely. It's the most common way to order."
+      Block 3 (examples):
+        - "Can I have a coffee, please?"
+        - "Can I have a tea, please?"
+        - "Can I have water, please?"
+      Block 4 (exercise): fill-in-blank
+        - "Can I ___ a tea, please?" → "have"
+        - "No, thank ___." → "you"
+        - "A ___ coffee, please." → "small" or "large"
+
+      ─── Section: dialogues ───
+      Block 1 (heading): "At the cafe"
+      Block 2 (dialogue):
+        Barista: Hello. What would you like?
+        Customer: Can I have a coffee, please?
+        Barista: Small or large?
+        Customer: Small, please.
+        Barista: Anything else?
+        Customer: No, thank you.
+        Barista: That's 50 baht.
+        Customer: Here you are.
+      Block 3 (listening-clip): TTS-generated audio of the dialogue + transcript
+      Block 4 (text): comprehension questions
+        - What did the customer order? → coffee
+        - What size? → small
+        - Did they want anything else? → No
+      Block 5 (exercise): fill-in-blank from dialogue (5 items)
+
+      ─── Section: activities ───
+      Block 1 (heading): "Practice and produce"
+      Block 2 (ai-mission): { scenarioSlug: "order-coffee-a1", level: "A1" }
+        Scenario: "You are at a cafe. The AI is the barista."
+        Learner must: greet, order one drink, choose size, answer "anything else?", say thank you
+      Block 3 (output-task): { prompt: "Imagine you are at a cafe. Write your order in 3-5 sentences.", taskType: "writing", minWords: 15, maxWords: 40, targetSkill: "writing" }
+      Block 4 (heading): "Review items added"
+      Block 5 (text): "After this lesson, these items will appear in your daily review:
+        - 'Can I have...?' (grammar pattern)
+        - small / large (vocabulary)
+        - 'Anything else?' (phrase)"
+
+      Expected scores at A1 for completion: ≥3/5 across all 6 conversation criteria.
+    </a1_food_ordering>
+
+    <b1_giving_opinion>
+      Unit slug: giving-opinion-b1
+      Title: Should Students Use AI?
+      Level: B1
+      Module: Opinions and Reasons
+      Goal: The learner can give an opinion, support it with a reason, and add an example.
+      Estimated minutes: 35
+
+      ─── Section: overview ───
+      Block 1 (heading): "Lesson goal"
+      Block 2 (text): "By the end of this lesson, you can give an opinion, support it with a reason, and add an example."
+      Block 3 (warmup): { prompt: "Do you think students should use AI to learn? Why or why not?" }
+      Block 4 (text): Short reading on common opinion-structures.
+
+      ─── Section: vocabulary ───
+      Block 1 (heading): "Opinion language"
+      Block 2 (vocab-list):
+        - opinion — "In my opinion, AI is useful."
+        - reason — "One reason is convenience."
+        - example — "For example, students can practice speaking."
+        - agree / disagree — "I agree with this idea." / "I disagree because..."
+        - however — "AI is helpful. However, students need guidance."
+        - improve — "AI can help students improve faster."
+      Block 3 (exercise): collocation match (5 items: give an opinion, support an argument, etc.)
+
+      ─── Section: grammar ───
+      Block 1 (heading): "Opinion structure"
+      Block 2 (text): "Opinions in English follow a predictable structure: claim → reason → example → counterpoint → conclusion."
+      Block 3 (examples):
+        - "I think... One reason is... For example... However... Overall..."
+      Block 4 (exercise): connector practice — choose from However / Because / For example (5 items)
+
+      ─── Section: dialogues ───
+      Block 1 (heading): "AI in class"
+      Block 2 (dialogue):
+        A: Should students use AI to learn English?
+        B: I think yes. One reason is that AI can give more practice.
+        A: Can you give an example?
+        B: Sure. A student can practice ordering food or interview questions.
+        A: But what's the problem?
+        B: Students should not use AI only to get answers.
+        A: So what's your final opinion?
+        B: AI is useful if students use it for practice.
+      Block 3 (listening-clip): TTS audio + transcript
+      Block 4 (text): comprehension questions
+
+      ─── Section: activities ───
+      Block 1 (heading): "Discuss and write"
+      Block 2 (ai-mission): { scenarioSlug: "give-opinion-b1", level: "B1" }
+        AI asks: opinion → reason → example → problem → final opinion
+      Block 3 (output-task): { prompt: "Should students use AI to learn English? Write 80-100 words.", taskType: "writing", minWords: 80, maxWords: 100, targetSkill: "writing_organization" }
+      Block 4 (heading): "Review items added"
+      Block 5 (text): "After this lesson, these items will appear in your daily review:
+        - opinion structure (grammar pattern)
+        - however, for example (connectors)
+        - In my opinion (phrase)"
+    </b1_giving_opinion>
+  </canonical_lesson_examples>
+
+  <content_authoring_guidelines>
+    Per source plan section 20. The agent applies these when generating new lesson content
+    (and when adapting AI tutor responses to level).
+
+    <a0_a1>
+      - Use short sentences (max 10 words for A0; max 15 for A1)
+      - Use pictures and audio heavily (every vocab item has an image + TTS clip)
+      - Avoid long grammar explanations (max 80 words per explanation)
+      - Translate vocabulary into vi/th/zh always; translate sample sentences when complexity warrants
+      - Prioritize survival communication (greetings, ordering, asking basic info)
+      - Give many examples (4-6 per grammar point)
+      - Accept imperfect but understandable output (scoring threshold: comprehensible = passing)
+    </a0_a1>
+
+    <a1_a2>
+      - Use predictable daily situations (routines, shopping, health, travel)
+      - Increase short dialogues (4-8 turns); always include TTS clip
+      - Start short reading texts (40-80 words)
+      - Teach sentence patterns clearly (one pattern per lesson)
+      - Use controlled roleplays (success criteria explicit)
+      - Encourage short written output (5-10 sentences)
+      - Translate explanations when learner is &lt;A2 (set per profile.cefr_estimate)
+    </a1_a2>
+
+    <a2_b1>
+      - Add storytelling, opinions, reasons, plans
+      - Use follow-up questions (every conversation prompt should have a follow-up)
+      - Teach connectors and paragraph structure (because, however, for example, finally)
+      - Increase AI conversation length (5-7 minutes; ~6-10 turns)
+      - Give feedback on tense consistency (past simple vs present perfect is the canonical contrast)
+      - Reading texts: 100-180 words
+      - Writing tasks: 80-150 words
+    </a2_b1>
+
+    <b1_b2>
+      - Add work, study, society, technology, abstract topics
+      - Teach formality and tone (informal ↔ neutral ↔ formal)
+      - Use longer speaking tasks (10-15 minutes)
+      - Require examples and explanations (no opinion without support)
+      - Introduce debate and problem-solving
+      - Reading texts: 200-400 words
+      - Writing tasks: 180-300 words
+    </b1_b2>
+
+    <b2_c1>
+      - Focus on nuance, register, argument, persuasion, precision
+      - Use authentic-style texts (news articles, opinion pieces, professional emails)
+      - Require structured long-form speaking (15-20 minutes) and writing (300-600 words)
+      - Teach editing and reformulation (revise the same idea for casual/formal/diplomatic)
+      - Challenge the learner with counterarguments and ambiguity
+      - No translation in feedback — respond in English at level
+    </b2_c1>
+  </content_authoring_guidelines>
+
+  <mvp_scope>
+    The full A0 → C1 path is ~256 lessons. The MVP does NOT attempt to ship all of it.
+
+    <mvp_deliverables>
+      1. A0 → A1 full path (8 modules × 4 lessons = 32 lessons, all 5 sections each)
+      2. A1 → A2 sample path (3 modules × 4 lessons = 12 lessons)
+      3. AI conversation missions (24 seed scenarios across all levels per <conversation_scenarios_seed>)
+      4. Vocabulary + grammar review system (full SM-2-like adaptive review)
+      5. Multi-skill scoring engine (all 11 skills, EWMA-smoothed)
+      6. CEFR skill dashboard (/skills page + dashboard widget)
+      7. A1 + A2 exit assessments
+      8. Teacher dashboard prototype (1 teacher can manage 1 class)
+      9. Voice mode is OUT of MVP scope (text-only AI conversation for v1)
+    </mvp_deliverables>
+
+    <mvp_lesson_count>
+      Area                          | Count
+      ------------------------------|------:
+      A0 → A1 core lessons          | 32
+      A1 → A2 sample lessons        | 12
+      AI roleplay scenarios         | 24
+      Review exercise templates     | 6 (one per item_type)
+      Exit assessments              | 2 (A1, A2)
+    </mvp_lesson_count>
+
+    <post_mvp_phases>
+      - Voice mode for conversation missions (Phase 11)
+      - Full A2 → C1 content path (Phase 12 — content expansion)
+      - Real billing integration (Stripe; explicitly OUT of scope until product-market-fit data justifies)
+      - Native mobile apps (PWA is the mobile story; iOS/Android shells deferred indefinitely)
+    </post_mvp_phases>
+  </mvp_scope>
+
+  <implementation_phases>
+    Maps the granular implementation_steps to the source plan's 5-phase build sequence.
+    The agent ships one phase at a time, each in its own set of PRs.
+
+    <phase_1_foundation_content>
+      Source plan phase 1: Foundation Content System
+      Spec steps: 1, 2, 3 (CEFR level system, AI tutor backend, AI tutor frontend)
+      Deliverable: Learners can read lessons grouped by CEFR level, see CEFR estimate, and
+      use AI tutor's Explain/Correct/Practice/Writing-Coach modes from any section.
+    </phase_1_foundation_content>
+
+    <phase_2_ai_conversation>
+      Source plan phase 2: AI Conversation MVP
+      Spec steps: 4, 5 (conversation backend + frontend)
+      Deliverable: Learners can run conversation missions end-to-end, see scoring, get review
+      items auto-created from missed targets.
+    </phase_2_ai_conversation>
+
+    <phase_3_adaptive_review>
+      Source plan phase 3: Adaptive Review
+      Spec steps: 6, 7 (skill scoring + review system)
+      Deliverable: Daily review queue surfaces due items; skill scores update from all activity;
+      dashboard shows "Today's review: N due"; /skills page shows breakdown.
+    </phase_3_adaptive_review>
+
+    <phase_4_assessments>
+      Source plan: split out from "Foundation"
+      Spec step: 8 (level exit assessments)
+      Deliverable: A1 + A2 exit assessments run end-to-end; pass updates cefr_estimate.
+    </phase_4_assessments>
+
+    <phase_5_teacher>
+      Source plan phase 4: Teacher Dashboard
+      Spec step: 9 (teacher dashboard MVP)
+      Deliverable: Teacher can manage a class, see student progress, get recommended actions,
+      assign lessons.
+    </phase_5_teacher>
+
+    <phase_6_school_saas>
+      Source plan phase 5: School SaaS Layer
+      Spec step: 10 (org admin portal)
+      Deliverable: Organizations + plan tiers + class-level reports + mock billing.
+    </phase_6_school_saas>
+
+    <phase_7_voice_and_polish>
+      Spec steps: 11 (voice), 13 (polish/observability)
+      Deliverable: Voice mode behind feature flag; rate limiting; cost telemetry; PWA review.
+    </phase_7_voice_and_polish>
+
+    <phase_8_content_expansion>
+      Spec step: 12 (content expansion)
+      Deliverable: Full A2 → C1 content path. Lower priority than v1 features.
+    </phase_8_content_expansion>
+  </implementation_phases>
+
+  <implementation_steps>
+    <step number="1">
+      <title>CEFR Level System Foundation</title>
+      <tasks>
+        - Add migration `2026XXXX_units_modules_lessons.sql`: create `units`, `modules`, `lessons` tables (or adapt `units` to be lessons-equivalent); ENABLE RLS with SELECT to authenticated; add cefr_level + role + target_cefr_level columns to profiles
+        - Backfill: seed 8 modules + 32 lesson stubs for A0-A1; seed 3 modules + 12 lesson stubs for A1-A2 (scaffolding only — content authored in step 12)
+        - Move existing `units.ts` data to a Supabase fetch path; keep TS module as a typed cache-front during transition
+        - Add `CefrLevel` Literal in `src/features/lessons/lesson.types.ts`
+        - LessonsIndex page: group units by CEFR level with `CefrBadge`
+        - Dashboard YourProgressCard adds CEFR badge + target pill from profile.cefr_estimate / target_cefr_level
+        - Add `/levels` and `/levels/:level` pages with module list
+        - Tests: TDD for migration data shape; component tests for CefrBadge, level grouping, dashboard extensions
+      </tasks>
+    </step>
+
+    <step number="2">
+      <title>AI Tutor Backend Foundation</title>
+      <tasks>
+        - Add `anthropic>=0.40` to `backend/requirements.txt`
+        - Add `ANTHROPIC_API_KEY`, `AI_DEFAULT_MODEL` (default 'claude-sonnet-4-6'), `AI_VOICE_ENABLED` (default false) to `backend/.env.example` and `backend/app/core/config.py` (Pydantic Settings)
+        - Create `backend/app/services/ai_prompts/` directory with system_prompt template modules (explain, correct, practice, writing_coach, conversation, score_session, review_coach, recommended_action)
+        - Add `backend/app/services/ai_tutor_service.py` with explain / correct / practice / writing_coach methods (no streaming yet)
+        - Add `backend/app/api/v1/ai_tutor.py` with the four endpoints
+        - Add `ai_usage_log` migration + `log_ai_usage_tx` Postgres function
+        - Add `submit_writing_coach_tx` Postgres function + writing_submissions table migration
+        - Use Anthropic SDK with prompt caching for system prompts; default `claude-sonnet-4-6`, override via env per <model_selection>
+        - ANTHROPIC_API_KEY validation: backend boots without it but AI endpoints return 503 with `{ code: 'ai_disabled' }`; surface in /api/v1/health as `ai_tutor_enabled: false`
+        - Mock-based unit tests for all four service methods (no real API calls in CI)
+      </tasks>
+    </step>
+
+    <step number="3">
+      <title>AI Tutor Frontend Surface</title>
+      <tasks>
+        - Add `src/lib/api/aiTutor.ts` client with the four methods, following the existing `authedFetch` + `defaultValue`-fallback pattern from progress.ts
+        - Add `AiTutorPanel` component with tabs: Explain | Correct | Practice | Writing Coach
+        - Floating "Ask Tutor" button on every section page (bottom-right, primary blue)
+        - `AiCorrectionBlock` component rendering the 4-block format
+        - `AiFeedbackPanel` component for writing-coach output (scores grid + inline annotations + rewritten exemplar)
+        - `OutputTaskBlock` lesson block component (textarea + word count + "Get feedback" button)
+        - i18n keys for all panel copy in en/vi/th/zh-CN (all four locales required)
+        - Unit tests for the panel component using mocked AiTutorAPI
+        - Manual smoke test: each tab returns a sensible response on A1, A2, B1 prompts
+      </tasks>
+    </step>
+
+    <step number="4">
+      <title>AI Conversation Missions Backend</title>
+      <tasks>
+        - Migration: ai_scenarios, ai_conversation_sessions, ai_conversation_turns tables + `*_tx` Postgres functions (start, record_turn, complete) + RLS
+        - Seed migration with the 24 scenarios from <conversation_scenarios_seed>
+        - `ai_conversation_service.py` with start_session, record_turn, complete_session methods
+        - SSE streaming endpoint `POST /api/v1/me/conversations/:session_id/turn` using Anthropic SDK streaming; emit metadata/token/done/error events per <streaming_protocol>
+        - System prompt template that includes scenario + target vocab/grammar + 6-criteria scoring rubric
+        - Scoring pass on session end: structured JSON response from Claude scored against the 6 criteria
+        - Auto-create review_items for target_vocab_misses inside complete_ai_conversation_session_tx
+        - Mock-based unit tests for service methods; real-DB integration test for full lifecycle (start → 3 turns → end → scores stored + review items created)
+        - Rate limit middleware (slowapi or in-process bucket): /me/conversations/:id/turn = 60/min, /me/conversations/:id/end = 5/min
+      </tasks>
+    </step>
+
+    <step number="5">
+      <title>AI Conversation Missions Frontend</title>
+      <tasks>
+        - Add `src/lib/api/aiConversation.ts` with start/turn/end methods + SSE consumption (EventSource + AbortController)
+        - Add `AiMissionBlock` lesson block type — embeds the "Start mission" CTA in section pages
+        - Add scenario picker page `/u/:username/conversations/scenarios`
+        - Add live mission runner `/u/:username/conversations/:scenarioSlug/:sessionId` with:
+          - Chat-style center column (ConversationTurnBubble for each turn)
+          - Right side panel with TargetVocabChip row + grammar checklist + scenario tips
+          - Streaming response rendering (character-by-character) with stop-generation button
+          - "End mission" button with confirm modal when success criteria not met
+        - Add session detail page `/u/:username/conversations/:sessionId` (transcript + scores + replay)
+        - Add session history page `/u/:username/conversations`
+        - Add session results screen with 6-criteria scores + review-items-added list + "Try again" / "Next mission" / "Back to lesson" CTAs
+        - i18n for all new copy
+        - Component tests; manual E2E for full happy-path flow
+      </tasks>
+    </step>
+
+    <step number="6">
+      <title>Multi-Skill Scoring Engine</title>
+      <tasks>
+        - Migration: skill_scores, skill_score_history tables; PK (user_id, skill); RLS SELECT-own
+        - `skill_scoring_service.py` with EWMA smoothing logic; sample_size cap at 30
+        - `update_skill_score_tx` Postgres function (called from other tx fns)
+        - Hook into existing exercise_attempts (extend submit_exercise_attempt_tx to call update_skill_score_tx) and the new ai_conversation_sessions completion (already calls it)
+        - Add `/api/v1/me/skills/summary`, `/skills/:skill/history`, `/skills/:skill/recent-errors`, `/skills/recommended-drills` endpoints
+        - Nightly job to recompute aggregated `cefr_estimate` on profiles (Supabase Edge Function — start with manual trigger, automate later via pg_cron or Vercel cron)
+        - Frontend: `/u/:username/skills` page with SkillBar grid + per-skill deep-dive sub-page (Recharts for history graph)
+        - Dashboard YourProgressCard gains "Skill breakdown" mini-row
+        - Unit tests for scoring math (EWMA); integration test that an exercise attempt updates the relevant skill_scores row
+      </tasks>
+    </step>
+
+    <step number="7">
+      <title>Adaptive Review System</title>
+      <tasks>
+        - Migration: review_items table; PK by id; index on (user_id, next_review_at); RLS SELECT-own
+        - `review_service.py` + `submit_review_answer_tx` Postgres function with SM-2-like scheduling
+        - Auto-create review_items on:
+          - exercise_attempts.is_correct = false (modify submit_exercise_attempt_tx)
+          - ai_conversation_sessions completion when target_vocab_misses non-empty (already in complete_ai_conversation_session_tx from step 4)
+          - Writing coach grammar errors (modify submit_writing_coach_tx)
+        - Endpoints: GET /me/review/queue, POST /me/review/answer, GET /me/review/stats, POST/DELETE /me/review/items
+        - Frontend: `/u/:username/review` page; ReviewDrillCard per item_type; difficulty buttons feed back into ease_factor
+        - Dashboard widget: "Today's review: N due" badge with subtle pulse
+        - Sidebar "Review" item with badge
+        - i18n for review surfaces
+        - Unit tests for SM-2 math (cover all 4 difficulty paths); integration test for full review session loop
+      </tasks>
+    </step>
+
+    <step number="8">
+      <title>Level Exit Assessments</title>
+      <tasks>
+        - Migration: assessments table with per-skill scores + section_state JSONB for resume
+        - `assessment_service.py` with start, submit_section, complete methods
+        - `submit_assessment_section_tx` + `complete_assessment_tx` Postgres functions
+        - Endpoints under /api/v1/me/assessments/*
+        - Build A1 + A2 assessment content fixtures: hand-author the listening clips (TTS-generated audio uploaded to lesson-audio bucket), reading articles, vocabulary items, grammar items
+        - Speaking assessment reuses existing scenario runner, scoped to the level's longest scenario
+        - Writing assessment: prompt + word-count target appropriate to level
+        - Frontend: `/u/:username/assessment/:level` runner with sequential sections, pause/resume, final results screen
+        - Dashboard CTA "Take A1 exit assessment" appears when all required A1 sections complete
+        - Pass triggers cefr_estimate update + level-badge unlock animation (subtle confetti, dismissible, prefers-reduced-motion-aware)
+        - Tests: assessment lifecycle integration test; pass/fail thresholds
+      </tasks>
+    </step>
+
+    <step number="9">
+      <title>Teacher Dashboard MVP</title>
+      <tasks>
+        - Migration: organizations, organization_memberships, classes, class_memberships, assigned_lessons + RLS (including the cross-table teacher-can-read-student-progress policies)
+        - `require_teacher` and `require_org_admin` dependencies in `app/core/security.py`
+        - Endpoints: /api/v1/teacher/{students, students/:id, students/:id/recommended-action, classes, classes/:id, classes/:id/roster, classes/:id/invite, classes/:id/assign-lesson, assignments/:id}
+        - `recommended_action_service.py` calling Claude (haiku-4-5) with structured summary of student's recent activity → one-liner
+        - `assign_lesson_tx` Postgres function with teacher-class ownership check
+        - Frontend: /teacher portal with overview + student deep-dive (tabs: Activity / Conversations / Writing / Errors)
+        - Sidebar "Teacher Portal" item gated on profile.role
+        - Class assignments surface on student's /lessons page as top "Assigned by your teacher" rail
+        - Per-student deep-dive shows: cefr_estimate, skill breakdown, last 10 conversations, last 5 writing samples, recurring errors (aggregated from user_activity_log)
+        - i18n for teacher surfaces
+        - Tests: role-gated endpoint tests; integration test for assign-lesson flow
+      </tasks>
+    </step>
+
+    <step number="10">
+      <title>School SaaS Layer</title>
+      <tasks>
+        - Org admin portal at /admin/orgs/:slug
+        - Endpoints for org CRUD (gated by env-var super-admin allowlist for now), teacher invites, seat tracking
+        - Email-based invite flow (use Supabase Auth's invite-by-email; fall back to magic-link generation)
+        - Mock billing UI: plan badge, seat usage bar, "Upgrade" CTA → contact-us modal (no Stripe)
+        - Class-level reports: aggregate skill scores, completion rates, recent activity (for the org admin view)
+        - Plan tier enforcement: AI conversation gated for `free`, voice mode gated for `starter` (use feature flags wired to org plan)
+        - Tests: org/class membership permission tests; plan-tier gating tests
+      </tasks>
+    </step>
+
+    <step number="11">
+      <title>Voice Mode for Conversation Missions</title>
+      <tasks>
+        - Behind feature flag `AI_VOICE_ENABLED` (default off); ship text-first first
+        - Browser-side: MediaRecorder for capture, upload to Supabase Storage path `voice-recordings/<user_id>/<session_id>/<turn>.webm`
+        - Backend: STT call (Whisper API or AssemblyAI per cost study); store transcript + confidence in ai_conversation_turns
+        - TTS for tutor turns: cache to `tts-cache/<content_hash>.mp3`; client streams playback via HTMLAudioElement
+        - Pronunciation Coach refines: per-phoneme scoring on submitted audio
+        - Add `/me/ai-tutor/pronunciation/score` endpoint
+        - i18n: all voice-mode UI copy
+        - Tests: mock STT/TTS providers; integration test for audio-upload + transcribe + score path
+      </tasks>
+    </step>
+
+    <step number="12">
+      <title>Content Expansion: A2 → C1 Path</title>
+      <tasks>
+        - Author the rest of the A1 → A2 path (40 lessons total; 28 more)
+        - Author A2 → B1 path (48 lessons across 12 modules)
+        - Author B1 → B1+, B1+ → B2, B2 → C1 paths (40 + 48 + 48 = 136 lessons)
+        - Each lesson: 5 sections (canonical structure), populated with vocab-list / dialogue / examples / exercise / ai-mission / output-task blocks
+        - Each lesson gets 1-2 ai_scenarios pinned to it
+        - Translations for vi/th/zh-CN per existing translation pipeline
+        - Unit images via existing `npm run lesson-images` pipeline
+        - Listening clips via TTS pipeline (uploaded to lesson-audio bucket)
+        - Seed migrations for the new units + scenarios
+        - This step can run in parallel with later phases; deliver level-by-level
+      </tasks>
+    </step>
+
+    <step number="13">
+      <title>Polish, Performance, Observability</title>
+      <tasks>
+        - Anthropic API cost telemetry: ai_usage_log already exists from step 2; add admin dashboard /admin/ai-usage with daily cost graph + per-endpoint breakdown + cache hit rate trend
+        - Rate limiting on AI endpoints: per-user per-minute caps via slowapi or in-process token bucket; org-tier multipliers
+        - Prompt caching coverage audit: confirm every system prompt block hits cache; alert when 24h cache_hit_rate &lt;60%
+        - SSE error handling: graceful reconnect (exp backoff), end-of-stream signaling, learner-facing "Tutor disconnected — retrying" toast
+        - Accessibility pass: aria-live regions for streamed text, keyboard nav for review cards, screen-reader announcements for skill score changes
+        - PWA manifest + service worker for offline-capable review (review queue cached locally; review answers queued and synced when online)
+        - Dark mode parity for every new surface
+        - Performance: code-split conversation runner, assessment runner, /skills page, teacher portal so the initial bundle stays under 700KB gzipped
+        - Lighthouse pass: ≥90 on Performance, Accessibility, Best Practices for /home, /lessons, /flashcards
+      </tasks>
+    </step>
+  </implementation_steps>
+
+  <observability_and_costs>
+    <metrics_to_track>
+      - Daily Anthropic token cost (input, output, cache_creation, cache_read) per endpoint
+      - 24h cache hit rate per endpoint (target: ≥80% for system prompts; ≥50% for scenario context)
+      - Per-user per-day AI cost (used to detect runaway loops or abuse)
+      - p50/p95/p99 latency per AI endpoint
+      - SSE connection success rate; reconnect attempts per session
+      - Review queue health: avg due_count per active user; review streak distribution
+      - Conversation mission completion rate (started → completed vs abandoned)
+      - Assessment pass rate per level
+    </metrics_to_track>
+
+    <alerting_thresholds>
+      - 24h cache hit rate &lt;60% → investigate prompt template changes
+      - Daily cost &gt;3x 7-day avg → investigate top spenders
+      - p95 latency on /me/conversations/*/turn &gt;5s → investigate Anthropic side or prompt size
+      - SSE error rate &gt;5% over 1h → investigate frontend reconnect logic or Anthropic stability
+    </alerting_thresholds>
+
+    <cost_controls>
+      - Per-user daily cost cap (default $1/day for `free` tier, $5 for paid; configurable via env)
+      - On cap breach: 429 with explanation; UI shows "You've reached today's AI limit"
+      - Anthropic budget alarm at AWS / Anthropic console level (out-of-band; not in the app)
+      - Prompt caching aggressively used; never put dynamic data in cached blocks
+    </cost_controls>
+  </observability_and_costs>
+
+  <success_criteria>
+    <functionality>
+      - Learner can complete a full A0 → A1 path: read sections, attempt exercises, run AI conversation missions, get scored, see scores in /skills
+      - Review queue surfaces due items daily and updates ease_factor on each answer
+      - A1 + A2 exit assessments run end-to-end (all 6 skill sections), produce per-skill breakdowns, update cefr_estimate on pass
+      - Teacher can log in, see students' progress, view deep-dive, get Claude-generated recommended action, assign a lesson
+      - All AI endpoints respect rate limits and degrade gracefully when ANTHROPIC_API_KEY is missing (503 with code='ai_disabled', `/health` returns ai_tutor_enabled=false)
+      - All AI streaming endpoints survive transient network drops (auto-reconnect with exponential backoff)
+    </functionality>
+
+    <user_experience>
+      - Streaming AI responses appear within 500ms of the first token
+      - SSE reconnects on transient network errors without losing turn state
+      - All new copy translated to vi/th/zh-CN; en used as fallbackLng
+      - Mobile-responsive: conversation runner usable on a 360px-wide screen
+      - Dark mode parity for every new surface
+      - Skill bars and CEFR badges have consistent color semantics across the app
+      - prefers-reduced-motion respected by every animation
+    </user_experience>
+
+    <technical_quality>
+      - All new tables ENABLE ROW LEVEL SECURITY with SELECT-own policies (and teacher-can-read-student policies where applicable)
+      - All write operations go through transactional `*_tx` Postgres functions GRANTed only to service_role
+      - Backend tests run mock-based for AI calls; integration tests cover full DB lifecycle for each domain
+      - Frontend tests cover all new components and hooks; new tests use established `vi.mock('@/stores/useUserStore')` + `vi.mock('@/lib/api/*')` patterns
+      - Type-check, lint, and build all pass on every PR
+      - Commit messages, PR bodies, and code comments NEVER reference Claude Code, Anthropic, or AI assistants (per project memory `feedback_no_claude_code_footer.md`)
+      - Hand-edited `database.types.ts` is regenerated via `supabase gen types typescript` after every schema-touching PR
+      - Spec/plan docs stay in sync as new tables ship; `app_spec.txt` and `CLAUDE.md` reflect current state
+    </technical_quality>
+
+    <design_polish>
+      - CefrBadge, SkillBar, ConversationTurnBubble, TargetVocabChip, ReviewDrillCard, AiFeedbackPanel, AiCorrectionBlock, ScenarioCard, ProgressDots, RecommendedActionCard match primary-blue / accent-gold palette
+      - Animations are subtle (150–600ms, ease-out) and disabled when prefers-reduced-motion
+      - Streaming AI text uses character-by-character reveal; conversation bubbles fade-and-slide
+      - Skill bars fill with ease-out animation on mount
+      - Confetti animation on assessment pass; subtle, dismissible, auto-clears in 3s
+      - Empty states for every new list page (history, conversations, review queue) with friendly CTA
+    </design_polish>
+
+    <product_outcome>
+      Three questions the platform answers clearly:
+      1. What can this learner do in English right now? → /skills + cefr_estimate badge
+      2. What exactly is holding them back? → recurring-errors panel + per-skill weak areas
+      3. What should they practice next? → daily review queue + recommended drills + AI Tutor practice mode
+
+      For teachers: deep-dive shows ability + risk areas + recommended intervention.
+      For schools: org-level reports show class progress, seat usage, and engagement metrics —
+      enough to justify a SaaS purchase.
+    </product_outcome>
+
+    <quantitative_goals>
+      - 80% of new A0 learners complete the first lesson within their first session
+      - 60% of A0 learners reach the A1 exit assessment within 30 days of signup
+      - 50% of A1 attempters pass on the first try (≥3.0 average, no skill below 2.0)
+      - Median conversation mission completion rate ≥70% (started → completed, not abandoned)
+      - Teacher dashboard "Recommended action" shipped with one-liner that 80% of teachers rate "useful" in feedback
+      - AI cost per active learner per month ≤$2 (driven by Haiku-where-possible + aggressive prompt caching)
+    </quantitative_goals>
+  </success_criteria>
+
+  <out_of_scope>
+    <intentionally_excluded>
+      - Real billing integration (Stripe/etc.) — mock UI only; real integration is a future SaaS PR
+      - Student-to-student social features (study groups, leaderboards beyond existing stub)
+      - Native mobile apps (iOS/Android) — PWA is the mobile story
+      - Live human tutor scheduling/payments — platform is AI-tutor-focused
+      - Content authoring CMS — content remains hand-authored in TS data + Postgres seed migrations until an authoring tool justifies its build cost
+      - Custom voice cloning / speaker-specific TTS — use the chosen provider's defaults
+      - Offline mode beyond review queue PWA caching mentioned in step 13
+      - Group conversation missions (multiple learners in one AI session) — single-learner only
+      - In-app messaging between teachers and students — out of MVP; teachers can email outside the app
+      - Custom assessment authoring by teachers — assessments are platform-authored only in MVP
+    </intentionally_excluded>
+
+    <explicit_dependencies_left_open>
+      - STT/TTS provider choice (step 11) — depends on cost study not yet done; default plan is Whisper API + OpenAI TTS, but ElevenLabs is a candidate for higher-quality tutor voices
+      - Background job runner for nightly cefr_estimate recompute — Supabase Edge Function vs pg_cron decision deferred to step 6 implementation
+      - Long-form content authoring tool — deferred until manual authoring path becomes a bottleneck
+      - Choice between Recharts and a lighter charting library for /skills history graphs — deferred to step 6
+    </explicit_dependencies_left_open>
+  </out_of_scope>
+
+  <agent_execution_notes>
+    <branching_and_prs>
+      - One PR per implementation step (or sub-step if a step's scope grows beyond ~500 lines of diff)
+      - Branch naming: `feat/<step-name>` for new features, `chore/<scope>` for schema-only or doc-only PRs
+      - Commit messages follow conventional commits (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`); NEVER reference Claude Code, Anthropic, AI assistants, or auto-generation in commit messages, PR bodies, code comments, or documentation
+      - Open PRs against `main` with a Test plan checklist matching this spec's success criteria
+      - Squash-merge by default; preserve commit message in the squash
+    </branching_and_prs>
+
+    <verification_gates>
+      Each PR must pass:
+      - `npm test -- --run` — all tests green
+      - `npm run type-check` — clean
+      - `npm run lint` — clean
+      - `npm run build` — succeeds; bundle stays under 700KB gzipped for code-split routes
+      - `cd backend &amp;&amp; pytest -v` — all backend tests green
+      - For migration-touching PRs: `supabase migration list` shows aligned local/remote columns after `supabase db push`
+      - For schema-touching PRs: `supabase gen types typescript` regenerated and committed
+      - Manual smoke test on the changed surface; UI changes verified in a browser before declaring done
+    </verification_gates>
+
+    <skill_priority_when_blocked>
+      If an implementation step is blocked on an external decision (STT provider, billing, etc.):
+      1. Defer the step
+      2. Continue with later steps that don't depend on it
+      3. Document the blocker in a memory note (`memory/project_blockers_<topic>.md`)
+      4. Surface the blocker on the next PR's description
+    </skill_priority_when_blocked>
+
+    <follow_existing_patterns>
+      Before creating a new pattern, check the existing codebase:
+      - Auth dependency: `get_current_user` (one path; don't introduce new auth helpers without a PR-level discussion)
+      - Frontend API client: `authedFetch` + `defaultValue` fallback (don't introduce new client patterns)
+      - Locale keys: nested objects under `<feature>.<surface>.<key>` (e.g., `lessons.section.next`, `flashcards.sets.<slug>.title`)
+      - Zustand stores: one per feature, expose selector hooks not raw state
+      - Postgres writes: transactional `*_tx` functions, REVOKEd from PUBLIC, GRANTed only to service_role
+      - Test setup: `vi.mock` at module scope, `createInstance()` for isolated i18next, `MemoryRouter` for route tests
+      - File names: kebab-case for components (`SkillBar.tsx`), snake_case for Python (`skill_scoring_service.py`), camelCase for TS modules (`useReviewQueue.ts`)
+      - Streaming: SSE with the standard event types (metadata, token, done, error) per <streaming_protocol>
+      - AI prompts: store in `backend/app/services/ai_prompts/`, build_system_prompt(level, **kwargs) signature
+    </follow_existing_patterns>
+
+    <when_to_pause_and_ask>
+      The agent should NOT silently extend the spec. Pause and surface a question to the user when:
+      - A new section_key beyond the canonical 5 is needed (would require updating 4 places)
+      - A new AI provider is needed beyond Anthropic
+      - A schema change would require backward-incompatible migration of existing data
+      - Cost estimates exceed the $2/active-user/month target by >2x
+      - A spec section conflicts with the source plan (`docs/ai-assisted-english-learning-path.md`) — flag the conflict
+      - A required external dependency (STT/TTS provider) cost exceeds reasonable bounds
+    </when_to_pause_and_ask>
+
+    <reference_documents>
+      - Source plan (authoritative for product vision): `docs/ai-assisted-english-learning-path.md`
+      - Project conventions (load-bearing — read before any work): `CLAUDE.md`
+      - Phase 1 progress tracking baseline (the canonical pattern to copy for new tx functions): `docs/superpowers/specs/2026-05-03-phase-1-progress-tracking-design.md`
+      - Recent UX work for reference: `docs/superpowers/specs/2026-05-04-flashcards-sidebar-layout-design.md`, `2026-05-04-next-lesson-cta-design.md`
+      - User memory rules: `C:\Users\kayla\.claude\projects\C--Users-kayla-dev-projects-tiger-english\memory\` — particularly `feedback_no_claude_code_footer.md`, `feedback_secrets_backend_only.md`, `feedback_run_full_test_suite_for_data_rewrites.md`, `feedback_skip_ceremony_for_small_chores.md`
+      - Frontend README: `README.md` (Quick Start)
+      - Backend README: `backend/README.md` (endpoint inventory)
+    </reference_documents>
+
+    <content_seeding_strategy>
+      For the 32 A0-A1 lessons + 12 A1-A2 lessons + 24 scenarios in MVP:
+      - Hand-authoring is fine for a 50-lesson MVP; do NOT build a content authoring tool
+      - Use Claude Opus 4.7 OFFLINE (i.e., dev-time scripts under `scripts/seed-lessons.ts`) to generate first-draft content from the level blueprint + lesson template; human review before commit
+      - Each lesson's content lives as a JSON fixture committed to the repo, then loaded into `lessons` table via seed migration
+      - Translation pipeline: re-use the existing flashcard translation pattern (locale files keyed by lesson slug)
+      - Image generation: use existing `npm run lesson-images` pipeline
+      - Listening audio: TTS-generate via Anthropic-friendly TTS provider; cache by content hash; upload to `lesson-audio` bucket
+
+      Do NOT generate content at runtime for lessons — content is static and committed. Runtime AI is only for tutor responses, conversation, scoring, and writing feedback.
+    </content_seeding_strategy>
+  </agent_execution_notes>
+</project_specification>
