@@ -86,11 +86,11 @@ describe("getSection + sectionRegistry", () => {
     expect(dialogueBlocks).toHaveLength(2);
   });
 
-  it("returns auto-registered unit-2 activities with 12 exercises", () => {
+  it("returns auto-registered unit-2 activities with 13 exercises", () => {
     const section = getSection("unit-2", "activities");
     expect(section).toBeDefined();
     const exerciseBlocks = section!.blocks.filter((b) => b.type === "exercise");
-    expect(exerciseBlocks).toHaveLength(12);
+    expect(exerciseBlocks).toHaveLength(13);
   });
 
   it("returns section after manual registration", () => {

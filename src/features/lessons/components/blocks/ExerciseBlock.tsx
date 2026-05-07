@@ -1,9 +1,10 @@
 import MultipleChoice from "@/components/exercises/MultipleChoice";
 import FillBlank from "@/components/exercises/FillBlank";
+import MatchPairs from "@/components/exercises/MatchPairs";
 import type { ExerciseType } from "../../lesson.types";
 import * as unit1Exercises from "../../data/exercises/unit-1";
 import * as unit2Exercises from "../../data/exercises/unit-2";
-import type { McqExercise, FillBlankExercise } from "@/components/exercises/exercises.types";
+import type { McqExercise, FillBlankExercise, MatchExercise } from "@/components/exercises/exercises.types";
 import { ProgressAPI } from "@/lib/api/progress";
 import { srcSetFor } from "@/lib/storageImage";
 
@@ -19,7 +20,8 @@ type Props = {
 
 type TaggedExercise =
   | { type: "multiple-choice"; data: McqExercise }
-  | { type: "fill-blank"; data: FillBlankExercise };
+  | { type: "fill-blank"; data: FillBlankExercise }
+  | { type: "match"; data: MatchExercise };
 
 const exerciseMap: Record<string, TaggedExercise> = {
   "u1-grammar-mcq-1": { type: "multiple-choice", data: unit1Exercises.grammarMcq1 },
@@ -49,6 +51,8 @@ const exerciseMap: Record<string, TaggedExercise> = {
   "u2-activities-mcq-8": { type: "multiple-choice", data: unit2Exercises.activitiesContractionItMcq },
   "u2-activities-fb-3": { type: "fill-blank", data: unit2Exercises.activitiesContractionShortenFb },
   "u2-activities-mcq-9": { type: "multiple-choice", data: unit2Exercises.activitiesContractionCorrectMcq },
+  // unit-2 activities: match-the-word-to-image
+  "u2-activities-match-1": { type: "match", data: unit2Exercises.activitiesMatchClassroomItems },
 };
 
 export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, imageAlt, onCorrect, unitSlug, sectionKey }: Props) {
@@ -60,14 +64,6 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, imag
       isCorrect,
     });
   };
-  if (exerciseType === "match") {
-    return (
-      <div className="card p-6 opacity-60 text-center">
-        <p className="text-sm font-medium text-semantic-text-muted">Coming soon</p>
-      </div>
-    );
-  }
-
   const entry = exerciseMap[exerciseId];
 
   if (!entry || entry.type !== exerciseType) {
@@ -106,6 +102,7 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, imag
       })()}
       {entry.type === "multiple-choice" && <MultipleChoice exercise={entry.data} onCorrect={onCorrect} onAttempt={handleAttempt} />}
       {entry.type === "fill-blank" && <FillBlank exercise={entry.data} onCorrect={onCorrect} onAttempt={handleAttempt} />}
+      {entry.type === "match" && <MatchPairs exercise={entry.data} onCorrect={onCorrect} onAttempt={handleAttempt} />}
     </div>
   );
 }
