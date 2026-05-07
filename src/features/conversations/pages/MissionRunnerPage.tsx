@@ -23,6 +23,7 @@ import {
   ChevronUp,
   Flag,
   Info,
+  PartyPopper,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { API_BASE } from "@/lib/api/config";
@@ -115,6 +116,12 @@ export default function MissionRunnerPage() {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // True once every target word has flipped to "used". Drives the
+  // success banner that surfaces a "Finish & see results" CTA so the
+  // user doesn't have to find the small red abort button to wrap up.
+  const allTargetsHit =
+    vocabChips.length > 0 && vocabChips.every((c) => c.status === "used");
 
   // Seed opening line from scenario
   useEffect(() => {
@@ -450,6 +457,51 @@ export default function MissionRunnerPage() {
             )}
             <div ref={chatEndRef} />
           </div>
+
+          {/* Mission complete banner — auto-shown when every target word
+              has been used. The 'End mission' button in the top bar is
+              styled as an abort affordance (red, Flag icon); this banner
+              is the success path so finishing feels intentional rather
+              than like termination. Input stays available so the user
+              can keep practicing past the minimum bar if they want. */}
+          {allTargetsHit && !missionEnded && (
+            <div className="flex-shrink-0 px-3 pt-3">
+              <div className="flex items-center gap-3 rounded-lg border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 p-3">
+                <PartyPopper
+                  className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0"
+                  aria-hidden
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-green-800 dark:text-green-200">
+                    {t("conversations.mission.allTargetsHit.title", {
+                      defaultValue: "All target words used!",
+                    })}
+                  </p>
+                  <p className="text-xs text-green-700 dark:text-green-300">
+                    {t("conversations.mission.allTargetsHit.subtitle", {
+                      defaultValue:
+                        "Wrap up to see your scores, or keep practicing.",
+                    })}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={doEndMission}
+                  disabled={endingMission}
+                  className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {endingMission ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5" aria-hidden />
+                  )}
+                  {t("conversations.mission.allTargetsHit.cta", {
+                    defaultValue: "Finish & see results",
+                  })}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Input bar */}
           {!missionEnded && (

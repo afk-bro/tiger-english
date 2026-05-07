@@ -576,7 +576,12 @@
       "vocabScore": "你使用了 {{used}}/{{total}} 个目标词汇（{{pct}}%）",
       "tryAnother": "尝试其他任务",
       "inputPlaceholder": "输入你的回答…",
-      "send": "发送"
+      "send": "发送",
+      "allTargetsHit": {
+        "title": "所有目标词汇已使用！",
+        "subtitle": "结束查看分数，或继续练习。",
+        "cta": "结束并查看结果"
+      }
     },
     "history": {
       "title": "我的对话",

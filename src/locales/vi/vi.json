@@ -584,7 +584,12 @@
       "vocabScore": "Bạn đã dùng {{used}}/{{total}} từ mục tiêu ({{pct}}%)",
       "tryAnother": "Thử nhiệm vụ khác",
       "inputPlaceholder": "Nhập câu trả lời của bạn…",
-      "send": "Gửi"
+      "send": "Gửi",
+      "allTargetsHit": {
+        "title": "Đã dùng hết các từ mục tiêu!",
+        "subtitle": "Kết thúc để xem điểm, hoặc tiếp tục luyện tập.",
+        "cta": "Kết thúc & xem kết quả"
+      }
     },
     "history": {
       "title": "Hội thoại của tôi",
