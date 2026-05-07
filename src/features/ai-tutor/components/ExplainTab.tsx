@@ -2,20 +2,23 @@
  * ExplainTab — sends the learner's question to /me/ai-tutor/explain/stream
  * and displays the AI response token-by-token via SSE streaming.
  *
- * Falls back to the non-streaming /explain endpoint if the browser does
- * not support ReadableStream body iteration (very rare in modern browsers).
+ * Falls back to the non-streaming /explain endpoint (which goes through
+ * the shared authedFetch helper via aiTutorAPI.explain) if the browser
+ * does not support ReadableStream body iteration (very rare in modern
+ * browsers) or the streaming endpoint isn't available.
+ *
+ * The streaming fetch itself stays inline rather than going through the
+ * shared authedFetch helper because the helper auto-parses res.json(),
+ * which would consume the SSE body. Streaming needs raw Response access.
  */
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Send, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { API_BASE } from "@/lib/api/config";
 import { aiTutorAPI } from "@/lib/api/aiTutor";
 import { useUserStore } from "@/stores/useUserStore";
 import { getLearnerLanguage } from "@/features/lessons/utils/learnerLanguage";
-
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:8000/api/v1";
 
 type Status = "idle" | "streaming" | "done" | "disabled" | "error";
 

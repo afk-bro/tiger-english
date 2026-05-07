@@ -25,12 +25,10 @@ import {
   Info,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { API_BASE } from "@/lib/api/config";
+import { authedGet, authedPostJson } from "@/lib/api/authedFetch";
 import CefrBadge from "@/components/CefrBadge";
 import type { ConversationScenario } from "../conversations.types";
-
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:8000/api/v1";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,27 +69,24 @@ function useScenario(slug: string | undefined) {
 
   useEffect(() => {
     if (!slug) return;
+    let cancelled = false;
     (async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) return;
-        const res = await fetch(`${API_BASE}/me/conversations/scenarios`, {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        const found = (data.scenarios as ConversationScenario[]).find(
-          (s) => s.slug === slug
+        const data = await authedGet<{ scenarios: ConversationScenario[] }>(
+          "/me/conversations/scenarios",
         );
+        if (cancelled) return;
+        const found = data?.scenarios.find((s) => s.slug === slug);
         setScenario(found ?? null);
       } catch {
         /* ignore */
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   return { scenario, loading };
@@ -142,6 +137,13 @@ export default function MissionRunnerPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // NOTE: this path doesn't go through the shared authedFetch helper because:
+  // - Retry semantics: we retry only on network failures (fetch throws), not on
+  //   HTTP errors. authedFetch throws on any non-2xx, which would cause this
+  //   loop to retry rate-limit (429) responses — wrong.
+  // - 429 handling: we read `retry_after_seconds` from the body and surface a
+  //   toast. Easier to keep that branch inline alongside the retry logic.
+  // If the helper grows a "raw response" mode in the future, this can migrate.
   async function fetchWithRetry(
     url: string,
     options: RequestInit,
@@ -298,29 +300,17 @@ export default function MissionRunnerPage() {
     const learnerTurns = messages.filter((m) => m.role === "learner").length;
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session) {
-        const res = await fetch(`${API_BASE}/me/conversations/end`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            scenario_slug: slug,
-            turn_count: learnerTurns,
-            vocab_hits: vocabHits,
-            vocab_misses: vocabMisses,
-            history: messages.map((m) => ({ role: m.role, text: m.text })),
-          }),
-        });
-        if (res.ok) {
-          const data: EndSessionResult = await res.json();
-          setEndResults(data);
-        }
-      }
+      const data = await authedPostJson<EndSessionResult>(
+        "/me/conversations/end",
+        {
+          scenario_slug: slug,
+          turn_count: learnerTurns,
+          vocab_hits: vocabHits,
+          vocab_misses: vocabMisses,
+          history: messages.map((m) => ({ role: m.role, text: m.text })),
+        },
+      );
+      if (data) setEndResults(data);
     } catch {
       // Fallback: show basic results without backend data
     } finally {

@@ -8,8 +8,7 @@ import type { CefrLevel, Unit } from "../lesson.types";
 import { CefrBadge } from "@/components/CefrBadge";
 import { getCefrColorClasses } from "@/components/cefrBadge.utils";
 import { Link } from "react-router-dom";
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
+import { API_BASE } from "@/lib/api/config";
 
 /** Stub teacher assignment — would come from API in production. */
 const STUB_ASSIGNED_LESSONS: Array<{ unitSlug: string; title: string; level: CefrLevel; dueDate: string | null }> = [

@@ -2,10 +2,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BarChart2, TrendingUp, Zap, RefreshCw, Clock } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000/api/v1";
+import { authedGet } from "@/lib/api/authedFetch";
 
 type EndpointStat = {
   endpoint: string;
@@ -36,16 +33,11 @@ type Summary = {
 };
 
 async function fetchSummary(): Promise<Summary | null> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session) return null;
-
-  const res = await fetch(`${API_BASE}/admin/ai-usage-summary`, {
-    headers: { Authorization: `Bearer ${session.access_token}` },
-  });
-  if (!res.ok) return null;
-  return res.json() as Promise<Summary>;
+  try {
+    return await authedGet<Summary>("/admin/ai-usage-summary");
+  } catch {
+    return null;
+  }
 }
 
 export default function AdminAiUsagePage() {

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { authedGet } from "@/lib/api/authedFetch";
 import type { SkillScore } from "./skills.types";
-
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000/api/v1";
 
 type SkillsSummary = {
   skills: SkillScore[];
@@ -21,31 +19,23 @@ export function useSkillsSummary(): UseSkillsSummaryResult {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchSummary() {
+    let cancelled = false;
+    (async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          setData(null);
-          setIsLoading(false);
-          return;
-        }
-
-        const res = await fetch(`${API_BASE}/me/skills/summary`, {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-        const json = await res.json() as SkillsSummary;
-        setData(json);
+        const json = await authedGet<SkillsSummary>("/me/skills/summary");
+        if (!cancelled) setData(json);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load skills");
-        setData(null);
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load skills");
+          setData(null);
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
-    }
-    void fetchSummary();
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return { data, isLoading, error };
