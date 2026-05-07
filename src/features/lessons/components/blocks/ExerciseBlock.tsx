@@ -5,6 +5,7 @@ import * as unit1Exercises from "../../data/exercises/unit-1";
 import * as unit2Exercises from "../../data/exercises/unit-2";
 import type { McqExercise, FillBlankExercise } from "@/components/exercises/exercises.types";
 import { ProgressAPI } from "@/lib/api/progress";
+import { srcSetFor } from "@/lib/storageImage";
 
 type Props = {
   exerciseType: ExerciseType;
@@ -78,19 +79,26 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, onCo
 
   return (
     <div className="card p-6 shadow-sm border border-semantic-border">
-      {/* TODO: alt="" assumes the image is decorative. Image-prompt exercises
-          ("choose what's in the picture") need real alt text from the data. */}
-      {imageUrl && (
-        <img
-          src={imageUrl}
-          alt=""
-          width={1024}
-          height={1024}
-          loading="lazy"
-          decoding="async"
-          className="w-full rounded-lg mb-4 object-cover"
-        />
-      )}
+      {/* TODO(a11y): alt="" assumes the image is decorative. Image-prompt
+          exercises ("choose what's in the picture") need real alt text
+          from the exercise data — separate from the sizing fix below. */}
+      {imageUrl && (() => {
+        // Card body renders ~700–800px wide on desktop and full-width on
+        // mobile. Request 768 for 1× and 1024 (source size) for 2×.
+        const { src, srcSet } = srcSetFor(imageUrl, 768);
+        return (
+          <img
+            src={src}
+            srcSet={srcSet}
+            alt=""
+            width={1024}
+            height={1024}
+            loading="lazy"
+            decoding="async"
+            className="w-full rounded-lg mb-4 object-cover"
+          />
+        );
+      })()}
       {entry.type === "multiple-choice" && <MultipleChoice exercise={entry.data} onCorrect={onCorrect} onAttempt={handleAttempt} />}
       {entry.type === "fill-blank" && <FillBlank exercise={entry.data} onCorrect={onCorrect} onAttempt={handleAttempt} />}
     </div>
