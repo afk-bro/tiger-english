@@ -42,7 +42,7 @@ def reset_in_memory_stores() -> list[str]:
 
     Each store is cleared independently via try/except so a future
     rename/removal of any one module doesn't break the whole test suite.
-    Three stores are known today; add new entries to STORES below as
+    Two stores are known today; add new entries to STORES below as
     new in-memory caches are introduced.
     """
     cleared: list[str] = []

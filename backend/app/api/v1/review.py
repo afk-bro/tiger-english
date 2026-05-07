@@ -47,16 +47,24 @@ async def get_due_items(
     user_id: UUID = Depends(get_current_user),
     supabase=Depends(get_supabase_admin),
 ) -> list[ReviewItem]:
-    """Return up to 20 review items currently due for the user."""
+    """Return up to 20 review items currently due for the user.
+
+    On transient Supabase errors we degrade to an empty list rather than
+    surfacing a 500 to the review UI, which is non-critical.
+    """
     uid = str(user_id)
     now_iso = datetime.now(timezone.utc).isoformat()
 
-    result = supabase.table("review_items") \
-        .select("*") \
-        .eq("user_id", uid) \
-        .lte("next_review_at", now_iso) \
-        .limit(20) \
-        .execute()
+    try:
+        result = supabase.table("review_items") \
+            .select("*") \
+            .eq("user_id", uid) \
+            .lte("next_review_at", now_iso) \
+            .limit(20) \
+            .execute()
+    except Exception:
+        logger.exception("Failed to fetch review items for user %s", uid)
+        return []
 
     items: list[ReviewItem] = []
     for row in result.data or []:
@@ -79,15 +87,23 @@ async def get_due_count(
     user_id: UUID = Depends(get_current_user),
     supabase=Depends(get_supabase_admin),
 ) -> ReviewCountResponse:
-    """Return the count of currently-due review items for the user."""
+    """Return the count of currently-due review items for the user.
+
+    Mirrors /due: degrade to count=0 on transient errors so the badge
+    just shows nothing instead of breaking the page that hosts it.
+    """
     uid = str(user_id)
     now_iso = datetime.now(timezone.utc).isoformat()
 
-    result = supabase.table("review_items") \
-        .select("id", count="exact") \
-        .eq("user_id", uid) \
-        .lte("next_review_at", now_iso) \
-        .execute()
+    try:
+        result = supabase.table("review_items") \
+            .select("id", count="exact") \
+            .eq("user_id", uid) \
+            .lte("next_review_at", now_iso) \
+            .execute()
+    except Exception:
+        logger.exception("Failed to fetch review count for user %s", uid)
+        return ReviewCountResponse(count=0)
 
     return ReviewCountResponse(count=result.count or 0)
 
@@ -137,36 +153,53 @@ async def rate_item(
     user_id: UUID = Depends(get_current_user),
     supabase=Depends(get_supabase_admin),
 ) -> RateDifficultyResponse:
-    """Record a difficulty rating for a review item, applying SM-2 scheduling."""
+    """Record a difficulty rating for a review item, applying SM-2 scheduling.
+
+    Returns 404 if the item doesn't exist for this user, 503 on transient
+    Supabase errors, otherwise 200 with the updated SM-2 schedule.
+    """
     uid = str(user_id)
     logger.info("Review rating: user=%s item=%s difficulty=%s", uid, item_id, body.difficulty)
 
-    result = supabase.table("review_items") \
-        .select("ease_factor, interval_days, streak_correct") \
-        .eq("id", item_id) \
-        .eq("user_id", uid) \
-        .single() \
-        .execute()
+    # Use limit(1) instead of .single() — supabase-py's .single() raises
+    # PGRST116 for "no rows", which we'd then have to string-match to
+    # distinguish from real errors. limit(1) gives us a clean
+    # data-or-empty contract.
+    try:
+        result = supabase.table("review_items") \
+            .select("ease_factor, interval_days, streak_correct") \
+            .eq("id", item_id) \
+            .eq("user_id", uid) \
+            .limit(1) \
+            .execute()
+    except Exception:
+        logger.exception("Failed to fetch review item %s for user %s", item_id, uid)
+        raise HTTPException(status_code=503, detail="Review service temporarily unavailable")
 
     if not result.data:
         raise HTTPException(status_code=404, detail="Review item not found")
 
-    row = result.data
+    row = result.data[0]
     new_ef, new_interval, new_streak = _sm2_update(
         float(row["ease_factor"]),
         int(row["interval_days"]),
         int(row["streak_correct"]),
         body.difficulty,
     )
-    next_review = (datetime.now(timezone.utc) + timedelta(days=new_interval)).isoformat()
+    now = datetime.now(timezone.utc)
+    next_review = (now + timedelta(days=new_interval)).isoformat()
 
-    supabase.table("review_items").update({
-        "ease_factor": new_ef,
-        "interval_days": new_interval,
-        "streak_correct": new_streak,
-        "next_review_at": next_review,
-        "last_reviewed_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("id", item_id).execute()
+    try:
+        supabase.table("review_items").update({
+            "ease_factor": new_ef,
+            "interval_days": new_interval,
+            "streak_correct": new_streak,
+            "next_review_at": next_review,
+            "last_reviewed_at": now.isoformat(),
+        }).eq("id", item_id).execute()
+    except Exception:
+        logger.exception("Failed to update review item %s for user %s", item_id, uid)
+        raise HTTPException(status_code=503, detail="Review service temporarily unavailable")
 
     return RateDifficultyResponse(
         success=True,
