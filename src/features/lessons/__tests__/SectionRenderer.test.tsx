@@ -66,7 +66,7 @@ describe("SectionRenderer", () => {
     expect(screen.queryByText("Remember.")).not.toBeInTheDocument();
   });
 
-  it("renders an <img> in an exercise block when block.imageUrl is set", () => {
+  it("renders an exercise image as decorative by default when imageAlt is omitted", () => {
     const section: Section = {
       id: "test", unitSlug: "unit-1", key: "activities",
       blocks: [
@@ -76,5 +76,24 @@ describe("SectionRenderer", () => {
     const { container } = render(<SectionRenderer section={section} unitSlug="unit-1" sectionKey="activities" />);
     const img = container.querySelector("img");
     expect(img).toHaveAttribute("src", "https://example.com/e.png");
+    expect(img).toHaveAttribute("alt", "");
+  });
+
+  it("uses exercise imageAlt when provided", () => {
+    const section: Section = {
+      id: "test", unitSlug: "unit-1", key: "activities",
+      blocks: [
+        {
+          id: "ex1",
+          type: "exercise",
+          exerciseType: "multiple-choice",
+          exerciseId: "u1-grammar-mcq-1",
+          imageUrl: "https://example.com/e.png",
+          imageAlt: "A woman reading in a library",
+        },
+      ],
+    };
+    render(<SectionRenderer section={section} unitSlug="unit-1" sectionKey="activities" />);
+    expect(screen.getByRole("img", { name: "A woman reading in a library" })).toBeInTheDocument();
   });
 });
