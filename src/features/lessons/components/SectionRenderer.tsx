@@ -6,8 +6,6 @@ import VocabListBlock from "./blocks/VocabListBlock";
 import DialogueBlock from "./blocks/DialogueBlock";
 import CalloutBlock from "./blocks/CalloutBlock";
 import ExerciseBlock from "./blocks/ExerciseBlock";
-import OutputTaskBlock from "./blocks/OutputTaskBlock";
-import AiMissionBlock from "./blocks/AiMissionBlock";
 
 function renderBlock(block: SectionBlock, onExerciseCorrect: (() => void) | undefined, unitSlug: string, sectionKey: string) {
   switch (block.type) {
@@ -18,8 +16,6 @@ function renderBlock(block: SectionBlock, onExerciseCorrect: (() => void) | unde
     case "dialogue": return <DialogueBlock lines={block.lines} imageUrl={block.imageUrl} />;
     case "callout": return <CalloutBlock variant={block.variant} content={block.content} translations={block.translations} />;
     case "exercise": return <ExerciseBlock exerciseType={block.exerciseType} exerciseId={block.exerciseId} imageUrl={block.imageUrl} onCorrect={onExerciseCorrect} unitSlug={unitSlug} sectionKey={sectionKey} />;
-    case "output-task": return <OutputTaskBlock prompt={block.prompt} minWords={block.minWords} maxWords={block.maxWords} translations={block.translations} />;
-    case "ai-mission": return <AiMissionBlock scenarioSlug={block.scenarioSlug} title={block.title} description={block.description} estimatedMinutes={block.estimatedMinutes} cefrLevel={block.cefrLevel} />;
     default: return null;
   }
 }

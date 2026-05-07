@@ -513,6 +513,7 @@
         "lessons": "บทเรียน",
         "review": "ทบทวน",
         "skills": "ทักษะ",
+        "practice": "ฝึกฝน",
         "conversations": "สนทนา",
         "library": "ห้องสมุด",
         "study_groups": "กลุ่มเรียน",
@@ -534,6 +535,19 @@
       "public_profile": "โปรไฟล์สาธารณะ"
     },
     "back": "กลับ"
+  },
+  "practice": {
+    "title": "ฝึกฝน",
+    "subtitle": "นำสิ่งที่คุณได้เรียนรู้มาใช้กับ AI",
+    "conversation": {
+      "title": "สนทนากับ AI",
+      "description": "ฝึกสนทนาจริงกับคู่หู AI ผ่านสถานการณ์ที่มีการแนะนำ"
+    },
+    "writing": {
+      "title": "เขียนแบบมีคำแนะนำ",
+      "description": "พัฒนาทักษะการเขียนด้วยคำแนะนำและฟีดแบ็กจาก AI",
+      "comingSoon": "เร็วๆ นี้"
+    }
   },
   "conversations": {
     "backToScenarios": "กลับไปที่รายการสถานการณ์",
