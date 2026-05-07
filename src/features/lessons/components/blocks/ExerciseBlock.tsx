@@ -84,7 +84,8 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, onCo
           from the exercise data — separate from the sizing fix below. */}
       {imageUrl && (() => {
         // Card body renders ~700–800px wide on desktop and full-width on
-        // mobile. Request 768 for 1× and 1024 (source size) for 2×.
+        // mobile. Request 768 for 1×; the 2× variant (1536) is capped by
+        // Supabase to the 1024 source, which is what retina users get.
         const { src, srcSet } = srcSetFor(imageUrl, 768);
         return (
           <img

@@ -35,6 +35,19 @@ describe("resizedStorageUrl", () => {
   it("passes through empty or non-string-shaped values unchanged", () => {
     expect(resizedStorageUrl("", { width: 64 })).toBe("");
   });
+
+  it("does not rewrite an external URL that merely has the storage path in its query string", () => {
+    // The substring-based version of this helper would have matched and
+    // mangled this URL — pin the path-based check.
+    const spoofed =
+      "https://redirector.example.com/r?next=/storage/v1/object/public/lesson-images/x.png";
+    expect(resizedStorageUrl(spoofed, { width: 64 })).toBe(spoofed);
+  });
+
+  it("returns relative or unparseable URLs unchanged", () => {
+    expect(resizedStorageUrl("/relative/path.png", { width: 64 })).toBe("/relative/path.png");
+    expect(resizedStorageUrl("not a url", { width: 64 })).toBe("not a url");
+  });
 });
 
 describe("srcSetFor", () => {

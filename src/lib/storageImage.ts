@@ -31,21 +31,33 @@ export type ResizeOptions = {
  * Returns a transformed URL if `url` points at a Supabase Storage
  * public object, otherwise returns `url` unchanged. Idempotent: passing
  * an already-transformed URL just updates the query params.
+ *
+ * The pathname check (rather than a substring scan) matters: an
+ * external URL whose query string happens to contain
+ * `/storage/v1/object/public/` (e.g. a redirector with a `next=` param)
+ * must not be rewritten as if it were a Supabase asset.
  */
 export function resizedStorageUrl(url: string, opts: ResizeOptions): string {
   if (typeof url !== "string" || url.length === 0) return url;
 
-  // Already a render URL — strip its query and re-apply ours.
-  if (url.includes(RENDER_PATH)) {
-    const [base] = url.split("?");
-    return appendParams(base, opts);
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    // Relative or otherwise unparseable — leave alone.
+    return url;
   }
 
-  // Object URL we can rewrite.
-  if (url.includes(OBJECT_PATH)) {
-    const [base] = url.split("?");
-    const rendered = base.replace(OBJECT_PATH, RENDER_PATH);
-    return appendParams(rendered, opts);
+  if (parsed.pathname.startsWith(RENDER_PATH)) {
+    // Already a render URL — drop existing transform params and re-apply ours.
+    parsed.search = "";
+    return applyParams(parsed, opts);
+  }
+
+  if (parsed.pathname.startsWith(OBJECT_PATH)) {
+    parsed.pathname = parsed.pathname.replace(OBJECT_PATH, RENDER_PATH);
+    parsed.search = "";
+    return applyParams(parsed, opts);
   }
 
   return url;
@@ -68,10 +80,9 @@ export function srcSetFor(
   };
 }
 
-function appendParams(base: string, opts: ResizeOptions): string {
-  const params = new URLSearchParams();
-  params.set("width", String(opts.width));
-  params.set("resize", opts.resize ?? "cover");
-  params.set("quality", String(opts.quality ?? 80));
-  return `${base}?${params.toString()}`;
+function applyParams(parsed: URL, opts: ResizeOptions): string {
+  parsed.searchParams.set("width", String(opts.width));
+  parsed.searchParams.set("resize", opts.resize ?? "cover");
+  parsed.searchParams.set("quality", String(opts.quality ?? 80));
+  return parsed.toString();
 }
