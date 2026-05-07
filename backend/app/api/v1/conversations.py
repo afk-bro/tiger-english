@@ -22,7 +22,6 @@ from pydantic import BaseModel
 
 from app.core.security import get_current_user
 from app.core.supabase import get_supabase_admin
-from app.core import pending_reviews
 
 logger = logging.getLogger(__name__)
 
@@ -627,16 +626,9 @@ async def end_conversation(
 
     review_items_added: List[str] = []
 
-    # Add missed vocab to the in-memory pending review store (always works)
-    # and also try to persist to the DB review_items table if it exists.
     if body.vocab_misses:
-        now = datetime.now(timezone.utc)
+        now_iso = datetime.now(timezone.utc).isoformat()
         uid = str(user_id)
-        # Primary: in-memory store (always succeeds, survives backend restart for hours)
-        pending_reviews.add_vocab_items(uid, body.vocab_misses, body.scenario_slug)
-        review_items_added.extend(body.vocab_misses)
-
-        # Secondary: try to persist to DB review_items table
         for word in body.vocab_misses:
             try:
                 supabase.table("review_items").insert({
@@ -648,12 +640,14 @@ async def end_conversation(
                     "ease_factor": 2.5,
                     "interval_days": 1,
                     "streak_correct": 0,
-                    "next_review_at": now.isoformat(),
+                    "next_review_at": now_iso,
                     "last_reviewed_at": None,
                 }).execute()
-                logger.info("Persisted review_item '%s' for user %s", word, uid)
+                review_items_added.append(word)
             except Exception as exc:
-                logger.debug("review_items table unavailable for '%s': %s", word, exc)
+                # Don't fail the whole end-session call if a single insert errors;
+                # just skip the word and let the user retry later.
+                logger.error("Failed to persist review_item '%s' for user %s: %s", word, uid, exc)
 
     return EndSessionResponse(
         scores=scores,
