@@ -29,7 +29,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
-    exclude: ['**/node_modules/**', '**/e2e/**'],
+    // .claude/worktrees/ holds transient agent worktrees (each contains a
+    // checkout of src/), and globbing into them double-counts every test
+    // and runs them in the wrong working directory.
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/.claude/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
