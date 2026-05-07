@@ -13,7 +13,7 @@ import logging
 import time
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Literal, Tuple
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -22,6 +22,9 @@ from pydantic import BaseModel
 
 from app.core.security import get_current_user
 from app.core.supabase import get_supabase_admin
+from app.core.config import settings
+from app.api.v1.ai_tutor import get_ai_tutor_service
+from app.services.ai_tutor_service import AiDisabledException, AiTutorService
 
 logger = logging.getLogger(__name__)
 
@@ -415,7 +418,11 @@ LEVEL_BAND_ORDER = ["A0–A1", "A1–A2", "A2–B1", "B1–B1+", "B1+–B2", "B2
 # ── Request / response models ─────────────────────────────────────────────────
 
 class TurnMessage(BaseModel):
-    role: str
+    # Domain roles match the frontend's ChatMessage shape ("tutor" =
+    # the AI / scenario partner, "learner" = the user). The service
+    # layer maps these onto Anthropic's user/assistant roles before
+    # building the messages array.
+    role: Literal["tutor", "learner"]
     text: str
 
 
@@ -423,6 +430,10 @@ class TurnRequest(BaseModel):
     scenario_slug: str
     message: str
     history: List[TurnMessage] = []
+    # Vocabulary targets the learner has NOT yet used in this session.
+    # The frontend tracks chip status client-side and forwards the unused
+    # subset on every turn so the AI can steer toward unmet objectives.
+    remaining_targets: List[str] = []
 
 
 @router.get("/me/conversations/scenarios")
@@ -453,15 +464,15 @@ async def list_scenarios(
 async def conversation_turn(
     body: TurnRequest,
     user_id: UUID = Depends(get_current_user),
+    service: AiTutorService = Depends(get_ai_tutor_service),
 ):
     """Send one conversational turn.
 
     Rate limited to 60 requests per minute per user. Returns 429 with
     Retry-After header when the limit is exceeded.
 
-    Phase 4: When real AI is available, this will call the AI tutor service.
-    For now it returns a stub response so the frontend can exercise the
-    rate-limiting and turn-recording paths.
+    Returns 503 with `ai_disabled` if the Anthropic key is not configured —
+    consistent with the sibling AI tutor endpoints.
     """
     uid = str(user_id)
     retry_after = _check_rate_limit(uid)
@@ -476,19 +487,45 @@ async def conversation_turn(
             headers={"Retry-After": str(retry_after)},
         )
 
-    # Find scenario for context
+    if not settings.ai_tutor_enabled:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "code": "ai_disabled",
+                "detail": "AI features are not enabled on this server.",
+            },
+        )
+
     scenario = next(
         (s for s in SEED_SCENARIOS if s["slug"] == body.scenario_slug), None
     )
-    ai_role = scenario["ai_role"] if scenario else "AI tutor"
+    if scenario is None:
+        raise HTTPException(status_code=404, detail="Scenario not found")
 
-    # Stub reply — real Anthropic call goes here in Phase 4
-    stub_reply = _generate_stub_reply(body.message, ai_role)
+    try:
+        reply = await service.conversation_turn(
+            scenario=scenario,
+            history=[m.model_dump() for m in body.history],
+            message=body.message,
+            remaining_targets=body.remaining_targets,
+            cefr_level=scenario.get("level", "A1"),
+        )
+    except AiDisabledException:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "code": "ai_disabled",
+                "detail": "AI features are not enabled on this server.",
+            },
+        )
+    except Exception as exc:
+        logger.exception("Conversation turn failed for user=%s: %s", uid, exc)
+        raise HTTPException(status_code=500, detail="Conversation turn failed")
 
     return {
-        "reply": stub_reply,
+        "reply": reply,
         "turn_index": len(body.history) + 1,
-        "vocab_used": [],  # will be populated by NLP detection in Phase 4
+        "vocab_used": [],  # populated server-side in phase 2b (per-turn evaluator)
     }
 
 
@@ -658,19 +695,3 @@ async def end_conversation(
     )
 
 
-def _generate_stub_reply(message: str, ai_role: str) -> str:
-    """Generate a contextually aware stub reply for the current turn."""
-    lower = message.lower()
-    if len(lower) < 8:
-        return "Could you say a bit more? I'd love to hear more from you!"
-    if any(w in lower for w in ("hello", "hi", "hey", "good morning", "good afternoon")):
-        return f"Hello! Great to meet you. I'm {ai_role}. How can I help you today?"
-    if any(w in lower for w in ("name", "called", "i am", "i'm")):
-        return "What a lovely name! Nice to meet you properly. Where are you from?"
-    if any(w in lower for w in ("from", "country", "live", "city")):
-        return "How interesting! I'd love to visit there someday. What's the best thing about where you live?"
-    if any(w in lower for w in ("work", "job", "study", "school", "university")):
-        return "That sounds really fulfilling! How long have you been doing that?"
-    if any(w in lower for w in ("thank", "thanks", "great", "good", "nice")):
-        return "You're very welcome! You're doing really well. Keep it up!"
-    return "That's great! Can you tell me a little more about that?"
