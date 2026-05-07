@@ -102,4 +102,42 @@ describe("MatchPairs", () => {
     fireEvent.click(bookBtn);
     expect(bookBtn).toHaveAttribute("aria-pressed", "false");
   });
+
+  it("the visible 'Not a match' message clears when the error flash ends", () => {
+    // Regression guard: previously this row was tied to `feedback`,
+    // which is only cleared on completion or reset, so the message
+    // stuck around for the rest of the session after the first wrong
+    // pair. It should now be tied to the transient `error` state.
+    vi.useFakeTimers();
+    render(<MatchPairs exercise={exercise} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "book" }));
+    fireEvent.click(screen.getByRole("button", { name: "A wooden chair" }));
+
+    expect(screen.getByText("Not a match — keep going.")).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(screen.queryByText("Not a match — keep going.")).not.toBeInTheDocument();
+  });
+
+  it("falls back to a word-interpolated aria-label when imageAlt is missing", () => {
+    // Regression guard: previously every image with missing imageAlt
+    // got the same fallback string ("Picture for matching"), making
+    // tiles indistinguishable to screen readers. Now the fallback
+    // interpolates the pair's word so each label is unique.
+    const exerciseNoAlt: MatchExercise = {
+      id: "match-no-alt",
+      prompt: "Match.",
+      pairs: [
+        { id: "p1", word: "apple", fallback: "🍎" },
+        { id: "p2", word: "banana", fallback: "🍌" },
+      ],
+    };
+    render(<MatchPairs exercise={exerciseNoAlt} />);
+    expect(screen.getByRole("button", { name: "Picture for apple" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Picture for banana" })).toBeInTheDocument();
+  });
 });

@@ -20,12 +20,13 @@
  *   - Each tile is a real <button> so it's keyboard-focusable; Enter /
  *     Space activates.
  *   - aria-pressed reflects selected state.
- *   - aria-live region announces match / mismatch outcomes.
- *   - Word and image tiles in a pair share an aria-describedby so a
- *     screen reader user navigating one column can hear which item
- *     in the other column it pairs with after matching.
+ *   - aria-live="polite" region announces match / mismatch outcomes.
+ *   - Each pair has imageAlt so screen readers describe the image
+ *     content (without that, the matching task is unsolvable for SR
+ *     users — see the imageAlt fallback in the image tile aria-label
+ *     for the dev-error case where it's missing).
  */
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle, RotateCcw, XCircle } from "lucide-react";
 import { clsx } from "clsx";
 import { useTranslation } from "react-i18next";
@@ -60,16 +61,17 @@ export default function MatchPairs({ exercise, onCorrect, onAttempt }: Props) {
     exercise.promptTranslations,
   );
 
-  // Stable shuffles for word + image columns. useMemo keyed on the
-  // exercise id so navigating away and back gives a fresh shuffle but
-  // re-renders during play don't reorder mid-game.
-  const wordOrder = useMemo(() => shuffle(exercise.pairs.map((p) => p.id)), [exercise.id]);
-  const imageOrder = useMemo(() => shuffle(exercise.pairs.map((p) => p.id)), [exercise.id]);
+  // Stable shuffles for word + image columns. Keyed on the pairs array
+  // reference (not just exercise.id) so a parent that swaps pair data
+  // while keeping the same id doesn't render stale tiles. Same-array
+  // re-renders during play do not reshuffle.
+  const wordOrder = useMemo(() => shuffle(exercise.pairs.map((p) => p.id)), [exercise.pairs]);
+  const imageOrder = useMemo(() => shuffle(exercise.pairs.map((p) => p.id)), [exercise.pairs]);
   const pairById = useMemo(() => {
     const m = new Map<string, MatchPair>();
     for (const p of exercise.pairs) m.set(p.id, p);
     return m;
-  }, [exercise.id]);
+  }, [exercise.pairs]);
 
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -87,6 +89,13 @@ export default function MatchPairs({ exercise, onCorrect, onAttempt }: Props) {
       errorTimerRef.current = null;
     }
   }
+
+  // Make sure a pending mismatch flash timer can't fire on an unmounted
+  // component (React warns + the timer leaks if the user navigates
+  // away within the 350ms window).
+  useEffect(() => {
+    return () => clearErrorTimer();
+  }, []);
 
   function attemptPair(wordId: string, imageId: string) {
     if (wordId === imageId) {
@@ -221,7 +230,14 @@ export default function MatchPairs({ exercise, onCorrect, onAttempt }: Props) {
                   pair.imageAlt ??
                   t("lessons.exercises.match.imageOf", {
                     word: pair.word,
-                    defaultValue: `Picture for matching`,
+                    // Fallback used only when an author forgets to set
+                    // imageAlt. We interpolate the word so the buttons
+                    // stay distinguishable for screen readers (the
+                    // alternative — every tile labeled "Picture for
+                    // matching" — is unsolvable). Note that this label
+                    // gives away the answer; correctly authored data
+                    // should always set a descriptive imageAlt.
+                    defaultValue: `Picture for ${pair.word}`,
                   })
                 }
                 className={clsx(
@@ -244,40 +260,34 @@ export default function MatchPairs({ exercise, onCorrect, onAttempt }: Props) {
         </div>
       </div>
 
-      {(allMatched || feedback === "incorrect") && (
+      {/* Status row: completion (sticky) or transient mismatch.
+          Tying the mismatch message to `error` (not `feedback`) means
+          it disappears when the flash clears (~350ms) — matching the
+          tile flash. `feedback` is kept as a separate flag so
+          onAttempt(false) only fires once per session. */}
+      {allMatched ? (
         <div className="flex items-center justify-between">
-          <div
-            className={clsx(
-              "flex items-center gap-2 text-sm font-medium",
-              allMatched ? "text-semantic-success" : "text-red-600 dark:text-red-400",
-            )}
-          >
-            {allMatched ? (
-              <>
-                <CheckCircle className="w-4 h-4" aria-hidden="true" />
-                {t("lessons.exercises.correct")}
-              </>
-            ) : (
-              <>
-                <XCircle className="w-4 h-4" aria-hidden="true" />
-                {t("lessons.exercises.match.keepGoing", {
-                  defaultValue: "Not a match — keep going.",
-                })}
-              </>
-            )}
+          <div className="flex items-center gap-2 text-sm font-medium text-semantic-success">
+            <CheckCircle className="w-4 h-4" aria-hidden="true" />
+            {t("lessons.exercises.correct")}
           </div>
-          {allMatched && (
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
-            >
-              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-              {t("lessons.exercises.match.playAgain", { defaultValue: "Play again" })}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleReset}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
+          >
+            <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+            {t("lessons.exercises.match.playAgain", { defaultValue: "Play again" })}
+          </button>
         </div>
-      )}
+      ) : error ? (
+        <div className="flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400">
+          <XCircle className="w-4 h-4" aria-hidden="true" />
+          {t("lessons.exercises.match.keepGoing", {
+            defaultValue: "Not a match — keep going.",
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }
