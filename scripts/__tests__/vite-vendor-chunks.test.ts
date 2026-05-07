@@ -19,7 +19,7 @@ describe("vendorChunkFor — package routing", () => {
     ["@supabase/supabase-js/dist/index.js", "vendor-supabase"],
     ["react-router-dom/dist/index.js", "vendor-router"],
     ["i18next/dist/cjs/i18next.js", "vendor-i18n"],
-    ["react-i18next/dist/index.js", "vendor-i18n"],
+    ["react-i18next/dist/index.js", "vendor-react"],
     ["react-hook-form/dist/index.js", "vendor-forms"],
     ["@hookform/resolvers/zod/index.js", "vendor-forms"],
     ["zod/lib/index.js", "vendor-forms"],
@@ -48,10 +48,14 @@ describe("vendorChunkFor — bucket precedence", () => {
     ).toBe("vendor-router");
   });
 
-  it("react-i18next lands in vendor-i18n (not vendor-react)", () => {
+  it("react-i18next is collocated with React in vendor-react", () => {
+    // Originally split into vendor-i18n, but its module init dereferences
+    // React's default import — separating the chunks produced a runtime
+    // 'Cannot read properties of undefined (reading createContext)' on
+    // load. Pinning the placement here so it doesn't regress.
     expect(
       vendorChunkFor("/repo/node_modules/react-i18next/dist/index.js"),
-    ).toBe("vendor-i18n");
+    ).toBe("vendor-react");
   });
 });
 

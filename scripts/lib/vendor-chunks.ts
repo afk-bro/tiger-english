@@ -15,9 +15,14 @@ export function vendorChunkFor(id: string): string | undefined {
   if (!normalized.includes("/node_modules/")) return undefined;
   if (normalized.includes("/react-router")) return "vendor-router";
   if (normalized.includes("/@supabase/")) return "vendor-supabase";
+  // i18next core only — react-i18next is collocated with React below.
+  // Splitting react-i18next into its own chunk produced a runtime
+  // "Cannot read properties of undefined (reading 'createContext')"
+  // because its module init dereferences React's default import before
+  // the vendor-react chunk was reliably ready in the loader.
   if (
-    normalized.includes("/i18next") ||
-    normalized.includes("/react-i18next")
+    normalized.includes("/i18next/") &&
+    !normalized.includes("/react-i18next/")
   ) {
     return "vendor-i18n";
   }
@@ -35,11 +40,14 @@ export function vendorChunkFor(id: string): string | undefined {
   ) {
     return "vendor-ui";
   }
-  // React itself goes last so the more specific buckets above (which
-  // include react-* packages depending on react) catch first.
+  // React core + libs whose module init dereferences React (must share a
+  // chunk so the dereference is in-scope at evaluation time). Goes last so
+  // the more specific buckets above (router, forms, ui) catch their own
+  // react-* packages first.
   if (
     normalized.includes("/react/") ||
     normalized.includes("/react-dom/") ||
+    normalized.includes("/react-i18next/") ||
     normalized.includes("/scheduler/")
   ) {
     return "vendor-react";
