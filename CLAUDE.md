@@ -71,7 +71,7 @@ React Router DOM v7. Pages are lazy-loaded with `Suspense`. Three layout buckets
 
 - **`PublicLayout`** (Header + Footer): `/`, `/about`, `/contact`, `/login`, `/register`, `/u/:username` (public profile stub)
 - **`FlashcardsLayout`** (auth-aware): `/flashcards` — picks `AuthLayout` when `useUserStore.profile` is non-null, `PublicLayout` otherwise. Anonymous users still get the preview path; logged-in users keep the sidebar
-- **`AuthLayout` + `RequireAuth`** (sidebar + slim header): `/home`, `/dashboard`, `/lessons`, `/lessons/:unitSlug`, `/lessons/:unitSlug/:sectionKey`, `/library`, `/study-groups`, `/notifications`, `/settings`, `/drag-drop`, `/ad-libs`
+- **`AuthLayout` + `RequireAuth`** (sidebar + slim header): `/home`, `/dashboard`, `/lessons`, `/lessons/:unitSlug`, `/lessons/:unitSlug/:sectionKey`, `/practice` (hub), `/conversations`, `/conversations/:slug`, `/u/:username/conversations`, `/u/:username/conversations/scenarios`, `/u/:username/conversations/:sessionId`, `/review`, `/skills`, `/skills/:skillKey`, `/library`, `/study-groups`, `/notifications`, `/settings`, `/drag-drop`, `/ad-libs`
 - **No layout wrapper**: `/auth/callback` (OAuth completion handler — top-level sibling route)
 
 ### Forms
@@ -94,21 +94,35 @@ Tailwind CSS with dark mode (class-based). Custom colors defined in `tailwind.co
 ```
 backend/app/
 ├── api/v1/
-│   ├── auth.py        # Auth endpoints: /register, /check-username, /logout, /profile (PATCH)
-│   └── progress.py    # Progress endpoints under /me/progress/: complete-section, attempt-exercise, review-flashcard, summary (auth via get_current_user)
+│   ├── auth.py            # /register, /check-username, /logout, /profile (PATCH)
+│   ├── progress.py        # /me/progress/{complete-section,attempt-exercise,review-flashcard,summary}
+│   ├── ai_tutor.py        # /me/ai-tutor/{explain,correct,practice,writing-coach}
+│   ├── conversations.py   # /me/conversations/{scenarios,turn,end} — AI roleplay sessions
+│   ├── review.py          # /me/review/{due,count,{id}/rate} — SM-2 spaced repetition queue
+│   ├── skills.py          # /me/skills/summary — 11-skill EWMA scores
+│   ├── lessons.py         # lesson-data endpoints
+│   └── admin.py           # /admin/* — gated by super_admin_user_ids env list
 ├── core/
-│   ├── config.py      # Pydantic BaseSettings (reads backend/.env)
-│   ├── security.py    # JWT helpers, password hashing, get_current_user dependency
-│   └── supabase.py    # Supabase admin client (uses SUPABASE_SECRET_KEY)
+│   ├── config.py          # Pydantic BaseSettings (reads backend/.env)
+│   ├── security.py        # JWT helpers, password hashing, get_current_user dependency
+│   └── supabase.py        # Supabase admin client (uses SUPABASE_SECRET_KEY)
 ├── models/
-│   ├── auth.py        # Pydantic auth models (UpdateProfile validates timezone)
-│   └── progress.py    # Pydantic progress models (SectionKey Literal, regex-validated unit_slug + exercise_id)
+│   ├── auth.py            # Pydantic auth models (UpdateProfile validates timezone)
+│   └── progress.py        # Pydantic progress models (SectionKey Literal, regex-validated unit_slug + exercise_id)
 └── services/
-    ├── auth_service.py     # Business logic: create user, verify credentials
-    └── progress_service.py # Domain functions: complete_lesson_section, submit_exercise_attempt, review_flashcard, get_summary
+    ├── auth_service.py        # create user, verify credentials
+    ├── progress_service.py    # complete_lesson_section, submit_exercise_attempt, review_flashcard, get_summary
+    ├── ai_tutor_service.py    # Anthropic SDK wrapper; raises AiDisabledException when no key
+    ├── skill_scoring_service.py  # EWMA per-skill score updates
+    └── sm2_service.py         # SM-2 spaced repetition algorithm
 
-backend/tests/         # pytest infrastructure; tests are mock-based — real DB verification happens in manual walkthroughs
+backend/tests/             # pytest infrastructure; tests are mock-based — real DB verification happens in manual walkthroughs
 ```
+
+**Top-level routes:**
+- `GET /health` — lightweight liveness probe (no I/O), used by Railway healthcheck
+- `GET /api/v1/health` — application-level readiness (checks DB + AI reachability)
+- `GET /` — version banner
 
 Note: there is no `/auth/login` HTTP endpoint. `login_user()` exists on `AuthService` for future internal use (org membership checks, invite-only flows, admin tooling) but is not exposed as a route.
 
@@ -126,6 +140,7 @@ Note: All progress writes go through transactional Postgres functions (`complete
 - `lesson_section_progress` — projection: which sections each user has completed (idempotent on user/unit/section)
 - `exercise_attempts` — projection: every exercise attempt (correct OR incorrect)
 - `flashcard_reviews` — projection: flashcard known/unknown reviews
+- `review_items` — SM-2 spaced repetition queue. Per-user, per-item rows with `ease_factor`, `interval_days`, `streak_correct`, `next_review_at`, etc. Backed by `/me/review/*` endpoints. RLS limits SELECT to the owner; writes go through `service_role` from the backend.
 
 ## Environment Variables
 
@@ -134,6 +149,7 @@ Note: All progress writes go through transactional Postgres functions (`complete
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 VITE_API_BASE_URL=http://localhost:8000/api/v1
+VITE_AI_CONVERSATION_ENABLED=  # set to "true" to expose the AI Conversation card on /practice; falls back to "Coming soon"
 
 # Playwright e2e (loaded by playwright.config.ts via vite's loadEnv)
 E2E_TESTER_EMAIL=
@@ -147,12 +163,31 @@ SUPABASE_SECRET_KEY=
 SECRET_KEY=
 ALLOWED_ORIGINS=["http://localhost:5173"]
 ENVIRONMENT=development
-LEONARDO_API_KEY=     # Used by scripts/generate-lesson-images.ts via dotenv (not yet read by FastAPI runtime)
+ANTHROPIC_API_KEY=    # required for /me/ai-tutor/* and /me/conversations/turn; absent → 503 ai_disabled
+LEONARDO_API_KEY=     # used by scripts/generate-lesson-images.ts via dotenv (not yet read by FastAPI runtime)
 ```
+
+In production these are set on the host platform (Vercel for frontend, Railway for backend), not in `.env` files. See `## Production deployment` below.
 
 ## Git Workflow
 
 Always work on a feature branch — never commit directly to `main`. Branch naming: `feat/<name>`, `fix/<name>`, `refactor/<name>`. Open a PR targeting `main` when the work is ready.
+
+## Production deployment
+
+**Frontend → Vercel.** Built from `main` on every push; previews on every PR branch. Env vars live in the Vercel dashboard (NOT in `.env` files in the repo) — Vite bakes `VITE_*` env vars in at build time, so changing one requires a redeploy with cache disabled.
+
+**Backend → Railway.** Built via Nixpacks from `backend/` (Root Directory set to `backend` in service settings). `backend/railway.toml` defines the start command (`uvicorn app.main:app --host 0.0.0.0 --port $PORT`), the `/health` healthcheck path, and a restart-on-failure policy (3 retries). `/health` is intentionally lightweight (no DB I/O) — `/api/v1/health` is the application-level readiness probe.
+
+Production frontend talks to production backend via `VITE_API_BASE_URL` (set in Vercel) → `https://<railway-domain>/api/v1`. The Vercel preview environment doesn't currently set Vercel-preview origins on the Railway `ALLOWED_ORIGINS` allowlist — preview branches that hit authed endpoints fail CORS until that's added.
+
+## /practice and the three-mode product structure
+
+The app is organized around **Lessons / Practice / Review**:
+
+- **Lessons** (`/lessons`) — short, completable, beginner-safe. **Deterministic** — no AI in the completion path. The `output-task` and `ai-mission` `SectionBlock` variants were removed in PR #137; AI/open-ended blocks are not allowed in lesson section data.
+- **Practice** (`/practice`) — applies what's been learned. Currently surfaces an AI Conversation card (links to `/conversations` when `VITE_AI_CONVERSATION_ENABLED === "true"`, otherwise renders as "Coming soon") and a Guided Writing card (always "Coming soon" for now).
+- **Review** (`/review`) — spaced repetition; backed by `review_items` and the `/me/review/*` endpoints.
 
 ## Lesson images
 
@@ -167,8 +202,26 @@ npm run lesson-images -- --unit unit-2 --item <id>  # regenerate one item
 
 The Leonardo API key (`LEONARDO_API_KEY` in `backend/.env`) and Supabase secret key (`SUPABASE_SECRET_KEY`) are read server-side only by the script — never bundled into the client.
 
+`buildCandidates` enumerates: unit-level, section-level, vocab-list items, dialogue blocks, and exercise blocks. **Match exercises (`MatchExercise.pairs[]`) are not yet enumerated** — per-pair Leonardo generation is a queued follow-up. Until then, match exercises render with `fallback` emoji glyphs from the pair data.
+
+Image URLs are served via Supabase Storage's `/storage/v1/render/image/public/` transform endpoint. The `srcSetFor()` helper in `src/lib/storageImage.ts` rewrites `/object/public/` URLs to the render endpoint and emits a `srcSet` with 1× and 2× density variants. Used by VocabListBlock, ExerciseBlock, DialogueBlock, and MatchPairs. External (non-Supabase) URLs pass through unchanged via a path-based check, so callers can apply it blindly.
+
+**Image alt-text convention** on the dialogue and exercise variants of `SectionBlock`:
+- omit / empty `imageAlt` → `alt=""` (decorative; screen readers skip)
+- non-empty `imageAlt` → `alt="<text>"` (informative; described to screen readers)
+Image-prompt exercises ("choose what's in the picture") MUST set `imageAlt` so the question stays answerable for SR users.
+
 Spec: `docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md`.
 Plan: `docs/superpowers/plans/2026-05-02-lesson-image-generation.md`.
+
+## Exercises
+
+Three exercise types live under `src/components/exercises/`:
+- **`MultipleChoice`** — single-correct option select. Data: `McqExercise`.
+- **`FillBlank`** — text input with `correctAnswer` + optional `acceptableAnswers`. Data: `FillBlankExercise`.
+- **`MatchPairs`** — mobile-first tap-to-pair word↔image matching. Two columns (words left, images right). Tile sizes ≥56/88 px clear WCAG 2.5.5. Data: `MatchExercise` with `pairs: MatchPair[]`. Each pair carries `imagePrompt` for pipeline generation, `imageAlt` for accessibility, and a `fallback` glyph rendered when no `imageUrl` is set yet.
+
+`ExerciseBlock` (in `src/features/lessons/components/blocks/`) dispatches by `exerciseType` against an `exerciseMap` of pre-imported data. Add a new exercise: define the data in `src/features/lessons/data/exercises/unit-N.ts`, add it to the map in `ExerciseBlock`, and reference it from a section block with `type: "exercise"`, `exerciseType`, and `exerciseId`.
 
 ## Flashcard sets
 
