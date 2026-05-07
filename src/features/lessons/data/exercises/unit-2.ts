@@ -1,5 +1,5 @@
 // src/features/lessons/data/exercises/unit-2.ts
-import type { McqExercise, FillBlankExercise } from "@/components/exercises/exercises.types";
+import type { McqExercise, FillBlankExercise, MatchExercise } from "@/components/exercises/exercises.types";
 
 // ----- Grammar exercises (in grammar.ts) -----
 
@@ -164,4 +164,54 @@ export const activitiesContractionCorrectMcq: McqExercise = {
     { id: "c", text: "We're at the bank." },
   ],
   correctOptionId: "c",
+};
+
+// ----- Activities: match-the-word-to-image -----
+//
+// `imageUrl` is omitted on each pair — the `fallback` glyph renders
+// until the lesson-images pipeline is extended to produce per-pair
+// images from `imagePrompt`. The exercise is fully playable now with
+// emoji glyphs; pipeline integration is a follow-up PR.
+export const activitiesMatchClassroomItems: MatchExercise = {
+  id: "u2-activities-match-1",
+  prompt: "Tap a word, then tap the picture that matches it.",
+  promptTranslations: {
+    vi: "Chạm vào một từ, rồi chạm vào hình phù hợp.",
+    th: "แตะคำ แล้วแตะรูปที่ตรงกัน",
+    "zh-CN": "点击一个单词，然后点击与之匹配的图片。",
+  },
+  pairs: [
+    {
+      id: "u2-match-book",
+      word: "book",
+      imageAlt: "An open book",
+      imagePrompt: "A simple, clean illustration of an open book on a plain background, lesson-image style",
+      fallback: "📖",
+      translations: { vi: "sách" },
+    },
+    {
+      id: "u2-match-pencil",
+      word: "pencil",
+      imageAlt: "A yellow wooden pencil",
+      imagePrompt: "A simple, clean illustration of a yellow wooden pencil on a plain background, lesson-image style",
+      fallback: "✏️",
+      translations: { vi: "bút chì" },
+    },
+    {
+      id: "u2-match-chair",
+      word: "chair",
+      imageAlt: "A simple wooden chair",
+      imagePrompt: "A simple, clean illustration of a wooden chair on a plain background, lesson-image style",
+      fallback: "🪑",
+      translations: { vi: "ghế" },
+    },
+    {
+      id: "u2-match-clock",
+      word: "clock",
+      imageAlt: "A round wall clock",
+      imagePrompt: "A simple, clean illustration of a round wall clock on a plain background, lesson-image style",
+      fallback: "🕐",
+      translations: { vi: "đồng hồ" },
+    },
+  ],
 };

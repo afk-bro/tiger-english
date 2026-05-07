@@ -41,6 +41,7 @@ const activities: Section = {
     { id: "u2-act-vocab-2", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u2-activities-mcq-2" },
     { id: "u2-act-vocab-3", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u2-activities-mcq-3" },
     { id: "u2-act-vocab-4", type: "exercise", exerciseType: "multiple-choice", exerciseId: "u2-activities-mcq-4" },
+    { id: "u2-act-vocab-match-1", type: "exercise", exerciseType: "match", exerciseId: "u2-activities-match-1" },
 
     {
       id: "u2-act-cluster-where-h",
