@@ -47,6 +47,17 @@ async def root():
         "docs": "/docs"
     }
 
+
+@app.get("/health")
+async def liveness():
+    """Lightweight liveness probe for the host platform (Railway, etc.).
+
+    Intentionally does no I/O — a 200 here means the process is up and
+    serving. For application-level readiness (DB, AI keys, etc.) see
+    /api/v1/health.
+    """
+    return {"status": "ok"}
+
 @app.get("/api/v1/health")
 async def health_check():
     """
