@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { clsx } from "clsx";
 import type { DialogueLine } from "../../lesson.types";
 import { getLearnerLanguage } from "../../utils/learnerLanguage";
+import { srcSetFor } from "@/lib/storageImage";
 
 type Props = { lines: DialogueLine[]; imageUrl?: string; imageAlt?: string };
 
@@ -11,17 +12,25 @@ export default function DialogueBlock({ lines, imageUrl, imageAlt }: Props) {
 
   return (
     <div className="space-y-3">
-      {imageUrl && (
-        <img
-          src={imageUrl}
-          alt={imageAlt ?? ""}
-          width={1024}
-          height={1024}
-          loading="lazy"
-          decoding="async"
-          className="w-full rounded-lg mb-4 object-cover"
-        />
-      )}
+      {imageUrl && (() => {
+        // Same shape as ExerciseBlock: dialogue banner renders w-full
+        // inside a section, ~700–800px on desktop, full-width on mobile.
+        // Request 768 for 1×; the 2× variant (1536) is capped by
+        // Supabase to the 1024 source for retina users.
+        const { src, srcSet } = srcSetFor(imageUrl, 768);
+        return (
+          <img
+            src={src}
+            srcSet={srcSet}
+            alt={imageAlt ?? ""}
+            width={1024}
+            height={1024}
+            loading="lazy"
+            decoding="async"
+            className="w-full rounded-lg mb-4 object-cover"
+          />
+        );
+      })()}
       {lines.map((line, i) => {
         const translation = learnerLang ? line.translations[learnerLang] : undefined;
         return (
