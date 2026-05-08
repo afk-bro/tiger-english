@@ -35,7 +35,18 @@ type Props = {
   nextUnit?: NextUnit;
 };
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 function fireConfetti() {
+  // Respect the user's OS-level motion preference. The modal itself
+  // (icon, copy, CTAs) is the meaningful celebration; the confetti is
+  // decorative and skipping it for reduced-motion users avoids
+  // animation that can trigger nausea or vestibular discomfort.
+  if (prefersReducedMotion()) return;
+
   // Two side bursts angled inward — feels celebratory without feeling
   // like an ad. Particle count kept moderate so low-end devices don't
   // stutter. Origin x is the firing point on each side; spread is the

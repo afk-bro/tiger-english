@@ -37,18 +37,24 @@ export default function SectionPage() {
   // a first render where it's already true) and fire the celebration
   // modal exactly once per unit per browser — see unitCelebration.ts
   // for the localStorage flag that enforces "once".
-  const allCompleted =
-    !!unit &&
-    unit.status === "available" &&
-    unit.sections.every((s) => getSectionProgress(unit.slug, s.key).completed);
+  //
+  // Effect depends on the primitive `unitSlug` (not the `unit` object)
+  // because `getUnit` returns a fresh hydrated object each render —
+  // depending on `unit` directly would re-run the effect on every
+  // unrelated re-render and repeatedly poke localStorage.
+  const allCompleted = Boolean(
+    unit &&
+      unit.status === "available" &&
+      unit.sections.every((s) => getSectionProgress(unit.slug, s.key).completed),
+  );
 
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   useEffect(() => {
-    if (!unit || !allCompleted) return;
-    if (hasUnitBeenCelebrated(unit.slug)) return;
+    if (!unitSlug || !allCompleted) return;
+    if (hasUnitBeenCelebrated(unitSlug)) return;
     setShowCompletionModal(true);
-    markUnitAsCelebrated(unit.slug);
-  }, [unit, allCompleted]);
+    markUnitAsCelebrated(unitSlug);
+  }, [unitSlug, allCompleted]);
 
   const progressKey = unitSlug && validSectionKey ? `${unitSlug}:${validSectionKey}` : "";
   const progress = useLessonProgressStore(

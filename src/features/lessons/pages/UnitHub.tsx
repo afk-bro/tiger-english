@@ -19,6 +19,33 @@ export default function UnitHub() {
   const getSectionProgress = useLessonProgressStore((s) => s.getSectionProgress);
   const lastVisitedMap = useLessonProgressStore((s) => s.lastVisitedSectionKey);
 
+  // Compute completion state up front so we can hold the modal trigger
+  // hooks above the early-return guards below — Rules of Hooks require
+  // every hook to be called on every render. `getUnit` returns a fresh
+  // hydrated object each render, so depending on `unit` directly here
+  // would re-run this effect on unrelated re-renders; pin to the
+  // primitive `unitSlug` instead.
+  const allCompleted = Boolean(
+    unit &&
+      unit.status === "available" &&
+      unit.sections.every((s) => getSectionProgress(unit.slug, s.key).completed),
+  );
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  useEffect(() => {
+    // Fires on the hub for two cases:
+    //   1. User completed sections elsewhere (e.g. via SectionPage on
+    //      another tab/device, or the SectionPage modal was dismissed
+    //      without firing — currently impossible since we mark
+    //      celebrated when opening, but kept as a safety net for
+    //      future trigger-logic changes).
+    //   2. The localStorage flag was reset / never written (e.g. the
+    //      user cleared site data) and they revisit a finished unit.
+    if (!unitSlug || !allCompleted) return;
+    if (hasUnitBeenCelebrated(unitSlug)) return;
+    setShowCompletionModal(true);
+    markUnitAsCelebrated(unitSlug);
+  }, [allCompleted, unitSlug]);
+
   if (!unit) {
     return (
       <div className="max-w-3xl mx-auto py-8 px-4">
@@ -52,20 +79,6 @@ export default function UnitHub() {
   const grammarFocus = localized?.grammarFocus || unit.grammarFocus;
 
   const hasAnyVisited = unit.sections.some((s) => getSectionProgress(unit.slug, s.key).visited);
-  const allCompleted = unit.sections.every((s) => getSectionProgress(unit.slug, s.key).completed);
-
-  // Catches the edge case where the user finished the unit (the
-  // SectionPage modal is what they normally see) but closed the browser
-  // before dismissing it — they'd land back on UnitHub with all
-  // sections complete but not yet celebrated. Mirror the same
-  // localStorage-gated trigger here.
-  const [showCompletionModal, setShowCompletionModal] = useState(false);
-  useEffect(() => {
-    if (!allCompleted) return;
-    if (hasUnitBeenCelebrated(unit.slug)) return;
-    setShowCompletionModal(true);
-    markUnitAsCelebrated(unit.slug);
-  }, [allCompleted, unit.slug]);
 
   const nextUnitData = getNextAvailableUnit(unit.slug);
   const nextUnitTitle = nextUnitData
