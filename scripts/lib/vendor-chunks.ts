@@ -16,8 +16,8 @@ export function vendorChunkFor(id: string): string | undefined {
   if (normalized.includes("/react-router")) return "vendor-router";
   if (normalized.includes("/@supabase/")) return "vendor-supabase";
   // i18next core + framework-agnostic plugins (i18next-browser-
-  // languagedetector, i18next-http-backend, etc.). react-i18next is
-  // intentionally excluded — see the vendor-react bucket below.
+  // languagedetector, etc.). react-i18next is intentionally excluded
+  // — see the vendor-react bucket below.
   // Path semantics:
   //   /i18next/          → core
   //   /i18next-<plugin>/ → plugin (matches the second condition)
