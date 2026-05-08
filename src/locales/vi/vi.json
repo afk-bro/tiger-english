@@ -300,6 +300,13 @@
       "continue": "Tiếp tục",
       "reviewUnit": "Xem lại bài"
     },
+    "unitComplete": {
+      "title": "Hoàn thành Bài {{number}}!",
+      "subtitle": "Tuyệt vời — bạn đã hoàn thành tất cả các phần. Hãy tiếp tục đà này nhé.",
+      "nextUnitCta": "Bắt đầu Bài {{number}} — {{title}}",
+      "backToLessons": "Quay lại bài học",
+      "keepReviewing": "Tiếp tục ôn bài này"
+    },
     "section": {
       "markComplete": "Đánh dấu hoàn thành",
       "completed": "Đã hoàn thành",

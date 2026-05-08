@@ -1,8 +1,11 @@
+import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
-import { getUnit } from "../data/getUnit";
+import { getUnit, getNextAvailableUnit } from "../data/getUnit";
 import SectionCard from "../components/SectionCard";
+import UnitCompleteModal from "../components/UnitCompleteModal";
+import { hasUnitBeenCelebrated, markUnitAsCelebrated } from "../unitCelebration";
 import { useLessonProgressStore } from "../useLessonProgressStore";
 import { getLearnerLanguage } from "../utils/learnerLanguage";
 import type { SectionKey } from "../lesson.types";
@@ -50,6 +53,24 @@ export default function UnitHub() {
 
   const hasAnyVisited = unit.sections.some((s) => getSectionProgress(unit.slug, s.key).visited);
   const allCompleted = unit.sections.every((s) => getSectionProgress(unit.slug, s.key).completed);
+
+  // Catches the edge case where the user finished the unit (the
+  // SectionPage modal is what they normally see) but closed the browser
+  // before dismissing it — they'd land back on UnitHub with all
+  // sections complete but not yet celebrated. Mirror the same
+  // localStorage-gated trigger here.
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  useEffect(() => {
+    if (!allCompleted) return;
+    if (hasUnitBeenCelebrated(unit.slug)) return;
+    setShowCompletionModal(true);
+    markUnitAsCelebrated(unit.slug);
+  }, [allCompleted, unit.slug]);
+
+  const nextUnitData = getNextAvailableUnit(unit.slug);
+  const nextUnitTitle = nextUnitData
+    ? (learnerLang && nextUnitData.translations?.[learnerLang]?.title) || nextUnitData.title
+    : "";
 
   let ctaLabel: string;
   let ctaTarget: SectionKey;
@@ -104,6 +125,17 @@ export default function UnitHub() {
           <SectionCard key={section.key} section={section} unitSlug={unit.slug} progress={getSectionProgress(unit.slug, section.key)} />
         ))}
       </div>
+      <UnitCompleteModal
+        open={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
+        unitNumber={unit.number}
+        unitTitle={title}
+        nextUnit={
+          nextUnitData
+            ? { slug: nextUnitData.slug, title: nextUnitTitle, number: nextUnitData.number }
+            : undefined
+        }
+      />
     </div>
   );
 }

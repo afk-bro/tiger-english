@@ -300,6 +300,13 @@
       "continue": "Continue",
       "reviewUnit": "Review Unit"
     },
+    "unitComplete": {
+      "title": "Unit {{number}} complete!",
+      "subtitle": "Great work — you finished every section. Keep the momentum going.",
+      "nextUnitCta": "Start Unit {{number}} — {{title}}",
+      "backToLessons": "Back to lessons",
+      "keepReviewing": "Keep reviewing this unit"
+    },
     "section": {
       "markComplete": "Mark as Complete",
       "completed": "Completed",

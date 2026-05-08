@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
@@ -9,6 +9,8 @@ import { SECTION_ORDER, type SectionKey } from "../lesson.types";
 import { getLearnerLanguage } from "../utils/learnerLanguage";
 import SectionRenderer from "../components/SectionRenderer";
 import SectionNav from "../components/SectionNav";
+import UnitCompleteModal from "../components/UnitCompleteModal";
+import { hasUnitBeenCelebrated, markUnitAsCelebrated } from "../unitCelebration";
 
 const DEFAULT_PROGRESS = { visited: false, completed: false } as const;
 
@@ -28,6 +30,25 @@ export default function SectionPage() {
   const setLastVisited = useLessonProgressStore((s) => s.setLastVisited);
   const markCompleted = useLessonProgressStore((s) => s.markCompleted);
   const toggleCompleted = useLessonProgressStore((s) => s.toggleCompleted);
+  const getSectionProgress = useLessonProgressStore((s) => s.getSectionProgress);
+
+  // `allCompleted` flips to true the moment the user marks the last
+  // remaining section as completed. We watch for that transition (or
+  // a first render where it's already true) and fire the celebration
+  // modal exactly once per unit per browser — see unitCelebration.ts
+  // for the localStorage flag that enforces "once".
+  const allCompleted =
+    !!unit &&
+    unit.status === "available" &&
+    unit.sections.every((s) => getSectionProgress(unit.slug, s.key).completed);
+
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  useEffect(() => {
+    if (!unit || !allCompleted) return;
+    if (hasUnitBeenCelebrated(unit.slug)) return;
+    setShowCompletionModal(true);
+    markUnitAsCelebrated(unit.slug);
+  }, [unit, allCompleted]);
 
   const progressKey = unitSlug && validSectionKey ? `${unitSlug}:${validSectionKey}` : "";
   const progress = useLessonProgressStore(
@@ -137,6 +158,17 @@ export default function SectionPage() {
         onToggleComplete={() => toggleCompleted(unit.slug, validSectionKey)}
         isLastSection={isLastSection}
         nextUnit={nextUnit}
+      />
+      <UnitCompleteModal
+        open={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
+        unitNumber={unit.number}
+        unitTitle={(learnerLang && unit.translations[learnerLang]?.title) || unit.title}
+        nextUnit={
+          nextUnitData
+            ? { slug: nextUnitData.slug, title: nextUnitTitle, number: nextUnitData.number }
+            : undefined
+        }
       />
     </div>
   );
