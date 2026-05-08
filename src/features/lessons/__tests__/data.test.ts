@@ -32,7 +32,10 @@ describe("getUnit", () => {
   });
 
   it("returns coming-soon units", () => {
-    const unit = getUnit("unit-3");
+    // unit-4 is the lowest-numbered remaining stub once unit-3 lands.
+    // If a future PR also fills out unit-4 this assertion needs to
+    // move to whichever unit is still `coming-soon`.
+    const unit = getUnit("unit-4");
     expect(unit).toBeDefined();
     expect(unit!.status).toBe("coming-soon");
     expect(unit!.sections).toHaveLength(0);
