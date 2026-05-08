@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { resizedStorageUrl, srcSetFor } from "../storageImage";
 
 const OBJECT_URL =
@@ -6,7 +6,15 @@ const OBJECT_URL =
 const RENDER_URL =
   "https://abc.supabase.co/storage/v1/render/image/public/lesson-images/unit-1/foo.png";
 
-describe("resizedStorageUrl", () => {
+// The transform gate defaults to off — flipping the env var on for the
+// "transforms enabled" describe blocks keeps the existing assertions
+// honest. Callers who run these tests without the flag still get
+// pass-through behavior, which is what the runtime sees by default.
+beforeEach(() => {
+  vi.stubEnv("VITE_SUPABASE_IMAGE_TRANSFORMS", "true");
+});
+
+describe("resizedStorageUrl (transforms enabled)", () => {
   it("rewrites a public object URL to the render-image endpoint", () => {
     const out = resizedStorageUrl(OBJECT_URL, { width: 64 });
     expect(out).toBe(`${RENDER_URL}?width=64&resize=cover&quality=80`);
@@ -50,6 +58,24 @@ describe("resizedStorageUrl", () => {
   });
 });
 
+describe("resizedStorageUrl (transforms disabled — default)", () => {
+  beforeEach(() => {
+    vi.stubEnv("VITE_SUPABASE_IMAGE_TRANSFORMS", "");
+  });
+
+  it("returns Supabase object URLs unchanged when the flag is off", () => {
+    // This is the safe default for projects without Image Transforms
+    // enabled on Supabase Pro — the render endpoint 403s with
+    // "FeatureNotEnabled", so we'd otherwise emit broken <img src>s.
+    expect(resizedStorageUrl(OBJECT_URL, { width: 64 })).toBe(OBJECT_URL);
+  });
+
+  it("returns external URLs unchanged regardless of the flag", () => {
+    const external = "https://images.example.com/foo.jpg";
+    expect(resizedStorageUrl(external, { width: 64 })).toBe(external);
+  });
+});
+
 describe("srcSetFor", () => {
   it("emits 1x + 2x densities at the requested display width", () => {
     const { src, srcSet } = srcSetFor(OBJECT_URL, 64);
@@ -70,5 +96,12 @@ describe("srcSetFor", () => {
     const { src, srcSet } = srcSetFor(external, 64);
     expect(src).toBe(external);
     expect(srcSet).toBe(`${external} 1x, ${external} 2x`);
+  });
+
+  it("with transforms disabled, emits the original URL for both 1x and 2x", () => {
+    vi.stubEnv("VITE_SUPABASE_IMAGE_TRANSFORMS", "");
+    const { src, srcSet } = srcSetFor(OBJECT_URL, 64);
+    expect(src).toBe(OBJECT_URL);
+    expect(srcSet).toBe(`${OBJECT_URL} 1x, ${OBJECT_URL} 2x`);
   });
 });

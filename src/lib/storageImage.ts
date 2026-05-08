@@ -11,13 +11,25 @@
  *   /storage/v1/object/public/<bucket>/<path>          (original)
  *   /storage/v1/render/image/public/<bucket>/<path>    (transformed)
  *
- * Adding `?width=N&resize=cover&quality=Q` to the render URL returns a
- * resized variant. Non-Supabase URLs (e.g. external CDN, future hosts)
- * pass through unchanged so the helper is safe to apply blindly.
+ * The render endpoint is a paid Pro-tier feature ("Image Transforms").
+ * Free-tier projects 403 with `FeatureNotEnabled`. So the rewrite is
+ * gated behind `VITE_SUPABASE_IMAGE_TRANSFORMS=true`; when unset (the
+ * default) we return the original object URL and `srcSetFor` emits the
+ * same URL for 1x and 2x. Flip the flag in Vercel after enabling
+ * Image Transforms on the Supabase project to recover the optimization.
+ *
+ * Non-Supabase URLs (e.g. external CDN) pass through unchanged so the
+ * helper is safe to apply blindly.
  */
 
 const OBJECT_PATH = "/storage/v1/object/public/";
 const RENDER_PATH = "/storage/v1/render/image/public/";
+
+function transformsEnabled(): boolean {
+  // Read at call time (not at module load) so test stubs via
+  // `vi.stubEnv` take effect without re-importing the module.
+  return import.meta.env?.VITE_SUPABASE_IMAGE_TRANSFORMS === "true";
+}
 
 export type ResizeOptions = {
   width: number;
@@ -39,6 +51,10 @@ export type ResizeOptions = {
  */
 export function resizedStorageUrl(url: string, opts: ResizeOptions): string {
   if (typeof url !== "string" || url.length === 0) return url;
+  // Render endpoint is gated by the Pro-tier "Image Transforms" feature.
+  // When not enabled, return the original URL untouched — the browser
+  // will fetch the source PNG and scale it client-side via CSS.
+  if (!transformsEnabled()) return url;
 
   let parsed: URL;
   try {
