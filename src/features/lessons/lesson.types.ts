@@ -96,6 +96,14 @@ export type VocabItem = {
   audioUrl?: string;
   imagePrompt?: string;
   imageUrl?: string;
+  /**
+   * Set to true for vocabulary that doesn't depict a clear physical
+   * object (function words, abstract concepts, environments, places).
+   * Items marked `noImage` are not enumerated by the lesson-images
+   * pipeline. Saves Leonardo credits AND avoids "guess what an
+   * abstract concept looks like" hallucinations from the model.
+   */
+  noImage?: boolean;
 };
 
 export type DialogueLine = {

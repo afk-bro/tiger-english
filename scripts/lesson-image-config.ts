@@ -21,7 +21,13 @@ export const MODEL_ID = "1dd50843-d653-4516-a8e3-f0238ee453ff";
 export const IMAGE_DIM = { width: 1024, height: 1024 } as const;
 
 export function templateVocabPrompt(word: string): string {
-  return `${word}, ${STYLE_SUFFIX}`;
+  // Vocab thumbnails depict ONE specific object isolated on a plain
+  // background, exactly like match-pair tiles. The looser STYLE_SUFFIX
+  // ("friendly characters") lets Flux Schnell add people / families
+  // to images of pencils and chairs — the OBJECT_STYLE_SUFFIX is
+  // stricter and produces single-subject output. STYLE_SUFFIX is
+  // retained for scene-style imagery (dialogue / exercise blocks).
+  return `${word}, ${OBJECT_STYLE_SUFFIX}`;
 }
 
 export function templatePairPrompt(prompt: string): string {

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   STYLE_SUFFIX,
+  OBJECT_STYLE_SUFFIX,
   MODEL_ID,
   IMAGE_DIM,
   computePromptHash,
@@ -17,8 +18,11 @@ describe("STYLE_SUFFIX, MODEL_ID, IMAGE_DIM", () => {
 });
 
 describe("templateVocabPrompt", () => {
-  it("appends the style suffix to the word", () => {
-    expect(templateVocabPrompt("classroom")).toBe(`classroom, ${STYLE_SUFFIX}`);
+  it("appends OBJECT_STYLE_SUFFIX so vocab thumbnails render as isolated objects", () => {
+    // Switched from STYLE_SUFFIX (which has "friendly characters" and
+    // produced photoreal scenes with people for vocab like "pencil")
+    // to OBJECT_STYLE_SUFFIX (single isolated object, no people).
+    expect(templateVocabPrompt("classroom")).toBe(`classroom, ${OBJECT_STYLE_SUFFIX}`);
   });
 });
 

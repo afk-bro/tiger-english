@@ -79,12 +79,19 @@ function readSidecar(unitSlug: string): Sidecar {
 
 const LEONARDO_BASE = "https://cloud.leonardo.ai/api/rest/v1";
 
+// Universal negative prompt — applied to every generation. Keeps text /
+// captions / writing artifacts out of the output (Leonardo's models
+// will happily inline garbled fake words on books, clocks, signs, etc.
+// without this).
+const NEGATIVE_PROMPT = "text, letters, words, writing, captions, numbers, watermark, signature";
+
 async function leonardoStartGeneration(prompt: string, apiKey: string): Promise<string> {
   const res = await fetch(`${LEONARDO_BASE}/generations`, {
     method: "POST",
     headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       prompt,
+      negative_prompt: NEGATIVE_PROMPT,
       modelId: MODEL_ID,
       width: IMAGE_DIM.width,
       height: IMAGE_DIM.height,
@@ -98,7 +105,9 @@ async function leonardoStartGeneration(prompt: string, apiKey: string): Promise<
   return id;
 }
 
-async function leonardoPoll(id: string, apiKey: string, timeoutMs = 60000): Promise<string> {
+type CompletedGeneration = { url: string; imageId: string };
+
+async function leonardoPoll(id: string, apiKey: string, timeoutMs = 60000): Promise<CompletedGeneration> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     await new Promise((r) => setTimeout(r, 2000));
@@ -106,16 +115,57 @@ async function leonardoPoll(id: string, apiKey: string, timeoutMs = 60000): Prom
       headers: { "Authorization": `Bearer ${apiKey}` },
     });
     if (!res.ok) throw new Error(`Leonardo poll: ${res.status}`);
-    const body = await res.json() as { generations_by_pk?: { status: string; generated_images: { url: string }[] } };
+    const body = await res.json() as { generations_by_pk?: { status: string; generated_images: { id: string; url: string }[] } };
     const gen = body.generations_by_pk;
     if (gen?.status === "COMPLETE") {
-      const url = gen.generated_images[0]?.url;
-      if (!url) throw new Error(`Leonardo poll: no image url`);
-      return url;
+      const first = gen.generated_images[0];
+      if (!first?.url || !first?.id) throw new Error(`Leonardo poll: no image url/id`);
+      return { url: first.url, imageId: first.id };
     }
     if (gen?.status === "FAILED") throw new Error(`Leonardo poll: status FAILED`);
   }
   throw new Error(`Leonardo poll: timeout after ${timeoutMs}ms`);
+}
+
+// Background-removal post-processing via Leonardo's /variations/nobg
+// endpoint. Costs ~5 credits per image on top of the ~2 for the
+// original generation, but the resulting RGBA PNG drops the solid
+// backdrop the model would otherwise paint, which makes lesson
+// thumbnails composite cleanly onto any tile color.
+async function leonardoStartNobg(imageId: string, apiKey: string): Promise<string> {
+  const res = await fetch(`${LEONARDO_BASE}/variations/nobg`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ id: imageId }),
+  });
+  if (!res.ok) throw new Error(`Leonardo nobg start: ${res.status} ${await res.text()}`);
+  const body = await res.json() as { sdNobgJob?: { id: string } };
+  const id = body.sdNobgJob?.id;
+  if (!id) throw new Error(`Leonardo nobg start: no job id in response`);
+  return id;
+}
+
+async function leonardoPollNobg(jobId: string, apiKey: string, timeoutMs = 90000): Promise<string> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const res = await fetch(`${LEONARDO_BASE}/variations/${jobId}`, {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    });
+    if (!res.ok) throw new Error(`Leonardo nobg poll: ${res.status}`);
+    // Response shape:
+    //   { generated_image_variation_generic: [{ url, status, ... }] }
+    const body = await res.json() as {
+      generated_image_variation_generic?: { url: string; status: string }[];
+    };
+    const variation = body.generated_image_variation_generic?.[0];
+    if (variation?.status === "COMPLETE") {
+      if (!variation.url) throw new Error(`Leonardo nobg poll: no url`);
+      return variation.url;
+    }
+    if (variation?.status === "FAILED") throw new Error(`Leonardo nobg poll: status FAILED`);
+  }
+  throw new Error(`Leonardo nobg poll: timeout after ${timeoutMs}ms`);
 }
 
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
@@ -188,9 +238,11 @@ async function main() {
     supabaseSecretKey: requireEnv("SUPABASE_SECRET_KEY"),
   };
 
-  const costPerImage = 0.04;
+  // Per-image cost = generation (~$0.04) + nobg variation (~$0.10).
+  // Real spend may differ; this is just a heads-up before confirm.
+  const costPerImage = 0.14;
   const estimated = (toGenerate.length * costPerImage).toFixed(2);
-  console.log(`[lesson-images] ${toGenerate.length} images to generate (estimated $${estimated} at $${costPerImage}/image)`);
+  console.log(`[lesson-images] ${toGenerate.length} images to generate (estimated $${estimated} at $${costPerImage}/image, includes nobg)`);
 
   if (!args.yes && toGenerate.length > 0) {
     const ok = await confirm("Continue? [y/N] ");
@@ -205,9 +257,14 @@ async function main() {
 
   for (const cand of toGenerate) {
     try {
+      // 1. Start generation
       const id = await withRetry(() => leonardoStartGeneration(cand.prompt, env.leonardoKey));
-      const leonardoUrl = await withRetry(() => leonardoPoll(id, env.leonardoKey));
-      const downloadRes = await fetch(leonardoUrl);
+      // 2. Poll for the source image (returns url + image id we feed to nobg)
+      const { imageId } = await withRetry(() => leonardoPoll(id, env.leonardoKey));
+      // 3. Strip the background — produces an RGBA PNG.
+      const nobgJobId = await withRetry(() => leonardoStartNobg(imageId, env.leonardoKey));
+      const nobgUrl = await withRetry(() => leonardoPollNobg(nobgJobId, env.leonardoKey));
+      const downloadRes = await fetch(nobgUrl);
       if (!downloadRes.ok) {
         throw new Error(`Leonardo CDN download failed: ${downloadRes.status} ${downloadRes.statusText}`);
       }
