@@ -25,6 +25,11 @@ class Settings(BaseSettings):
 
     # CORS
     allowed_origins: str = '["http://localhost:5173", "http://127.0.0.1:5173"]'
+    # Optional regex applied in addition to the exact-match list above.
+    # Set on Railway to allow Vercel preview URLs without redeploying the
+    # backend each time a new preview branch is created. Example:
+    #   ALLOWED_ORIGIN_REGEX=^https://tiger-english-[a-z0-9-]+\.vercel\.app$
+    allowed_origin_regex: str | None = None
 
     # Environment
     environment: str = "development"
