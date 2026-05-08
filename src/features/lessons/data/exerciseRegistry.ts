@@ -9,6 +9,7 @@
 
 import * as unit1Exercises from "./exercises/unit-1";
 import * as unit2Exercises from "./exercises/unit-2";
+import * as unit3Exercises from "./exercises/unit-3";
 import type {
   McqExercise,
   FillBlankExercise,
@@ -50,6 +51,16 @@ export const exerciseRegistry: Record<string, TaggedExercise> = {
   "u2-activities-mcq-9": { type: "multiple-choice", data: unit2Exercises.activitiesContractionCorrectMcq },
   // unit-2 activities: match-the-word-to-image
   "u2-activities-match-1": { type: "match", data: unit2Exercises.activitiesMatchClassroomItems },
+  // unit-3 grammar
+  "u3-grammar-mcq-1": { type: "multiple-choice", data: unit3Exercises.grammarMcqTimeOfDay },
+  // unit-3 activities
+  "u3-activities-mcq-1": { type: "multiple-choice", data: unit3Exercises.activitiesHowAreYouMcq },
+  "u3-activities-mcq-2": { type: "multiple-choice", data: unit3Exercises.activitiesEveningGreetingMcq },
+  "u3-activities-mcq-3": { type: "multiple-choice", data: unit3Exercises.activitiesGoodNightMcq },
+  "u3-activities-mcq-4": { type: "multiple-choice", data: unit3Exercises.activitiesAndYouMcq },
+  "u3-activities-mcq-5": { type: "multiple-choice", data: unit3Exercises.activitiesByeMcq },
+  "u3-activities-fb-1": { type: "fill-blank", data: unit3Exercises.activitiesSeeYouFb },
+  "u3-activities-fb-2": { type: "fill-blank", data: unit3Exercises.activitiesGoodFb },
 };
 
 export function lookupExercise(exerciseId: string): TaggedExercise | undefined {

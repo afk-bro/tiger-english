@@ -60,9 +60,12 @@ describe("SectionPage coming-soon branch", () => {
   });
 
   it("renders the localized unit title when language is th", () => {
+    // unit-4 (The Alphabet & Spelling) is the lowest-numbered stub
+    // with a Thai translation. If a future PR fills out unit-4 the
+    // pointer needs to move to whichever coming-soon unit has `th`.
     mockI18n.language = "th";
-    renderAt("/lessons/unit-3/grammar");
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("การทักทายและการกล่าวลา");
+    renderAt("/lessons/unit-4/grammar");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("ตัวอักษรและการสะกดคำ");
   });
 });
 

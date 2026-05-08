@@ -86,7 +86,21 @@ export const units: Unit[] = [
     },
   },
   {
-    ...stub("unit-3", 3, "Greetings & Saying Goodbye", "Common greetings and farewells", "Hello / Hi / Good morning / Goodbye / See you", "A1"),
+    slug: "unit-3",
+    number: 3,
+    title: "Greetings & Saying Goodbye",
+    topic: "Common greetings and farewells",
+    grammarFocus: "Hello / Hi / Good morning / Goodbye / See you",
+    estimatedMinutes: 30,
+    status: "available",
+    cefrLevel: "A1",
+    sections: [
+      { key: "overview", estimatedMinutes: 3 },
+      { key: "grammar", estimatedMinutes: 7 },
+      { key: "vocabulary", estimatedMinutes: 6 },
+      { key: "dialogues", estimatedMinutes: 5 },
+      { key: "activities", estimatedMinutes: 9 },
+    ],
     translations: {
       th: {
         title: "การทักทายและการกล่าวลา",
@@ -98,9 +112,28 @@ export const units: Unit[] = [
         topic: "Các cách chào hỏi và tạm biệt thông dụng",
         grammarFocus: "Hello / Hi / Good morning / Goodbye / See you",
       },
+      "zh-CN": {
+        title: "问候与告别",
+        topic: "常见的问候语和告别语",
+        grammarFocus: "Hello / Hi / Good morning / Goodbye / See you",
+      },
     },
   },
-  stub("unit-4", 4, "The Alphabet & Spelling", "Spelling your name out loud", "English alphabet pronunciation; asking 'How do you spell that?'", "A1"),
+  {
+    ...stub("unit-4", 4, "The Alphabet & Spelling", "Spelling your name out loud", "English alphabet pronunciation; asking 'How do you spell that?'", "A1"),
+    translations: {
+      th: {
+        title: "ตัวอักษรและการสะกดคำ",
+        topic: "การสะกดชื่อของคุณออกเสียง",
+        grammarFocus: "การออกเสียงตัวอักษรภาษาอังกฤษ; การถาม 'How do you spell that?'",
+      },
+      vi: {
+        title: "Bảng chữ cái và Đánh vần",
+        topic: "Đánh vần tên của bạn bằng lời",
+        grammarFocus: "Phát âm bảng chữ cái tiếng Anh; hỏi 'How do you spell that?'",
+      },
+    },
+  },
 
   // ─── A0–A1 Module 2: Personal Information ────────────────────────────────
   stub("unit-5", 5, "Numbers 1–20", "Counting and basic numbers", "Cardinal numbers; asking 'How many?'", "A1"),
