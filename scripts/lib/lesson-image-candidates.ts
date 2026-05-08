@@ -49,8 +49,19 @@ export function buildCandidates(deps: CandidateDeps): Candidate[] {
     for (const block of section.blocks) {
       if (block.type === "vocab-list") {
         for (const item of block.items) {
-          const prompt = item.imagePrompt ?? templateVocabPrompt(item.word);
-          out.push({ kind: "vocab", id: item.id, prompt });
+          // `noImage` opts a vocab item out of generation entirely —
+          // used for function words, abstracts, and environments
+          // where any generated image is more likely to confuse than
+          // help. Saves Leonardo credits AND avoids text/hallucination
+          // hazards on items where the model has no clear referent.
+          if (item.noImage) continue;
+          // Custom imagePrompt overrides the bare word, but either
+          // way we attach OBJECT_STYLE_SUFFIX (via templateVocabPrompt)
+          // so vocab thumbnails share a consistent isolated-object
+          // style. Authors who need scene-style imagery should use
+          // dialogue / exercise blocks instead.
+          const subject = item.imagePrompt ?? item.word;
+          out.push({ kind: "vocab", id: item.id, prompt: templateVocabPrompt(subject) });
         }
       } else if (block.type === "dialogue" && block.imagePrompt) {
         out.push({ kind: "dialogue", id: block.id, prompt: block.imagePrompt });

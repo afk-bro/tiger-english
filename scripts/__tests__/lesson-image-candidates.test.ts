@@ -201,8 +201,49 @@ describe("buildCandidates — other kinds (regression for the existing flow)", (
       "vocab:u1-v-bye",
       "dialogue:u1-d-1",
     ]);
-    expect(candidates.find((c) => c.id === "u1-v-hello")?.prompt).toBe("wave hello");
-    // Templated vocab prompt is non-empty (exact text owned by lesson-image-config).
-    expect(candidates.find((c) => c.id === "u1-v-bye")?.prompt).toContain("bye");
+    // Custom imagePrompt overrides the word but still picks up
+    // OBJECT_STYLE_SUFFIX so all vocab thumbnails share style.
+    expect(candidates.find((c) => c.id === "u1-v-hello")?.prompt).toMatch(/^wave hello, .+isolated/);
+    expect(candidates.find((c) => c.id === "u1-v-bye")?.prompt).toMatch(/^bye, .+isolated/);
+  });
+});
+
+describe("buildCandidates — vocab item noImage skip", () => {
+  it("skips vocab-list items with `noImage: true`", () => {
+    const unit: Unit = {
+      slug: "unit-1",
+      number: 1,
+      title: "U1",
+      topic: "t",
+      grammarFocus: "g",
+      estimatedMinutes: 10,
+      status: "available",
+      sections: [{ key: "vocabulary", estimatedMinutes: 10 }],
+      translations: {},
+    };
+    const section: Section = {
+      id: "u1-vocabulary",
+      unitSlug: "unit-1",
+      key: "vocabulary",
+      blocks: [
+        {
+          id: "u1-vl",
+          type: "vocab-list",
+          items: [
+            // Function word / abstract — opted out of the pipeline.
+            { id: "u1-v-is", word: "is", translations: {}, noImage: true },
+            // Concrete object — generates as normal.
+            { id: "u1-v-pencil", word: "pencil", translations: {} },
+            // Explicit imagePrompt + noImage — still skipped (noImage wins).
+            { id: "u1-v-name", word: "name", translations: {}, imagePrompt: "a name tag", noImage: true },
+          ],
+        },
+      ],
+    };
+    const deps = makeDeps({ unit, sections: [section] });
+
+    const candidates = buildCandidates(deps);
+    const ids = candidates.filter((c) => c.kind === "vocab").map((c) => c.id);
+    expect(ids).toEqual(["u1-v-pencil"]);
   });
 });

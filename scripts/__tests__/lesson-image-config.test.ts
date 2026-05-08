@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   STYLE_SUFFIX,
+  OBJECT_STYLE_SUFFIX,
   MODEL_ID,
   IMAGE_DIM,
   computePromptHash,
@@ -17,8 +18,11 @@ describe("STYLE_SUFFIX, MODEL_ID, IMAGE_DIM", () => {
 });
 
 describe("templateVocabPrompt", () => {
-  it("appends the style suffix to the word", () => {
-    expect(templateVocabPrompt("classroom")).toBe(`classroom, ${STYLE_SUFFIX}`);
+  it("appends OBJECT_STYLE_SUFFIX so vocab thumbnails render as isolated objects", () => {
+    // Switched from STYLE_SUFFIX (which has "friendly characters" and
+    // produced photoreal scenes with people for vocab like "pencil")
+    // to OBJECT_STYLE_SUFFIX (single isolated object, no people).
+    expect(templateVocabPrompt("classroom")).toBe(`classroom, ${OBJECT_STYLE_SUFFIX}`);
   });
 });
 
@@ -37,6 +41,18 @@ describe("computePromptHash", () => {
   it("changes when the style suffix changes", () => {
     const a = computePromptHash("hello", { styleSuffix: "a" });
     const b = computePromptHash("hello", { styleSuffix: "b" });
+    expect(a).not.toBe(b);
+  });
+
+  it("changes when the negative prompt changes", () => {
+    const a = computePromptHash("hello", { negativePrompt: "no text" });
+    const b = computePromptHash("hello", { negativePrompt: "no numbers" });
+    expect(a).not.toBe(b);
+  });
+
+  it("changes when postprocess changes", () => {
+    const a = computePromptHash("hello", { postprocess: "nobg" });
+    const b = computePromptHash("hello", { postprocess: "none" });
     expect(a).not.toBe(b);
   });
 
