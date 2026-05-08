@@ -44,6 +44,18 @@ describe("computePromptHash", () => {
     expect(a).not.toBe(b);
   });
 
+  it("changes when the negative prompt changes", () => {
+    const a = computePromptHash("hello", { negativePrompt: "no text" });
+    const b = computePromptHash("hello", { negativePrompt: "no numbers" });
+    expect(a).not.toBe(b);
+  });
+
+  it("changes when postprocess changes", () => {
+    const a = computePromptHash("hello", { postprocess: "nobg" });
+    const b = computePromptHash("hello", { postprocess: "none" });
+    expect(a).not.toBe(b);
+  });
+
   it("is stable for the same input", () => {
     expect(computePromptHash("hello")).toBe(computePromptHash("hello"));
   });

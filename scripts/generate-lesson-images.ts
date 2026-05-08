@@ -84,6 +84,7 @@ const LEONARDO_BASE = "https://cloud.leonardo.ai/api/rest/v1";
 // will happily inline garbled fake words on books, clocks, signs, etc.
 // without this).
 const NEGATIVE_PROMPT = "text, letters, words, writing, captions, numbers, watermark, signature";
+const HASH_POSTPROCESS = "nobg";
 
 async function leonardoStartGeneration(prompt: string, apiKey: string): Promise<string> {
   const res = await fetch(`${LEONARDO_BASE}/generations`, {
@@ -212,7 +213,7 @@ async function main() {
   const toGenerate: Candidate[] = [];
   const skipped: Candidate[] = [];
   for (const cand of candidates) {
-    const hash = computePromptHash(cand.prompt);
+    const hash = computePromptHash(cand.prompt, { negativePrompt: NEGATIVE_PROMPT, postprocess: HASH_POSTPROCESS });
     const entry = sidecar[cand.id];
     if (!args.force && entry && entry.promptHash === hash) {
       skipped.push(cand);
@@ -272,7 +273,7 @@ async function main() {
       const publicUrl = await withRetry(() => uploadToStorage(supabase, args.unit, cand.id, pngBytes));
       sidecar[cand.id] = {
         url: publicUrl,
-        promptHash: computePromptHash(cand.prompt),
+        promptHash: computePromptHash(cand.prompt, { negativePrompt: NEGATIVE_PROMPT, postprocess: HASH_POSTPROCESS }),
         model: MODEL_ID,
         generatedAt: new Date().toISOString(),
       };

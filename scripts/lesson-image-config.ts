@@ -34,11 +34,13 @@ export function templatePairPrompt(prompt: string): string {
   return `${prompt}, ${OBJECT_STYLE_SUFFIX}`;
 }
 
-type HashOpts = { model?: string; styleSuffix?: string };
+type HashOpts = { model?: string; styleSuffix?: string; negativePrompt?: string; postprocess?: string };
 
 export function computePromptHash(prompt: string, opts: HashOpts = {}): string {
   const model = opts.model ?? MODEL_ID;
   const styleSuffix = opts.styleSuffix ?? STYLE_SUFFIX;
-  const composite = `${prompt} ${model} ${styleSuffix}`;
+  const negativePrompt = opts.negativePrompt ?? "";
+  const postprocess = opts.postprocess ?? "";
+  const composite = `${prompt} ${model} ${styleSuffix} ${negativePrompt} ${postprocess}`;
   return createHash("sha256").update(composite).digest("hex");
 }
