@@ -181,7 +181,7 @@ Always work on a feature branch — never commit directly to `main`. Branch nami
 
 **Backend → Railway.** Built via Nixpacks from `backend/` (Root Directory set to `backend` in service settings). `backend/railway.toml` defines the start command (`uvicorn app.main:app --host 0.0.0.0 --port $PORT`), the `/health` healthcheck path, and a restart-on-failure policy (3 retries). `/health` is intentionally lightweight (no DB I/O) — `/api/v1/health` is the application-level readiness probe.
 
-Production frontend talks to production backend via `VITE_API_BASE_URL` (set in Vercel) → `https://<railway-domain>/api/v1`. The Vercel preview environment doesn't currently set Vercel-preview origins on the Railway `ALLOWED_ORIGINS` allowlist — preview branches that hit authed endpoints fail CORS until that's added.
+Production frontend talks to production backend via `VITE_API_BASE_URL` (set in Vercel) → `https://<railway-domain>/api/v1`. Vercel preview branches (which get a fresh subdomain per branch) are allowed via `ALLOWED_ORIGIN_REGEX` on Railway, applied alongside the exact-match `ALLOWED_ORIGINS` list. Set it to `^https://tiger-english-[a-z0-9-]+\.vercel\.app$` (or whatever pattern matches the project's preview URLs) so authed calls from preview deploys don't get blocked by CORS.
 
 ## /practice and the three-mode product structure
 
