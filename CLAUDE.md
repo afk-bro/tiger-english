@@ -152,6 +152,7 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 VITE_AI_CONVERSATION_ENABLED=  # set to "true" to expose the AI Conversation card on /practice; falls back to "Coming soon"
+VITE_SUPABASE_IMAGE_TRANSFORMS= # set to "true" only if Supabase Pro "Image Transforms" is enabled — otherwise srcSetFor returns the original object URL
 
 # Playwright e2e (loaded by playwright.config.ts via vite's loadEnv)
 E2E_TESTER_EMAIL=
@@ -204,9 +205,9 @@ npm run lesson-images -- --unit unit-2 --item <id>  # regenerate one item
 
 The Leonardo API key (`LEONARDO_API_KEY` in `backend/.env`) and Supabase secret key (`SUPABASE_SECRET_KEY`) are read server-side only by the script — never bundled into the client.
 
-`buildCandidates` enumerates: unit-level, section-level, vocab-list items, dialogue blocks, and exercise blocks. **Match exercises (`MatchExercise.pairs[]`) are not yet enumerated** — per-pair Leonardo generation is a queued follow-up. Until then, match exercises render with `fallback` emoji glyphs from the pair data.
+`buildCandidates` (in `scripts/lib/lesson-image-candidates.ts`) enumerates: unit-level, section-level, vocab-list items, dialogue blocks, exercise blocks, and per-pair entries on match exercises (each `MatchExercise.pairs[]` item with an `imagePrompt`). Pair candidates are keyed by `pair.id` in the same flat sidecar keyspace as vocab items, so `hydrateMatchExercise` can look them up at runtime. Match exercises with no sidecar entries fall back to the `fallback` emoji glyph from the pair data.
 
-Image URLs are served via Supabase Storage's `/storage/v1/render/image/public/` transform endpoint. The `srcSetFor()` helper in `src/lib/storageImage.ts` rewrites `/object/public/` URLs to the render endpoint and emits a `srcSet` with 1× and 2× density variants. Used by VocabListBlock, ExerciseBlock, DialogueBlock, and MatchPairs. External (non-Supabase) URLs pass through unchanged via a path-based check, so callers can apply it blindly.
+Image URLs are normally served from `/storage/v1/object/public/` and the `srcSetFor()` helper in `src/lib/storageImage.ts` can rewrite them to Supabase's `/storage/v1/render/image/public/` transform endpoint to get density-aware variants. The rewrite is gated behind `VITE_SUPABASE_IMAGE_TRANSFORMS=true` because the render endpoint is a paid Pro-tier feature — free-tier projects 403 with `FeatureNotEnabled`, which would manifest as broken `<img>` tags. Default (flag unset) returns the original object URL and the browser scales client-side via CSS. Used by VocabListBlock, ExerciseBlock, DialogueBlock, and MatchPairs. External (non-Supabase) URLs pass through unchanged via a path-based check, so callers can apply it blindly.
 
 **Image alt-text convention** on the dialogue and exercise variants of `SectionBlock`:
 - omit / empty `imageAlt` → `alt=""` (decorative; screen readers skip)

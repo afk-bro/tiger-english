@@ -11,10 +11,11 @@ import { createInterface } from "readline";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { computePromptHash, templateVocabPrompt, MODEL_ID, IMAGE_DIM } from "./lesson-image-config";
+import { computePromptHash, MODEL_ID, IMAGE_DIM } from "./lesson-image-config";
 import { units } from "../src/features/lessons/data/units";
 import { lookupSection } from "../src/features/lessons/data/sectionRegistry";
-import { sidecarKeyForUnit, sidecarKeyForSection } from "../src/features/lessons/data/imageHydration";
+import { lookupExercise } from "../src/features/lessons/data/exerciseRegistry";
+import { buildCandidates, type Candidate } from "./lib/lesson-image-candidates";
 // Single bootstrap shared with getSection.ts so the section registration list
 // has one source of truth.
 import "../src/features/lessons/data/registerAllSections";
@@ -65,44 +66,6 @@ async function confirm(question: string): Promise<boolean> {
       resolve(/^y(es)?$/i.test(answer.trim()));
     });
   });
-}
-
-type Candidate = {
-  kind: "unit" | "section" | "vocab" | "dialogue" | "exercise";
-  id: string;
-  prompt: string;
-};
-
-function buildCandidates(unitSlug: string): Candidate[] {
-  const unit = units.find((u) => u.slug === unitSlug);
-  if (!unit) throw new Error(`Unit not found: ${unitSlug}`);
-  const out: Candidate[] = [];
-
-  if (unit.imagePrompt) {
-    out.push({ kind: "unit", id: sidecarKeyForUnit(), prompt: unit.imagePrompt });
-  }
-
-  for (const meta of unit.sections) {
-    const section = lookupSection(unitSlug, meta.key);
-    if (!section) continue;
-    if (section.imagePrompt) {
-      out.push({ kind: "section", id: sidecarKeyForSection(section.key), prompt: section.imagePrompt });
-    }
-    for (const block of section.blocks) {
-      if (block.type === "vocab-list") {
-        for (const item of block.items) {
-          const prompt = item.imagePrompt ?? templateVocabPrompt(item.word);
-          out.push({ kind: "vocab", id: item.id, prompt });
-        }
-      } else if (block.type === "dialogue" && block.imagePrompt) {
-        out.push({ kind: "dialogue", id: block.id, prompt: block.imagePrompt });
-      } else if (block.type === "exercise" && block.imagePrompt) {
-        out.push({ kind: "exercise", id: block.id, prompt: block.imagePrompt });
-      }
-    }
-  }
-
-  return out;
 }
 
 type SidecarEntry = { url: string; promptHash: string; model: string; generatedAt: string };
@@ -185,7 +148,9 @@ async function main() {
 
   console.log(`[lesson-images] unit=${args.unit} dryRun=${args.dryRun} force=${args.force}`);
 
-  let candidates = buildCandidates(args.unit);
+  const unit = units.find((u) => u.slug === args.unit);
+  if (!unit) throw new Error(`Unit not found: ${args.unit}`);
+  let candidates = buildCandidates({ unit, lookupSection, lookupExercise });
   if (args.item) {
     candidates = candidates.filter((c) => c.id === args.item);
     if (candidates.length === 0) {

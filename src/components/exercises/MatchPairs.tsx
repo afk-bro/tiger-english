@@ -26,7 +26,7 @@
  *     users — see the imageAlt fallback in the image tile aria-label
  *     for the dev-error case where it's missing).
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle, RotateCcw, XCircle } from "lucide-react";
 import { clsx } from "clsx";
 import { useTranslation } from "react-i18next";
@@ -170,66 +170,62 @@ export default function MatchPairs({ exercise, onCorrect, onAttempt }: Props) {
             : ""}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:gap-3">
-        {/* Words column */}
-        <div className="space-y-2">
-          {wordOrder.map((id) => {
-            const pair = pairById.get(id)!;
-            const isSelected = selectedWord === id;
-            const isMatched = matched.has(id);
-            const isError = error?.wordId === id;
-            return (
+      {/* Row-aligned grid: each row is one (word, image) cell pair, both
+          drawn from independent shuffles. Aligning rows makes the two
+          columns share heights — words inherit the row height set by
+          the capped image size, so the word column no longer ends
+          before the image column. The pairing is still by pair.id (NOT
+          by row position): wordOrder[i] and imageOrder[i] are
+          independent, so a row's word and image rarely match. */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 max-w-md mx-auto">
+        {Array.from({ length: exercise.pairs.length }).map((_, i) => {
+          const wordPair = pairById.get(wordOrder[i])!;
+          const imagePair = pairById.get(imageOrder[i])!;
+          const wordSelected = selectedWord === wordPair.id;
+          const wordMatched = matched.has(wordPair.id);
+          const wordError = error?.wordId === wordPair.id;
+          const imageSelected = selectedImage === imagePair.id;
+          const imageMatched = matched.has(imagePair.id);
+          const imageError = error?.imageId === imagePair.id;
+          return (
+            <Fragment key={i}>
               <button
-                key={id}
                 type="button"
-                onClick={() => handleWordTap(id)}
-                disabled={isMatched || allMatched}
-                aria-pressed={isSelected}
+                onClick={() => handleWordTap(wordPair.id)}
+                disabled={wordMatched || allMatched}
+                aria-pressed={wordSelected}
                 aria-label={
-                  isMatched
+                  wordMatched
                     ? t("lessons.exercises.match.matchedAria", {
-                        word: pair.word,
-                        defaultValue: `${pair.word} (matched)`,
+                        word: wordPair.word,
+                        defaultValue: `${wordPair.word} (matched)`,
                       })
-                    : pair.word
+                    : wordPair.word
                 }
                 className={clsx(
                   "w-full min-h-[56px] px-4 py-3 rounded-lg border-2 text-base font-medium transition-all touch-manipulation",
                   "flex items-center justify-center text-center",
-                  isMatched &&
+                  wordMatched &&
                     "border-semantic-success bg-semantic-success/10 text-semantic-success cursor-default",
-                  !isMatched && isError &&
+                  !wordMatched && wordError &&
                     "border-red-400 bg-red-50 text-red-700 dark:border-red-500 dark:bg-red-900/20 dark:text-red-400 animate-pulse",
-                  !isMatched && !isError && isSelected &&
+                  !wordMatched && !wordError && wordSelected &&
                     "border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-200 ring-2 ring-primary-300 dark:ring-primary-700",
-                  !isMatched && !isError && !isSelected &&
+                  !wordMatched && !wordError && !wordSelected &&
                     "border-semantic-border bg-semantic-surface text-semantic-text hover:bg-semantic-surface-2 active:scale-[0.98]",
                 )}
               >
-                {pair.word}
+                {wordPair.word}
               </button>
-            );
-          })}
-        </div>
-
-        {/* Images column */}
-        <div className="space-y-2">
-          {imageOrder.map((id) => {
-            const pair = pairById.get(id)!;
-            const isSelected = selectedImage === id;
-            const isMatched = matched.has(id);
-            const isError = error?.imageId === id;
-            return (
               <button
-                key={id}
                 type="button"
-                onClick={() => handleImageTap(id)}
-                disabled={isMatched || allMatched}
-                aria-pressed={isSelected}
+                onClick={() => handleImageTap(imagePair.id)}
+                disabled={imageMatched || allMatched}
+                aria-pressed={imageSelected}
                 aria-label={
-                  pair.imageAlt ??
+                  imagePair.imageAlt ??
                   t("lessons.exercises.match.imageOf", {
-                    word: pair.word,
+                    word: imagePair.word,
                     // Fallback used only when an author forgets to set
                     // imageAlt. We interpolate the word so the buttons
                     // stay distinguishable for screen readers (the
@@ -237,27 +233,34 @@ export default function MatchPairs({ exercise, onCorrect, onAttempt }: Props) {
                     // matching" — is unsolvable). Note that this label
                     // gives away the answer; correctly authored data
                     // should always set a descriptive imageAlt.
-                    defaultValue: `Picture for ${pair.word}`,
+                    defaultValue: `Picture for ${imagePair.word}`,
                   })
                 }
                 className={clsx(
-                  "w-full min-h-[88px] sm:min-h-[112px] rounded-lg border-2 transition-all touch-manipulation overflow-hidden",
+                  // aspect-square + max-w caps each tile at ~120-140px.
+                  // The 1024×1024 source PNG was filling the column on
+                  // desktop (~340px tall tiles, totaling 1360px column
+                  // height) — way out of proportion with the four-word
+                  // list. justify-self-center centers the tile within
+                  // the wider grid cell so the word/image pairing
+                  // still reads visually as left-text right-image.
+                  "w-full aspect-square max-w-[120px] sm:max-w-[140px] justify-self-center rounded-lg border-2 transition-all touch-manipulation overflow-hidden",
                   "flex items-center justify-center",
-                  isMatched &&
+                  imageMatched &&
                     "border-semantic-success bg-semantic-success/10 cursor-default",
-                  !isMatched && isError &&
+                  !imageMatched && imageError &&
                     "border-red-400 bg-red-50 dark:border-red-500 dark:bg-red-900/20 animate-pulse",
-                  !isMatched && !isError && isSelected &&
+                  !imageMatched && !imageError && imageSelected &&
                     "border-primary-500 bg-primary-50 dark:bg-primary-900/30 ring-2 ring-primary-300 dark:ring-primary-700",
-                  !isMatched && !isError && !isSelected &&
+                  !imageMatched && !imageError && !imageSelected &&
                     "border-semantic-border bg-semantic-surface hover:bg-semantic-surface-2 active:scale-[0.98]",
                 )}
               >
-                <PairVisual pair={pair} matched={isMatched} />
+                <PairVisual pair={imagePair} matched={imageMatched} />
               </button>
-            );
-          })}
-        </div>
+            </Fragment>
+          );
+        })}
       </div>
 
       {/* Status row: completion (sticky) or transient mismatch.

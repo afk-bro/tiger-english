@@ -1,10 +1,11 @@
+import { useMemo } from "react";
 import MultipleChoice from "@/components/exercises/MultipleChoice";
 import FillBlank from "@/components/exercises/FillBlank";
 import MatchPairs from "@/components/exercises/MatchPairs";
 import type { ExerciseType } from "../../lesson.types";
-import * as unit1Exercises from "../../data/exercises/unit-1";
-import * as unit2Exercises from "../../data/exercises/unit-2";
-import type { McqExercise, FillBlankExercise, MatchExercise } from "@/components/exercises/exercises.types";
+import { lookupExercise } from "../../data/exerciseRegistry";
+import { hydrateMatchExercise } from "../../data/imageHydration";
+import { unitImagesSidecars } from "../../data/images";
 import { ProgressAPI } from "@/lib/api/progress";
 import { srcSetFor } from "@/lib/storageImage";
 
@@ -18,43 +19,6 @@ type Props = {
   sectionKey: string;
 };
 
-type TaggedExercise =
-  | { type: "multiple-choice"; data: McqExercise }
-  | { type: "fill-blank"; data: FillBlankExercise }
-  | { type: "match"; data: MatchExercise };
-
-const exerciseMap: Record<string, TaggedExercise> = {
-  "u1-grammar-mcq-1": { type: "multiple-choice", data: unit1Exercises.grammarMcq1 },
-  "u1-activities-mcq-1": { type: "multiple-choice", data: unit1Exercises.activitiesNameMcq },
-  "u1-activities-fb-1": { type: "fill-blank", data: unit1Exercises.activitiesAddressFillBlank },
-  "u1-activities-fb-2": { type: "fill-blank", data: unit1Exercises.activitiesPhoneFillBlank },
-  "u1-activities-mcq-2": { type: "multiple-choice", data: unit1Exercises.activitiesThanksMcq },
-  "u1-activities-mcq-3": { type: "multiple-choice", data: unit1Exercises.activitiesThirdPersonMcq },
-  "u1-activities-mcq-4": { type: "multiple-choice", data: unit1Exercises.activitiesWhereMcq },
-  "u1-activities-mcq-5": { type: "multiple-choice", data: unit1Exercises.activitiesFirstNameMcq },
-  "u1-activities-mcq-6": { type: "multiple-choice", data: unit1Exercises.activitiesLastNameMcq },
-  // unit-2 grammar
-  "u2-grammar-mcq-1": { type: "multiple-choice", data: unit2Exercises.grammarMcqContractions },
-  "u2-grammar-mcq-2": { type: "multiple-choice", data: unit2Exercises.grammarMcqWhereWord },
-  // unit-2 activities: vocabulary recognition
-  "u2-activities-mcq-1": { type: "multiple-choice", data: unit2Exercises.activitiesVocabClassroomMcq },
-  "u2-activities-mcq-2": { type: "multiple-choice", data: unit2Exercises.activitiesVocabHomeMcq },
-  "u2-activities-mcq-3": { type: "multiple-choice", data: unit2Exercises.activitiesVocabTownMcq },
-  "u2-activities-mcq-4": { type: "multiple-choice", data: unit2Exercises.activitiesVocabMixedMcq },
-  // unit-2 activities: 'Where' + pronouns
-  "u2-activities-mcq-5": { type: "multiple-choice", data: unit2Exercises.activitiesWhereResponseMariaMcq },
-  "u2-activities-fb-1": { type: "fill-blank", data: unit2Exercises.activitiesWhereAreFb },
-  "u2-activities-mcq-6": { type: "multiple-choice", data: unit2Exercises.activitiesWhereResponseChildrenMcq },
-  "u2-activities-fb-2": { type: "fill-blank", data: unit2Exercises.activitiesWhereDictionaryFb },
-  // unit-2 activities: contractions
-  "u2-activities-mcq-7": { type: "multiple-choice", data: unit2Exercises.activitiesContractionTheyMcq },
-  "u2-activities-mcq-8": { type: "multiple-choice", data: unit2Exercises.activitiesContractionItMcq },
-  "u2-activities-fb-3": { type: "fill-blank", data: unit2Exercises.activitiesContractionShortenFb },
-  "u2-activities-mcq-9": { type: "multiple-choice", data: unit2Exercises.activitiesContractionCorrectMcq },
-  // unit-2 activities: match-the-word-to-image
-  "u2-activities-match-1": { type: "match", data: unit2Exercises.activitiesMatchClassroomItems },
-};
-
 export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, imageAlt, onCorrect, unitSlug, sectionKey }: Props) {
   const handleAttempt = (isCorrect: boolean) => {
     void ProgressAPI.attemptExercise({
@@ -64,7 +28,26 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, imag
       isCorrect,
     });
   };
-  const entry = exerciseMap[exerciseId];
+  const entry = lookupExercise(exerciseId);
+
+  // Hydrate per-pair imageUrls from the unit sidecar before passing to
+  // MatchPairs. Block-level hydration (in hydrateSection) doesn't reach
+  // pair data because pairs live inside the exercise registry, not on
+  // the SectionBlock — see hydrateMatchExercise for the rationale.
+  //
+  // useMemo'd because hydrateMatchExercise returns a fresh exercise
+  // (and pairs) reference whenever any sidecar entry exists, and
+  // MatchPairs's column shuffle is keyed on `exercise.pairs`. Without
+  // memoization, any parent re-render (progress writes, theme changes,
+  // i18n) would reshuffle the tiles mid-exercise.
+  //
+  // Declared before the early-return guard below so the hooks order
+  // is stable across renders regardless of whether the exercise is
+  // resolvable.
+  const matchData = useMemo(() => {
+    if (!entry || entry.type !== "match") return null;
+    return hydrateMatchExercise(entry.data, unitImagesSidecars[unitSlug] ?? {});
+  }, [entry, unitSlug]);
 
   if (!entry || entry.type !== exerciseType) {
     return (
@@ -102,7 +85,7 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, imag
       })()}
       {entry.type === "multiple-choice" && <MultipleChoice exercise={entry.data} onCorrect={onCorrect} onAttempt={handleAttempt} />}
       {entry.type === "fill-blank" && <FillBlank exercise={entry.data} onCorrect={onCorrect} onAttempt={handleAttempt} />}
-      {entry.type === "match" && <MatchPairs exercise={entry.data} onCorrect={onCorrect} onAttempt={handleAttempt} />}
+      {entry.type === "match" && matchData && <MatchPairs exercise={matchData} onCorrect={onCorrect} onAttempt={handleAttempt} />}
     </div>
   );
 }
