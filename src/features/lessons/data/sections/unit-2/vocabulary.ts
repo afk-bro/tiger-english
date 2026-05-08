@@ -37,7 +37,7 @@ const vocabulary: Section = {
         { id: "u2-v-notebook", word: "notebook", translations: { vi: "vở" } },
         { id: "u2-v-pen", word: "pen", translations: { vi: "bút mực" }, imagePrompt: "a single blue ballpoint pen with a click top and visible plastic body" },
         { id: "u2-v-pencil", word: "pencil", translations: { vi: "bút chì" } },
-        { id: "u2-v-ruler", word: "ruler", translations: { vi: "thước kẻ" } },
+        { id: "u2-v-ruler", word: "ruler", translations: { vi: "thước kẻ" }, imagePrompt: "a yellow wooden ruler with evenly spaced black tick marks only on one long edge, completely blank everywhere else, no digits, no numerals, no characters, no letters, just plain tick marks" },
         { id: "u2-v-table", word: "table", translations: { vi: "bàn" } },
         { id: "u2-v-wall", word: "wall", translations: { vi: "tường" }, noImage: true },
       ],
