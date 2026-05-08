@@ -300,6 +300,13 @@
       "continue": "继续",
       "reviewUnit": "复习单元"
     },
+    "unitComplete": {
+      "title": "第 {{number}} 单元完成！",
+      "subtitle": "太棒了——你完成了所有部分。继续保持这股劲头吧。",
+      "nextUnitCta": "开始第 {{number}} 单元 — {{title}}",
+      "backToLessons": "返回课程",
+      "keepReviewing": "继续复习此单元"
+    },
     "section": {
       "markComplete": "标记为完成",
       "completed": "已完成",

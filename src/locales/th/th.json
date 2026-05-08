@@ -300,6 +300,13 @@
       "continue": "ดำเนินต่อ",
       "reviewUnit": "ทบทวนบทเรียน"
     },
+    "unitComplete": {
+      "title": "จบบทเรียนที่ {{number}} แล้ว!",
+      "subtitle": "ยอดเยี่ยม — คุณทำครบทุกส่วนแล้ว มาต่อกันเลย",
+      "nextUnitCta": "เริ่มบทเรียนที่ {{number}} — {{title}}",
+      "backToLessons": "กลับไปยังบทเรียน",
+      "keepReviewing": "ทบทวนบทเรียนนี้ต่อ"
+    },
     "section": {
       "markComplete": "ทำเครื่องหมายว่าเสร็จ",
       "completed": "เสร็จแล้ว",
