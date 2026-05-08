@@ -100,3 +100,16 @@ def test_settings_parses_allowed_origin_regex_from_env(monkeypatch):
     monkeypatch.delenv("ALLOWED_ORIGIN_REGEX", raising=False)
     s2 = Settings()
     assert s2.allowed_origin_regex is None
+
+
+def test_settings_normalizes_blank_regex_to_none(monkeypatch):
+    """A copied .env containing `ALLOWED_ORIGIN_REGEX=` (or whitespace)
+    should be treated as unset rather than an empty regex string —
+    otherwise CORSMiddleware sees a regex that's distinct from None
+    but matches nothing, which is a surprising footgun."""
+    from app.core.config import Settings
+
+    for blank in ["", "   ", "\t\n"]:
+        monkeypatch.setenv("ALLOWED_ORIGIN_REGEX", blank)
+        s = Settings()
+        assert s.allowed_origin_regex is None, f"expected None for {blank!r}"

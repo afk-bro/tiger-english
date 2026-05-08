@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
+from pydantic import ConfigDict, field_validator
 from typing import List
 import json
 
@@ -30,6 +30,19 @@ class Settings(BaseSettings):
     # backend each time a new preview branch is created. Example:
     #   ALLOWED_ORIGIN_REGEX=^https://tiger-english-[a-z0-9-]+\.vercel\.app$
     allowed_origin_regex: str | None = None
+
+    @field_validator("allowed_origin_regex", mode="before")
+    @classmethod
+    def _empty_regex_is_none(cls, v):
+        """Treat an empty / whitespace-only ALLOWED_ORIGIN_REGEX as unset.
+
+        Without this, a copied .env containing `ALLOWED_ORIGIN_REGEX=`
+        would parse to "" and be passed to CORSMiddleware as an empty
+        regex — surprising and behaviorally distinct from "not configured".
+        """
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
 
     # Environment
     environment: str = "development"
