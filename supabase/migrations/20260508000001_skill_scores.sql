@@ -40,4 +40,12 @@ CREATE POLICY "users_select_own_skill_scores" ON skill_scores
   FOR SELECT USING (auth.uid() = user_id);
 
 GRANT SELECT ON skill_scores TO authenticated;
-GRANT INSERT, UPDATE, DELETE ON skill_scores TO service_role;
+-- Explicit service_role grants. Supabase Cloud's default role config
+-- gives service_role broad access on tables in `public`, so existing
+-- migrations (e.g. review_items) work without these. Listing them
+-- here documents intent and protects the FastAPI backend's read +
+-- upsert flow against any future tightening of role defaults — without
+-- the SELECT grant, get_summary's SELECT would fail with permission
+-- denied and the service would fall right back into the in-memory
+-- store this migration is meant to retire.
+GRANT SELECT, INSERT, UPDATE, DELETE ON skill_scores TO service_role;
