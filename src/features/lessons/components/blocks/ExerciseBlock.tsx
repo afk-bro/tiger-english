@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import MultipleChoice from "@/components/exercises/MultipleChoice";
 import FillBlank from "@/components/exercises/FillBlank";
 import MatchPairs from "@/components/exercises/MatchPairs";
@@ -29,6 +30,25 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, imag
   };
   const entry = lookupExercise(exerciseId);
 
+  // Hydrate per-pair imageUrls from the unit sidecar before passing to
+  // MatchPairs. Block-level hydration (in hydrateSection) doesn't reach
+  // pair data because pairs live inside the exercise registry, not on
+  // the SectionBlock — see hydrateMatchExercise for the rationale.
+  //
+  // useMemo'd because hydrateMatchExercise returns a fresh exercise
+  // (and pairs) reference whenever any sidecar entry exists, and
+  // MatchPairs's column shuffle is keyed on `exercise.pairs`. Without
+  // memoization, any parent re-render (progress writes, theme changes,
+  // i18n) would reshuffle the tiles mid-exercise.
+  //
+  // Declared before the early-return guard below so the hooks order
+  // is stable across renders regardless of whether the exercise is
+  // resolvable.
+  const matchData = useMemo(() => {
+    if (!entry || entry.type !== "match") return null;
+    return hydrateMatchExercise(entry.data, unitImagesSidecars[unitSlug] ?? {});
+  }, [entry, unitSlug]);
+
   if (!entry || entry.type !== exerciseType) {
     return (
       <div className="card p-4 opacity-60">
@@ -36,15 +56,6 @@ export default function ExerciseBlock({ exerciseType, exerciseId, imageUrl, imag
       </div>
     );
   }
-
-  // Hydrate per-pair imageUrls from the unit sidecar before passing to
-  // MatchPairs. Block-level hydration (in hydrateSection) doesn't reach
-  // pair data because pairs live inside the exercise registry, not on
-  // the SectionBlock — see hydrateMatchExercise for the rationale.
-  const matchData =
-    entry.type === "match"
-      ? hydrateMatchExercise(entry.data, unitImagesSidecars[unitSlug] ?? {})
-      : null;
 
   return (
     <div className="card p-6 shadow-sm border border-semantic-border">

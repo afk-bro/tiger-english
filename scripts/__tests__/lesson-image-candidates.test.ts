@@ -46,7 +46,7 @@ describe("buildCandidates — match exercises", () => {
       grammarFocus: "g",
       estimatedMinutes: 10,
       status: "available",
-      sections: [{ key: "activities", title: "Activities" }],
+      sections: [{ key: "activities", estimatedMinutes: 10 }],
       translations: {},
     };
     const section: Section = {
@@ -90,7 +90,7 @@ describe("buildCandidates — match exercises", () => {
       grammarFocus: "g",
       estimatedMinutes: 10,
       status: "available",
-      sections: [{ key: "activities", title: "Activities" }],
+      sections: [{ key: "activities", estimatedMinutes: 10 }],
       translations: {},
     };
     const section: Section = {
@@ -123,7 +123,7 @@ describe("buildCandidates — match exercises", () => {
       grammarFocus: "g",
       estimatedMinutes: 10,
       status: "available",
-      sections: [{ key: "activities", title: "Activities" }],
+      sections: [{ key: "activities", estimatedMinutes: 10 }],
       translations: {},
     };
     const section: Section = {
@@ -168,7 +168,7 @@ describe("buildCandidates — other kinds (regression for the existing flow)", (
       grammarFocus: "g",
       estimatedMinutes: 10,
       status: "available",
-      sections: [{ key: "vocabulary", title: "Vocab" }],
+      sections: [{ key: "vocabulary", estimatedMinutes: 10 }],
       translations: {},
       imagePrompt: "unit hero",
     };
