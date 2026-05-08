@@ -3,6 +3,7 @@
 // image URLs in a per-unit sidecar map. No mutation, no side effects.
 
 import type { Unit, Section, SectionBlock, VocabItem, SectionKey } from "../lesson.types";
+import type { MatchExercise, MatchPair } from "@/components/exercises/exercises.types";
 import type { UnitSidecar } from "./images";
 
 export function sidecarKeyForUnit(): string {
@@ -36,6 +37,34 @@ export function hydrateSection(section: Section, sidecar: UnitSidecar): Section 
     blocks: blocksChanged ? blocks : section.blocks,
     ...(sectionEntry ? { imageUrl: sectionEntry.url } : {}),
   };
+}
+
+/**
+ * Returns a copy of a MatchExercise with each pair's `imageUrl` populated
+ * from the unit sidecar when an entry exists for `pair.id`. Pairs without
+ * a sidecar entry pass through unchanged so MatchPairs falls back to the
+ * `fallback` glyph.
+ *
+ * Pair IDs are unique within a unit by convention (e.g. `u2-match-book`),
+ * so the flat sidecar key matches what the pipeline writes for vocab
+ * items — no composite key needed.
+ *
+ * Reference preservation: if no pair is hydrated, returns the input
+ * exercise reference. This keeps ExerciseBlock's render stable when
+ * the sidecar is empty (the common case until the pipeline runs).
+ */
+export function hydrateMatchExercise(
+  exercise: MatchExercise,
+  sidecar: UnitSidecar,
+): MatchExercise {
+  let pairsChanged = false;
+  const pairs = exercise.pairs.map<MatchPair>((pair) => {
+    const entry = sidecar[pair.id];
+    if (!entry) return pair;
+    pairsChanged = true;
+    return { ...pair, imageUrl: entry.url };
+  });
+  return pairsChanged ? { ...exercise, pairs } : exercise;
 }
 
 function hydrateBlock(block: SectionBlock, sidecar: UnitSidecar): SectionBlock {

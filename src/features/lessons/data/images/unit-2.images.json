@@ -1,1 +1,26 @@
-{}
+{
+  "u2-match-book": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-book.png",
+    "promptHash": "9581b1d2ee2ac834e95ad6bcf50f3b0ed079fa6892ef4343c662cc4bf500ff96",
+    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
+    "generatedAt": "2026-05-08T03:08:54.063Z"
+  },
+  "u2-match-pencil": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-pencil.png",
+    "promptHash": "d64a3f3ae2481d9a6d0924d5655ff00f9a9d3b0fd6d05bf1252a12ea8eda21b2",
+    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
+    "generatedAt": "2026-05-08T03:09:00.734Z"
+  },
+  "u2-match-chair": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-chair.png",
+    "promptHash": "4ad6b1853541a4c58440d36db7961ade52c585556379a235ca93a9016a55bbaf",
+    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
+    "generatedAt": "2026-05-08T03:09:05.675Z"
+  },
+  "u2-match-clock": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-clock.png",
+    "promptHash": "91fdd9c8b0ddd01f90580f5c448b3be8cfbb398d0ad7d6db383941b9ff72ddf9",
+    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
+    "generatedAt": "2026-05-08T03:09:13.121Z"
+  }
+}

@@ -204,7 +204,7 @@ npm run lesson-images -- --unit unit-2 --item <id>  # regenerate one item
 
 The Leonardo API key (`LEONARDO_API_KEY` in `backend/.env`) and Supabase secret key (`SUPABASE_SECRET_KEY`) are read server-side only by the script — never bundled into the client.
 
-`buildCandidates` enumerates: unit-level, section-level, vocab-list items, dialogue blocks, and exercise blocks. **Match exercises (`MatchExercise.pairs[]`) are not yet enumerated** — per-pair Leonardo generation is a queued follow-up. Until then, match exercises render with `fallback` emoji glyphs from the pair data.
+`buildCandidates` (in `scripts/lib/lesson-image-candidates.ts`) enumerates: unit-level, section-level, vocab-list items, dialogue blocks, exercise blocks, and per-pair entries on match exercises (each `MatchExercise.pairs[]` item with an `imagePrompt`). Pair candidates are keyed by `pair.id` in the same flat sidecar keyspace as vocab items, so `hydrateMatchExercise` can look them up at runtime. Match exercises with no sidecar entries fall back to the `fallback` emoji glyph from the pair data.
 
 Image URLs are served via Supabase Storage's `/storage/v1/render/image/public/` transform endpoint. The `srcSetFor()` helper in `src/lib/storageImage.ts` rewrites `/object/public/` URLs to the render endpoint and emits a `srcSet` with 1× and 2× density variants. Used by VocabListBlock, ExerciseBlock, DialogueBlock, and MatchPairs. External (non-Supabase) URLs pass through unchanged via a path-based check, so callers can apply it blindly.
 
