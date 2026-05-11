@@ -59,3 +59,132 @@ async def get_scenario(
     if detail is None:
         raise HTTPException(404, "scenario_not_found")
     return detail
+
+
+@router.post("/me/ai-tutor/sessions", response_model=StartSessionResponse)
+async def start_session(
+    body: StartSessionRequest,
+    user_id: UUID = Depends(get_current_user),
+    supabase=Depends(get_supabase_admin),
+):
+    _require_enabled()
+    try:
+        return TutorSessionService(supabase, _get_stt()).start_session(
+            user_id, body.scenario_slug, body.mode
+        )
+    except ScenarioNotFoundError:
+        raise HTTPException(404, "scenario_not_found")
+
+
+@router.get("/me/ai-tutor/sessions/{session_id}")
+async def get_session(
+    session_id: UUID,
+    user_id: UUID = Depends(get_current_user),
+    supabase=Depends(get_supabase_admin),
+):
+    _require_enabled()
+    # Implement a get_session method on TutorSessionService if missing, OR
+    # do a direct supabase read here. Per the plan, this is a thin read
+    # that loads session + last 50 turns + currents-task info for hydration.
+    # KEEP THIS SIMPLE: just read the session row. The frontend can request
+    # more detail via /scenarios endpoints + this for state.
+    try:
+        result = (
+            supabase.table("ai_tutor_sessions")
+            .select("*")
+            .eq("id", str(session_id))
+            .eq("user_id", str(user_id))
+            .single()
+            .execute()
+        )
+    except Exception:
+        raise HTTPException(404, "session_not_found")
+    if not result.data:
+        raise HTTPException(404, "session_not_found")
+    return result.data
+
+
+# In-memory rate limit (60/min/user) — same pattern as conversations.py
+_RATE_WINDOW = 60
+_RATE_MAX = 60
+_rate: dict[str, list[float]] = defaultdict(list)
+
+
+def _rate_check(user_id: str) -> int | None:
+    now = time.monotonic()
+    cutoff = now - _RATE_WINDOW
+    _rate[user_id] = [t for t in _rate[user_id] if t > cutoff]
+    if len(_rate[user_id]) >= _RATE_MAX:
+        return int(_RATE_WINDOW - (now - min(_rate[user_id]))) + 1
+    _rate[user_id].append(now)
+    return None
+
+
+@router.post("/me/ai-tutor/sessions/{session_id}/turns", response_model=TurnResponse)
+async def submit_turn(
+    session_id: UUID,
+    audio: UploadFile = File(...),
+    current_task_id: UUID = Form(...),
+    user_id: UUID = Depends(get_current_user),
+    supabase=Depends(get_supabase_admin),
+):
+    _require_enabled()
+    retry = _rate_check(str(user_id))
+    if retry is not None:
+        raise HTTPException(429, headers={"Retry-After": str(retry)})
+
+    audio_bytes = await audio.read()
+    if len(audio_bytes) > 2 * 1024 * 1024:
+        raise HTTPException(413, "audio_too_large")
+
+    try:
+        return await TutorSessionService(supabase, _get_stt()).submit_turn(
+            user_id=user_id,
+            session_id=session_id,
+            audio_bytes=audio_bytes,
+            mime_type=audio.content_type or "audio/webm",
+            current_task_id=current_task_id,
+        )
+    except TurnSTTFailure as exc:
+        # Service already logged ai_tutor_events; no session/turn writes occurred.
+        raise HTTPException(503, detail={"error": "stt_failed", "retryable": True, "reason": exc.reason})
+    except SessionNotFoundError:
+        raise HTTPException(404, "session_not_found")
+    except SessionAccessDeniedError:
+        raise HTTPException(403, "session_access_denied")
+    except SessionNotActiveError:
+        raise HTTPException(409, "session_not_active")
+
+
+@router.post("/me/ai-tutor/sessions/{session_id}/finish", response_model=FinishResponse)
+async def finish_session(
+    session_id: UUID,
+    user_id: UUID = Depends(get_current_user),
+    supabase=Depends(get_supabase_admin),
+):
+    _require_enabled()
+    try:
+        return TutorSessionService(supabase, _get_stt()).finish_session(user_id, session_id)
+    except SessionNotFoundError:
+        raise HTTPException(404, "session_not_found")
+    except SessionAccessDeniedError:
+        raise HTTPException(403, "session_access_denied")
+    except SessionNotActiveError:
+        raise HTTPException(409, "session_not_active")
+
+
+@router.post("/me/ai-tutor/sessions/{session_id}/abandon")
+async def abandon_session(
+    session_id: UUID,
+    user_id: UUID = Depends(get_current_user),
+    supabase=Depends(get_supabase_admin),
+):
+    _require_enabled()
+    try:
+        TutorSessionService(supabase, _get_stt()).abandon_session(user_id, session_id, reason="user_cancelled")
+    except SessionNotFoundError:
+        raise HTTPException(404, "session_not_found")
+    except SessionAccessDeniedError:
+        raise HTTPException(403, "session_access_denied")
+    # abandon is silently idempotent for already-terminal sessions; no SessionNotActiveError here.
+    return {"ok": True}
