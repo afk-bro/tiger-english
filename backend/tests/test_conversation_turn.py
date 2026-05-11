@@ -198,8 +198,10 @@ def client_with_mocked_service(sample_user_id, monkeypatch):
     from app.services.ai_tutor_service import AiTutorService
     from app.core.config import settings
 
-    # Force the gate open so we exercise the success / error branches
-    monkeypatch.setattr(type(settings), "ai_tutor_enabled", property(lambda self: True))
+    # Force the gate open so we exercise the success / error branches.
+    # ai_tutor_enabled is a pydantic Settings field (env-driven); patch the
+    # instance attribute since pydantic v2 fields aren't class descriptors.
+    monkeypatch.setattr(settings, "ai_tutor_enabled", True)
 
     mock_service = MagicMock(spec=AiTutorService)
     app.dependency_overrides[get_ai_tutor_service] = lambda: mock_service
@@ -217,7 +219,7 @@ def client_with_ai_disabled(sample_user_id, monkeypatch):
     from app.core.security import get_current_user
     from app.core.config import settings
 
-    monkeypatch.setattr(type(settings), "ai_tutor_enabled", property(lambda self: False))
+    monkeypatch.setattr(settings, "ai_tutor_enabled", False)
 
     app.dependency_overrides[get_current_user] = lambda: sample_user_id
 

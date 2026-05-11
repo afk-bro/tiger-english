@@ -80,7 +80,7 @@ async def health_check():
 
     return {
         "status": "ok",
-        "ai_tutor_enabled": settings.ai_tutor_enabled,
+        "ai_tutor_enabled": bool(settings.ai_tutor_enabled and settings.groq_api_key),
         "voice_enabled": settings.ai_voice_enabled,
         "anthropic_reachable": anthropic_reachable,
         "db_reachable": db_reachable,
