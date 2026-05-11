@@ -18,7 +18,9 @@ from uuid import UUID
 from app.core.storage import tutor_audio_url
 from app.models.tutor import (
     EvaluationResult,
+    FinishResponse,
     StartSessionResponse,
+    TurnCorrection,
     TurnResponse,
     TutorSessionDTO,
     TutorTurnDTO,
@@ -389,6 +391,145 @@ class TutorSessionService:
             ),
             end_lesson_detected=False,
         )
+
+    # ------------------------------------------------------------------
+    # finish_session / abandon_session — terminal transitions (Task 4.5).
+    # ------------------------------------------------------------------
+
+    def finish_session(self, user_id: UUID, session_id: UUID) -> FinishResponse:
+        """Complete an active session, award XP, and return a summary DTO.
+
+        XP formula (spec §5): `max(5, 25 + 10 * tasks_completed - 5 * mistakes)`.
+        The 25-point base means even a session with zero tasks and a few
+        mistakes still earns the floor of 5, so users aren't punished for
+        starting and trying.
+
+        The transactional bits (status flip + completed_at + xp_awarded +
+        event log) are handled by `complete_tutor_session_tx`. We compute the
+        XP here, call the RPC, read back the updated row, and collect every
+        turn's `correction` JSONB so the frontend can render an end-of-lesson
+        recap.
+        """
+        # 1. Load + ownership/status check. The RPC itself is idempotent, but
+        #    we surface a clean SessionNotActiveError to the caller — finishing
+        #    an already-completed session is almost certainly a bug.
+        session_result = (
+            self.supabase.table("ai_tutor_sessions")
+            .select("id, user_id, scenario_id, status, completed_task_ids, mistake_count")
+            .eq("id", str(session_id))
+            .single()
+            .execute()
+        )
+        session = session_result.data
+        if not session:
+            raise SessionNotFoundError(str(session_id))
+        if session["user_id"] != str(user_id):
+            raise SessionAccessDeniedError(str(session_id))
+        if session["status"] != "active":
+            raise SessionNotActiveError(session["status"])
+
+        # 2. Compute XP.
+        tasks_completed = len(session.get("completed_task_ids") or [])
+        mistake_count = session.get("mistake_count", 0) or 0
+        xp = max(5, 25 + 10 * tasks_completed - 5 * mistake_count)
+
+        # 3. Transactional flip.
+        self.supabase.rpc(
+            "complete_tutor_session_tx",
+            {
+                "_session_id": str(session_id),
+                "_xp_awarded": xp,
+            },
+        ).execute()
+
+        # 4. Read back the updated row (now status='completed', completed_at
+        #    populated, xp_awarded set).
+        updated_result = (
+            self.supabase.table("ai_tutor_sessions")
+            .select("*")
+            .eq("id", str(session_id))
+            .single()
+            .execute()
+        )
+        updated_session = updated_result.data
+        if not updated_session:
+            raise RuntimeError(
+                f"complete_tutor_session_tx succeeded for session_id={session_id!r} "
+                "but the row could not be read back"
+            )
+
+        # 5. Resolve scenario slug for the DTO.
+        scenario_lookup = (
+            self.supabase.table("ai_tutor_scenarios")
+            .select("slug")
+            .eq("id", session["scenario_id"])
+            .single()
+            .execute()
+        )
+        scenario_row = scenario_lookup.data or {}
+        scenario_slug = scenario_row.get("slug")
+
+        # 6. Collect corrections across all turns. We pull only the `correction`
+        #    column to keep the payload small; ordering doesn't matter for the
+        #    recap UI but follows insert order naturally.
+        turns_result = (
+            self.supabase.table("ai_tutor_turns")
+            .select("correction")
+            .eq("session_id", str(session_id))
+            .execute()
+        )
+        turns_rows = turns_result.data or []
+        parsed_corrections = [
+            TurnCorrection(**t["correction"])
+            for t in turns_rows
+            if t.get("correction")
+        ]
+
+        return FinishResponse(
+            session=self._session_to_dto(updated_session, scenario_slug),
+            xp_awarded=xp,
+            all_corrections=parsed_corrections,
+        )
+
+    def abandon_session(
+        self,
+        user_id: UUID,
+        session_id: UUID,
+        reason: str = "user_cancelled",
+    ) -> None:
+        """Mark an active session as abandoned.
+
+        Idempotent by design: if the session is already in a terminal state
+        (completed/abandoned) we short-circuit without raising. The frontend
+        may call this defensively on tab-close or back-button, and the RPC's
+        own `status='active'` guard would no-op anyway — skipping the network
+        round-trip is the cleaner UX.
+
+        Ownership errors still raise — a wrong-owner call is never silent.
+        """
+        session_result = (
+            self.supabase.table("ai_tutor_sessions")
+            .select("id, user_id, status")
+            .eq("id", str(session_id))
+            .single()
+            .execute()
+        )
+        session = session_result.data
+        if not session:
+            raise SessionNotFoundError(str(session_id))
+        if session["user_id"] != str(user_id):
+            raise SessionAccessDeniedError(str(session_id))
+        if session["status"] != "active":
+            # Idempotent no-op — see docstring.
+            return
+
+        self.supabase.rpc(
+            "abandon_tutor_session_tx",
+            {
+                "_session_id": str(session_id),
+                "_reason": reason,
+            },
+        ).execute()
 
     # ------------------------------------------------------------------
     # Helpers.

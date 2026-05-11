@@ -587,3 +587,216 @@ async def test_submit_turn_final_task_completion_uses_wrapup_line(mock_supabase,
 
     assert response.end_lesson_detected is False
     assert response.current_task_id is None
+
+
+# ===========================================================================
+# finish_session / abandon_session — Task 4.5
+# ===========================================================================
+
+
+def _wire_finish_session_mocks(
+    mock_supabase,
+    *,
+    session_row,
+    updated_session_row=None,
+    turns_rows=None,
+    scenario_slug="coffee-shop",
+):
+    """Wire mock_supabase for a finish_session call.
+
+    The session table is hit twice: once pre-RPC for ownership/status checks
+    (returns session_row), once post-RPC for the updated DTO (returns
+    updated_session_row). The scenario + turns tables are each hit once.
+    """
+    if updated_session_row is None and session_row is not None:
+        updated_session_row = {
+            **session_row,
+            "status": "completed",
+            "xp_awarded": 50,
+            "completed_at": datetime(2026, 5, 11, 12, 30, 0, tzinfo=timezone.utc).isoformat(),
+        }
+
+    session_table = MagicMock()
+    session_table.select.return_value = session_table
+    session_table.eq.return_value = session_table
+    session_table.single.return_value = session_table
+    session_execute = MagicMock()
+    session_execute.side_effect = [
+        MagicMock(data=session_row),
+        MagicMock(data=updated_session_row),
+    ]
+    session_table.execute = session_execute
+
+    scenario_table = _make_table_mock_with_select({"slug": scenario_slug} if scenario_slug else None)
+
+    # Turns table: select().eq().execute() — NO single().
+    turns_table = MagicMock()
+    turns_table.select.return_value = turns_table
+    turns_table.eq.return_value = turns_table
+    turns_table.execute.return_value.data = turns_rows or []
+
+    events_table = _make_events_insert_mock()
+
+    routes = {
+        "ai_tutor_sessions": session_table,
+        "ai_tutor_scenarios": scenario_table,
+        "ai_tutor_turns": turns_table,
+        "ai_tutor_events": events_table,
+    }
+    mock_supabase.table.side_effect = lambda name: routes[name]
+    mock_supabase.rpc.return_value.execute.return_value.data = None
+    return routes
+
+
+def test_finish_session_calls_rpc_with_computed_xp(mock_supabase, sample_user_id):
+    """3 tasks completed, 1 mistake → xp = 25 + 30 - 5 = 50."""
+    from app.services.tutor_session_service import TutorSessionService
+
+    t1, t2, t3 = (
+        "11111111-1111-1111-1111-111111111111",
+        "22222222-2222-2222-2222-222222222222",
+        "33333333-3333-3333-3333-333333333333",
+    )
+    session_row = _make_active_session_row(sample_user_id, completed=[t1, t2, t3])
+    session_row["mistake_count"] = 1
+    _wire_finish_session_mocks(mock_supabase, session_row=session_row)
+
+    service = TutorSessionService(mock_supabase)
+    service.finish_session(sample_user_id, UUID(SESSION_ID))
+
+    rpc_calls = [
+        c for c in mock_supabase.rpc.call_args_list
+        if c.args and c.args[0] == "complete_tutor_session_tx"
+    ]
+    assert len(rpc_calls) == 1
+    assert rpc_calls[0].args[1] == {
+        "_session_id": SESSION_ID,
+        "_xp_awarded": 50,
+    }
+
+
+def test_finish_session_xp_floor_is_5(mock_supabase, sample_user_id):
+    """0 tasks completed, 10 mistakes → -25 floored to 5."""
+    from app.services.tutor_session_service import TutorSessionService
+
+    session_row = _make_active_session_row(sample_user_id, completed=[])
+    session_row["mistake_count"] = 10
+    _wire_finish_session_mocks(mock_supabase, session_row=session_row)
+
+    service = TutorSessionService(mock_supabase)
+    service.finish_session(sample_user_id, UUID(SESSION_ID))
+
+    rpc_calls = [
+        c for c in mock_supabase.rpc.call_args_list
+        if c.args and c.args[0] == "complete_tutor_session_tx"
+    ]
+    assert len(rpc_calls) == 1
+    assert rpc_calls[0].args[1]["_xp_awarded"] == 5
+
+
+def test_finish_session_collects_corrections(mock_supabase, sample_user_id):
+    """Three turns, two with correction JSONB → all_corrections has 2 entries."""
+    from app.services.tutor_session_service import TutorSessionService
+    from app.models.tutor import FinishResponse
+
+    session_row = _make_active_session_row(sample_user_id, completed=[INTRO_TASK_ID])
+    correction_a = {
+        "corrected_en": "My name is Tom.",
+        "explanation_vi": "Bạn quên dấu chấm.",
+        "translation_vi": "Tên tôi là Tom.",
+        "severity": "minor",
+        "explanation_key": None,
+    }
+    correction_b = {
+        "corrected_en": "What is your name?",
+        "explanation_vi": "Câu hỏi cần dấu chấm hỏi.",
+        "translation_vi": None,
+        "severity": "major",
+        "explanation_key": None,
+    }
+    turns_rows = [
+        {"correction": correction_a},
+        {"correction": None},
+        {"correction": correction_b},
+    ]
+    _wire_finish_session_mocks(
+        mock_supabase, session_row=session_row, turns_rows=turns_rows
+    )
+
+    service = TutorSessionService(mock_supabase)
+    response = service.finish_session(sample_user_id, UUID(SESSION_ID))
+
+    assert isinstance(response, FinishResponse)
+    assert len(response.all_corrections) == 2
+    assert response.all_corrections[0].corrected_en == "My name is Tom."
+    assert response.all_corrections[0].severity == "minor"
+    assert response.all_corrections[1].corrected_en == "What is your name?"
+    assert response.all_corrections[1].severity == "major"
+
+
+def test_finish_session_raises_when_not_active(mock_supabase, sample_user_id):
+    """Finishing a session that's already completed → SessionNotActiveError; no RPC."""
+    from app.services.tutor_session_service import (
+        SessionNotActiveError,
+        TutorSessionService,
+    )
+
+    session_row = _make_active_session_row(sample_user_id)
+    session_row["status"] = "completed"
+    _wire_finish_session_mocks(mock_supabase, session_row=session_row)
+
+    service = TutorSessionService(mock_supabase)
+    with pytest.raises(SessionNotActiveError):
+        service.finish_session(sample_user_id, UUID(SESSION_ID))
+
+    rpc_calls = [
+        c for c in mock_supabase.rpc.call_args_list
+        if c.args and c.args[0] == "complete_tutor_session_tx"
+    ]
+    assert rpc_calls == []
+
+
+def test_abandon_session_calls_rpc(mock_supabase, sample_user_id):
+    """Active session → abandon_tutor_session_tx called with default reason."""
+    from app.services.tutor_session_service import TutorSessionService
+
+    session_row = _make_active_session_row(sample_user_id)
+    _wire_finish_session_mocks(mock_supabase, session_row=session_row)
+
+    service = TutorSessionService(mock_supabase)
+    service.abandon_session(sample_user_id, UUID(SESSION_ID))
+
+    rpc_calls = [
+        c for c in mock_supabase.rpc.call_args_list
+        if c.args and c.args[0] == "abandon_tutor_session_tx"
+    ]
+    assert len(rpc_calls) == 1
+    assert rpc_calls[0].args[1] == {
+        "_session_id": SESSION_ID,
+        "_reason": "user_cancelled",
+    }
+
+
+def test_abandon_session_silent_on_already_abandoned(mock_supabase, sample_user_id):
+    """Already-terminal session → no raise. We mirror the RPC's idempotency.
+
+    Design choice: short-circuit in the service (no RPC call) when the
+    session is already in a terminal state. The SQL function would no-op
+    anyway, so skipping the network round-trip is the cleaner UX for a
+    defensive abandon-on-tab-close call.
+    """
+    from app.services.tutor_session_service import TutorSessionService
+
+    session_row = _make_active_session_row(sample_user_id)
+    session_row["status"] = "abandoned"
+    _wire_finish_session_mocks(mock_supabase, session_row=session_row)
+
+    service = TutorSessionService(mock_supabase)
+    # Must not raise.
+    service.abandon_session(sample_user_id, UUID(SESSION_ID))
+
+    rpc_calls = [
+        c for c in mock_supabase.rpc.call_args_list
+        if c.args and c.args[0] == "abandon_tutor_session_tx"
+    ]
+    assert rpc_calls == []
