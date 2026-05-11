@@ -60,3 +60,29 @@ def test_normalization_strips_punctuation_and_lowercases():
     e = TutorEvaluatorService()
     res = e.evaluate("MY NAME IS TOM!!!", INTRO_TASK)
     assert res.task_completed is True
+
+
+def test_end_lesson_english_variants():
+    from app.services.tutor_evaluator_service import detect_end_lesson
+    assert detect_end_lesson("end lesson") is True
+    assert detect_end_lesson("Please end the lesson") is True
+    assert detect_end_lesson("finish session") is True
+    assert detect_end_lesson("stop the lesson") is True
+
+
+def test_end_lesson_vietnamese():
+    from app.services.tutor_evaluator_service import detect_end_lesson
+    assert detect_end_lesson("kết thúc bài học") is True
+
+
+def test_end_lesson_false_positives():
+    from app.services.tutor_evaluator_service import detect_end_lesson
+    assert detect_end_lesson("I want to extend my lesson") is False
+    assert detect_end_lesson("ending soon") is False
+
+
+def test_vi_spoken_detection():
+    from app.services.tutor_evaluator_service import is_vietnamese_text
+    assert is_vietnamese_text("Tên tôi là Tom") is True
+    assert is_vietnamese_text("My name is Tom") is False
+    assert is_vietnamese_text("kết thúc") is True

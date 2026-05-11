@@ -116,3 +116,34 @@ class TutorEvaluatorService:
             should_advance=should_advance,
             matched_pattern=matched_pattern,
         )
+
+
+# ---------------------------------------------------------------------------
+# Module-level detectors used by the tutor session loop.
+# ---------------------------------------------------------------------------
+
+_END_LESSON_EN = re.compile(r"\b(end|finish|stop)\s+(the\s+)?(lesson|session)\b", re.IGNORECASE)
+_END_LESSON_VI = re.compile(r"kết thúc bài học", re.IGNORECASE)
+_VI_DIACRITICS = re.compile(
+    r"[ạáàảãâấầẩẫậăắằẳẵặéèẻẽêếềểễệíìỉĩịóòỏõôốồổỗộơớờởỡợúùủũưứừửữựýỳỷỹỵđ]",
+    re.IGNORECASE,
+)
+
+
+def detect_end_lesson(transcript: str) -> bool:
+    """Return True if the transcript signals an intent to end the lesson.
+
+    Matches English variants like "end lesson", "end the lesson",
+    "finish session", "stop the lesson", and the Vietnamese phrase
+    "kết thúc bài học".
+    """
+    return bool(_END_LESSON_EN.search(transcript) or _END_LESSON_VI.search(transcript))
+
+
+def is_vietnamese_text(transcript: str) -> bool:
+    """Return True if the transcript contains Vietnamese diacritics.
+
+    Used to detect the user falling back to L1 (Vietnamese) during an
+    English-only tutor turn.
+    """
+    return bool(_VI_DIACRITICS.search(transcript))
