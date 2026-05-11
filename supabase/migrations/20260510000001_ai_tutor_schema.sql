@@ -21,13 +21,13 @@ CREATE TABLE ai_tutor_scenarios (
   description_vi      TEXT,
   goal_en             TEXT,
   goal_vi             TEXT,
-  is_free             BOOLEAN DEFAULT TRUE,
+  is_free             BOOLEAN NOT NULL DEFAULT TRUE,
   ai_persona          TEXT,
   opening_line_en     TEXT NOT NULL,
   opening_audio_path  TEXT,
-  sort_order          INT DEFAULT 0,
-  created_at          TIMESTAMPTZ DEFAULT NOW(),
-  updated_at          TIMESTAMPTZ DEFAULT NOW()
+  sort_order          INT NOT NULL DEFAULT 0,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- =========================================================================
@@ -42,7 +42,7 @@ CREATE TABLE ai_tutor_scenario_tasks (
   title_en                 TEXT NOT NULL,
   title_vi                 TEXT NOT NULL,
   accept_patterns          JSONB NOT NULL,
-  correction_templates     JSONB DEFAULT '[]'::jsonb,
+  correction_templates     JSONB NOT NULL DEFAULT '[]'::jsonb,
   next_ai_line_en          TEXT,
   next_ai_line_audio_path  TEXT,
   sort_order               INT NOT NULL,
@@ -69,15 +69,15 @@ CREATE TABLE ai_tutor_scenario_phrases (
 
 CREATE TABLE ai_tutor_sessions (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id             UUID NOT NULL REFERENCES auth.users(id),
+  user_id             UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   scenario_id         UUID NOT NULL REFERENCES ai_tutor_scenarios(id),
   status              TEXT NOT NULL CHECK (status IN ('active', 'completed', 'abandoned')),
   current_task_id     UUID REFERENCES ai_tutor_scenario_tasks(id),
-  completed_task_ids  UUID[] DEFAULT '{}',
-  mistake_count       INT DEFAULT 0,
-  xp_awarded          INT DEFAULT 0,
-  started_at          TIMESTAMPTZ DEFAULT NOW(),
-  last_activity_at    TIMESTAMPTZ DEFAULT NOW(),
+  completed_task_ids  UUID[] NOT NULL DEFAULT '{}',
+  mistake_count       INT NOT NULL DEFAULT 0,
+  xp_awarded          INT NOT NULL DEFAULT 0,
+  started_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_activity_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   completed_at        TIMESTAMPTZ,
   CHECK (status != 'completed' OR completed_at IS NOT NULL)
 );
@@ -96,15 +96,15 @@ CREATE UNIQUE INDEX ai_tutor_sessions_user_scenario_active
 CREATE TABLE ai_tutor_turns (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id        UUID NOT NULL REFERENCES ai_tutor_sessions(id) ON DELETE CASCADE,
-  user_id           UUID NOT NULL REFERENCES auth.users(id),  -- denormalized for RLS performance
+  user_id           UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,  -- denormalized for RLS performance
   task_id           UUID REFERENCES ai_tutor_scenario_tasks(id),
   speaker           TEXT NOT NULL CHECK (speaker IN ('ai', 'user')),
   text_en           TEXT,
   audio_path        TEXT,           -- AI: pre-generated; user: NULL in Spec 1
   evaluator_result  JSONB,          -- user turns only
-  task_completed    BOOLEAN DEFAULT FALSE,
+  task_completed    BOOLEAN NOT NULL DEFAULT FALSE,
   correction        JSONB,          -- {corrected_en, explanation_vi, translation_vi, severity, explanation_key}
-  created_at        TIMESTAMPTZ DEFAULT NOW()
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX ai_tutor_turns_session
@@ -118,11 +118,11 @@ CREATE INDEX ai_tutor_turns_session
 
 CREATE TABLE ai_tutor_events (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID REFERENCES auth.users(id),
+  user_id     UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   session_id  UUID REFERENCES ai_tutor_sessions(id) ON DELETE SET NULL,
   event_type  TEXT NOT NULL,        -- e.g. 'turn.failed.stt', 'session.abandoned', 'mic.denied'
-  payload     JSONB DEFAULT '{}'::jsonb,
-  created_at  TIMESTAMPTZ DEFAULT NOW()
+  payload     JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX ai_tutor_events_user_recent
@@ -198,7 +198,7 @@ GRANT INSERT, UPDATE, DELETE ON ai_tutor_events           TO service_role;
 -- =========================================================================
 
 ALTER TABLE user_activity_log
-  DROP CONSTRAINT user_activity_log_type_check;
+  DROP CONSTRAINT IF EXISTS user_activity_log_type_check;
 
 ALTER TABLE user_activity_log
   ADD CONSTRAINT user_activity_log_type_check CHECK (type IN (
