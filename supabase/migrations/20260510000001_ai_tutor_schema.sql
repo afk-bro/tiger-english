@@ -369,14 +369,29 @@ BEGIN
     );
   END IF;
 
-  -- 3. Task advance (optional): append to completed_task_ids, set
-  --    current_task_id, and write a learner-facing activity log row.
-  IF _completed_task_id IS NOT NULL THEN
-    UPDATE ai_tutor_sessions
-    SET completed_task_ids = completed_task_ids || _completed_task_id,
-        current_task_id    = _next_task_id
-    WHERE id = _session_id;
+  -- 3. Single consolidated session UPDATE: task advance (if any),
+  --    mistake bump (if any), and last_activity_at bump (always).
+  --    Folding the previous three separate UPDATEs into one reduces WAL
+  --    volume and dodges any lock-ordering risk between them.
+  UPDATE ai_tutor_sessions
+  SET completed_task_ids = CASE
+        WHEN _completed_task_id IS NOT NULL
+        THEN completed_task_ids || _completed_task_id
+        ELSE completed_task_ids
+      END,
+      current_task_id    = CASE
+        WHEN _completed_task_id IS NOT NULL
+        THEN _next_task_id
+        ELSE current_task_id
+      END,
+      mistake_count      = mistake_count
+        + (CASE WHEN _user_correction IS NOT NULL THEN 1 ELSE 0 END),
+      last_activity_at   = NOW()
+  WHERE id = _session_id;
 
+  -- 4. Learner-facing activity log row for the task advance (still gated
+  --    on _completed_task_id IS NOT NULL — separate from the UPDATE above).
+  IF _completed_task_id IS NOT NULL THEN
     SELECT task_key INTO task_key_v
     FROM ai_tutor_scenario_tasks
     WHERE id = _completed_task_id;
@@ -396,18 +411,6 @@ BEGIN
       )
     );
   END IF;
-
-  -- 4. Mistake bump (optional).
-  IF _user_correction IS NOT NULL THEN
-    UPDATE ai_tutor_sessions
-    SET mistake_count = mistake_count + 1
-    WHERE id = _session_id;
-  END IF;
-
-  -- 5. Always bump last_activity_at.
-  UPDATE ai_tutor_sessions
-  SET last_activity_at = NOW()
-  WHERE id = _session_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -430,29 +433,34 @@ DECLARE
   mistake_count_v    INT;
   duration_s_v       INT;
 BEGIN
-  -- Mark session completed and capture the fields we need for the
-  -- activity-log payload in one round trip.
+  -- Mark session completed, capture activity-log payload fields, AND
+  -- resolve the scenario slug in one round trip (UPDATE ... FROM ...).
+  -- The status='active' guard makes double-finish a silent no-op:
+  -- a second call after the first succeeded will RETURNING zero rows,
+  -- leaving user_id_v NULL, and we return early below — no second XP
+  -- award, no second activity_log row, no second event.
   UPDATE ai_tutor_sessions s
-  SET status       = 'completed',
-      completed_at = NOW(),
-      xp_awarded   = _xp_awarded
+  SET status           = 'completed',
+      completed_at     = NOW(),
+      xp_awarded       = _xp_awarded,
+      last_activity_at = NOW()
+  FROM ai_tutor_scenarios sc
   WHERE s.id = _session_id
+    AND s.status = 'active'
+    AND sc.id = s.scenario_id
   RETURNING
     s.user_id,
+    sc.slug,
     COALESCE(array_length(s.completed_task_ids, 1), 0),
     s.mistake_count,
     EXTRACT(EPOCH FROM (NOW() - s.started_at))::INT
-  INTO user_id_v, tasks_completed_v, mistake_count_v, duration_s_v;
+  INTO user_id_v, scenario_slug_v, tasks_completed_v, mistake_count_v, duration_s_v;
 
+  -- Idempotent no-op: session was already completed/abandoned, or doesn't
+  -- exist. Either way, do NOT re-award XP or re-emit the activity row.
   IF user_id_v IS NULL THEN
-    RAISE EXCEPTION 'session not found: %', _session_id;
+    RETURN;
   END IF;
-
-  -- Resolve scenario slug for the activity-log payload.
-  SELECT sc.slug INTO scenario_slug_v
-  FROM ai_tutor_sessions s
-  JOIN ai_tutor_scenarios sc ON sc.id = s.scenario_id
-  WHERE s.id = _session_id;
 
   -- Award XP additively. user_stats has a row per user (seeded at
   -- registration); use UPDATE rather than UPSERT to surface missing rows.
@@ -490,13 +498,20 @@ AS $$
 DECLARE
   user_id_v UUID;
 BEGIN
+  -- The status='active' guard makes double-abandon a silent no-op:
+  -- a second call after the first succeeded RETURNING zero rows leaves
+  -- user_id_v NULL and we return early — no duplicate session.abandoned
+  -- event is emitted.
   UPDATE ai_tutor_sessions
   SET status = 'abandoned'
   WHERE id = _session_id
+    AND status = 'active'
   RETURNING user_id INTO user_id_v;
 
+  -- Idempotent no-op: session was already completed/abandoned, or doesn't
+  -- exist. Either way, do NOT re-emit the abandoned event.
   IF user_id_v IS NULL THEN
-    RAISE EXCEPTION 'session not found: %', _session_id;
+    RETURN;
   END IF;
 
   INSERT INTO ai_tutor_events (user_id, session_id, event_type, payload)
