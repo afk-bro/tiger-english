@@ -8,7 +8,7 @@
 
 ## 1. Purpose & scope
 
-This is **Spec 1 of an N-spec rollout** for the AI Tutor speech feature. It delivers the AI Tutor shell, navigation, and a single end-to-end scenario ("Meeting someone new" / "Gặp người mới") with real speech-to-text (Groq Whisper), pre-generated TTS playback, browser SpeechSynthesis fallback, and a rule-based task evaluator. No LLM calls in Spec 1.
+This is **Spec 1 of an N-spec rollout** for the AI Tutor speech feature. It delivers the AI Tutor shell, navigation, and a single end-to-end scenario ("Meeting someone new" / "Gặp người mới") with real speech-to-text (Groq Whisper, model configurable), pre-generated TTS playback, browser SpeechSynthesis fallback, and a rule-based task evaluator. No LLM calls in Spec 1.
 
 **Goal:** prove the guided speaking loop end-to-end on real devices, behind a feature flag, before investing in LLM evaluation, additional scenarios, post-session streak/review flow, or paywall infrastructure.
 
@@ -43,7 +43,7 @@ This is **Spec 1 of an N-spec rollout** for the AI Tutor speech feature. It deli
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| **STT provider** | Groq Whisper API (`whisper-large-v3`) | Effectively free, <1s latency, no self-hosting, language pinnable to English. |
+| **STT provider** | Groq Whisper API; model configurable via `GROQ_STT_MODEL` env (default `whisper-large-v3`) | Low cost, sub-second p50 latency on short clips, no self-hosting burden, language pinnable to English. Model swappable to `whisper-large-v3-turbo` or future Groq STT models without code changes. |
 | **TTS strategy** | Pre-generated MP3 in Supabase Storage for fixed lines + browser `SpeechSynthesis` fallback | Voice consistency for pronunciation modeling; zero recurring TTS cost for the seed scenario. |
 | **Course tab destination** | Existing `/lessons` | No parallel lesson system; tutor shell links out. |
 | **Streak / XP / activity** | Reuse `user_stats` + `user_activity_log` + `_derive_streak`; no new streak/XP tables | Single source of truth for learner progress across lessons + tutor. |
@@ -233,25 +233,53 @@ CREATE INDEX ai_tutor_events_type_recent ON ai_tutor_events(event_type, created_
 ```sql
 start_tutor_session_tx(_user_id, _scenario_id, _mode)
   → returns uuid (session_id)
-  -- Honors UNIQUE active-session index; raises if attempting fresh while one already active
+  -- _mode IN ('fresh', 'continue')
+  -- 'continue': returns existing active session_id if one exists for (user, scenario);
+  --             otherwise creates a new active session.
+  -- 'fresh':    if an active session exists for (user, scenario), atomically marks it
+  --             status='abandoned' (with completed_at=NULL, ai_tutor_events row
+  --             event_type='session.abandoned', payload={reason:'started_fresh'}),
+  --             then creates and returns a new active session.
+  -- Both branches honor the UNIQUE(user_id, scenario_id) WHERE status='active' partial index.
+  -- Sets current_task_id to the first task by sort_order.
 
-record_tutor_turn_tx(
-  _session_id, _user_id, _speaker, _task_id, _text_en, _audio_path,
-  _evaluator_result, _task_completed, _correction
+record_tutor_exchange_tx(
+  _session_id, _user_id,
+  _user_text, _user_evaluator_result, _user_correction,
+  _completed_task_id,           -- nullable; the task that just completed (or NULL if no advance)
+  _next_task_id,                -- nullable; the task to set as current_task_id (or NULL if no advance / lesson done)
+  _ai_text, _ai_audio_path,     -- nullable; AI's response turn (NULL if end-lesson detected and we're not auto-replying)
+  _ai_task_id                   -- nullable; the task the AI is now prompting for (typically = _next_task_id)
 ) → void
-  -- Inserts row into ai_tutor_turns
-  -- If _task_completed AND speaker='user': appends task to completed_task_ids, advances current_task_id
-  -- If _speaker='user' AND _correction IS NOT NULL: increments mistake_count
-  -- Updates last_activity_at
+  -- ATOMIC. Replaces the prior pair of record_tutor_turn_tx calls.
+  -- 1. Inserts ai_tutor_turns row for user (speaker='user', text_en=_user_text,
+  --    evaluator_result=_user_evaluator_result, correction=_user_correction,
+  --    task_id=session.current_task_id BEFORE update,
+  --    task_completed=(_completed_task_id IS NOT NULL)).
+  -- 2. If _ai_text IS NOT NULL: inserts ai_tutor_turns row for AI
+  --    (speaker='ai', text_en=_ai_text, audio_path=_ai_audio_path, task_id=_ai_task_id).
+  -- 3. If _completed_task_id IS NOT NULL:
+  --      - appends to ai_tutor_sessions.completed_task_ids
+  --      - sets current_task_id = _next_task_id
+  --      - inserts user_activity_log row (event_type='tutor_task_completed',
+  --        payload={session_id, scenario_slug, task_key, severity, has_correction}).
+  -- 4. If _user_correction IS NOT NULL: increments mistake_count.
+  -- 5. Always updates last_activity_at = now().
+  -- All five steps run in one transaction; partial failure rolls back everything.
 
 complete_tutor_session_tx(_session_id, _xp_awarded) → void
-  -- Sets status='completed', completed_at=now()
-  -- Updates user_stats.xp += _xp_awarded
-  -- Inserts user_activity_log row (event_type='tutor_session_completed')
-  -- Atomic across all three writes
+  -- Sets status='completed', completed_at=now(), xp_awarded=_xp_awarded.
+  -- Updates user_stats.xp += _xp_awarded.
+  -- Inserts user_activity_log row (event_type='tutor_session_completed',
+  --   payload={session_id, scenario_slug, xp_awarded, tasks_completed,
+  --            mistake_count, duration_s}).
+  -- Atomic across all three writes.
 
-abandon_tutor_session_tx(_session_id) → void
-  -- Sets status='abandoned'; logs ai_tutor_events row (event_type='session.abandoned')
+abandon_tutor_session_tx(_session_id, _reason) → void
+  -- Sets status='abandoned'.
+  -- Logs ai_tutor_events row (event_type='session.abandoned', payload={reason: _reason}).
+  -- Used for explicit user cancel; the start_tutor_session_tx 'fresh' branch handles
+  -- the implicit-abandon-on-restart case inline.
 ```
 
 All functions: `REVOKE ALL FROM PUBLIC, anon, authenticated; GRANT EXECUTE TO service_role`. Pattern matches existing `complete_lesson_section_tx`.
@@ -325,7 +353,7 @@ class STTProvider(Protocol):
 
 `GroqSTTProvider`:
 - Uses Groq's OpenAI-compatible endpoint (`POST /openai/v1/audio/transcriptions`).
-- Model: `whisper-large-v3`.
+- Model from `settings.groq_stt_model` (default `whisper-large-v3`; configurable per env).
 - `language="en"` (always; doesn't auto-detect).
 - `prompt` parameter set to current task title to bias vocabulary recognition.
 - Timeout: 10s. On timeout/5xx/empty result: raises `STTFailureError` (caught by route handler → 503).
@@ -342,33 +370,56 @@ Provider chosen via env: `STT_PROVIDER=groq` (prod) or `stub` (tests). DI in `tu
 | `GET` | `/api/v1/me/ai-tutor/sessions/:id` | required | Resume hydration: full session + tasks + last 50 turns |
 | `POST` | `/api/v1/me/ai-tutor/sessions/:id/turns` | required | `multipart/form-data` audio+task_id; full turn pipeline (see below) |
 | `POST` | `/api/v1/me/ai-tutor/sessions/:id/finish` | required | Awards XP, calls `complete_tutor_session_tx` |
-| `POST` | `/api/v1/me/ai-tutor/sessions/:id/abandon` | required | Soft-cancel; `abandon_tutor_session_tx` |
+| `POST` | `/api/v1/me/ai-tutor/sessions/:id/abandon` | required | Soft-cancel; `abandon_tutor_session_tx(reason='user_cancelled')` |
+| `POST` | `/api/v1/me/ai-tutor/events` | required | Frontend-originated diagnostics. Body `{event_type, payload, session_id?}`. Writes `ai_tutor_events` with `user_id=auth.uid()`. Allowed `event_type` values whitelisted server-side: `mic.denied`, `audio.fallback`, `turn.failed.network`, `unsupported_browser`. Rate-limited 30/min/user. |
 
 Rate limit on `/turns`: reuse the in-memory limiter pattern from `conversations.py` (60/min/user). Audio upload size cap: 2 MB.
 
 ### Turn pipeline (`POST /sessions/:id/turns`)
 
 ```text
-1. Authn + session ownership check + status='active' check        (~5ms)
-2. Validate audio: size <2MB, mime_type ∈ {webm, mp4, wav, ogg}    (~1ms)
-3. STTProvider.transcribe(audio, prompt=current_task.title_en)
-     → on STTFailureError: log to ai_tutor_events ('turn.failed.stt'),
-       return 503 {error: 'stt_failed', retryable: true} BEFORE any DB write. (~500–1500ms; Groq)
-4. End-lesson detection FIRST (regex incl. Vietnamese variant)     (~1ms)
-   → on match: write user turn (text only, no eval), return {end_lesson_detected: true, tasks_done, tasks_total}
-5. VI-spoken detection (diacritic regex)                            (~1ms)
-   → on match: do NOT write turn; log ai_tutor_events ('turn.vi_spoken'),
-       return {evaluation: {kind: 'vi_spoken'}}
-6. TutorEvaluatorService.evaluate(transcript, current_task)         (~1ms; pure regex)
-   → returns {task_completed, severity, correction_template?, should_advance}
-7. record_tutor_turn_tx(user turn) + record_tutor_turn_tx(ai turn) atomically  (~10–20ms)
-   - User turn includes correction jsonb if a template matched
-   - AI turn: if task advanced → next_task.next_ai_line_en + audio_path; else → re-prompt template
-8. Build response payload + return                                  (~5ms)
+1. Authn + session ownership check + status='active' check                       (~5ms)
+2. Validate audio: size <2MB, mime_type ∈ {webm, mp4, wav, ogg}                   (~1ms)
+3. STTProvider.transcribe(audio, prompt=current_task.title_en)                   (~500–1500ms)
+     → on STTFailureError: log to ai_tutor_events ('turn.failed.stt') ONLY;
+       return 503 {error: 'stt_failed', retryable: true}.
+       NO writes to ai_tutor_sessions or ai_tutor_turns (session state untouched).
+4. End-lesson detection FIRST (regex incl. Vietnamese variant)                    (~1ms)
+   → on match: load session counts; return {end_lesson_detected: true, tasks_done,
+     tasks_total} WITHOUT writing a turn (frontend opens confirmation modal; only
+     the /finish call mutates session state).
+5. VI-spoken detection (diacritic regex)                                          (~1ms)
+   → on match: NO writes to ai_tutor_sessions or ai_tutor_turns; log
+     ai_tutor_events ('turn.vi_spoken'); return {evaluation: {kind: 'vi_spoken'}}.
+6. TutorEvaluatorService.evaluate(transcript, current_task)                       (~1ms)
+   → returns {task_completed, severity, correction_template?, should_advance,
+     matched_pattern?}.
+7. Compute next-task pointers (caller-side, before DB call):                      (~1ms)
+     completed_task_id = current_task.id IF should_advance ELSE NULL
+     next_task = lookup(scenario_tasks WHERE sort_order > current.sort_order
+                        ORDER BY sort_order LIMIT 1)
+                 IF should_advance ELSE current_task
+     next_task_id  = next_task.id IF (should_advance AND next_task IS NOT NULL) ELSE NULL
+     all_tasks_done = should_advance AND next_task IS NULL
+8. Pick AI's next line:                                                           (~1ms)
+   - If should_advance AND next_task IS NOT NULL → use current_task.next_ai_line_en
+     (this is the line that *reacts* to completing current task and prompts the next).
+   - If all_tasks_done → use a final canned wrap-up line (per-scenario, stored on the
+     scenario row as a future column or hard-coded for the seed; for the seed scenario:
+     "Great job! That was a really nice chat. Want to end here?").
+   - Else (didn't advance) → use task's re-prompt template (a fixed encouragement line
+     stored on the task row; for the seed: "Try again — you can do it!").
+9. record_tutor_exchange_tx(...) — single atomic call                             (~10–20ms)
+   Writes user turn + AI turn + (optionally) advances current_task_id +
+   (optionally) inserts user_activity_log 'tutor_task_completed' + bumps
+   mistake_count if correction set. See §5 for full contract.
+10. Build response payload + return                                               (~5ms)
 
 Target end-to-end: <2.5s p95.
 Audio playback start: <500ms after response (Supabase CDN).
 ```
+
+**Note on "no DB writes" in steps 3 and 5:** these refer specifically to **no writes to `ai_tutor_sessions` or `ai_tutor_turns`** — session state is provably unchanged on STT failure or VI-spoken rejection. Diagnostic writes to `ai_tutor_events` may still happen (and should, for telemetry).
 
 ### Evaluator (Spec 1: rule-based only)
 
@@ -434,7 +485,9 @@ npm run tutor-audio -- --scenario meeting-someone-new --provider openai-tts
 ```python
 ai_tutor_enabled: bool = False
 groq_api_key: str | None = None
+groq_stt_model: str = 'whisper-large-v3'    # swappable without code change
 stt_provider: Literal['groq','stub'] = 'stub'
+stt_timeout_seconds: int = 10
 tutor_audio_bucket: str = 'ai-tutor-audio'
 elevenlabs_api_key: str | None = None       # script-side only; not read at runtime
 ```
@@ -572,16 +625,16 @@ When `state.kind === 'lesson_complete'`:
 
 | Failure | Frontend behavior | Backend behavior |
 |---|---|---|
-| `POST /turns` 5xx or timeout >15s | Discard recorded blob, transition to `error` state with `cause:'stt_failed', retryable:true`. Toast: "Couldn't hear that — try again." | Caught before any DB write. Logs `ai_tutor_events(event_type='turn.failed.stt')`. Returns 503. |
+| `POST /turns` 5xx or timeout >15s | Discard recorded blob, transition to `error` state with `cause:'stt_failed', retryable:true`. Toast: "Couldn't hear that — try again." | No writes to `ai_tutor_sessions` or `ai_tutor_turns` (session state untouched). Logs `ai_tutor_events(event_type='turn.failed.stt')` only. Returns 503. |
 | `POST /turns` 429 | Same UX, message "You're going fast! Wait a moment." | Rate limiter response. |
 | `POST /turns` 401 | Trigger Supabase session refresh, retry once silently. | Standard JWT validation. |
 | Network offline mid-recording | `navigator.onLine` listener pauses pipeline; on reconnect, allow re-submit. | N/A. |
 | Mic permission denied | Persistent error banner with browser-specific instructions. | Logs `ai_tutor_events(event_type='mic.denied')`. |
 | Unsupported browser (no MediaRecorder OR no AudioContext) | Render unsupported-browser screen with desktop fallback link. | N/A. |
 | Audio file 404 in playback | Silent fallback to `SpeechSynthesis`. | N/A; telemetry log only. |
-| `evaluation.kind === 'vi_spoken'` | Toast (vi+en), dialogue card NOT added, mic re-enabled. | No turn write; logs `ai_tutor_events(event_type='turn.vi_spoken')`. |
-| `end_lesson_detected: true` | Open `EndLessonModal`. Dismiss → mic re-enabled. Confirm → `POST /finish`. | User turn written (text only); no eval; no advance. |
-| User submits silence | Same as STT failure → toast "Couldn't hear that — try again." | Empty after `.strip()` OR length < 2 chars → treated as `STTFailureError`. Logs `ai_tutor_events(event_type='turn.failed.stt', payload={reason:'empty_transcript'})`. No DB writes. |
+| `evaluation.kind === 'vi_spoken'` | Toast (vi+en), dialogue card NOT added, mic re-enabled. | No writes to `ai_tutor_sessions` or `ai_tutor_turns`; logs `ai_tutor_events(event_type='turn.vi_spoken')`. |
+| `end_lesson_detected: true` | Open `EndLessonModal`. Dismiss → mic re-enabled. Confirm → `POST /finish`. | No writes to `ai_tutor_sessions` or `ai_tutor_turns` from `/turns`. Only `/finish` mutates session state. |
+| User submits silence | Same as STT failure → toast "Couldn't hear that — try again." | Empty after `.strip()` OR length < 2 chars → treated as `STTFailureError`. Logs `ai_tutor_events(event_type='turn.failed.stt', payload={reason:'empty_transcript'})`. No writes to `ai_tutor_sessions` or `ai_tutor_turns`. |
 | User refreshes mid-session | URL has sessionId → hydrate via `GET /sessions/:id` → restore state machine to `ai_speaking` (last AI turn). | Active session preserved by partial unique index. |
 | User closes tab | Session remains `active` for 24h; subsequent `start` with `mode='continue'` resumes. Cron job can mark abandoned after 24h (deferred to Spec 3). | N/A. |
 
@@ -591,22 +644,28 @@ When `state.kind === 'lesson_complete'`:
 
 ### `user_activity_log` (learner progress; existing table, new event types)
 
-- `tutor_session_completed` — payload: `{session_id, scenario_slug, xp_awarded, tasks_completed, mistake_count, duration_s}`
-- `tutor_task_completed` — payload: `{session_id, task_key, severity, has_correction}`
+- `tutor_session_completed` — written by `complete_tutor_session_tx`. Payload: `{session_id, scenario_slug, xp_awarded, tasks_completed, mistake_count, duration_s}`.
+- `tutor_task_completed` — written by `record_tutor_exchange_tx` whenever `_completed_task_id IS NOT NULL`. Payload: `{session_id, scenario_slug, task_key, severity, has_correction}`.
 
-These flow through the existing event log so the streak derivation, /dashboard summary, and any future learner-facing reports pick them up automatically.
+These flow through the existing event log so streak derivation, `/dashboard` summary, and future learner-facing reports pick them up automatically. Both insertions live inside their respective transactional functions, so they are atomic with the corresponding session/turn writes — no risk of a task being marked completed in `ai_tutor_sessions` without the matching activity-log row.
 
 ### `ai_tutor_events` (product diagnostics; new table)
 
-- `session.started` — `{scenario_slug, mode}`
-- `session.abandoned` — `{last_state, turns_count}`
-- `turn.failed.stt` — `{provider, http_status, error_class}`
-- `turn.failed.network` — `{}`
-- `turn.vi_spoken` — `{transcript_length}`
-- `mic.denied` — `{user_agent, platform}`
-- `audio.fallback` — `{reason: 'missing'\|'load_error'}`
+**Backend-originated** (written directly by route handlers / transactional functions):
 
-These are admin-only; not exposed to end users. Useful for tuning rule-based evaluator and identifying broken audio assets.
+- `session.started` — `{scenario_slug, mode}` (written by `start_tutor_session_tx` for `'fresh'`)
+- `session.abandoned` — `{reason, last_state?, turns_count?}` (written by `start_tutor_session_tx` `'fresh'` branch with `reason='started_fresh'`, by `abandon_tutor_session_tx` with `reason='user_cancelled'`, and by future cleanup cron)
+- `turn.failed.stt` — `{provider, model, http_status?, error_class, reason?}`
+- `turn.vi_spoken` — `{transcript_length}`
+
+**Frontend-originated** (POST `/api/v1/me/ai-tutor/events`, allowed `event_type` whitelist enforced server-side):
+
+- `mic.denied` — `{user_agent, platform}`
+- `audio.fallback` — `{reason: 'missing'\|'load_error', audio_path?}`
+- `turn.failed.network` — `{}`
+- `unsupported_browser` — `{user_agent, missing: ['MediaRecorder', ...]}`
+
+These are admin-only (no `SELECT` for `authenticated`); not exposed to end users. Useful for tuning the rule-based evaluator, identifying broken audio assets, and spotting browser-support gaps.
 
 ---
 
