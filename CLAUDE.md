@@ -50,6 +50,7 @@ API base: `VITE_API_BASE_URL` (defaults to `http://localhost:8000/api/v1`)
 Frontend API clients live under `src/lib/api/`:
 - `auth.ts` — exports `authAPI` (an instance of class `AuthAPI`) with typed request/response interfaces; private `makeRequest` sets `Content-Type: application/json` and lets callers pass `Authorization` explicitly per call
 - `progress.ts` — exports `ProgressAPI` (instance of `ProgressAPIClass`) for the authenticated `/me/progress/*` endpoints (`completeSection`, `attemptExercise`, `reviewFlashcard`, `getSummary`); private `authedFetch` helper resolves the Supabase session, returns `null` when none exists, throws on non-2xx, and forces `Authorization: Bearer <jwt>` + `Content-Type: application/json` over caller-supplied headers. Write methods catch and log errors and return `null` so callers can degrade gracefully; `getSummary` deliberately propagates errors so its hook can render an error state.
+- The **AI Tutor frontend client** is at `src/features/ai-tutor/api/tutor.ts` (not under `src/lib/api/`) because it's tightly coupled to the feature module. Same `authedFetch`-based pattern. Methods: `listScenarios`, `getScenario`, `startSession`, `getSession`, `submitTurn` (multipart audio), `finishSession`, `abandonSession`. Also `src/features/ai-tutor/api/events.ts` exports `reportTutorEvent(eventType, payload, sessionId?)` — fire-and-forget telemetry POST with `keepalive: true`.
 
 Add new clients alongside these following the same pattern: one module per `<feature>API`, a private `authedFetch`-style helper that injects the bearer token, and try/catch wrappers on write methods that log + return `null`.
 
@@ -72,6 +73,7 @@ React Router DOM v7. Pages are lazy-loaded with `Suspense`. Three layout buckets
 - **`PublicLayout`** (Header + Footer): `/`, `/about`, `/contact`, `/login`, `/register`, `/u/:username` (public profile stub)
 - **`FlashcardsLayout`** (auth-aware): `/flashcards` — picks `AuthLayout` when `useUserStore.profile` is non-null, `PublicLayout` otherwise. Anonymous users still get the preview path; logged-in users keep the sidebar
 - **`AuthLayout` + `RequireAuth`** (sidebar + slim header): `/home`, `/dashboard`, `/lessons`, `/lessons/:unitSlug`, `/lessons/:unitSlug/:sectionKey`, `/practice` (hub), `/conversations`, `/conversations/:slug`, `/u/:username/conversations`, `/u/:username/conversations/scenarios`, `/u/:username/conversations/:sessionId`, `/review`, `/skills`, `/skills/:skillKey`, `/library`, `/study-groups`, `/notifications`, `/settings`, `/drag-drop`, `/ad-libs`, `/assessment/:level`, `/assessment/:level/results`, `/u/:username/assessment/:level`, `/u/:username/assessment/:level/results`, `/admin/orgs/:slug`, `/admin/orgs/:slug/billing`, `/admin/ai-usage`, plus `/teacher/*` (gated by an additional `RequireTeacher` wrapper inside `AuthLayout`): `/teacher`, `/teacher/classes`, `/teacher/classes/:classId`, `/teacher/students`, `/teacher/students/:studentId`
+- **`TutorLayout` + `RequireAuth`** (top tabs Home / Course → `/lessons`, persistent footer nav: Home / Free Talk / Review / Challenge / Profile, no sidebar): `/ai-tutor`, `/ai-tutor/scenarios/:slug/phrasebook`, `/ai-tutor/scenarios/:slug/briefing`, `/ai-tutor/scenarios/:slug/session/:sessionId`. **All routes gated on `VITE_AI_TUTOR_ENABLED === 'true'`** — when off, paths 404 and the homepage CTA stays as flashcards.
 - **No layout wrapper**: `/auth/callback` (OAuth completion handler — top-level sibling route)
 
 ### Forms
@@ -101,6 +103,7 @@ backend/app/
 │   ├── review.py          # /me/review/{due,count,{id}/rate} — SM-2 spaced repetition queue
 │   ├── skills.py          # /me/skills/summary — 11-skill EWMA scores
 │   ├── lessons.py         # lesson-data endpoints
+│   ├── ai_tutor_session.py # /ai-tutor/scenarios + /me/ai-tutor/sessions/* + /me/ai-tutor/events (Spec 1+ speech feature; gated by AI_TUTOR_ENABLED)
 │   └── admin.py           # /admin/* — gated by super_admin_user_ids env list
 ├── core/
 │   ├── config.py          # Pydantic BaseSettings (reads backend/.env)
@@ -110,13 +113,18 @@ backend/app/
 │   ├── auth.py            # Pydantic auth models (UpdateProfile validates timezone)
 │   ├── progress.py        # Pydantic progress models (SectionKey Literal, regex-validated unit_slug + exercise_id)
 │   ├── ai_tutor.py        # ExplainResponse, CorrectionResponse, PracticeItem/Response, WritingCoach* shapes
+│   ├── tutor.py           # Pydantic models for AI Tutor (TutorScenarioSummary/Detail, TutorTask, TutorPhrase, TutorSessionDTO, TutorTurnDTO, TurnCorrection, EvaluationResult, StartSessionResponse, TurnResponse, FinishResponse, TutorEventRequest)
 │   └── skills.py          # ALL_SKILL_KEYS, SkillSummary, scoring shapes
 └── services/
     ├── auth_service.py        # create user, verify credentials
     ├── progress_service.py    # complete_lesson_section, submit_exercise_attempt, review_flashcard, get_summary
     ├── ai_tutor_service.py    # Anthropic SDK wrapper; raises AiDisabledException when no key
     ├── skill_scoring_service.py  # EWMA per-skill score updates
-    └── sm2_service.py         # SM-2 spaced repetition algorithm
+    ├── sm2_service.py         # SM-2 spaced repetition algorithm
+    ├── tutor_scenario_service.py    # read catalog (scenarios + tasks + phrases + active-session lookup)
+    ├── tutor_session_service.py     # session lifecycle: start_session, submit_turn (hot path), finish_session, abandon_session
+    ├── tutor_evaluator_service.py   # rule-based evaluator + detect_end_lesson + is_vietnamese_text helpers
+    └── stt_provider/                # STT abstraction: Protocol + StubSTTProvider + GroqSTTProvider
 
 backend/tests/             # pytest infrastructure; tests are mock-based — real DB verification happens in manual walkthroughs
 ```
@@ -143,6 +151,15 @@ Note: All progress writes go through transactional Postgres functions (`complete
 - `exercise_attempts` — projection: every exercise attempt (correct OR incorrect)
 - `flashcard_reviews` — projection: flashcard known/unknown reviews
 - `review_items` — SM-2 spaced repetition queue. Per-user, per-item rows with `ease_factor`, `interval_days`, `streak_correct`, `next_review_at`, etc. Backed by `/me/review/*` endpoints. RLS limits SELECT to the owner; writes go through `service_role` from the backend.
+- `ai_tutor_scenarios` — catalog of speech-practice scenarios (slug, mode `course`/`free_talk`, level, `title_en/vi`, `description_en/vi`, `goal_en/vi`, `ai_persona`, `opening_line_en`, `opening_audio_path`, `is_free`). Seeded with `meeting-someone-new` in `20260510000003_ai_tutor_seed_meeting_someone_new.sql`.
+- `ai_tutor_scenario_tasks` — per-scenario tasks (sort_order, `title_en/vi`, `accept_patterns` jsonb, `correction_templates` jsonb with `{match_regex, corrected_en_template, explanation_vi, explanation_key, severity}`, `next_ai_line_en`, `next_ai_line_audio_path`).
+- `ai_tutor_scenario_phrases` — phrasebook items per scenario (`phrase_en`, `translation_vi`, `audio_path`, `sort_order`).
+- `ai_tutor_sessions` — per-user session lifecycle (`status` active/completed/abandoned, `current_task_id`, `completed_task_ids[]`, `mistake_count`, `xp_awarded`, `started_at`/`last_activity_at`/`completed_at`). Partial unique index on `(user_id, scenario_id) WHERE status='active'` enforces one active session per user per scenario.
+- `ai_tutor_turns` — every dialogue turn (speaker `ai`/`user`, `text_en`, `audio_path` for AI turns only — user audio is never persisted in Spec 1, `evaluator_result` jsonb, `correction` jsonb, `task_completed`, `user_id` denormalized for RLS performance).
+- `ai_tutor_events` — diagnostic-only telemetry stream (mic.denied, audio.fallback, turn.failed.stt, turn.vi_spoken, session.started, session.abandoned). No SELECT for end-users; admin-only.
+- `ai_tutor_review_items` — **NOT YET CREATED**. Reserved for Spec 3 (repeat-after-me practice for past mistakes).
+
+Tutor session writes go through 4 transactional Postgres functions (`start_tutor_session_tx`, `record_tutor_exchange_tx`, `complete_tutor_session_tx`, `abandon_tutor_session_tx`) granted only to `service_role` — same posture as `complete_lesson_section_tx`. `record_tutor_exchange_tx` writes both turn rows + advances `current_task_id` + writes a `tutor_task_completed` row to `user_activity_log` atomically. `complete_tutor_session_tx` writes a `tutor_session_completed` activity row + increments `user_stats.xp` atomically.
 
 ## Environment Variables
 
@@ -153,6 +170,8 @@ VITE_SUPABASE_ANON_KEY=
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 VITE_AI_CONVERSATION_ENABLED=  # set to "true" to expose the AI Conversation card on /practice; falls back to "Coming soon"
 VITE_SUPABASE_IMAGE_TRANSFORMS= # set to "true" only if Supabase Pro "Image Transforms" is enabled — otherwise srcSetFor returns the original object URL
+VITE_AI_TUTOR_ENABLED=         # set to "true" to expose the /ai-tutor route tree, the homepage CTA swap (Flashcards → AI Tutor), and the AuthLayout sidebar entry. Frontend gate only — backend has its own AI_TUTOR_ENABLED flag.
+VITE_TUTOR_MAX_RECORD_MS=20000 # hard cap on a single mic recording; auto-submits at the cap. Default 20s.
 
 # Playwright e2e (loaded by playwright.config.ts via vite's loadEnv)
 E2E_TESTER_EMAIL=
@@ -168,6 +187,13 @@ ALLOWED_ORIGINS=["http://localhost:5173"]
 ENVIRONMENT=development
 ANTHROPIC_API_KEY=    # required for /me/ai-tutor/* and /me/conversations/turn; absent → 503 ai_disabled
 LEONARDO_API_KEY=     # used by scripts/generate-lesson-images.ts via dotenv (not yet read by FastAPI runtime)
+AI_TUTOR_ENABLED=              # master opt-in for ALL AI tutor surfaces — gates both the new /api/v1/me/ai-tutor/sessions/* speech endpoints AND the legacy /me/ai-tutor/{explain,correct,practice,writing-coach} + /me/conversations/turn endpoints. (Pre-existing @property derived from anthropic_api_key was replaced by this explicit flag in feat/ai-tutor-spec1; both ANTHROPIC_API_KEY and this flag must be set to enable conversation/explain.)
+GROQ_API_KEY=                  # required when AI_TUTOR_ENABLED=true and STT_PROVIDER=groq
+GROQ_STT_MODEL=whisper-large-v3 # configurable; swap for whisper-large-v3-turbo etc.
+STT_PROVIDER=stub              # 'groq' in production; 'stub' in dev/tests. Stub mode honors X-Test-Stub-Transcript header (only when environment != 'production') so e2e can script transcripts.
+STT_TIMEOUT_SECONDS=10
+TUTOR_AUDIO_BUCKET=ai-tutor-audio
+ELEVEN_LABS_API_KEY=           # script-side only; used by scripts/generate-tutor-audio.ts. NEVER read at runtime by FastAPI. Note the underscore between ELEVEN and LABS — matches the existing convention.
 ```
 
 In production these are set on the host platform (Vercel for frontend, Railway for backend), not in `.env` files. See `## Production deployment` below.
@@ -191,6 +217,7 @@ The app is organized around **Lessons / Practice / Review**:
 - **Lessons** (`/lessons`) — short, completable, beginner-safe. **Deterministic** — no AI in the completion path. The `output-task` and `ai-mission` `SectionBlock` variants were removed in PR #137; AI/open-ended blocks are not allowed in lesson section data.
 - **Practice** (`/practice`) — applies what's been learned. Currently surfaces an AI Conversation card (links to `/conversations` when `VITE_AI_CONVERSATION_ENABLED === "true"`, otherwise renders as "Coming soon") and a Guided Writing card (always "Coming soon" for now).
 - **Review** (`/review`) — spaced repetition; backed by `review_items` and the `/me/review/*` endpoints.
+- **AI Tutor** (`/ai-tutor` — flag-gated by `VITE_AI_TUTOR_ENABLED`) — speech-driven roleplay with Vietnamese-first support. Backend pipeline: browser MediaRecorder → multipart upload → Groq Whisper STT → end-lesson detector (incl. Vietnamese variant `kết thúc bài học`) → VI-spoken detector (diacritics regex) → rule-based evaluator → atomic `record_tutor_exchange_tx` → response with optional pre-generated AI audio. **Deterministic — no LLM calls in Spec 1.** One scenario seeded ("Meeting someone new" / "Gặp người mới"); Spec 2 will add LLM evaluator fallback + more scenarios.
 
 ## Lesson images
 
@@ -216,6 +243,21 @@ Image-prompt exercises ("choose what's in the picture") MUST set `imageAlt` so t
 
 Spec: `docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md`.
 Plan: `docs/superpowers/plans/2026-05-02-lesson-image-generation.md`.
+
+## AI Tutor audio
+
+Author-time pipeline that pre-generates ElevenLabs MP3s for the AI Tutor's fixed lines (scenario opening, per-task next-line reactions, phrasebook phrases) and uploads them to the public Supabase Storage bucket `ai-tutor-audio`. Runtime resolves `audio_path` columns to public URLs via `tutor_audio_url()` in `backend/app/core/storage.py`.
+
+```bash
+npm run tutor-audio -- --scenario meeting-someone-new --dry-run    # plan only
+npm run tutor-audio -- --scenario meeting-someone-new              # execute (idempotent on existing audio_path)
+npm run tutor-audio -- --scenario meeting-someone-new --force      # regenerate everything
+npm run tutor-audio -- --scenario meeting-someone-new --asset opening  # one asset
+```
+
+The script reads `ELEVEN_LABS_API_KEY` (with underscore between ELEVEN and LABS) + `SUPABASE_URL` + `SUPABASE_SECRET_KEY` from `backend/.env`. **Server-side only — never imported by FastAPI runtime.** For the seed scenario it generates 13 assets (1 opening + 4 task next-lines + 8 phrases) for ~445 characters total — well under the ElevenLabs 10k chars/mo free tier.
+
+When `audio_path` is null at runtime, the frontend falls back to browser `SpeechSynthesis` (with telemetry to `ai_tutor_events('audio.fallback', {reason: 'missing'|'load_error'})`).
 
 ## Exercises
 
