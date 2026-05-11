@@ -75,8 +75,14 @@ async def health_check():
     except Exception:
         db_reachable = False
 
-    # Check if Anthropic API is reachable (just check if configured)
-    anthropic_reachable = settings.ai_tutor_enabled
+    # Check if Anthropic API is reachable (just check if configured).
+    # Independent of the AI_TUTOR_ENABLED master flag — this reports whether
+    # the key itself is present and not a placeholder, matching the old
+    # @property semantics that this signal originally exposed.
+    anthropic_reachable = bool(
+        settings.anthropic_api_key
+        and not settings.anthropic_api_key.startswith("sk-ant-placeholder")
+    )
 
     return {
         "status": "ok",

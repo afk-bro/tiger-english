@@ -43,7 +43,9 @@ def _build_client():
     if not _ANTHROPIC_AVAILABLE:
         raise AiDisabledException("anthropic package not installed")
     if not settings.ai_tutor_enabled:
-        raise AiDisabledException("AI tutor disabled (no valid ANTHROPIC_API_KEY)")
+        raise AiDisabledException(
+            "AI tutor disabled — set AI_TUTOR_ENABLED=true and a valid ANTHROPIC_API_KEY"
+        )
     import anthropic  # noqa: PLC0415 – intentional lazy import
 
     return anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
