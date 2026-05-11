@@ -1,10 +1,19 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CreditCard } from "lucide-react";
+import { ArrowRight, CreditCard, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Button from "../ui/Button";
 
 export default function HeroSection() {
   const { t } = useTranslation();
+  const aiTutorEnabled = import.meta.env.VITE_AI_TUTOR_ENABLED === 'true';
+
+  const secondaryCtaLabel = aiTutorEnabled
+    ? t('home.cta.aiTutor.button', { defaultValue: 'Start speaking' })
+    : t('hero.try_flashcards');
+  const secondaryCtaTo = aiTutorEnabled ? '/ai-tutor' : '/flashcards';
+  const secondaryCtaIcon = aiTutorEnabled
+    ? <MessageCircle className="w-4 h-4" />
+    : <CreditCard className="w-4 h-4" />;
 
   return (
     <section className="relative overflow-hidden">
@@ -22,8 +31,8 @@ export default function HeroSection() {
               <Button to="/register" variant="primary" iconRight={<ArrowRight />}>
                 {t("hero.cta")}
               </Button>
-              <Button to="/flashcards" variant="secondary" iconRight={<CreditCard className="w-4 h-4" />}>
-                {t("hero.try_flashcards")}
+              <Button to={secondaryCtaTo} variant="secondary" iconRight={secondaryCtaIcon}>
+                {secondaryCtaLabel}
               </Button>
               <Link
                 to="/about"
