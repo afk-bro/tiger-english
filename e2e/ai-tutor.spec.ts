@@ -120,6 +120,10 @@ async function scriptTranscript(page: Page, transcript: string): Promise<void> {
  * idle → recording (Speak now) → submit. We wait briefly after Speak now
  * for MediaRecorder to spin up against the fake device so the resulting
  * blob is non-empty.
+ *
+ * Submit is a single click now that `handleSubmitRecording` awaits
+ * `mic.stop()` (which resolves only after MediaRecorder.onstop fires), so
+ * there's no longer a stale-closure window where the first click no-ops.
  */
 async function speakAndSubmit(page: Page, transcript: string): Promise<void> {
   await scriptTranscript(page, transcript);
@@ -132,27 +136,7 @@ async function speakAndSubmit(page: Page, transcript: string): Promise<void> {
   const submitBtn = page.getByRole('button', { name: /^Submit$/i });
   await expect(submitBtn).toBeVisible({ timeout: 5_000 });
   await page.waitForTimeout(1200);
-
-  // KNOWN-NUANCE: `handleSubmitRecording` in TutorSessionPage calls
-  // `mic.stop()` then `submitTurn(...)`. `submitTurn` closes over the
-  // hook-render-time value of `mic.blob` — which is still `null` at the
-  // moment of the first click (the recorder's `onstop` hasn't yet
-  // committed `setBlob`). The first click therefore short-circuits.
-  // The next render, post-`setBlob`, gives `submitTurn` a fresh closure
-  // that sees the blob and fires the POST. We click Submit a second time
-  // so the test exercises the network path. This pattern is invisible to
-  // human users because the recording panel stays in `recording` mode
-  // until `submitTurn` dispatches `RECORD_STOP`, so a real user would
-  // also click again if the first click "did nothing."
   await submitBtn.click();
-  await page.waitForTimeout(150);
-  // If the panel is still in recording mode (Submit visible + enabled),
-  // click once more to pick up the freshly-set blob.
-  if (await submitBtn.isVisible().catch(() => false)) {
-    if (await submitBtn.isEnabled().catch(() => false)) {
-      await submitBtn.click().catch(() => {});
-    }
-  }
 }
 
 test.describe('AI Tutor', () => {
@@ -212,17 +196,10 @@ test.describe('AI Tutor', () => {
   test('first task accept-pattern match advances + end-lesson confirm → lesson_complete', async ({
     page,
   }) => {
-    // Scope: this verifies (a) a successful accept-pattern match on the
-    // FIRST task, (b) the AI advance-line renders, and (c) the end-lesson
-    // detector + EndLessonModal → finish → LessonCompleteScreen pipeline.
-    //
-    // NOT covered here: chaining through all four tasks. The current
-    // TutorSessionPage submits `routerState.currentTaskId` for every turn
-    // (it doesn't track the advancing `current_task_id` returned in the
-    // turn response), so subsequent turns evaluate against introduce_self
-    // and never match the later task patterns. A separate change is
-    // needed in `useTutorSession` / `TutorSessionPage` before a 4-turn
-    // walkthrough is e2e-stable. See "Outstanding work" memory.
+    // Scope: shortest happy path — first task matches, AI advance-line
+    // renders, then we early-end via "end lesson" → modal → finish →
+    // LessonCompleteScreen. The full 4-task walkthrough is exercised in
+    // the next test.
     await page.goto('/ai-tutor/scenarios/meeting-someone-new/briefing');
 
     const startCta = page
@@ -260,6 +237,66 @@ test.describe('AI Tutor', () => {
     ).toBeVisible();
     await expect(
       page.getByRole('button', { name: /View dashboard/i }),
+    ).toBeVisible();
+  });
+
+  test('full session: 4 task progressions → wrap-up → end-lesson confirm → lesson_complete', async ({
+    page,
+  }) => {
+    // Drives all four tasks for `meeting-someone-new`, then triggers the
+    // end-lesson detector after the wrap-up line. Exercises the
+    // current_task_id advance logic (each turn must evaluate against the
+    // currently-pointed task, not the initial one).
+    await page.goto('/ai-tutor/scenarios/meeting-someone-new/briefing');
+    const startCta = page
+      .getByRole('button', { name: /^(Start lesson|Start fresh)$/i })
+      .first();
+    await expect(startCta).toBeVisible({ timeout: 15_000 });
+    await startCta.click();
+    await expect(page).toHaveURL(/\/session\//, { timeout: 15_000 });
+    await expect(page.getByText(/Tasks:\s*0\s*\/\s*4 completed/)).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Turn 1: introduce_self → AI advance line.
+    await speakAndSubmit(page, 'my name is Tom');
+    await expect(page.getByText(/How are you today/i)).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Turn 2: ask_how_are_you → AI asks where from.
+    await speakAndSubmit(page, 'how are you');
+    await expect(page.getByText(/Where are you from/i)).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Turn 3: say_where_from → AI asks what doing today.
+    await speakAndSubmit(page, "I'm from Vietnam");
+    await expect(page.getByText(/What are you doing today/i)).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Turn 4: ask_what_doing_today → wrap-up line.
+    await speakAndSubmit(page, 'what are you doing today');
+    await expect(
+      page.getByText(/Great job.*really nice chat/i),
+    ).toBeVisible({ timeout: 15_000 });
+
+    // The wrap-up line itself contains "end here" — say "end lesson" to
+    // open the finish modal.
+    await speakAndSubmit(page, 'end lesson');
+    await expect(page.getByText(/Finish lesson\?/i)).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole('button', { name: /^End lesson$/i }).click();
+
+    // Lesson complete.
+    await expect(page.getByText(/Lesson finished/i)).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText(/XP/)).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /^Continue$/i }),
     ).toBeVisible();
   });
 
