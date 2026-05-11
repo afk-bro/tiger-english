@@ -18,6 +18,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "lesson-images": "tsx scripts/generate-lesson-images.ts",
+    "tutor-audio": "tsx scripts/generate-tutor-audio.ts",
     "analyze": "vite build --mode analyze",
     "bundle-report": "npm run build && npx vite-bundle-analyzer dist",
     "backend:dev": "cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
