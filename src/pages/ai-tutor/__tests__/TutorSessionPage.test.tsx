@@ -102,7 +102,7 @@ const baseScenario: TutorScenarioDetail = {
   existing_active_session_id: null,
 };
 
-function makeSession(state: SessionState) {
+function makeSession(state: SessionState, currentTaskId: string | null = null) {
   return {
     state,
     dispatch: vi.fn(),
@@ -114,12 +114,13 @@ function makeSession(state: SessionState) {
       mimeType: "",
       stream: null,
       start: vi.fn(),
-      stop: vi.fn(),
+      stop: vi.fn(() => Promise.resolve({ blob: null, mimeType: "" })),
       cancel: vi.fn(),
       reset: vi.fn(),
     },
     submitTurn: vi.fn(),
     finishSession: vi.fn(),
+    currentTaskId,
   };
 }
 

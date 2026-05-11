@@ -37,7 +37,10 @@ export default function TutorSessionPage() {
 
   // 2. Data + session
   const { scenario } = useScenario(slug);
-  const session = useTutorSession({ sessionId });
+  const session = useTutorSession({
+    sessionId,
+    initialCurrentTaskId: routerState?.currentTaskId ?? null,
+  });
 
   // 3. Local turn list accumulated as turns arrive
   const [turns, setTurns] = useState<TutorTurnDTO[]>([]);
@@ -123,14 +126,13 @@ export default function TutorSessionPage() {
   };
 
   const handleSubmitRecording = async () => {
-    session.mic.stop();
-    // Let the mic blob settle (MediaRecorder.onstop is async).
-    await new Promise((r) => setTimeout(r, 50));
-    const currentTaskId =
-      scenario?.tasks.find((tk) => tk.id === routerState?.currentTaskId)?.id ??
-      scenario?.tasks[0]?.id;
-    if (!currentTaskId) return;
-    await session.submitTurn(currentTaskId);
+    // Await the real blob from MediaRecorder.onstop — `mic.stop()` resolves
+    // only once the recorder has flushed. Avoids the stale-closure trap
+    // where `mic.blob` is still `null` at the moment of the click.
+    const { blob, mimeType } = await session.mic.stop();
+    if (!blob) return;
+    await session.submitTurn({ blob, mimeType });
+    session.mic.reset();
   };
 
   const handleCancelRecording = () => {
@@ -173,8 +175,12 @@ export default function TutorSessionPage() {
     );
   }
 
+  // Use the hook's advancing pointer (updated from each TurnResponse) so the
+  // banner reflects the task currently being evaluated, not just the one we
+  // started on. Fall back to the first task while loading / before any
+  // advance has happened.
   const currentTask =
-    scenario.tasks.find((tk) => tk.id === routerState?.currentTaskId) ??
+    scenario.tasks.find((tk) => tk.id === session.currentTaskId) ??
     scenario.tasks[0];
   const tasksTotal = scenario.tasks.length;
   // v1: derive tasks-done from local turn flags. The state machine doesn't

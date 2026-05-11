@@ -39,7 +39,7 @@ vi.mock('../../audio/useMicRecorder', () => ({
     mimeType: '',
     stream: null,
     start: vi.fn(),
-    stop: vi.fn(),
+    stop: vi.fn(() => Promise.resolve({ blob: null, mimeType: '' })),
     cancel: vi.fn(),
     reset: vi.fn(),
   }),
@@ -120,6 +120,132 @@ describe('useTutorSession', () => {
     if (result.current.state.kind === 'lesson_complete') {
       expect(result.current.state.xpAwarded).toBe(25);
     }
+  });
+
+  it('submitTurn advances currentTaskId from TurnResponse.current_task_id', async () => {
+    (tutorAPI.submitTurn as ReturnType<typeof vi.fn>).mockResolvedValue({
+      transcript: 'my name is Tom',
+      evaluation: {
+        outcome: 'task_completed',
+        feedback_en: null,
+        feedback_vi: null,
+        correction: null,
+      },
+      session: {
+        id: 'sess-1',
+        scenario_slug: 'meeting-someone-new',
+        status: 'active',
+        current_task_id: 'task-2',
+        completed_task_ids: ['task-1'],
+        mistake_count: 0,
+        xp_awarded: 0,
+        started_at: '',
+        last_activity_at: '',
+        completed_at: null,
+      },
+      new_turns: [
+        {
+          id: 'turn-ai-1',
+          speaker: 'ai',
+          text_en: 'Nice to meet you! How are you today?',
+          audio_url: null,
+          correction: null,
+          task_completed: false,
+          created_at: new Date().toISOString(),
+        },
+      ],
+      current_task_id: 'task-2',
+      end_lesson_detected: false,
+      tasks_done: 1,
+      tasks_total: 4,
+    });
+
+    const { result } = renderHook(() =>
+      useTutorSession({ sessionId: 'sess-1', initialCurrentTaskId: 'task-1' }),
+    );
+    await waitFor(() =>
+      expect(result.current.state.kind).toBe('awaiting_user_speech'),
+    );
+    expect(result.current.currentTaskId).toBe('task-1');
+
+    // Move the reducer into `recording` so RECORD_STOP → processing is legal.
+    act(() => {
+      result.current.dispatch({ type: 'RECORD_START', startedAt: Date.now() });
+    });
+
+    await act(async () => {
+      await result.current.submitTurn({
+        blob: new Blob(['fake'], { type: 'audio/webm' }),
+        mimeType: 'audio/webm',
+      });
+    });
+
+    expect(tutorAPI.submitTurn).toHaveBeenCalledWith(
+      'sess-1',
+      expect.any(Blob),
+      'audio/webm',
+      'task-1', // first turn evaluates against task-1 (initial pointer)
+    );
+    // Pointer advances after the response.
+    expect(result.current.currentTaskId).toBe('task-2');
+  });
+
+  it('submitTurn clears currentTaskId when backend returns null (all tasks done → wrap-up)', async () => {
+    (tutorAPI.submitTurn as ReturnType<typeof vi.fn>).mockResolvedValue({
+      transcript: 'what are you doing today',
+      evaluation: {
+        outcome: 'task_completed',
+        feedback_en: null,
+        feedback_vi: null,
+        correction: null,
+      },
+      session: {
+        id: 'sess-1',
+        scenario_slug: 'meeting-someone-new',
+        status: 'active',
+        current_task_id: null,
+        completed_task_ids: ['task-1', 'task-2', 'task-3', 'task-4'],
+        mistake_count: 0,
+        xp_awarded: 0,
+        started_at: '',
+        last_activity_at: '',
+        completed_at: null,
+      },
+      new_turns: [
+        {
+          id: 'turn-ai-wrap',
+          speaker: 'ai',
+          text_en: 'Great job!',
+          audio_url: null,
+          correction: null,
+          task_completed: false,
+          created_at: new Date().toISOString(),
+        },
+      ],
+      current_task_id: null,
+      end_lesson_detected: false,
+      tasks_done: 4,
+      tasks_total: 4,
+    });
+
+    const { result } = renderHook(() =>
+      useTutorSession({ sessionId: 'sess-1', initialCurrentTaskId: 'task-4' }),
+    );
+    await waitFor(() =>
+      expect(result.current.state.kind).toBe('awaiting_user_speech'),
+    );
+
+    act(() => {
+      result.current.dispatch({ type: 'RECORD_START', startedAt: Date.now() });
+    });
+    await act(async () => {
+      await result.current.submitTurn({
+        blob: new Blob(['fake'], { type: 'audio/webm' }),
+        mimeType: 'audio/webm',
+      });
+    });
+
+    expect(result.current.currentTaskId).toBeNull();
   });
 
   it('finishSession dispatches TURN_ERROR(network) on failure', async () => {

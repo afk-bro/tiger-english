@@ -24,7 +24,15 @@ export interface UseMicRecorder {
   mimeType: string;
   stream: MediaStream | null;
   start: () => Promise<void>;
-  stop: () => void;
+  /**
+   * Stops recording and resolves with the final blob once
+   * `MediaRecorder.onstop` has fired. Callers can `await` this to avoid the
+   * stale-closure trap where `mic.blob` is still `null` at the time of a
+   * Submit-button click (React hasn't yet committed `setBlob`). Resolves
+   * with `{ blob: null, mimeType: '' }` if there is no active recording, or
+   * if `cancel()` raced the stop.
+   */
+  stop: () => Promise<{ blob: Blob | null; mimeType: string }>;
   cancel: () => void;
   reset: () => void;
 }
@@ -45,6 +53,12 @@ export function useMicRecorder({ maxMs = DEFAULT_MAX_MS }: { maxMs?: number } = 
   // Track latest stream synchronously so unmount-cleanup can reach it without
   // re-running the effect (we want unmount-only semantics).
   const streamRef = useRef<MediaStream | null>(null);
+  // Pending resolver for the current `stop()` call. The recorder's `onstop`
+  // handler resolves this with the final blob, so callers can await the real
+  // mic output instead of polling React state for `setBlob` to commit.
+  const stopResolverRef = useRef<
+    ((value: { blob: Blob | null; mimeType: string }) => void) | null
+  >(null);
 
   const cleanupStream = useCallback((s: MediaStream | null) => {
     s?.getTracks().forEach((t) => t.stop());
@@ -57,11 +71,20 @@ export function useMicRecorder({ maxMs = DEFAULT_MAX_MS }: { maxMs?: number } = 
     }
   }, []);
 
-  const stop = useCallback(() => {
+  const stop = useCallback((): Promise<{ blob: Blob | null; mimeType: string }> => {
     const rec = recorderRef.current;
-    if (!rec || rec.state === 'inactive') return;
-    rec.stop();
-    clearTimer();
+    if (!rec || rec.state === 'inactive') {
+      return Promise.resolve({ blob: null, mimeType: '' });
+    }
+    return new Promise((resolve) => {
+      // If a prior `stop()` is somehow still pending (shouldn't normally
+      // happen — recorder only stops once), resolve it with a null blob so
+      // the caller doesn't hang forever.
+      stopResolverRef.current?.({ blob: null, mimeType: '' });
+      stopResolverRef.current = resolve;
+      rec.stop();
+      clearTimer();
+    });
   }, [clearTimer]);
 
   const cancel = useCallback(() => {
@@ -144,6 +167,8 @@ export function useMicRecorder({ maxMs = DEFAULT_MAX_MS }: { maxMs?: number } = 
         setStream(null);
         setState('idle');
         cancelledRef.current = false;
+        stopResolverRef.current?.({ blob: null, mimeType: '' });
+        stopResolverRef.current = null;
         return;
       }
       const finalBlob = new Blob(chunksRef.current, { type: mime });
@@ -153,13 +178,18 @@ export function useMicRecorder({ maxMs = DEFAULT_MAX_MS }: { maxMs?: number } = 
       setStream(null);
       setBlob(finalBlob);
       setState('stopped');
+      stopResolverRef.current?.({ blob: finalBlob, mimeType: mime });
+      stopResolverRef.current = null;
     };
 
     rec.start();
     setState('recording');
 
     timerRef.current = window.setTimeout(() => {
-      stop();
+      // Fire-and-forget: the hard cap doesn't need to await the resolver
+      // (no caller is on the other end of the timer-triggered stop). State
+      // assertions still observe the `setState('stopped')` from onstop.
+      void stop();
     }, maxMs);
   }, [maxMs, cleanupStream, stop]);
 

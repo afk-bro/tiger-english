@@ -23,7 +23,7 @@
  * turn from `StartSessionResponse` (carried via router state when
  * navigating from `useResumeOrStart`).
  */
-import { useEffect, useReducer, useRef } from 'react';
+import { useEffect, useReducer, useRef, useState, useCallback } from 'react';
 import { tutorAPI, TutorAPIError } from '../api/tutor';
 import { initialState, transition } from '../state/sessionMachine';
 import { useTutorTTS } from '../audio/useTutorTTS';
@@ -34,15 +34,50 @@ export interface UseTutorSessionOptions {
   sessionId: string | undefined;
   /** Hard cap on a single recording, in ms. Defaults to 20s. */
   maxRecordMs?: number;
+  /**
+   * Initial value for the advancing `current_task_id` pointer. Typically the
+   * `StartSessionResponse.current_task_id` from the briefing page's router
+   * state. Updated on every successful `submitTurn` from
+   * `TurnResponse.current_task_id`.
+   */
+  initialCurrentTaskId?: string | null;
 }
 
 export function useTutorSession({
   sessionId,
   maxRecordMs = 20_000,
+  initialCurrentTaskId = null,
 }: UseTutorSessionOptions) {
   const [state, dispatch] = useReducer(transition, initialState);
   const tts = useTutorTTS();
   const mic = useMicRecorder({ maxMs: maxRecordMs });
+
+  // Advancing current-task pointer. Tracked in both state (so React re-renders
+  // when it changes — the page needs this to highlight the right task in the
+  // banner) AND a ref (so `submitTurn`'s callback reads the freshest value
+  // without capturing a stale closure).
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(
+    initialCurrentTaskId ?? null,
+  );
+  const currentTaskIdRef = useRef<string | null>(initialCurrentTaskId ?? null);
+  // Retains the most-recent non-null task id even after the backend reports
+  // `current_task_id: null` (all tasks done → wrap-up line). The user can
+  // still talk past the wrap-up (e.g. "end lesson") and we need to send a
+  // valid task id so the backend's end-lesson detector can run — it ignores
+  // evaluation in that path but still requires `current_task_id` in the
+  // form payload.
+  const lastTaskIdRef = useRef<string | null>(initialCurrentTaskId ?? null);
+
+  // If the caller hands us an `initialCurrentTaskId` after the first render
+  // (e.g. router state arrives a tick late), pick it up — but never let it
+  // clobber a pointer we've already advanced via a turn response.
+  useEffect(() => {
+    if (!initialCurrentTaskId) return;
+    if (currentTaskIdRef.current) return;
+    currentTaskIdRef.current = initialCurrentTaskId;
+    lastTaskIdRef.current = initialCurrentTaskId;
+    setCurrentTaskId(initialCurrentTaskId);
+  }, [initialCurrentTaskId]);
 
   // Hydration: load session on mount. v1 dispatches a placeholder opening
   // turn so the reducer leaves `loading`; the page replaces it with the
@@ -96,52 +131,81 @@ export function useTutorSession({
   }, [state.kind, aiTurnId]);
 
   /**
-   * Submit the currently captured mic blob as a tutor turn. The page
-   * component is expected to call this AFTER `mic.stop()` has resolved a
-   * blob (i.e., `mic.blob` is non-null).
+   * Submit a captured mic blob as a tutor turn. The page passes the blob +
+   * mimeType in directly (returned by awaiting `mic.stop()`) — we deliberately
+   * do NOT read them from `mic.blob` state because that's stale-closure-prone
+   * relative to the click that triggers submission.
+   *
+   * The current task id is read from `currentTaskIdRef.current` so it always
+   * reflects the latest `TurnResponse.current_task_id` (i.e. submitting
+   * after task 1 advances evaluates against task 2, not task 1).
    */
-  const submitTurn = async (currentTaskId: string): Promise<void> => {
-    if (!sessionId || !mic.blob) return;
-    dispatch({ type: 'RECORD_STOP' }); // → processing
-    try {
-      const response = await tutorAPI.submitTurn(
-        sessionId,
-        mic.blob,
-        mic.mimeType,
-        currentTaskId,
-      );
-      if (response.end_lesson_detected) {
+  const submitTurn = useCallback(
+    async ({
+      blob,
+      mimeType,
+    }: {
+      blob: Blob;
+      mimeType: string;
+    }): Promise<void> => {
+      if (!sessionId) return;
+      // Prefer the active task id; fall back to the last-known task id so
+      // we can still send a post-wrap-up turn (e.g. "end lesson") through
+      // the end-lesson detector.
+      const taskId = currentTaskIdRef.current ?? lastTaskIdRef.current;
+      if (!taskId) return;
+      dispatch({ type: 'RECORD_STOP' }); // → processing
+      try {
+        const response = await tutorAPI.submitTurn(
+          sessionId,
+          blob,
+          mimeType,
+          taskId,
+        );
+        if (response.end_lesson_detected) {
+          dispatch({
+            type: 'END_LESSON_DETECTED',
+            tasksDone: response.tasks_done ?? 0,
+            tasksTotal: response.tasks_total ?? 0,
+          });
+          return;
+        }
+        // Advance the current-task pointer from the backend's view (after
+        // it has applied evaluation + task transitions). null means "all
+        // tasks done" — the wrap-up line follows.
+        if (response.current_task_id) {
+          currentTaskIdRef.current = response.current_task_id;
+          lastTaskIdRef.current = response.current_task_id;
+          setCurrentTaskId(response.current_task_id);
+        } else {
+          currentTaskIdRef.current = null;
+          setCurrentTaskId(null);
+        }
+        const newAi =
+          response.new_turns.find((t) => t.speaker === 'ai') ?? null;
         dispatch({
-          type: 'END_LESSON_DETECTED',
-          tasksDone: response.tasks_done ?? 0,
-          tasksTotal: response.tasks_total ?? 0,
+          type: 'TURN_RESPONSE',
+          payload: {
+            evaluation: response.evaluation,
+            newAiTurn: newAi,
+            session: response.session,
+            endLessonDetected: false,
+            tasksDone: response.tasks_done,
+            tasksTotal: response.tasks_total,
+          },
         });
-        return;
+      } catch (err) {
+        // Backend signals STT failure with HTTP 503. Anything else → network.
+        const status =
+          err instanceof TutorAPIError
+            ? err.status
+            : (err as { status?: number }).status;
+        const cause = status === 503 ? 'stt_failed' : 'network';
+        dispatch({ type: 'TURN_ERROR', cause });
       }
-      const newAi = response.new_turns.find((t) => t.speaker === 'ai') ?? null;
-      dispatch({
-        type: 'TURN_RESPONSE',
-        payload: {
-          evaluation: response.evaluation,
-          newAiTurn: newAi,
-          session: response.session,
-          endLessonDetected: false,
-          tasksDone: response.tasks_done,
-          tasksTotal: response.tasks_total,
-        },
-      });
-    } catch (err) {
-      // Backend signals STT failure with HTTP 503. Anything else → network.
-      const status =
-        err instanceof TutorAPIError
-          ? err.status
-          : (err as { status?: number }).status;
-      const cause = status === 503 ? 'stt_failed' : 'network';
-      dispatch({ type: 'TURN_ERROR', cause });
-    } finally {
-      mic.reset();
-    }
-  };
+    },
+    [sessionId],
+  );
 
   /**
    * Finalize the session. Dispatches FINISH_RESPONSE on success — the
@@ -163,5 +227,13 @@ export function useTutorSession({
     }
   };
 
-  return { state, dispatch, tts, mic, submitTurn, finishSession };
+  return {
+    state,
+    dispatch,
+    tts,
+    mic,
+    submitTurn,
+    finishSession,
+    currentTaskId,
+  };
 }

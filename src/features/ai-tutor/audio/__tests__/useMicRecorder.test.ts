@@ -106,22 +106,37 @@ describe('useMicRecorder', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('stop() produces a Blob and transitions to stopped', async () => {
+  it('stop() resolves with the final Blob + mimeType and transitions to stopped', async () => {
     const { result } = renderHook(() => useMicRecorder());
 
     await act(async () => {
       await result.current.start();
     });
 
-    act(() => {
-      result.current.stop();
+    let stopResult: { blob: Blob | null; mimeType: string } | undefined;
+    await act(async () => {
+      stopResult = await result.current.stop();
     });
+
+    expect(stopResult).toBeDefined();
+    expect(stopResult!.blob).toBeInstanceOf(Blob);
+    expect(stopResult!.blob!.type).toBe('audio/webm;codecs=opus');
+    expect(stopResult!.blob!.size).toBeGreaterThan(0);
+    expect(stopResult!.mimeType).toBe('audio/webm;codecs=opus');
 
     expect(result.current.state).toBe('stopped');
     expect(result.current.blob).toBeInstanceOf(Blob);
     expect(result.current.blob?.type).toBe('audio/webm;codecs=opus');
     expect(result.current.blob?.size).toBeGreaterThan(0);
     expect(result.current.stream).toBeNull(); // stream tracks released
+  });
+
+  it('stop() on an inactive recorder resolves with null blob immediately', async () => {
+    const { result } = renderHook(() => useMicRecorder());
+    // No start() — recorder is null.
+    const stopResult = await result.current.stop();
+    expect(stopResult.blob).toBeNull();
+    expect(stopResult.mimeType).toBe('');
   });
 
   it('cancel() discards the blob and returns to idle', async () => {
@@ -221,8 +236,8 @@ describe('useMicRecorder', () => {
     await act(async () => {
       await result.current.start();
     });
-    act(() => {
-      result.current.stop();
+    await act(async () => {
+      await result.current.stop();
     });
     expect(result.current.state).toBe('stopped');
     expect(result.current.blob).not.toBeNull();
