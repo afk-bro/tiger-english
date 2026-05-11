@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Home, LayoutDashboard, GraduationCap, BookOpen, Users, Bell,
-  Layers, MousePointer2, FileText, MessageCircleQuestion,
+  Layers, MousePointer2, FileText, MessageCircleQuestion, Mic,
   RotateCcw, Zap, Sparkles,
   Settings, HelpCircle, User, LogOut,
   ChevronLeft, ChevronRight, X,
@@ -20,7 +20,14 @@ interface AppSidebarProps {
   triggerRef?: React.RefObject<HTMLButtonElement | null>;  // ref to the button that opened the drawer
 }
 
-const NAV_ITEMS = [
+type NavItem = {
+  to: string;
+  labelKey: string;
+  icon: typeof Home;
+  end?: boolean;
+};
+
+const NAV_ITEMS: NavItem[] = [
   { to: "/home",              labelKey: "common.sidebar.nav.home",            icon: Home,             end: true },
   { to: "/dashboard",         labelKey: "common.sidebar.nav.dashboard",       icon: LayoutDashboard },
   { to: "/lessons",           labelKey: "common.sidebar.nav.lessons",         icon: GraduationCap },
@@ -30,10 +37,15 @@ const NAV_ITEMS = [
   { to: "/library",           labelKey: "common.sidebar.nav.library",         icon: BookOpen },
   { to: "/study-groups",      labelKey: "common.sidebar.nav.study_groups",    icon: Users },
   { to: "/notifications",     labelKey: "common.sidebar.nav.notifications",   icon: Bell },
+  // AI Tutor entry — gated by VITE_AI_TUTOR_ENABLED feature flag.
+  // Inserted above Flashcards so it appears in the discovery cluster with the other practice surfaces.
+  ...(import.meta.env.VITE_AI_TUTOR_ENABLED === "true"
+    ? [{ to: "/ai-tutor", labelKey: "common.sidebar.nav.ai_tutor", icon: Mic } as NavItem]
+    : []),
   { to: "/flashcards",        labelKey: "common.sidebar.nav.flashcards",      icon: Layers },
   { to: "/drag-drop",         labelKey: "common.sidebar.nav.drag_drop",       icon: MousePointer2 },
   { to: "/ad-libs",           labelKey: "common.sidebar.nav.ad_libs",         icon: FileText },
-] as const;
+];
 
 const UTILITY_ITEMS = [
   { labelKey: "common.sidebar.utility.settings", icon: Settings },
