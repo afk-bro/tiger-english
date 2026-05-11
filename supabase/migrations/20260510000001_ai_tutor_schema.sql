@@ -208,3 +208,334 @@ ALTER TABLE user_activity_log
     'tutor_session_completed',
     'tutor_task_completed'
   ));
+
+-- =========================================================================
+-- Transactional functions for the AI Tutor session lifecycle.
+--
+-- All four functions are SECURITY DEFINER and called only by the FastAPI
+-- backend via supabase.rpc() under the service_role key. EXECUTE is
+-- REVOKEd from PUBLIC/anon/authenticated and GRANTed to service_role at
+-- the bottom of this section, mirroring the progress-tracking functions
+-- in 20260503000001_phase1_progress_tracking.sql.
+--
+-- Pattern parity with complete_lesson_section_tx:
+--   * SET search_path = public, pg_temp, auth
+--   * SECURITY DEFINER
+--   * LANGUAGE plpgsql
+--   * One BEGIN...END block per function; everything inside is atomic.
+-- =========================================================================
+
+-- ---------- start_tutor_session_tx ----------------------------------------
+-- Returns the active session_id for (user, scenario), creating one if
+-- needed. _mode='continue' resumes any existing active session;
+-- _mode='fresh' marks an existing active session as abandoned (with a
+-- 'session.abandoned' event, reason='started_fresh') before creating a
+-- new one. Both new-session branches emit a 'session.started' event.
+-- The UNIQUE(user_id, scenario_id) WHERE status='active' partial index
+-- backstops the abandon-then-insert sequence.
+-- --------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION start_tutor_session_tx(
+  _user_id UUID,
+  _scenario_id UUID,
+  _mode TEXT
+) RETURNS UUID
+SET search_path = public, pg_temp, auth
+AS $$
+DECLARE
+  existing_session_id UUID;
+  new_session_id      UUID;
+  first_task_id       UUID;
+  scenario_slug_v     TEXT;
+BEGIN
+  IF _mode NOT IN ('fresh', 'continue') THEN
+    RAISE EXCEPTION 'invalid mode: %', _mode;
+  END IF;
+
+  -- Look up any currently-active session for (user, scenario).
+  SELECT id INTO existing_session_id
+  FROM ai_tutor_sessions
+  WHERE user_id = _user_id
+    AND scenario_id = _scenario_id
+    AND status = 'active'
+  LIMIT 1;
+
+  IF _mode = 'continue' AND existing_session_id IS NOT NULL THEN
+    RETURN existing_session_id;
+  END IF;
+
+  -- 'fresh' branch: implicitly abandon the existing active session, if any.
+  IF _mode = 'fresh' AND existing_session_id IS NOT NULL THEN
+    UPDATE ai_tutor_sessions
+    SET status = 'abandoned'
+    WHERE id = existing_session_id;
+
+    INSERT INTO ai_tutor_events (user_id, session_id, event_type, payload)
+    VALUES (
+      _user_id,
+      existing_session_id,
+      'session.abandoned',
+      jsonb_build_object('reason', 'started_fresh')
+    );
+  END IF;
+
+  -- Resolve first task (by sort_order) for the scenario.
+  SELECT id INTO first_task_id
+  FROM ai_tutor_scenario_tasks
+  WHERE scenario_id = _scenario_id
+  ORDER BY sort_order ASC
+  LIMIT 1;
+
+  -- Resolve scenario slug for the session.started event payload.
+  SELECT slug INTO scenario_slug_v
+  FROM ai_tutor_scenarios
+  WHERE id = _scenario_id;
+
+  -- Create the new active session.
+  INSERT INTO ai_tutor_sessions (
+    user_id, scenario_id, status, current_task_id
+  )
+  VALUES (
+    _user_id, _scenario_id, 'active', first_task_id
+  )
+  RETURNING id INTO new_session_id;
+
+  INSERT INTO ai_tutor_events (user_id, session_id, event_type, payload)
+  VALUES (
+    _user_id,
+    new_session_id,
+    'session.started',
+    jsonb_build_object('scenario_slug', scenario_slug_v, 'mode', _mode)
+  );
+
+  RETURN new_session_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ---------- record_tutor_exchange_tx --------------------------------------
+-- One atomic exchange: user turn (always) + optional AI turn + optional
+-- task advance + optional mistake-count bump. The user turn carries the
+-- task_id read BEFORE any update, so it remains attributed to the task
+-- that was current when the user spoke, even when this same call advances
+-- the session's current_task_id.
+-- --------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION record_tutor_exchange_tx(
+  _session_id            UUID,
+  _user_id               UUID,
+  _user_text             TEXT,
+  _user_evaluator_result JSONB,
+  _user_correction       JSONB,
+  _completed_task_id     UUID,
+  _next_task_id          UUID,
+  _ai_text               TEXT,
+  _ai_audio_path         TEXT,
+  _ai_task_id            UUID
+) RETURNS VOID
+SET search_path = public, pg_temp, auth
+AS $$
+DECLARE
+  pre_update_task_id UUID;
+  scenario_slug_v    TEXT;
+  task_key_v         TEXT;
+  severity_v         TEXT;
+BEGIN
+  -- Read current_task_id BEFORE any update; the user turn is attributed
+  -- to the task that was current when they spoke.
+  SELECT s.current_task_id, sc.slug
+  INTO pre_update_task_id, scenario_slug_v
+  FROM ai_tutor_sessions s
+  JOIN ai_tutor_scenarios sc ON sc.id = s.scenario_id
+  WHERE s.id = _session_id;
+
+  -- 1. User turn (always inserted).
+  INSERT INTO ai_tutor_turns (
+    session_id, user_id, task_id, speaker, text_en,
+    evaluator_result, correction, task_completed
+  )
+  VALUES (
+    _session_id, _user_id, pre_update_task_id, 'user', _user_text,
+    _user_evaluator_result, _user_correction,
+    (_completed_task_id IS NOT NULL)
+  );
+
+  -- 2. AI turn (optional).
+  IF _ai_text IS NOT NULL THEN
+    INSERT INTO ai_tutor_turns (
+      session_id, user_id, task_id, speaker, text_en, audio_path
+    )
+    VALUES (
+      _session_id, _user_id, _ai_task_id, 'ai', _ai_text, _ai_audio_path
+    );
+  END IF;
+
+  -- 3. Task advance (optional): append to completed_task_ids, set
+  --    current_task_id, and write a learner-facing activity log row.
+  IF _completed_task_id IS NOT NULL THEN
+    UPDATE ai_tutor_sessions
+    SET completed_task_ids = completed_task_ids || _completed_task_id,
+        current_task_id    = _next_task_id
+    WHERE id = _session_id;
+
+    SELECT task_key INTO task_key_v
+    FROM ai_tutor_scenario_tasks
+    WHERE id = _completed_task_id;
+
+    severity_v := COALESCE(_user_correction->>'severity', 'none');
+
+    INSERT INTO user_activity_log (user_id, type, payload)
+    VALUES (
+      _user_id,
+      'tutor_task_completed',
+      jsonb_build_object(
+        'session_id',     _session_id,
+        'scenario_slug',  scenario_slug_v,
+        'task_key',       task_key_v,
+        'severity',       severity_v,
+        'has_correction', (_user_correction IS NOT NULL)
+      )
+    );
+  END IF;
+
+  -- 4. Mistake bump (optional).
+  IF _user_correction IS NOT NULL THEN
+    UPDATE ai_tutor_sessions
+    SET mistake_count = mistake_count + 1
+    WHERE id = _session_id;
+  END IF;
+
+  -- 5. Always bump last_activity_at.
+  UPDATE ai_tutor_sessions
+  SET last_activity_at = NOW()
+  WHERE id = _session_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ---------- complete_tutor_session_tx -------------------------------------
+-- Marks the session completed, awards XP (additive on user_stats), and
+-- writes the learner-facing tutor_session_completed activity log row.
+-- All three writes are atomic.
+-- --------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION complete_tutor_session_tx(
+  _session_id  UUID,
+  _xp_awarded  INT
+) RETURNS VOID
+SET search_path = public, pg_temp, auth
+AS $$
+DECLARE
+  user_id_v          UUID;
+  scenario_slug_v    TEXT;
+  tasks_completed_v  INT;
+  mistake_count_v    INT;
+  duration_s_v       INT;
+BEGIN
+  -- Mark session completed and capture the fields we need for the
+  -- activity-log payload in one round trip.
+  UPDATE ai_tutor_sessions s
+  SET status       = 'completed',
+      completed_at = NOW(),
+      xp_awarded   = _xp_awarded
+  WHERE s.id = _session_id
+  RETURNING
+    s.user_id,
+    COALESCE(array_length(s.completed_task_ids, 1), 0),
+    s.mistake_count,
+    EXTRACT(EPOCH FROM (NOW() - s.started_at))::INT
+  INTO user_id_v, tasks_completed_v, mistake_count_v, duration_s_v;
+
+  IF user_id_v IS NULL THEN
+    RAISE EXCEPTION 'session not found: %', _session_id;
+  END IF;
+
+  -- Resolve scenario slug for the activity-log payload.
+  SELECT sc.slug INTO scenario_slug_v
+  FROM ai_tutor_sessions s
+  JOIN ai_tutor_scenarios sc ON sc.id = s.scenario_id
+  WHERE s.id = _session_id;
+
+  -- Award XP additively. user_stats has a row per user (seeded at
+  -- registration); use UPDATE rather than UPSERT to surface missing rows.
+  UPDATE user_stats
+  SET xp = xp + _xp_awarded
+  WHERE user_id = user_id_v;
+
+  INSERT INTO user_activity_log (user_id, type, payload)
+  VALUES (
+    user_id_v,
+    'tutor_session_completed',
+    jsonb_build_object(
+      'session_id',      _session_id,
+      'scenario_slug',   scenario_slug_v,
+      'xp_awarded',      _xp_awarded,
+      'tasks_completed', tasks_completed_v,
+      'mistake_count',   mistake_count_v,
+      'duration_s',      duration_s_v
+    )
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ---------- abandon_tutor_session_tx --------------------------------------
+-- Explicit-cancel path. The 'fresh' branch of start_tutor_session_tx
+-- handles the implicit-abandon-on-restart case inline.
+-- --------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION abandon_tutor_session_tx(
+  _session_id UUID,
+  _reason     TEXT
+) RETURNS VOID
+SET search_path = public, pg_temp, auth
+AS $$
+DECLARE
+  user_id_v UUID;
+BEGIN
+  UPDATE ai_tutor_sessions
+  SET status = 'abandoned'
+  WHERE id = _session_id
+  RETURNING user_id INTO user_id_v;
+
+  IF user_id_v IS NULL THEN
+    RAISE EXCEPTION 'session not found: %', _session_id;
+  END IF;
+
+  INSERT INTO ai_tutor_events (user_id, session_id, event_type, payload)
+  VALUES (
+    user_id_v,
+    _session_id,
+    'session.abandoned',
+    jsonb_build_object('reason', _reason)
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- =========================================================================
+-- Function permissions: tutor session functions are callable ONLY by the
+-- backend service role. Mirrors the progress-tracking pattern in
+-- 20260503000001_phase1_progress_tracking.sql — without these REVOKEs
+-- Postgres's default GRANT EXECUTE TO PUBLIC combined with PostgREST
+-- auto-RPC exposure would let any authenticated user call e.g.
+--   supabase.rpc('complete_tutor_session_tx', { _session_id, _xp_awarded })
+-- and award themselves XP / corrupt other users' sessions.
+-- =========================================================================
+
+REVOKE EXECUTE ON FUNCTION start_tutor_session_tx(UUID, UUID, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION start_tutor_session_tx(UUID, UUID, TEXT) FROM anon;
+REVOKE EXECUTE ON FUNCTION start_tutor_session_tx(UUID, UUID, TEXT) FROM authenticated;
+
+REVOKE EXECUTE ON FUNCTION record_tutor_exchange_tx(UUID, UUID, TEXT, JSONB, JSONB, UUID, UUID, TEXT, TEXT, UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION record_tutor_exchange_tx(UUID, UUID, TEXT, JSONB, JSONB, UUID, UUID, TEXT, TEXT, UUID) FROM anon;
+REVOKE EXECUTE ON FUNCTION record_tutor_exchange_tx(UUID, UUID, TEXT, JSONB, JSONB, UUID, UUID, TEXT, TEXT, UUID) FROM authenticated;
+
+REVOKE EXECUTE ON FUNCTION complete_tutor_session_tx(UUID, INT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION complete_tutor_session_tx(UUID, INT) FROM anon;
+REVOKE EXECUTE ON FUNCTION complete_tutor_session_tx(UUID, INT) FROM authenticated;
+
+REVOKE EXECUTE ON FUNCTION abandon_tutor_session_tx(UUID, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION abandon_tutor_session_tx(UUID, TEXT) FROM anon;
+REVOKE EXECUTE ON FUNCTION abandon_tutor_session_tx(UUID, TEXT) FROM authenticated;
+
+GRANT EXECUTE ON FUNCTION start_tutor_session_tx(UUID, UUID, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION record_tutor_exchange_tx(UUID, UUID, TEXT, JSONB, JSONB, UUID, UUID, TEXT, TEXT, UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION complete_tutor_session_tx(UUID, INT) TO service_role;
+GRANT EXECUTE ON FUNCTION abandon_tutor_session_tx(UUID, TEXT) TO service_role;
