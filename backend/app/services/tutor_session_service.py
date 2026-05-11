@@ -45,6 +45,18 @@ class ScenarioNotFoundError(Exception):
     """
 
 
+class SessionNotFoundError(Exception):
+    """No session row found for the given id."""
+
+
+class SessionAccessDeniedError(Exception):
+    """Session exists but belongs to a different user."""
+
+
+class SessionNotActiveError(Exception):
+    """Session exists and is owned but is not in 'active' status (already completed/abandoned)."""
+
+
 class TurnSTTFailure(Exception):
     """STT failure — route handler maps to 503; no session/turn writes occurred."""
 
@@ -186,8 +198,12 @@ class TutorSessionService:
             .execute()
         )
         session = session_result.data
-        if not session or session["user_id"] != str(user_id) or session["status"] != "active":
-            raise PermissionError("session not active or not owned by user")
+        if not session:
+            raise SessionNotFoundError(str(session_id))
+        if session["user_id"] != str(user_id):
+            raise SessionAccessDeniedError(str(session_id))
+        if session["status"] != "active":
+            raise SessionNotActiveError(session["status"])
 
         # Resolve scenario slug (used for DTO + diagnostics).
         scenario_lookup = (
@@ -277,19 +293,18 @@ class TutorSessionService:
         evaluator = TutorEvaluatorService()
         eval_result = evaluator.evaluate(transcript, current_task)
 
-        # 7. Compute next-task pointers.
-        sorted_tasks = sorted(tasks_rows, key=lambda t: t["sort_order"])
+        # 7. Compute next-task pointers. tasks_rows is already ordered by
+        #    sort_order from the SQL query above — no local re-sort needed.
         if eval_result.should_advance:
             completed_task_id_arg = current_task["id"]
             next_task = next(
-                (t for t in sorted_tasks if t["sort_order"] > current_task["sort_order"]),
+                (t for t in tasks_rows if t["sort_order"] > current_task["sort_order"]),
                 None,
             )
             next_task_id_arg = next_task["id"] if next_task else None
             all_tasks_done = next_task is None
         else:
             completed_task_id_arg = None
-            next_task = current_task
             next_task_id_arg = None
             all_tasks_done = False
 
@@ -311,6 +326,9 @@ class TutorSessionService:
         correction_dict = (
             eval_result.correction.model_dump() if eval_result.correction else None
         )
+        # Concurrent double-submits: idempotency / serialization is handled by
+        # record_tutor_exchange_tx and the unique partial index on active sessions
+        # (see migration 20260510000001). The service does not need its own lock.
         self.supabase.rpc(
             "record_tutor_exchange_tx",
             {

@@ -448,6 +448,103 @@ async def test_submit_turn_no_match_uses_retry_line(mock_supabase, sample_user_i
 
 
 @pytest.mark.asyncio
+async def test_submit_turn_raises_for_unknown_session(mock_supabase, sample_user_id):
+    """No session row for the given id → SessionNotFoundError; no RPC."""
+    from app.services.stt_provider import StubSTTProvider
+    from app.services.tutor_session_service import (
+        SessionNotFoundError,
+        TutorSessionService,
+    )
+
+    _wire_submit_turn_mocks(
+        mock_supabase,
+        session_row=None,
+        tasks_rows=[INTRO_TASK_ROW, NEXT_TASK_ROW],
+    )
+
+    stt = StubSTTProvider(canned_text="My name is Tom")
+    service = TutorSessionService(mock_supabase, stt=stt)
+
+    with pytest.raises(SessionNotFoundError):
+        await service.submit_turn(
+            user_id=sample_user_id,
+            session_id=UUID(SESSION_ID),
+            audio_bytes=b"audio",
+            mime_type="audio/webm",
+            current_task_id=UUID(INTRO_TASK_ID),
+        )
+
+    rpc_calls = [c for c in mock_supabase.rpc.call_args_list if c.args and c.args[0] == "record_tutor_exchange_tx"]
+    assert rpc_calls == []
+
+
+@pytest.mark.asyncio
+async def test_submit_turn_raises_for_session_owned_by_other_user(mock_supabase, sample_user_id):
+    """Session owned by a different user → SessionAccessDeniedError; no RPC."""
+    from app.services.stt_provider import StubSTTProvider
+    from app.services.tutor_session_service import (
+        SessionAccessDeniedError,
+        TutorSessionService,
+    )
+
+    other_user_id = UUID("99999999-9999-9999-9999-999999999999")
+    session_row = _make_active_session_row(other_user_id)
+    _wire_submit_turn_mocks(
+        mock_supabase,
+        session_row=session_row,
+        tasks_rows=[INTRO_TASK_ROW, NEXT_TASK_ROW],
+    )
+
+    stt = StubSTTProvider(canned_text="My name is Tom")
+    service = TutorSessionService(mock_supabase, stt=stt)
+
+    with pytest.raises(SessionAccessDeniedError):
+        await service.submit_turn(
+            user_id=sample_user_id,
+            session_id=UUID(SESSION_ID),
+            audio_bytes=b"audio",
+            mime_type="audio/webm",
+            current_task_id=UUID(INTRO_TASK_ID),
+        )
+
+    rpc_calls = [c for c in mock_supabase.rpc.call_args_list if c.args and c.args[0] == "record_tutor_exchange_tx"]
+    assert rpc_calls == []
+
+
+@pytest.mark.asyncio
+async def test_submit_turn_raises_for_completed_session(mock_supabase, sample_user_id):
+    """Session exists + owned but status != 'active' → SessionNotActiveError; no RPC."""
+    from app.services.stt_provider import StubSTTProvider
+    from app.services.tutor_session_service import (
+        SessionNotActiveError,
+        TutorSessionService,
+    )
+
+    session_row = _make_active_session_row(sample_user_id)
+    session_row["status"] = "completed"
+    _wire_submit_turn_mocks(
+        mock_supabase,
+        session_row=session_row,
+        tasks_rows=[INTRO_TASK_ROW, NEXT_TASK_ROW],
+    )
+
+    stt = StubSTTProvider(canned_text="My name is Tom")
+    service = TutorSessionService(mock_supabase, stt=stt)
+
+    with pytest.raises(SessionNotActiveError):
+        await service.submit_turn(
+            user_id=sample_user_id,
+            session_id=UUID(SESSION_ID),
+            audio_bytes=b"audio",
+            mime_type="audio/webm",
+            current_task_id=UUID(INTRO_TASK_ID),
+        )
+
+    rpc_calls = [c for c in mock_supabase.rpc.call_args_list if c.args and c.args[0] == "record_tutor_exchange_tx"]
+    assert rpc_calls == []
+
+
+@pytest.mark.asyncio
 async def test_submit_turn_final_task_completion_uses_wrapup_line(mock_supabase, sample_user_id):
     """Completing the last task: RPC called with no next_task_id + canned wrap-up line."""
     from app.services.stt_provider import StubSTTProvider
