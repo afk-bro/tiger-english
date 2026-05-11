@@ -505,6 +505,171 @@ def test_post_event_rate_limited():
     supabase_mock.table.return_value.insert.assert_not_called()
 
 
+# ----------------------------------------------------------------------
+# Test-mode STT stub-transcript header (Task 18.1)
+#
+# `_get_stt(request)` reads `X-Test-Stub-Transcript` from the incoming
+# request when running in stub mode outside production. This lets e2e
+# tests script a transcript per turn without hitting Groq. The guard
+# requires BOTH stt_provider == "stub" AND environment != "production".
+# ----------------------------------------------------------------------
+
+
+def test_get_stt_uses_header_in_stub_dev_mode():
+    """When stub provider + non-prod env, _get_stt reads the header.
+
+    ASCII headers round-trip unchanged through `unquote`.
+    """
+    from unittest.mock import MagicMock
+    from app.api.v1.ai_tutor_session import _get_stt
+    from app.core.config import settings
+
+    request = MagicMock()
+    request.headers = {"x-test-stub-transcript": "my name is Tom"}
+
+    original_provider = settings.stt_provider
+    original_env = settings.environment
+    try:
+        settings.stt_provider = "stub"
+        settings.environment = "development"
+        provider = _get_stt(request)
+        assert provider.__class__.__name__ == "StubSTTProvider"
+        assert provider.canned_text == "my name is Tom"
+    finally:
+        settings.stt_provider = original_provider
+        settings.environment = original_env
+
+
+def test_get_stt_decodes_percent_encoded_header():
+    """Non-ASCII transcripts arrive percent-encoded (HTTP header constraint).
+
+    The Vietnamese end-lesson trigger "kết thúc bài học" is the
+    representative case — Playwright `route.continue` rejects raw
+    non-ASCII header values, so the spec encodes them client-side.
+    """
+    from unittest.mock import MagicMock
+    from urllib.parse import quote
+    from app.api.v1.ai_tutor_session import _get_stt
+    from app.core.config import settings
+
+    request = MagicMock()
+    request.headers = {"x-test-stub-transcript": quote("kết thúc bài học")}
+
+    original_provider = settings.stt_provider
+    original_env = settings.environment
+    try:
+        settings.stt_provider = "stub"
+        settings.environment = "development"
+        provider = _get_stt(request)
+        assert provider.canned_text == "kết thúc bài học"
+    finally:
+        settings.stt_provider = original_provider
+        settings.environment = original_env
+
+
+def test_get_stt_ignores_header_in_production():
+    """Production safety: header is ignored even with stub provider."""
+    from unittest.mock import MagicMock
+    from app.api.v1.ai_tutor_session import _get_stt
+    from app.core.config import settings
+
+    request = MagicMock()
+    request.headers = {"x-test-stub-transcript": "this should be ignored"}
+
+    original_provider = settings.stt_provider
+    original_env = settings.environment
+    try:
+        settings.stt_provider = "stub"
+        settings.environment = "production"
+        provider = _get_stt(request)
+        assert provider.__class__.__name__ == "StubSTTProvider"
+        assert provider.canned_text == ""
+    finally:
+        settings.stt_provider = original_provider
+        settings.environment = original_env
+
+
+def test_get_stt_without_request_uses_empty_stub():
+    """Calling _get_stt() with no request returns a default stub provider."""
+    from app.api.v1.ai_tutor_session import _get_stt
+    from app.core.config import settings
+
+    original_provider = settings.stt_provider
+    try:
+        settings.stt_provider = "stub"
+        provider = _get_stt(None)
+        assert provider.__class__.__name__ == "StubSTTProvider"
+        assert provider.canned_text == ""
+    finally:
+        settings.stt_provider = original_provider
+
+
+def test_submit_turn_passes_header_to_stub(client_with_mock_session_service):
+    """End-to-end: header on /turns reaches StubSTTProvider via _get_stt."""
+    from unittest.mock import patch
+    from app.core.config import settings
+
+    client, service = client_with_mock_session_service
+
+    captured: dict = {}
+
+    async def _fake_submit(**kwargs):
+        # Synthesize the expected TurnResponse shape; the contents don't
+        # matter — we only care that submit_turn was invoked with a stub
+        # provider built from the header.
+        from app.models.tutor import TurnResponse, TutorSessionDTO, EvaluationResult
+        session = TutorSessionDTO(**_session_dto_dict())
+        return TurnResponse(
+            transcript="hello world",
+            session=session,
+            new_turns=[],
+            evaluation=EvaluationResult(),
+            current_task_id=SAMPLE_TASK_ID,
+            tasks_done=0,
+            tasks_total=4,
+            end_lesson_detected=False,
+        )
+
+    service.submit_turn = _fake_submit
+
+    original_provider = settings.stt_provider
+    original_env = settings.environment
+    try:
+        settings.stt_provider = "stub"
+        settings.environment = "development"
+
+        # Wrap the original _get_stt to capture the provider built from the
+        # request without changing behavior. (Patch the symbol in the
+        # router module so the endpoint picks up the wrapper.)
+        from app.api.v1 import ai_tutor_session as router_mod
+
+        original_get_stt = router_mod._get_stt
+
+        def _wrapper(request=None):
+            provider = original_get_stt(request)
+            captured["text"] = provider.canned_text
+            return provider
+
+        with patch.object(router_mod, "_get_stt", side_effect=_wrapper):
+            files = {"audio": ("audio.webm", b"\x00" * 16, "audio/webm")}
+            data = {"current_task_id": str(SAMPLE_TASK_ID)}
+            res = client.post(
+                f"/api/v1/me/ai-tutor/sessions/{SAMPLE_SESSION_ID}/turns",
+                files=files,
+                data=data,
+                headers={
+                    "Authorization": "Bearer fake-token",
+                    "X-Test-Stub-Transcript": "hello world",
+                },
+            )
+    finally:
+        settings.stt_provider = original_provider
+        settings.environment = original_env
+
+    assert res.status_code == 200
+    assert captured.get("text") == "hello world"
+
+
 def test_post_event_swallows_supabase_error():
     supabase_mock = MagicMock()
     supabase_mock.table.return_value.insert.return_value.execute.side_effect = RuntimeError("db down")

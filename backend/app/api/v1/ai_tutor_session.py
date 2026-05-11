@@ -4,7 +4,7 @@ from collections import defaultdict
 import time
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 
 from ...core.config import settings
 from ...core.security import get_current_user
@@ -25,10 +25,28 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["ai-tutor"])
 
 
-def _get_stt():
+def _get_stt(request: Request | None = None):
     if settings.stt_provider == "groq" and settings.groq_api_key:
         return GroqSTTProvider(settings.groq_api_key, settings.groq_stt_model, settings.stt_timeout_seconds)
-    return StubSTTProvider()
+    # Stub mode: in non-production, allow tests to inject a scripted
+    # transcript via the X-Test-Stub-Transcript header. The guard against
+    # `environment == "production"` is the production-safety check — a
+    # misconfigured prod with STT_PROVIDER=stub still won't echo headers.
+    #
+    # HTTP headers are ASCII-only, so callers URL-encode non-ASCII
+    # transcripts (e.g. Vietnamese end-lesson trigger). We percent-decode
+    # here. ASCII transcripts round-trip unchanged.
+    canned = ""
+    if (
+        request is not None
+        and settings.stt_provider == "stub"
+        and settings.environment != "production"
+    ):
+        raw = request.headers.get("x-test-stub-transcript", "") or ""
+        if raw:
+            from urllib.parse import unquote
+            canned = unquote(raw)
+    return StubSTTProvider(canned_text=canned)
 
 
 def _require_enabled():
@@ -123,6 +141,7 @@ def _rate_check(user_id: str) -> int | None:
 @router.post("/me/ai-tutor/sessions/{session_id}/turns", response_model=TurnResponse)
 async def submit_turn(
     session_id: UUID,
+    request: Request,
     audio: UploadFile = File(...),
     current_task_id: UUID = Form(...),
     user_id: UUID = Depends(get_current_user),
@@ -138,7 +157,7 @@ async def submit_turn(
         raise HTTPException(413, "audio_too_large")
 
     try:
-        return await TutorSessionService(supabase, _get_stt()).submit_turn(
+        return await TutorSessionService(supabase, _get_stt(request)).submit_turn(
             user_id=user_id,
             session_id=session_id,
             audio_bytes=audio_bytes,
