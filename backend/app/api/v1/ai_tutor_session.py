@@ -188,3 +188,36 @@ async def abandon_session(
         raise HTTPException(403, "session_access_denied")
     # abandon is silently idempotent for already-terminal sessions; no SessionNotActiveError here.
     return {"ok": True}
+
+
+# ----------------------------------------------------------------------
+# Frontend telemetry events (Task 5.3)
+# ----------------------------------------------------------------------
+
+_ALLOWED_FRONTEND_EVENTS = {"mic.denied", "audio.fallback", "turn.failed.network", "unsupported_browser"}
+
+
+@router.post("/me/ai-tutor/events", status_code=204)
+async def post_event(
+    body: TutorEventRequest,
+    user_id: UUID = Depends(get_current_user),
+    supabase=Depends(get_supabase_admin),
+):
+    if body.event_type not in _ALLOWED_FRONTEND_EVENTS:
+        raise HTTPException(400, "event_type_not_allowed")
+    # Use a separate rate-limit bucket for events so abusive event spam can't
+    # exhaust the /turns budget (or vice versa).
+    retry = _rate_check(f"events:{user_id}")
+    if retry is not None:
+        raise HTTPException(429, headers={"Retry-After": str(retry)})
+    try:
+        supabase.table("ai_tutor_events").insert({
+            "user_id": str(user_id),
+            "session_id": str(body.session_id) if body.session_id else None,
+            "event_type": body.event_type,
+            "payload": body.payload,
+        }).execute()
+    except Exception:
+        logger.exception("ai_tutor_events insert failed for user %s type %s", user_id, body.event_type)
+        # Diagnostics: never fail the calling page if telemetry write breaks.
+        return

@@ -418,3 +418,107 @@ def test_abandon_session_success(client_with_mock_session_service):
     assert res.status_code == 200
     assert res.json() == {"ok": True}
     service.abandon_session.assert_called_once()
+
+
+# ----------------------------------------------------------------------
+# Frontend telemetry events endpoint (Task 5.3)
+# ----------------------------------------------------------------------
+
+
+def _events_client(supabase_mock):
+    """Build a TestClient with auth bypassed and a custom supabase mock."""
+    from app.main import app
+    from app.core.security import get_current_user
+    from app.core.supabase import get_supabase_admin
+
+    app.dependency_overrides[get_current_user] = lambda: SAMPLE_USER_ID
+    app.dependency_overrides[get_supabase_admin] = lambda: supabase_mock
+    return app, TestClient(app)
+
+
+def test_post_event_success():
+    supabase_mock = MagicMock()
+    insert_mock = supabase_mock.table.return_value.insert
+    insert_mock.return_value.execute.return_value = MagicMock(data=[{}])
+
+    app, client = _events_client(supabase_mock)
+    try:
+        with client as c:
+            res = c.post(
+                "/api/v1/me/ai-tutor/events",
+                json={
+                    "event_type": "mic.denied",
+                    "payload": {"reason": "user_blocked"},
+                    "session_id": str(SAMPLE_SESSION_ID),
+                },
+                headers={"Authorization": "Bearer fake-token"},
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert res.status_code == 204
+    supabase_mock.table.assert_called_with("ai_tutor_events")
+    args, _kwargs = insert_mock.call_args
+    inserted = args[0]
+    assert inserted["user_id"] == str(SAMPLE_USER_ID)
+    assert inserted["session_id"] == str(SAMPLE_SESSION_ID)
+    assert inserted["event_type"] == "mic.denied"
+    assert inserted["payload"] == {"reason": "user_blocked"}
+
+
+def test_post_event_invalid_event_type():
+    supabase_mock = MagicMock()
+    app, client = _events_client(supabase_mock)
+    try:
+        with client as c:
+            res = c.post(
+                "/api/v1/me/ai-tutor/events",
+                json={"event_type": "foo.bar", "payload": {}},
+                headers={"Authorization": "Bearer fake-token"},
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    # Pydantic Literal rejects with 422, OR server-side whitelist with 400 —
+    # either is an acceptable defense.
+    assert res.status_code in (400, 422)
+    # And no insert was attempted.
+    supabase_mock.table.return_value.insert.assert_not_called()
+
+
+def test_post_event_rate_limited():
+    supabase_mock = MagicMock()
+    app, client = _events_client(supabase_mock)
+    try:
+        with patch("app.api.v1.ai_tutor_session._rate_check", return_value=7):
+            with client as c:
+                res = c.post(
+                    "/api/v1/me/ai-tutor/events",
+                    json={"event_type": "audio.fallback", "payload": {}},
+                    headers={"Authorization": "Bearer fake-token"},
+                )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert res.status_code == 429
+    assert res.headers.get("Retry-After") == "7"
+    supabase_mock.table.return_value.insert.assert_not_called()
+
+
+def test_post_event_swallows_supabase_error():
+    supabase_mock = MagicMock()
+    supabase_mock.table.return_value.insert.return_value.execute.side_effect = RuntimeError("db down")
+
+    app, client = _events_client(supabase_mock)
+    try:
+        with client as c:
+            res = c.post(
+                "/api/v1/me/ai-tutor/events",
+                json={"event_type": "turn.failed.network", "payload": {"code": 500}},
+                headers={"Authorization": "Bearer fake-token"},
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    # Telemetry write failure must NOT fail the calling page.
+    assert res.status_code == 204
