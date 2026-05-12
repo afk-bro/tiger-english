@@ -28,7 +28,7 @@ import { tutorAPI, TutorAPIError } from '../api/tutor';
 import { initialState, transition } from '../state/sessionMachine';
 import { useTutorTTS } from '../audio/useTutorTTS';
 import { useMicRecorder } from '../audio/useMicRecorder';
-import type { TutorTurnDTO } from '../types';
+import type { EvaluationResult, TutorTurnDTO } from '../types';
 
 export interface UseTutorSessionOptions {
   sessionId: string | undefined;
@@ -41,16 +41,34 @@ export interface UseTutorSessionOptions {
    * `TurnResponse.current_task_id`.
    */
   initialCurrentTaskId?: string | null;
+  /**
+   * Fires on every successful turn response (i.e. backend returned an
+   * EvaluationResult). Skipped on end-lesson responses — those route through
+   * the END_LESSON_DETECTED dispatch instead. The page uses this to surface
+   * the Vi+En toast when `evaluation.kind === 'vi_spoken'`; a callback (vs.
+   * exposing reactive `lastEvaluation` state) avoids the "two same-kind
+   * evaluations in a row dedupe to one toast" trap.
+   */
+  onEvaluation?: (evaluation: EvaluationResult) => void;
 }
 
 export function useTutorSession({
   sessionId,
   maxRecordMs = 20_000,
   initialCurrentTaskId = null,
+  onEvaluation,
 }: UseTutorSessionOptions) {
   const [state, dispatch] = useReducer(transition, initialState);
   const tts = useTutorTTS();
   const mic = useMicRecorder({ maxMs: maxRecordMs });
+
+  // Keep onEvaluation in a ref so changing the callback's identity doesn't
+  // bust submitTurn's useCallback (which would re-render every consumer
+  // that captured the old reference).
+  const onEvaluationRef = useRef(onEvaluation);
+  useEffect(() => {
+    onEvaluationRef.current = onEvaluation;
+  }, [onEvaluation]);
 
   // Advancing current-task pointer. Tracked in both state (so React re-renders
   // when it changes — the page needs this to highlight the right task in the
@@ -181,6 +199,10 @@ export function useTutorSession({
           currentTaskIdRef.current = null;
           setCurrentTaskId(null);
         }
+        // Surface the evaluation to consumers (vi_spoken toast, future
+        // mid-evaluation UI). Called after end-lesson is ruled out so the
+        // page doesn't double-handle an end-lesson "kết thúc bài học" turn.
+        onEvaluationRef.current?.(response.evaluation);
         const newAi =
           response.new_turns.find((t) => t.speaker === 'ai') ?? null;
         dispatch({

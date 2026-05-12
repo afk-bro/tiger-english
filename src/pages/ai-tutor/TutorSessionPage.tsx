@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -11,7 +11,7 @@ import { DialogueCard } from '@/features/ai-tutor/components/DialogueCard';
 import { RecordingPanel } from '@/features/ai-tutor/components/RecordingPanel';
 import { EndLessonModal } from '@/features/ai-tutor/components/EndLessonModal';
 import { LessonCompleteScreen } from '@/features/ai-tutor/components/LessonCompleteScreen';
-import type { TutorTurnDTO } from '@/features/ai-tutor/types';
+import type { EvaluationResult, TutorTurnDTO } from '@/features/ai-tutor/types';
 
 interface RouterState {
   openingTurn?: TutorTurnDTO;
@@ -37,9 +37,27 @@ export default function TutorSessionPage() {
 
   // 2. Data + session
   const { scenario } = useScenario(slug);
+  // VI-spoken: backend detected the user spoke Vietnamese. It logs the event
+  // server-side and replies with `evaluation.kind === 'vi_spoken'` + no AI
+  // advance. Surface the bilingual nudge so the learner knows to retry in
+  // English.
+  const handleEvaluation = useCallback(
+    (evaluation: EvaluationResult) => {
+      if (evaluation.kind === 'vi_spoken') {
+        toast(
+          t('tutor.session.viSpokenToast', {
+            defaultValue:
+              'Hãy nói bằng tiếng Anh nhé! / Try speaking in English.',
+          }),
+        );
+      }
+    },
+    [t],
+  );
   const session = useTutorSession({
     sessionId,
     initialCurrentTaskId: routerState?.currentTaskId ?? null,
+    onEvaluation: handleEvaluation,
   });
 
   // 3. Local turn list accumulated as turns arrive
