@@ -4,6 +4,11 @@ import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import type { CefrLevel } from "@/features/lessons/lesson.types";
 
+/** UI-gating role. Authoritative admin gate lives in the backend
+ *  SUPER_ADMIN_USER_IDS env allowlist; this column drives the frontend
+ *  RequireTeacher / RequireAdmin route wrappers (defense-in-depth). */
+export type UserRole = 'user' | 'teacher' | 'admin';
+
 type UserProfile = {
   id: string;
   first_name: string;
@@ -12,6 +17,7 @@ type UserProfile = {
   username: string;
   native_language: string | null;
   timezone?: string | null;
+  role: UserRole;
   /** Learner's estimated CEFR proficiency level — populated once the DB migration adds the column */
   cefr_estimate?: CefrLevel | null;
   /** Learner's self-set target CEFR level — e.g. 'B1' */
@@ -55,8 +61,8 @@ export const useUserStore = create<UserStore>((set) => ({
       return;
     }
 
-    // cefr_estimate / target_cefr_level columns aren't in the auto-generated
-    // Supabase types yet, so widen the row type at the boundary.
+    // cefr_estimate / target_cefr_level / role columns are widened from
+    // their DB-types `string` to our app-side unions at the boundary.
     type ProfileRow = {
       id: string;
       first_name: string;
@@ -65,13 +71,14 @@ export const useUserStore = create<UserStore>((set) => ({
       username: string;
       native_language: string | null;
       timezone: string | null;
+      role: UserRole | string;
       cefr_estimate: CefrLevel | null;
       target_cefr_level: CefrLevel | null;
     };
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, first_name, last_name, email, username, native_language, timezone, cefr_estimate, target_cefr_level")
+      .select("id, first_name, last_name, email, username, native_language, timezone, role, cefr_estimate, target_cefr_level")
       .eq("id", session.user.id)
       .single<ProfileRow>();
 
@@ -82,6 +89,10 @@ export const useUserStore = create<UserStore>((set) => ({
         set({ error: error.message, profile: null, profileLoading: false });
       }
     } else {
+      // Normalize role at the boundary — any unexpected DB value falls back
+      // to 'user'. The DB CHECK constraint should prevent this in practice.
+      const validRole = (r: string): UserRole =>
+        r === 'admin' || r === 'teacher' ? r : 'user';
       set({
         profile: {
           id: data.id,
@@ -91,6 +102,7 @@ export const useUserStore = create<UserStore>((set) => ({
           username: data.username,
           native_language: data.native_language ?? null,
           timezone: data.timezone ?? null,
+          role: validRole(data.role ?? 'user'),
           cefr_estimate: data.cefr_estimate ?? null,
           target_cefr_level: data.target_cefr_level ?? null,
         },
