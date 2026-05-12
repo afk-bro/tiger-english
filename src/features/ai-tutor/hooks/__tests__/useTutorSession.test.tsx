@@ -362,6 +362,57 @@ describe('useTutorSession', () => {
     expect(result.current.state.kind).toBe('end_lesson_confirm');
   });
 
+  it('tracks completedTaskIds from each TurnResponse.session.completed_task_ids', async () => {
+    (tutorAPI.submitTurn as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      transcript: 'my name is Tom',
+      evaluation: {
+        kind: 'evaluated',
+        task_completed: true,
+        severity: 'none',
+        correction: null,
+        should_advance: true,
+        matched_pattern: null,
+      },
+      session: {
+        id: 'sess-1',
+        scenario_slug: 'meeting-someone-new',
+        status: 'active',
+        current_task_id: 'task-2',
+        completed_task_ids: ['task-1'],
+        mistake_count: 0,
+        xp_awarded: 0,
+        started_at: '',
+        last_activity_at: '',
+        completed_at: null,
+      },
+      new_turns: [],
+      current_task_id: 'task-2',
+      end_lesson_detected: false,
+      tasks_done: 1,
+      tasks_total: 4,
+    });
+
+    const { result } = renderHook(() =>
+      useTutorSession({ sessionId: 'sess-1', initialCurrentTaskId: 'task-1' }),
+    );
+    await waitFor(() =>
+      expect(result.current.state.kind).toBe('awaiting_user_speech'),
+    );
+    expect(result.current.completedTaskIds).toEqual([]);
+
+    act(() => {
+      result.current.dispatch({ type: 'RECORD_START', startedAt: Date.now() });
+    });
+    await act(async () => {
+      await result.current.submitTurn({
+        blob: new Blob(['x'], { type: 'audio/webm' }),
+        mimeType: 'audio/webm',
+      });
+    });
+
+    expect(result.current.completedTaskIds).toEqual(['task-1']);
+  });
+
   it('finishSession dispatches TURN_ERROR(network) on failure', async () => {
     (tutorAPI.finishSession as ReturnType<typeof vi.fn>).mockRejectedValue(
       new Error('offline'),

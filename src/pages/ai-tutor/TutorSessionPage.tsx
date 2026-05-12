@@ -201,10 +201,12 @@ export default function TutorSessionPage() {
     scenario.tasks.find((tk) => tk.id === session.currentTaskId) ??
     scenario.tasks[0];
   const tasksTotal = scenario.tasks.length;
-  // v1: derive tasks-done from local turn flags. The state machine doesn't
-  // expose completed_task_ids directly; turn.task_completed is set on user
-  // turns whose evaluation advances the task pointer.
-  const tasksDone = turns.filter((tt) => tt.task_completed).length;
+  // Source of truth: backend's session.completed_task_ids, surfaced by the
+  // hook on every TurnResponse. We can't derive this from local turn flags
+  // because the page only appends AI turns (which always carry
+  // task_completed=false); the user turn that flips the flag is dropped in
+  // submitTurn before reaching the local accumulator.
+  const tasksDone = session.completedTaskIds.length;
   const lastTurn = turns[turns.length - 1];
 
   return (

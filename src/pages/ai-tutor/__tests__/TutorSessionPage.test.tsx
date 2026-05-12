@@ -102,7 +102,11 @@ const baseScenario: TutorScenarioDetail = {
   existing_active_session_id: null,
 };
 
-function makeSession(state: SessionState, currentTaskId: string | null = null) {
+function makeSession(
+  state: SessionState,
+  currentTaskId: string | null = null,
+  completedTaskIds: string[] = [],
+) {
   return {
     state,
     dispatch: vi.fn(),
@@ -121,6 +125,7 @@ function makeSession(state: SessionState, currentTaskId: string | null = null) {
     submitTurn: vi.fn(),
     finishSession: vi.fn(),
     currentTaskId,
+    completedTaskIds,
   };
 }
 

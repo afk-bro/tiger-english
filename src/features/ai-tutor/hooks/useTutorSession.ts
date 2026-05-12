@@ -86,6 +86,13 @@ export function useTutorSession({
   // form payload.
   const lastTaskIdRef = useRef<string | null>(initialCurrentTaskId ?? null);
 
+  // Completed-task ids from the backend's view (TurnResponse.session.
+  // completed_task_ids). Source of truth for the progress banner: deriving
+  // tasks-done from local turn flags is unreliable because the page only
+  // accumulates AI turns (which always carry task_completed=false) — the
+  // user-turn-with-task_completed-true flag is dropped in submitTurn.
+  const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
+
   // If the caller hands us an `initialCurrentTaskId` after the first render
   // (e.g. router state arrives a tick late), pick it up — but never let it
   // clobber a pointer we've already advanced via a turn response.
@@ -199,6 +206,12 @@ export function useTutorSession({
           currentTaskIdRef.current = null;
           setCurrentTaskId(null);
         }
+        // Track the backend's authoritative completed-task list. Backend
+        // returns the full array on each turn; replace (don't merge) so
+        // hypothetical server-side resets stay consistent.
+        if (response.session?.completed_task_ids) {
+          setCompletedTaskIds(response.session.completed_task_ids);
+        }
         // Surface the evaluation to consumers (vi_spoken toast, future
         // mid-evaluation UI). Called after end-lesson is ruled out so the
         // page doesn't double-handle an end-lesson "kết thúc bài học" turn.
@@ -257,5 +270,6 @@ export function useTutorSession({
     submitTurn,
     finishSession,
     currentTaskId,
+    completedTaskIds,
   };
 }
