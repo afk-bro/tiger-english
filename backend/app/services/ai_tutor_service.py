@@ -43,10 +43,22 @@ def _build_client():
     if not _ANTHROPIC_AVAILABLE:
         raise AiDisabledException("anthropic package not installed")
     if not settings.ai_tutor_enabled:
-        raise AiDisabledException("AI tutor disabled (no valid ANTHROPIC_API_KEY)")
+        raise AiDisabledException(
+            "AI tutor disabled — set AI_TUTOR_ENABLED=true and a valid ANTHROPIC_API_KEY"
+        )
+    # Independent of the flag, verify the key is actually present and not a
+    # placeholder. Without this, AsyncAnthropic(api_key=None) is happily
+    # constructed and only fails on the first outbound call (runtime 5xx).
+    # `sk-ant-placeholder` matches the convention in backend/.env.example and
+    # the placeholder check in app/main.py's /health endpoint.
+    key = settings.anthropic_api_key
+    if not key or key.startswith("sk-ant-placeholder") or key in ("changeme", "your-key-here"):
+        raise AiDisabledException(
+            "AI tutor disabled — ANTHROPIC_API_KEY is missing or a placeholder"
+        )
     import anthropic  # noqa: PLC0415 – intentional lazy import
 
-    return anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    return anthropic.AsyncAnthropic(api_key=key)
 
 
 # ── System prompts ───────────────────────────────────────────────────────────

@@ -536,7 +536,8 @@
         "flashcards": "Flashcards",
         "drag_drop": "Drag & Drop",
         "ad_libs": "Ad Libs",
-        "ai_tutor": "AI Tutor"
+        "ai_tutor": "AI Tutor",
+        "quick_help": "Quick Help"
       },
       "utility": {
         "settings": "Settings",
@@ -663,5 +664,97 @@
     "usage": "Usage",
     "upgrade": "Upgrade",
     "contactUs": "Contact us to upgrade"
+  },
+  "home": {
+    "cta": {
+      "aiTutor": {
+        "heading": "Practice Speaking with Your AI Tutor",
+        "subtext": "Learn real English conversations with Vietnamese support.",
+        "button": "Start speaking"
+      }
+    }
+  },
+  "tutor": {
+    "tabs": {
+      "home": "Home",
+      "course": "Course"
+    },
+    "footer": {
+      "home": "Home",
+      "freeTalk": "Free Talk",
+      "review": "Review",
+      "challenge": "Challenge",
+      "profile": "Profile"
+    },
+    "home": {
+      "lessonsHeader": "Lessons",
+      "freeTalkHeader": "Free Talk",
+      "freeTalkSubtitle": "Practice real conversations in everyday situations.",
+      "trialTitle": "Get unlimited AI Tutor access free",
+      "trialBody": "Start your free trial",
+      "trialToast": "Free trial coming soon — your AI Tutor is currently free!",
+      "freePill": "Free",
+      "start": "Start",
+      "moreSoon": "More scenarios coming soon.",
+      "nonViBanner": "AI Tutor is currently optimized for Vietnamese learners. English-only mode coming soon."
+    },
+    "phrasebook": {
+      "title": "Useful phrases for this conversation",
+      "viSupport": "Học một vài câu hữu ích trước khi bắt đầu cuộc trò chuyện.",
+      "next": "Next",
+      "notFound": "Phrasebook not found."
+    },
+    "briefing": {
+      "goalLabel": "Mục tiêu:",
+      "goalEnLabel": "Goal:",
+      "tasksLabel": "Tasks",
+      "startLesson": "Start lesson",
+      "continueWhereLeftOff": "Continue where you left off",
+      "startFresh": "Start fresh",
+      "notFound": "Scenario not found."
+    },
+    "session": {
+      "tasksProgress": "Tasks: {{done}} / {{total}} completed",
+      "currentTask": "Current task:",
+      "listen": "Listen",
+      "speakNow": "Speak now",
+      "submit": "Submit",
+      "cancel": "Cancel",
+      "processing": "Processing…",
+      "repeat": "Repeat",
+      "translate": "Translate",
+      "hideText": "Hide text",
+      "showText": "Show text",
+      "flagForPractice": "Flag",
+      "viSpokenToast": "Hãy nói bằng tiếng Anh nhé! / Try speaking in English.",
+      "sttFailedToast": "Couldn't hear that — try again.",
+      "rateLimitToast": "You're going fast! Wait a moment.",
+      "micDeniedHelp": "Microphone access is required. Click the lock icon in your browser's address bar to allow it.",
+      "networkErrorToast": "Network error. Try again.",
+      "unsupported": "This browser doesn't support recording. Please try Chrome, Edge, Firefox (desktop) or iOS Safari 16+ / Chrome Android."
+    },
+    "endLesson": {
+      "title": "Finish lesson?",
+      "body": "You've completed {{done}} of {{total}} tasks.",
+      "confirm": "End lesson",
+      "dismiss": "Continue practicing"
+    },
+    "lessonComplete": {
+      "title": "Lesson finished",
+      "xpEarned": "+{{xp}} XP",
+      "continue": "Continue",
+      "viewDashboard": "View dashboard",
+      "correctionsHeader": "Corrections"
+    },
+    "correction": {
+      "youSaid": "You said",
+      "better": "Better",
+      "explanation": "Vietnamese explanation"
+    },
+    "comingSoon": {
+      "review": "Speech review coming soon",
+      "challenge": "Challenge mode coming soon",
+      "gotIt": "Got it"
+    }
   }
 }

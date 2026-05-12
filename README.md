@@ -9,6 +9,7 @@ Live at **https://tiger-english.com**.
 - **Lessons** — short, deterministic, completable units. Heading / text / examples / vocab / dialogue / exercise (MCQ, fill-blank, match-word-to-image) blocks.
 - **Practice** — `/practice` hub for AI-driven applied modes (AI Conversation, Guided Writing).
 - **Review** — SM-2 spaced repetition for vocabulary and missed exercises.
+- **AI Tutor** *(behind `VITE_AI_TUTOR_ENABLED`)* — speech-driven roleplay practice with Vietnamese support. Browser MediaRecorder → Groq Whisper STT → rule-based task evaluator → pre-generated ElevenLabs TTS playback (with browser SpeechSynthesis fallback). One scenario seeded ("Meeting someone new"); more in Spec 2+.
 - **Skills** — 11-skill EWMA scoring derived from exercise + conversation activity.
 - **Flashcards** — 17 curated sets plus user-created sets, with native-language translations.
 - **Multi-locale UI** — `en`, `vi`, `th`, `zh-CN` via `react-i18next` (browser language detection, English fallback).
@@ -20,7 +21,7 @@ Live at **https://tiger-english.com**.
 - **Frontend** — React 19, TypeScript, Vite, Tailwind CSS, Headless UI, Zustand, React Router 7, React Hook Form + Zod, Vitest + Testing Library
 - **Backend** — FastAPI, Pydantic v2, uvicorn, supabase-py, anthropic SDK, pytest
 - **Database / Auth / Storage** — Supabase (Postgres + Auth + Storage)
-- **AI** — Anthropic Claude (Sonnet for tutoring + conversation, Haiku for evaluation)
+- **AI** — Anthropic Claude (Sonnet for tutoring + conversation, Haiku for evaluation), Groq Whisper (STT for the AI Tutor), ElevenLabs (author-time TTS for the AI Tutor's fixed lines)
 - **Hosting** — Vercel (frontend), Railway (backend)
 - **Image generation** (author-time) — Leonardo AI
 
@@ -33,7 +34,7 @@ src/
 ├── components/         # Cross-feature UI (sidebar, exercises, header/footer, …)
 ├── features/
 │   ├── admin/          # Org admin pages (billing, overview)
-│   ├── ai-tutor/       # Standalone AI tutor surface (Explain / Correct / Practice / Writing Coach)
+│   ├── ai-tutor/       # AI Tutor: speech feature (audio, hooks, state, components) + legacy Explain/Correct/Practice/Writing Coach surface
 │   ├── assessment/     # CEFR-level placement assessment + results
 │   ├── auth/           # Login / Register / RequireAuth / RequireGuest
 │   ├── conversations/  # AI roleplay scenarios + mission runner

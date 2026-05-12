@@ -14,6 +14,297 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_tutor_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tutor_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tutor_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_tutor_scenario_phrases: {
+        Row: {
+          audio_path: string | null
+          id: string
+          phrase_en: string
+          scenario_id: string
+          sort_order: number
+          translation_vi: string
+        }
+        Insert: {
+          audio_path?: string | null
+          id?: string
+          phrase_en: string
+          scenario_id: string
+          sort_order: number
+          translation_vi: string
+        }
+        Update: {
+          audio_path?: string | null
+          id?: string
+          phrase_en?: string
+          scenario_id?: string
+          sort_order?: number
+          translation_vi?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tutor_scenario_phrases_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tutor_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_tutor_scenario_tasks: {
+        Row: {
+          accept_patterns: Json
+          correction_templates: Json
+          id: string
+          next_ai_line_audio_path: string | null
+          next_ai_line_en: string | null
+          scenario_id: string
+          sort_order: number
+          task_key: string
+          title_en: string
+          title_vi: string
+        }
+        Insert: {
+          accept_patterns: Json
+          correction_templates?: Json
+          id?: string
+          next_ai_line_audio_path?: string | null
+          next_ai_line_en?: string | null
+          scenario_id: string
+          sort_order: number
+          task_key: string
+          title_en: string
+          title_vi: string
+        }
+        Update: {
+          accept_patterns?: Json
+          correction_templates?: Json
+          id?: string
+          next_ai_line_audio_path?: string | null
+          next_ai_line_en?: string | null
+          scenario_id?: string
+          sort_order?: number
+          task_key?: string
+          title_en?: string
+          title_vi?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tutor_scenario_tasks_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tutor_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_tutor_scenarios: {
+        Row: {
+          ai_persona: string | null
+          created_at: string
+          description_en: string | null
+          description_vi: string | null
+          goal_en: string | null
+          goal_vi: string | null
+          id: string
+          is_free: boolean
+          level: string
+          mode: string
+          opening_audio_path: string | null
+          opening_line_en: string
+          slug: string
+          sort_order: number
+          title_en: string
+          title_vi: string
+          updated_at: string
+        }
+        Insert: {
+          ai_persona?: string | null
+          created_at?: string
+          description_en?: string | null
+          description_vi?: string | null
+          goal_en?: string | null
+          goal_vi?: string | null
+          id?: string
+          is_free?: boolean
+          level: string
+          mode: string
+          opening_audio_path?: string | null
+          opening_line_en: string
+          slug: string
+          sort_order?: number
+          title_en: string
+          title_vi: string
+          updated_at?: string
+        }
+        Update: {
+          ai_persona?: string | null
+          created_at?: string
+          description_en?: string | null
+          description_vi?: string | null
+          goal_en?: string | null
+          goal_vi?: string | null
+          id?: string
+          is_free?: boolean
+          level?: string
+          mode?: string
+          opening_audio_path?: string | null
+          opening_line_en?: string
+          slug?: string
+          sort_order?: number
+          title_en?: string
+          title_vi?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_tutor_sessions: {
+        Row: {
+          completed_at: string | null
+          completed_task_ids: string[]
+          current_task_id: string | null
+          id: string
+          last_activity_at: string
+          mistake_count: number
+          scenario_id: string
+          started_at: string
+          status: string
+          user_id: string
+          xp_awarded: number
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_task_ids?: string[]
+          current_task_id?: string | null
+          id?: string
+          last_activity_at?: string
+          mistake_count?: number
+          scenario_id: string
+          started_at?: string
+          status: string
+          user_id: string
+          xp_awarded?: number
+        }
+        Update: {
+          completed_at?: string | null
+          completed_task_ids?: string[]
+          current_task_id?: string | null
+          id?: string
+          last_activity_at?: string
+          mistake_count?: number
+          scenario_id?: string
+          started_at?: string
+          status?: string
+          user_id?: string
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tutor_sessions_current_task_id_fkey"
+            columns: ["current_task_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tutor_scenario_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_tutor_sessions_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tutor_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_tutor_turns: {
+        Row: {
+          audio_path: string | null
+          correction: Json | null
+          created_at: string
+          evaluator_result: Json | null
+          id: string
+          session_id: string
+          speaker: string
+          task_completed: boolean
+          task_id: string | null
+          text_en: string | null
+          user_id: string
+        }
+        Insert: {
+          audio_path?: string | null
+          correction?: Json | null
+          created_at?: string
+          evaluator_result?: Json | null
+          id?: string
+          session_id: string
+          speaker: string
+          task_completed?: boolean
+          task_id?: string | null
+          text_en?: string | null
+          user_id: string
+        }
+        Update: {
+          audio_path?: string | null
+          correction?: Json | null
+          created_at?: string
+          evaluator_result?: Json | null
+          id?: string
+          session_id?: string
+          speaker?: string
+          task_completed?: boolean
+          task_id?: string | null
+          text_en?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tutor_turns_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tutor_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_tutor_turns_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tutor_scenario_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercise_attempts: {
         Row: {
           attempted_at: string
@@ -275,32 +566,38 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cefr_estimate: string | null
           created_at: string
           email: string
           first_name: string
           id: string
           last_name: string
           native_language: string | null
+          target_cefr_level: string | null
           timezone: string | null
           username: string
         }
         Insert: {
+          cefr_estimate?: string | null
           created_at?: string
           email: string
           first_name: string
           id: string
           last_name: string
           native_language?: string | null
+          target_cefr_level?: string | null
           timezone?: string | null
           username: string
         }
         Update: {
+          cefr_estimate?: string | null
           created_at?: string
           email?: string
           first_name?: string
           id?: string
           last_name?: string
           native_language?: string | null
+          target_cefr_level?: string | null
           timezone?: string | null
           username?: string
         }
@@ -313,6 +610,84 @@ export type Database = {
             referencedColumns: ["code"]
           },
         ]
+      }
+      review_items: {
+        Row: {
+          answer: string
+          created_at: string
+          ease_factor: number
+          id: string
+          interval_days: number
+          item_type: string
+          last_reviewed_at: string | null
+          next_review_at: string
+          note: string | null
+          prompt: string
+          source_id: string | null
+          source_type: string | null
+          streak_correct: number
+          translation: string | null
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          item_type: string
+          last_reviewed_at?: string | null
+          next_review_at?: string
+          note?: string | null
+          prompt: string
+          source_id?: string | null
+          source_type?: string | null
+          streak_correct?: number
+          translation?: string | null
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          item_type?: string
+          last_reviewed_at?: string | null
+          next_review_at?: string
+          note?: string | null
+          prompt?: string
+          source_id?: string | null
+          source_type?: string | null
+          streak_correct?: number
+          translation?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      skill_scores: {
+        Row: {
+          last_updated_at: string
+          sample_size: number
+          score: number
+          skill: string
+          user_id: string
+        }
+        Insert: {
+          last_updated_at?: string
+          sample_size?: number
+          score?: number
+          skill: string
+          user_id: string
+        }
+        Update: {
+          last_updated_at?: string
+          sample_size?: number
+          score?: number
+          skill?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_activity_log: {
         Row: {
@@ -423,6 +798,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      abandon_tutor_session_tx: {
+        Args: { _reason: string; _session_id: string }
+        Returns: undefined
+      }
       complete_lesson_section_tx: {
         Args: {
           p_idempotency_key: string
@@ -443,6 +822,25 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      complete_tutor_session_tx: {
+        Args: { _session_id: string; _xp_awarded: number }
+        Returns: undefined
+      }
+      record_tutor_exchange_tx: {
+        Args: {
+          _ai_audio_path: string
+          _ai_task_id: string
+          _ai_text: string
+          _completed_task_id: string
+          _next_task_id: string
+          _session_id: string
+          _user_correction: Json
+          _user_evaluator_result: Json
+          _user_id: string
+          _user_text: string
+        }
+        Returns: undefined
+      }
       review_flashcard_tx: {
         Args: { p_flashcard_id: string; p_status: string; p_user_id: string }
         Returns: {
@@ -458,6 +856,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      start_tutor_session_tx: {
+        Args: { _mode: string; _scenario_id: string; _user_id: string }
+        Returns: string
       }
       submit_exercise_attempt_tx: {
         Args: {

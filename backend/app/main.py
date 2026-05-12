@@ -10,6 +10,7 @@ from .api.v1.review import router as review_router
 from .api.v1.conversations import router as conversations_router
 from .api.v1.admin import router as admin_router
 from .api.v1.lessons import router as lessons_router
+from .api.v1.ai_tutor_session import router as ai_tutor_session_router
 
 app = FastAPI(
     title="Gain English API",
@@ -38,6 +39,7 @@ app.include_router(review_router, prefix="/api/v1")
 app.include_router(conversations_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(lessons_router, prefix="/api/v1")
+app.include_router(ai_tutor_session_router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
@@ -75,12 +77,22 @@ async def health_check():
     except Exception:
         db_reachable = False
 
-    # Check if Anthropic API is reachable (just check if configured)
-    anthropic_reachable = settings.ai_tutor_enabled
+    # Check if Anthropic API is reachable (just check if configured).
+    # Independent of the AI_TUTOR_ENABLED master flag — this reports whether
+    # the key itself is present and not a placeholder, matching the old
+    # @property semantics that this signal originally exposed.
+    anthropic_reachable = bool(
+        settings.anthropic_api_key
+        and not settings.anthropic_api_key.startswith("sk-ant-placeholder")
+    )
 
+    # ai_tutor_enabled = master flag + STT provider actually usable. In stub
+    # mode (dev/test), no API key is required; in groq mode, the key must
+    # be configured.
+    stt_ready = settings.stt_provider == "stub" or bool(settings.groq_api_key)
     return {
         "status": "ok",
-        "ai_tutor_enabled": settings.ai_tutor_enabled,
+        "ai_tutor_enabled": bool(settings.ai_tutor_enabled and stt_ready),
         "voice_enabled": settings.ai_voice_enabled,
         "anthropic_reachable": anthropic_reachable,
         "db_reachable": db_reachable,

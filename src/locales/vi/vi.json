@@ -536,7 +536,8 @@
         "flashcards": "Thẻ học",
         "drag_drop": "Kéo & Thả",
         "ad_libs": "Điền từ",
-        "ai_tutor": "Trợ lý AI"
+        "ai_tutor": "Trợ lý AI",
+        "quick_help": "Trợ giúp nhanh"
       },
       "utility": {
         "settings": "Cài đặt",
@@ -662,5 +663,97 @@
     "usage": "Usage",
     "upgrade": "Upgrade",
     "contactUs": "Contact us to upgrade"
+  },
+  "home": {
+    "cta": {
+      "aiTutor": {
+        "heading": "Luyện nói với AI Gia sư",
+        "subtext": "Học các cuộc hội thoại tiếng Anh thực tế với hỗ trợ tiếng Việt.",
+        "button": "Bắt đầu nói"
+      }
+    }
+  },
+  "tutor": {
+    "tabs": {
+      "home": "Trang chủ",
+      "course": "Khóa học"
+    },
+    "footer": {
+      "home": "Trang chủ",
+      "freeTalk": "Trò chuyện tự do",
+      "review": "Ôn tập",
+      "challenge": "Thử thách",
+      "profile": "Hồ sơ"
+    },
+    "home": {
+      "lessonsHeader": "Bài học",
+      "freeTalkHeader": "Trò chuyện tự do",
+      "freeTalkSubtitle": "Luyện tập các cuộc hội thoại thực tế trong các tình huống hàng ngày.",
+      "trialTitle": "Truy cập AI Gia sư không giới hạn miễn phí",
+      "trialBody": "Bắt đầu dùng thử miễn phí",
+      "trialToast": "Dùng thử miễn phí sắp ra mắt — AI Gia sư của bạn hiện đang miễn phí!",
+      "freePill": "Miễn phí",
+      "start": "Bắt đầu",
+      "moreSoon": "Sẽ có thêm nhiều tình huống sớm.",
+      "nonViBanner": "AI Gia sư hiện được tối ưu cho người học tiếng Việt. Chế độ chỉ tiếng Anh sẽ sớm có."
+    },
+    "phrasebook": {
+      "title": "Những câu hữu ích cho cuộc hội thoại này",
+      "viSupport": "Học một vài câu hữu ích trước khi bắt đầu cuộc trò chuyện.",
+      "next": "Tiếp tục",
+      "notFound": "Không tìm thấy sổ tay câu."
+    },
+    "briefing": {
+      "goalLabel": "Mục tiêu:",
+      "goalEnLabel": "Goal:",
+      "tasksLabel": "Nhiệm vụ",
+      "startLesson": "Bắt đầu bài học",
+      "continueWhereLeftOff": "Tiếp tục từ chỗ đã dừng",
+      "startFresh": "Bắt đầu lại",
+      "notFound": "Không tìm thấy kịch bản."
+    },
+    "session": {
+      "tasksProgress": "Nhiệm vụ: {{done}} / {{total}} đã hoàn thành",
+      "currentTask": "Nhiệm vụ hiện tại:",
+      "listen": "Nghe",
+      "speakNow": "Nói ngay",
+      "submit": "Gửi",
+      "cancel": "Hủy",
+      "processing": "Đang xử lý…",
+      "repeat": "Lặp lại",
+      "translate": "Dịch",
+      "hideText": "Ẩn văn bản",
+      "showText": "Hiện văn bản",
+      "flagForPractice": "Đánh dấu",
+      "viSpokenToast": "Hãy nói bằng tiếng Anh nhé! / Try speaking in English.",
+      "sttFailedToast": "Không nghe rõ — vui lòng thử lại.",
+      "rateLimitToast": "Bạn đang nói quá nhanh! Đợi một chút.",
+      "micDeniedHelp": "Cần quyền truy cập micrô. Nhấp vào biểu tượng ổ khóa trên thanh địa chỉ trình duyệt để cho phép.",
+      "networkErrorToast": "Lỗi mạng. Vui lòng thử lại.",
+      "unsupported": "Trình duyệt này không hỗ trợ ghi âm. Vui lòng dùng Chrome, Edge, Firefox (máy tính) hoặc iOS Safari 16+ / Chrome Android."
+    },
+    "endLesson": {
+      "title": "Kết thúc bài học?",
+      "body": "Bạn đã hoàn thành {{done}} trên {{total}} nhiệm vụ.",
+      "confirm": "Kết thúc",
+      "dismiss": "Tiếp tục luyện tập"
+    },
+    "lessonComplete": {
+      "title": "Hoàn thành bài học",
+      "xpEarned": "+{{xp}} XP",
+      "continue": "Tiếp tục",
+      "viewDashboard": "Xem bảng điều khiển",
+      "correctionsHeader": "Sửa lỗi"
+    },
+    "correction": {
+      "youSaid": "Bạn nói",
+      "better": "Tốt hơn",
+      "explanation": "Giải thích"
+    },
+    "comingSoon": {
+      "review": "Ôn tập giọng nói sẽ có sớm",
+      "challenge": "Chế độ thử thách sẽ có sớm",
+      "gotIt": "Đã hiểu"
+    }
   }
 }

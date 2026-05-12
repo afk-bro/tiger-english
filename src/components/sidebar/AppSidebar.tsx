@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Home, LayoutDashboard, GraduationCap, BookOpen, Users, Bell,
-  Layers, MousePointer2, FileText, MessageCircleQuestion,
+  Layers, MousePointer2, FileText, MessageCircleQuestion, Mic,
   RotateCcw, Zap, Sparkles,
   Settings, HelpCircle, User, LogOut,
   ChevronLeft, ChevronRight, X,
@@ -20,7 +20,14 @@ interface AppSidebarProps {
   triggerRef?: React.RefObject<HTMLButtonElement | null>;  // ref to the button that opened the drawer
 }
 
-const NAV_ITEMS = [
+type NavItem = {
+  to: string;
+  labelKey: string;
+  icon: typeof Home;
+  end?: boolean;
+};
+
+const NAV_ITEMS: NavItem[] = [
   { to: "/home",              labelKey: "common.sidebar.nav.home",            icon: Home,             end: true },
   { to: "/dashboard",         labelKey: "common.sidebar.nav.dashboard",       icon: LayoutDashboard },
   { to: "/lessons",           labelKey: "common.sidebar.nav.lessons",         icon: GraduationCap },
@@ -30,10 +37,15 @@ const NAV_ITEMS = [
   { to: "/library",           labelKey: "common.sidebar.nav.library",         icon: BookOpen },
   { to: "/study-groups",      labelKey: "common.sidebar.nav.study_groups",    icon: Users },
   { to: "/notifications",     labelKey: "common.sidebar.nav.notifications",   icon: Bell },
+  // AI Tutor entry — gated by VITE_AI_TUTOR_ENABLED feature flag.
+  // Inserted above Flashcards so it appears in the discovery cluster with the other practice surfaces.
+  ...(import.meta.env.VITE_AI_TUTOR_ENABLED === "true"
+    ? [{ to: "/ai-tutor", labelKey: "common.sidebar.nav.ai_tutor", icon: Mic } as NavItem]
+    : []),
   { to: "/flashcards",        labelKey: "common.sidebar.nav.flashcards",      icon: Layers },
   { to: "/drag-drop",         labelKey: "common.sidebar.nav.drag_drop",       icon: MousePointer2 },
   { to: "/ad-libs",           labelKey: "common.sidebar.nav.ad_libs",         icon: FileText },
-] as const;
+];
 
 const UTILITY_ITEMS = [
   { labelKey: "common.sidebar.utility.settings", icon: Settings },
@@ -101,16 +113,18 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
         ))}
       </nav>
 
-      {/* AI Tutor button */}
+      {/* Quick Help button — opens the slide-out panel with Explain / Correct /
+          Practice / Writing Coach tabs. Distinct from the /ai-tutor NavLink
+          above (which routes to the speech-driven roleplay scenarios). */}
       <div className="px-2 py-2 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={() => openAiTutor()}
-          aria-label={collapsed ? t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" }) : undefined}
-          title={collapsed ? t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" }) : undefined}
+          aria-label={collapsed ? t("common.sidebar.nav.quick_help", { defaultValue: "Quick Help" }) : undefined}
+          title={collapsed ? t("common.sidebar.nav.quick_help", { defaultValue: "Quick Help" }) : undefined}
           className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
         >
           <MessageCircleQuestion className="w-5 h-5 flex-shrink-0" aria-hidden />
-          {!collapsed && <span>{t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" })}</span>}
+          {!collapsed && <span>{t("common.sidebar.nav.quick_help", { defaultValue: "Quick Help" })}</span>}
         </button>
       </div>
 

@@ -28,6 +28,17 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'playwright/.auth/user.json',
+        // Fake media flags so getUserMedia({audio: true}) returns a silent
+        // synthetic stream without needing a real microphone. The AI tutor
+        // session spec relies on these — see e2e/ai-tutor.spec.ts where
+        // the scripted transcript is injected via the X-Test-Stub-Transcript
+        // header rather than from real audio content.
+        launchOptions: {
+          args: [
+            '--use-fake-ui-for-media-stream',
+            '--use-fake-device-for-media-stream',
+          ],
+        },
       },
       dependencies: ['setup'],
     },

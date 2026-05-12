@@ -42,6 +42,11 @@ const TeacherStudentDetailPage  = lazy(() => import("@/features/teacher/pages/Te
 const OrgOverviewPage           = lazy(() => import("@/features/org-admin/pages/OrgOverviewPage"));
 const OrgBillingPage            = lazy(() => import("@/features/org-admin/pages/OrgBillingPage"));
 const AdminAiUsagePage          = lazy(() => import("@/features/admin/pages/AdminAiUsagePage"));
+const TutorLayout               = lazy(() => import("@/features/ai-tutor/components/TutorLayout").then(m => ({ default: m.TutorLayout })));
+const AiTutorHomePage           = lazy(() => import("@/pages/ai-tutor/AiTutorHomePage"));
+const PhrasebookPage            = lazy(() => import("@/pages/ai-tutor/PhrasebookPage"));
+const ScenarioBriefingPage      = lazy(() => import("@/pages/ai-tutor/ScenarioBriefingPage"));
+const TutorSessionPage          = lazy(() => import("@/pages/ai-tutor/TutorSessionPage"));
 
 // Stub pages for new authenticated routes
 const StubPage = ({ titleKey }: { titleKey: string }) => {
@@ -132,6 +137,16 @@ export function AppRoutes() {
           <Route path="/admin/orgs/:slug/billing" element={<OrgBillingPage />} />
           <Route path="/admin/ai-usage" element={<AdminAiUsagePage />} />
         </Route>
+
+        {/* AI Tutor routes — gated by VITE_AI_TUTOR_ENABLED feature flag */}
+        {import.meta.env.VITE_AI_TUTOR_ENABLED === 'true' && (
+          <Route element={<RequireAuth><TutorLayout /></RequireAuth>}>
+            <Route path="/ai-tutor" element={<AiTutorHomePage />} />
+            <Route path="/ai-tutor/scenarios/:slug/phrasebook" element={<PhrasebookPage />} />
+            <Route path="/ai-tutor/scenarios/:slug/briefing" element={<ScenarioBriefingPage />} />
+            <Route path="/ai-tutor/scenarios/:slug/session/:sessionId" element={<TutorSessionPage />} />
+          </Route>
+        )}
       </Routes>
     </Suspense>
   );

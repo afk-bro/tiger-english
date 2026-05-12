@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict, field_validator
-from typing import List
+from typing import List, Literal
 import json
 
 import os as _os
@@ -58,6 +58,20 @@ class Settings(BaseSettings):
     # routes (503 + ai_disabled). Opt in via AI_WRITING_COACH_MOCK_WHEN_DISABLED=true.
     ai_writing_coach_mock_when_disabled: bool = False
 
+    # AI tutor speech (Spec 1) — env-gated. AI_TUTOR_ENABLED is the master
+    # opt-in for the speech-tutor surface; combined with groq_api_key in the
+    # /api/v1/health probe to report whether STT is actually wired up.
+    ai_tutor_enabled: bool = False
+    groq_api_key: str | None = None
+    groq_stt_model: str = "whisper-large-v3"
+    stt_provider: Literal["groq", "stub"] = "stub"
+    stt_timeout_seconds: int = 10
+    tutor_audio_bucket: str = "ai-tutor-audio"
+    # Script-side only (reads ELEVEN_LABS_API_KEY); declared here so the
+    # secret has a documented home and Pydantic's case-insensitive matching
+    # picks it up from backend/.env without bundling it into the client.
+    eleven_labs_api_key: str | None = None
+
     # Admin settings
     super_admin_user_ids: str = "[]"  # JSON array of user UUIDs allowed to access /admin endpoints
 
@@ -75,14 +89,6 @@ class Settings(BaseSettings):
             return json.loads(self.allowed_origins)
         except json.JSONDecodeError:
             return ["http://localhost:5173"]
-
-    @property
-    def ai_tutor_enabled(self) -> bool:
-        """Check if AI tutor is enabled (API key present and not placeholder)"""
-        return bool(
-            self.anthropic_api_key
-            and not self.anthropic_api_key.startswith("sk-ant-placeholder")
-        )
 
     @property
     def super_admin_ids(self) -> List[str]:
