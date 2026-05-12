@@ -49,8 +49,10 @@ def _build_client():
     # Independent of the flag, verify the key is actually present and not a
     # placeholder. Without this, AsyncAnthropic(api_key=None) is happily
     # constructed and only fails on the first outbound call (runtime 5xx).
+    # `sk-ant-placeholder` matches the convention in backend/.env.example and
+    # the placeholder check in app/main.py's /health endpoint.
     key = settings.anthropic_api_key
-    if not key or key.startswith("sk-placeholder") or key in ("changeme", "your-key-here"):
+    if not key or key.startswith("sk-ant-placeholder") or key in ("changeme", "your-key-here"):
         raise AiDisabledException(
             "AI tutor disabled — ANTHROPIC_API_KEY is missing or a placeholder"
         )

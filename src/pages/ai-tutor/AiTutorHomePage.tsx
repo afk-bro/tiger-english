@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TrialCtaCard } from "@/features/ai-tutor/components/TrialCtaCard";
 import { FeaturedLessonCard } from "@/features/ai-tutor/components/FeaturedLessonCard";
@@ -22,12 +23,23 @@ import type { TutorScenarioSummary } from "@/features/ai-tutor/types";
 export default function AiTutorHomePage() {
   const { t } = useTranslation();
   const profile = useUserStore((s) => s.profile);
+  const location = useLocation();
   const [scenarios, setScenarios] = useState<TutorScenarioSummary[] | null>(
     null,
   );
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  // React Router pushState navigation to `/ai-tutor#free-talk` (the bottom-nav
+  // entry) updates `location.hash` but doesn't natively scroll to the anchor.
+  // Run this after scenarios load — the #free-talk section only mounts in the
+  // loaded UI tree.
+  useEffect(() => {
+    if (!location.hash || isLoading) return;
+    const el = document.querySelector(location.hash);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [location.hash, isLoading]);
 
   useEffect(() => {
     let cancelled = false;

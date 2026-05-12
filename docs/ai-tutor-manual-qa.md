@@ -69,10 +69,10 @@ Tick each on the chosen device. Note device + browser version inline.
 ## Error paths
 
 - [ ] **E1** — Deny microphone permission: persistent banner with browser-specific instructions appears; `ai_tutor_events('mic.denied')` row in DB
-- [ ] **E2** — Speak Vietnamese instead of English: toast "Hãy nói bằng tiếng Anh nhé! / Try speaking in English." (Note: VI-spoken toast surfacing is currently deferred; underlying behavior is correct — no advance, no turn write — verify the latter via DB inspection)
+- [ ] **E2** — Speak Vietnamese instead of English: toast "Hãy nói bằng tiếng Anh nhé! / Try speaking in English." surfaces; backend logs `turn.vi_spoken` and skips the turn write / task advance (verify via DB inspection).
 - [ ] **E3** — Network failure during turn submit: toast "Couldn't hear that — try again." surfaces; no DB writes occur (verify via `ai_tutor_turns` count unchanged)
 - [ ] **E4** — Submit silence (just background noise): same STT failure path
-- [ ] **E5** — Backend off (`ai_tutor_enabled=false`): scenario list returns 503 with `{error: 'tutor_disabled'}`; UI displays the error
+- [ ] **E5** — Backend off (`ai_tutor_enabled=false`): scenario list returns 503 with body `{"detail": {"error": "tutor_disabled"}}` (FastAPI wraps the dict under `detail`); UI displays a generic error toast
 
 ## Device matrix
 
@@ -91,10 +91,7 @@ Run the full acceptance criteria on each:
 
 These are not regressions — they were deliberately deferred from Spec 1 to keep the cycle shippable. Don't flag them as failures.
 
-- **VI-spoken toast** is not displayed; backend correctly rejects the turn (no advance, no DB write).
-- **`tasksDone` count** in the in-session banner is approximate (counts user turns with `task_completed=true` rather than reading `session.completed_task_ids`).
 - **Resume mid-session** restores the dialogue page to a generic awaiting-speech state rather than replaying the last AI prompt automatically.
-- **The `current_task_id` for `submitTurn`** is taken from initial router state; if the user crosses many task boundaries without page refresh, the page may submit against a stale task. Spec 1's single-scenario flow rarely surfaces this.
 
 Each has a follow-up note in the implementation plan / spec.
 

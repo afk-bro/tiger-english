@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { useScenario } from '@/features/ai-tutor/hooks/useScenario';
 import { useResumeOrStart } from '@/features/ai-tutor/hooks/useResumeOrStart';
 
@@ -7,10 +9,31 @@ export default function ScenarioBriefingPage() {
   const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const { scenario, isLoading, error } = useScenario(slug);
-  const { existingActiveSessionId, startFresh, startContinue, isStarting } = useResumeOrStart({
+  const {
+    existingActiveSessionId,
+    startFresh,
+    startContinue,
+    isStarting,
+    error: startError,
+  } = useResumeOrStart({
     slug: slug ?? '',
     scenarioDetail: scenario,
   });
+
+  // Surface session-start failures so the user knows the button re-enabling
+  // wasn't a silent success.
+  useEffect(() => {
+    if (!startError) return;
+    toast.error(
+      t('tutor.briefing.startFailedToast', {
+        defaultValue: "Couldn't start the lesson — please try again.",
+      }),
+    );
+  }, [startError, t]);
+
+  // No slug → no usable scenario route; disable the CTAs rather than firing
+  // requests with an empty path.
+  const ctaDisabled = isStarting || !slug;
 
   if (isLoading) {
     return (
@@ -91,7 +114,7 @@ export default function ScenarioBriefingPage() {
             <button
               type="button"
               onClick={startContinue}
-              disabled={isStarting}
+              disabled={ctaDisabled}
               className="block w-full px-4 py-3 rounded-md bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 disabled:opacity-50"
             >
               {t('tutor.briefing.continueWhereLeftOff', {
@@ -101,7 +124,7 @@ export default function ScenarioBriefingPage() {
             <button
               type="button"
               onClick={startFresh}
-              disabled={isStarting}
+              disabled={ctaDisabled}
               className="block w-full px-4 py-3 rounded-md border border-gray-300 dark:border-gray-700 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
             >
               {t('tutor.briefing.startFresh', { defaultValue: 'Start fresh' })}
@@ -111,7 +134,7 @@ export default function ScenarioBriefingPage() {
           <button
             type="button"
             onClick={startFresh}
-            disabled={isStarting}
+            disabled={ctaDisabled}
             className="block w-full px-4 py-3 rounded-md bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 disabled:opacity-50"
           >
             {t('tutor.briefing.startLesson', { defaultValue: 'Start lesson' })}
