@@ -7,6 +7,21 @@ import type { UserStore } from '@/stores/useUserStore';
 
 vi.mock('@/stores/useUserStore');
 
+// Mock the TutorAPI module so the home page's useEffect resolves to an
+// empty-scenario list without hitting Supabase. Keeps this test focused
+// on route wiring rather than the home page's data flow.
+vi.mock('@/features/ai-tutor/api/tutor', () => ({
+  tutorAPI: {
+    listScenarios: vi.fn().mockResolvedValue([]),
+    getScenario: vi.fn(),
+    startSession: vi.fn(),
+    getSession: vi.fn(),
+    submitTurn: vi.fn(),
+    finishSession: vi.fn(),
+    abandonSession: vi.fn(),
+  },
+}));
+
 // Mock TutorLayout so the test asserts the route block mounts the layout
 // + child page without rendering the full chrome (top tabs, audio gesture
 // unlock, etc.). The mock renders <Outlet /> so child route elements
@@ -75,10 +90,11 @@ describe('AI Tutor routes', () => {
     vi.unstubAllEnvs();
   });
 
-  it('renders the home placeholder behind auth when flag is enabled', async () => {
+  it('mounts TutorLayout + home page behind auth when flag is enabled', async () => {
     setProfile(truthyProfile);
     const { findByTestId, findByText } = renderAt('/ai-tutor');
     expect(await findByTestId('mock-tutor-layout')).toBeInTheDocument();
-    expect(await findByText(/AI Tutor home/i)).toBeInTheDocument();
+    // listScenarios resolves to [], so the empty-state copy appears.
+    expect(await findByText(/no scenarios available yet/i)).toBeInTheDocument();
   });
 });
