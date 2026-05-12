@@ -1,6 +1,6 @@
--- Add `role` column to profiles to back the existing RequireTeacher and
--- RequireAdmin route guards (frontend defense-in-depth). The column is
--- purely a UI-gating signal — the authoritative gate for /api/v1/admin/*
+-- Add `role` column to profiles to back the frontend RequireTeacher route
+-- guard (and a forthcoming RequireAdmin guard shipping in a follow-up PR).
+-- Purely a UI-gating signal — the authoritative gate for /api/v1/admin/*
 -- endpoints remains the env-based SUPER_ADMIN_USER_IDS allowlist in
 -- backend/app/api/v1/admin.py.
 --

@@ -6,7 +6,8 @@ import type { CefrLevel } from "@/features/lessons/lesson.types";
 
 /** UI-gating role. Authoritative admin gate lives in the backend
  *  SUPER_ADMIN_USER_IDS env allowlist; this column drives the frontend
- *  RequireTeacher / RequireAdmin route wrappers (defense-in-depth). */
+ *  RequireTeacher route wrapper (defense-in-depth). A RequireAdmin
+ *  wrapper following the same pattern lands in a follow-up PR. */
 export type UserRole = 'user' | 'teacher' | 'admin';
 
 type UserProfile = {
