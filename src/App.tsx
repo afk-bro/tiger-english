@@ -7,6 +7,7 @@ import PublicLayout from "./components/layout/PublicLayout";
 import AuthLayout from "./components/layout/AuthLayout";
 import RequireAuth from "./features/auth/RequireAuth";
 import RequireTeacher from "./features/teacher/components/RequireTeacher";
+import RequireAdmin from "./features/admin/components/RequireAdmin";
 import RequireGuest from "./features/auth/RequireGuest";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useUserStore } from "@/stores/useUserStore";
@@ -132,10 +133,11 @@ export function AppRoutes() {
           <Route path="/teacher/classes/:classId" element={<RequireTeacher><TeacherClassDetailPage /></RequireTeacher>} />
           <Route path="/teacher/students" element={<RequireTeacher><TeacherStudentsPage /></RequireTeacher>} />
           <Route path="/teacher/students/:studentId" element={<RequireTeacher><TeacherStudentDetailPage /></RequireTeacher>} />
-          {/* Org admin */}
-          <Route path="/admin/orgs/:slug" element={<OrgOverviewPage />} />
-          <Route path="/admin/orgs/:slug/billing" element={<OrgBillingPage />} />
-          <Route path="/admin/ai-usage" element={<AdminAiUsagePage />} />
+          {/* Org admin — gated by RequireAdmin (defense-in-depth; backend
+              is the authoritative gate via SUPER_ADMIN_USER_IDS) */}
+          <Route path="/admin/orgs/:slug" element={<RequireAdmin><OrgOverviewPage /></RequireAdmin>} />
+          <Route path="/admin/orgs/:slug/billing" element={<RequireAdmin><OrgBillingPage /></RequireAdmin>} />
+          <Route path="/admin/ai-usage" element={<RequireAdmin><AdminAiUsagePage /></RequireAdmin>} />
         </Route>
 
         {/* AI Tutor routes — gated by VITE_AI_TUTOR_ENABLED feature flag */}
