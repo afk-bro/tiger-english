@@ -528,7 +528,8 @@
         "flashcards": "闪卡",
         "drag_drop": "拖放练习",
         "ad_libs": "填空练习",
-        "ai_tutor": "AI导师"
+        "ai_tutor": "AI导师",
+        "quick_help": "快速帮助"
       },
       "utility": {
         "settings": "设置",

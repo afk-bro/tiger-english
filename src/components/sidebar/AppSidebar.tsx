@@ -113,16 +113,18 @@ export default function AppSidebar({ collapsed, onToggleCollapsed, isOpen, onClo
         ))}
       </nav>
 
-      {/* AI Tutor button */}
+      {/* Quick Help button — opens the slide-out panel with Explain / Correct /
+          Practice / Writing Coach tabs. Distinct from the /ai-tutor NavLink
+          above (which routes to the speech-driven roleplay scenarios). */}
       <div className="px-2 py-2 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={() => openAiTutor()}
-          aria-label={collapsed ? t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" }) : undefined}
-          title={collapsed ? t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" }) : undefined}
+          aria-label={collapsed ? t("common.sidebar.nav.quick_help", { defaultValue: "Quick Help" }) : undefined}
+          title={collapsed ? t("common.sidebar.nav.quick_help", { defaultValue: "Quick Help" }) : undefined}
           className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
         >
           <MessageCircleQuestion className="w-5 h-5 flex-shrink-0" aria-hidden />
-          {!collapsed && <span>{t("common.sidebar.nav.ai_tutor", { defaultValue: "AI Tutor" })}</span>}
+          {!collapsed && <span>{t("common.sidebar.nav.quick_help", { defaultValue: "Quick Help" })}</span>}
         </button>
       </div>
 

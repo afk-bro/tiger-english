@@ -536,7 +536,8 @@
         "flashcards": "Flashcards",
         "drag_drop": "Drag & Drop",
         "ad_libs": "Ad Libs",
-        "ai_tutor": "AI Tutor"
+        "ai_tutor": "AI Tutor",
+        "quick_help": "Quick Help"
       },
       "utility": {
         "settings": "Settings",
