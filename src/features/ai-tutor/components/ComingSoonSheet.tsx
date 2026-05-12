@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ComingSoonSheetProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface ComingSoonSheetProps {
  * need: backdrop click + Escape close + a single "Got it" affirmative button.
  */
 export function ComingSoonSheet({ isOpen, onClose, title, body }: ComingSoonSheetProps) {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!isOpen) return;
     const onEsc = (e: KeyboardEvent) => {
@@ -36,7 +38,7 @@ export function ComingSoonSheet({ isOpen, onClose, title, body }: ComingSoonShee
     >
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t('common.close', { defaultValue: 'Close' })}
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
@@ -48,7 +50,7 @@ export function ComingSoonSheet({ isOpen, onClose, title, body }: ComingSoonShee
           onClick={onClose}
           className="mt-4 w-full inline-flex justify-center px-4 py-2 rounded-md bg-primary-500 text-white text-sm font-medium hover:bg-primary-600"
         >
-          Got it
+          {t('tutor.comingSoon.gotIt', { defaultValue: 'Got it' })}
         </button>
       </div>
     </div>

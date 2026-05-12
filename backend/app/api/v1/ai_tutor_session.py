@@ -13,7 +13,7 @@ from ...models.tutor import (
     StartSessionRequest, StartSessionResponse, TurnResponse, FinishResponse,
     TutorScenarioSummary, TutorScenarioDetail, TutorEventRequest,
 )
-from ...services.stt_provider import GroqSTTProvider, StubSTTProvider, STTFailureError
+from ...services.stt_provider import GroqSTTProvider, StubSTTProvider
 from ...services.tutor_scenario_service import TutorScenarioService
 from ...services.tutor_session_service import (
     TutorSessionService, TurnSTTFailure,
@@ -50,10 +50,18 @@ def _get_stt(request: Request | None = None):
 
 
 def _require_enabled():
-    """503 when AI tutor isn't fully wired (no API key OR flag off in production)."""
+    """503 when AI tutor isn't fully wired (no API key OR flag off in production).
+
+    Defence in depth: even if production is misconfigured with
+    STT_PROVIDER=stub, never bypass the flag there. The stub bypass exists
+    so dev/test environments can exercise the route tree without the full
+    Groq + Anthropic surface — never something we want available in prod.
+    """
     if not settings.ai_tutor_enabled:
-        # In stub mode (tests/dev), allow through even when ai_tutor_enabled is False.
-        if settings.stt_provider != "stub":
+        if (
+            settings.stt_provider != "stub"
+            or settings.environment == "production"
+        ):
             raise HTTPException(status_code=503, detail={"error": "tutor_disabled"})
 
 

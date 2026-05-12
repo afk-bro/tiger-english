@@ -36,7 +36,7 @@ export function EndLessonModal({
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
     >
       <button
-        aria-label="Close"
+        aria-label={t('common.close', { defaultValue: 'Close' })}
         type="button"
         onClick={onDismiss}
         className="absolute inset-0 bg-black/50"

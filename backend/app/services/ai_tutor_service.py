@@ -46,9 +46,17 @@ def _build_client():
         raise AiDisabledException(
             "AI tutor disabled — set AI_TUTOR_ENABLED=true and a valid ANTHROPIC_API_KEY"
         )
+    # Independent of the flag, verify the key is actually present and not a
+    # placeholder. Without this, AsyncAnthropic(api_key=None) is happily
+    # constructed and only fails on the first outbound call (runtime 5xx).
+    key = settings.anthropic_api_key
+    if not key or key.startswith("sk-placeholder") or key in ("changeme", "your-key-here"):
+        raise AiDisabledException(
+            "AI tutor disabled — ANTHROPIC_API_KEY is missing or a placeholder"
+        )
     import anthropic  # noqa: PLC0415 – intentional lazy import
 
-    return anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    return anthropic.AsyncAnthropic(api_key=key)
 
 
 # ── System prompts ───────────────────────────────────────────────────────────

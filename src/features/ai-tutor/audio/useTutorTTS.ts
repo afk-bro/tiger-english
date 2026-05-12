@@ -142,8 +142,17 @@ export function useTutorTTS(): UseTutorTTS {
         const playResult = audio.play();
         if (playResult && typeof playResult.catch === "function") {
           playResult.catch(() => {
-            // play() rejection (e.g., no gesture); onerror typically also fires.
-            // Don't fire telemetry here — onerror handles it.
+            // play() rejection (e.g., autoplay-blocked without a user gesture).
+            // `onerror` is NOT guaranteed to fire for policy rejections, so
+            // without an explicit fallback here the UI could stay stuck in
+            // 'loading' forever. Fall back to synthesis ourselves.
+            if (resolved) return;
+            void reportTutorEvent("audio.fallback", {
+              reason: "play_rejected",
+              audio_path: audioUrl,
+            });
+            if (audioRef.current === audio) audioRef.current = null;
+            speakViaSynthesis(text).then(finish);
           });
         }
       });

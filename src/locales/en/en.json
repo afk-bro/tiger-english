@@ -752,7 +752,8 @@
     },
     "comingSoon": {
       "review": "Speech review coming soon",
-      "challenge": "Challenge mode coming soon"
+      "challenge": "Challenge mode coming soon",
+      "gotIt": "Got it"
     }
   }
 }

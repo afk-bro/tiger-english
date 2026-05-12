@@ -751,7 +751,8 @@
     },
     "comingSoon": {
       "review": "Ôn tập giọng nói sẽ có sớm",
-      "challenge": "Chế độ thử thách sẽ có sớm"
+      "challenge": "Chế độ thử thách sẽ có sớm",
+      "gotIt": "Đã hiểu"
     }
   }
 }
