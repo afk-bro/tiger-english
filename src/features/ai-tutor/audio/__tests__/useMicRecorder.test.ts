@@ -6,7 +6,7 @@ vi.mock('@/features/ai-tutor/api/events', () => ({
   reportTutorEvent: vi.fn(() => Promise.resolve()),
 }));
 
-import { useMicRecorder } from '../useMicRecorder';
+import { useMicRecorder, coarseUserAgent } from '../useMicRecorder';
 import { reportTutorEvent } from '../../api/events';
 
 // ---------- Fakes ----------
@@ -68,13 +68,12 @@ beforeEach(() => {
     configurable: true,
     value: { getUserMedia },
   });
+  // Use a realistic UA so coarseUserAgent can bucket it (Chrome on macOS).
   Object.defineProperty(global.navigator, 'userAgent', {
     configurable: true,
-    value: 'jest-test-ua',
-  });
-  Object.defineProperty(global.navigator, 'platform', {
-    configurable: true,
-    value: 'jest-test-platform',
+    value:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
+      '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   });
 
   (reportTutorEvent as unknown as ReturnType<typeof vi.fn>).mockClear();
@@ -170,9 +169,116 @@ describe('useMicRecorder', () => {
       cause: 'mic_denied',
       message: expect.any(String),
     });
+    // Payload is the coarsened {browser, os} bucket, NOT the raw UA string.
     expect(reportTutorEvent).toHaveBeenCalledWith('mic.denied', {
-      user_agent: 'jest-test-ua',
-      platform: 'jest-test-platform',
+      browser: 'chrome',
+      os: 'macos',
+    });
+    const payload = (reportTutorEvent as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0][1] as Record<string, unknown>;
+    expect(payload).not.toHaveProperty('user_agent');
+    expect(payload).not.toHaveProperty('platform');
+    // Defense-in-depth: no field should leak the raw UA substring.
+    for (const v of Object.values(payload)) {
+      expect(String(v)).not.toContain('Mozilla');
+      expect(String(v)).not.toContain('AppleWebKit');
+    }
+  });
+
+  describe('coarseUserAgent', () => {
+    it('buckets common browsers and OSes correctly', () => {
+      // Chrome on macOS
+      expect(
+        coarseUserAgent(
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
+            '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        ),
+      ).toEqual({ browser: 'chrome', os: 'macos' });
+
+      // Safari on iOS
+      expect(
+        coarseUserAgent(
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 ' +
+            '(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        ),
+      ).toEqual({ browser: 'safari', os: 'ios' });
+
+      // Firefox on Windows
+      expect(
+        coarseUserAgent(
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+        ),
+      ).toEqual({ browser: 'firefox', os: 'windows' });
+
+      // Edge on Windows (must match before chrome substring)
+      expect(
+        coarseUserAgent(
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+            '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+        ),
+      ).toEqual({ browser: 'edge', os: 'windows' });
+
+      // Chrome on Android
+      expect(
+        coarseUserAgent(
+          'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) ' +
+            'Chrome/120.0.0.0 Mobile Safari/537.36',
+        ),
+      ).toEqual({ browser: 'chrome', os: 'android' });
+
+      // Unknown / empty
+      expect(coarseUserAgent('')).toEqual({ browser: 'other', os: 'other' });
+      expect(coarseUserAgent('curl/8.0.0')).toEqual({ browser: 'other', os: 'other' });
+    });
+
+    it('detects iOS-specific browser tokens (FxiOS, EdgiOS, CriOS) that contain "Safari" but are not Safari', () => {
+      // Firefox iOS — UA contains "FxiOS/" and "Safari/" but is Firefox.
+      expect(
+        coarseUserAgent(
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 ' +
+            '(KHTML, like Gecko) FxiOS/121.0 Mobile/15E148 Safari/605.1.15',
+        ),
+      ).toEqual({ browser: 'firefox', os: 'ios' });
+
+      // Edge iOS — UA contains "EdgiOS/" and "Safari/" but is Edge.
+      expect(
+        coarseUserAgent(
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 ' +
+            '(KHTML, like Gecko) Version/17.0 EdgiOS/121.0 Mobile/15E148 Safari/604.1',
+        ),
+      ).toEqual({ browser: 'edge', os: 'ios' });
+
+      // Chrome iOS — already detected via "CriOS", regression-pinning here.
+      expect(
+        coarseUserAgent(
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 ' +
+            '(KHTML, like Gecko) CriOS/121.0.0.0 Mobile/15E148 Safari/604.1',
+        ),
+      ).toEqual({ browser: 'chrome', os: 'ios' });
+    });
+
+    it('disambiguates iPadOS desktop-mode from a real Mac via maxTouchPoints', () => {
+      // iPad on iPadOS 13+ in desktop mode: UA contains "Macintosh", no
+      // "iPad" token, but reports maxTouchPoints > 0. Desktop Macs report 0.
+      const iPadDesktopModeUa =
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 ' +
+        '(KHTML, like Gecko) Version/17.0 Safari/605.1.15';
+
+      // Without maxTouchPoints → looks like macOS Safari (the legacy false negative).
+      expect(coarseUserAgent(iPadDesktopModeUa)).toEqual({
+        browser: 'safari',
+        os: 'macos',
+      });
+      // With maxTouchPoints > 1 → correctly classified as iOS.
+      expect(coarseUserAgent(iPadDesktopModeUa, 5)).toEqual({
+        browser: 'safari',
+        os: 'ios',
+      });
+      // Real Mac (maxTouchPoints === 0 or undefined) stays as macos.
+      expect(coarseUserAgent(iPadDesktopModeUa, 0)).toEqual({
+        browser: 'safari',
+        os: 'macos',
+      });
     });
   });
 

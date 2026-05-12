@@ -39,6 +39,51 @@ export interface UseMicRecorder {
 
 const DEFAULT_MAX_MS = 20_000;
 
+/**
+ * Coarsen the user-agent into a (browser, os) bucket for mic.denied telemetry.
+ *
+ * We want enough signal to answer "which browser+OS combo denies mic?" without
+ * shipping the raw UA string (mild fingerprinting / PII).
+ *
+ * Detection notes:
+ *  - Order matters because UAs nest brand tokens (every Chromium derivative
+ *    contains "chrome"; every iOS browser contains "safari"). We check the
+ *    more-specific tokens first.
+ *  - iOS Chrome / Firefox / Edge use distinct tokens (CriOS / FxiOS / EdgiOS)
+ *    rather than the desktop tokens. Without those checks they'd all fall
+ *    through to "safari".
+ *  - iPadOS 13+ in desktop mode reports a Mac UA with no "iPad" token. The
+ *    standard workaround is to check `navigator.maxTouchPoints > 1` —
+ *    desktop Macs report 0. Pass it in so the function stays pure.
+ */
+export function coarseUserAgent(
+  ua: string,
+  maxTouchPoints: number = 0,
+): {
+  browser: 'safari' | 'chrome' | 'firefox' | 'edge' | 'other';
+  os: 'ios' | 'android' | 'macos' | 'windows' | 'linux' | 'other';
+} {
+  const s = ua.toLowerCase();
+
+  let browser: 'safari' | 'chrome' | 'firefox' | 'edge' | 'other' = 'other';
+  if (s.includes('edg/') || s.includes('edge/') || s.includes('edgios/')) browser = 'edge';
+  else if (s.includes('firefox/') || s.includes('fxios/')) browser = 'firefox';
+  else if (s.includes('chrome/') || s.includes('crios/')) browser = 'chrome';
+  else if (s.includes('safari/')) browser = 'safari';
+
+  let os: 'ios' | 'android' | 'macos' | 'windows' | 'linux' | 'other' = 'other';
+  const looksLikeMac = s.includes('mac os') || s.includes('macintosh');
+  if (s.includes('android')) os = 'android';
+  else if (s.includes('iphone') || s.includes('ipad') || s.includes('ipod')) os = 'ios';
+  else if (s.includes('windows')) os = 'windows';
+  // iPadOS desktop-mode disambiguation: Mac UA + touch-capable === iPad.
+  else if (looksLikeMac && maxTouchPoints > 1) os = 'ios';
+  else if (looksLikeMac) os = 'macos';
+  else if (s.includes('linux')) os = 'linux';
+
+  return { browser, os };
+}
+
 export function useMicRecorder({ maxMs = DEFAULT_MAX_MS }: { maxMs?: number } = {}): UseMicRecorder {
   const [state, setState] = useState<MicState>('idle');
   const [error, setError] = useState<MicError | null>(null);
@@ -133,10 +178,14 @@ export function useMicRecorder({ maxMs = DEFAULT_MAX_MS }: { maxMs?: number } = 
         setError({ cause: 'mic_denied', message: 'Microphone access denied.' });
         // Fire telemetry BEFORE flipping state back to idle so observers that
         // react to state transitions can rely on the event ordering.
-        void reportTutorEvent('mic.denied', {
-          user_agent: navigator.userAgent,
-          platform: navigator.platform,
-        });
+        // Send coarsened browser+OS buckets instead of the raw UA string to
+        // avoid mild user fingerprinting. navigator.platform is dropped — it's
+        // deprecated and redundant once os is in place.
+        const { browser, os } = coarseUserAgent(
+          navigator.userAgent || '',
+          navigator.maxTouchPoints || 0,
+        );
+        void reportTutorEvent('mic.denied', { browser, os });
       } else if (err.name === 'NotFoundError' || err.name === 'OverconstrainedError') {
         setError({ cause: 'no_device', message: 'No microphone found.' });
       } else {
