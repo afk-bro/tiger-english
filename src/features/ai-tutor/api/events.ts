@@ -1,7 +1,6 @@
+import { API_BASE } from "@/lib/api/config";
 import { supabase } from "@/lib/supabase";
 import type { FrontendEventType } from "../types";
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
 
 export async function reportTutorEvent(
   eventType: FrontendEventType,

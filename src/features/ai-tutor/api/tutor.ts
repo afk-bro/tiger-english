@@ -21,6 +21,7 @@
  * `/api/v1/ai-tutor/*` (public reads) and `/api/v1/me/ai-tutor/*`
  * (authenticated session lifecycle).
  */
+import { API_BASE } from "@/lib/api/config";
 import { supabase } from "@/lib/supabase";
 import type {
   FinishResponse,
@@ -30,10 +31,6 @@ import type {
   TutorScenarioSummary,
   TutorSessionDTO,
 } from "@/features/ai-tutor/types";
-
-const API_BASE: string =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:8000/api/v1";
 
 /**
  * Error thrown by the tutor client for any non-2xx response. The status

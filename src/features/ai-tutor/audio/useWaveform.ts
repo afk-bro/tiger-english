@@ -56,7 +56,13 @@ export function useWaveform({
         return;
       }
       const ctx2d = canvas.getContext('2d');
-      if (!ctx2d) return;
+      if (!ctx2d) {
+        // Vanishingly rare (e.g. WebGL-only context already taken), but if
+        // it happens we must keep the loop alive so we can recover on the
+        // next frame instead of leaving the analyser running without cleanup.
+        animationRef.current = requestAnimationFrame(draw);
+        return;
+      }
 
       analyser.getByteFrequencyData(dataArray);
       const w = canvas.width;

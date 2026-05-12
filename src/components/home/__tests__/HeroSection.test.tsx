@@ -10,15 +10,12 @@ vi.mock('react-i18next', () => ({
 
 import HeroSection from '../HeroSection';
 
-const ORIGINAL_ENV = { ...import.meta.env };
-
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 afterEach(() => {
-  // restore env between tests
-  Object.assign(import.meta.env, ORIGINAL_ENV);
+  vi.unstubAllEnvs();
 });
 
 function renderWithRouter() {
@@ -31,7 +28,7 @@ function renderWithRouter() {
 
 describe('HeroSection secondary CTA', () => {
   it('renders the AI Tutor CTA when VITE_AI_TUTOR_ENABLED === "true"', () => {
-    (import.meta.env as Record<string, string>).VITE_AI_TUTOR_ENABLED = 'true';
+    vi.stubEnv('VITE_AI_TUTOR_ENABLED', 'true');
 
     renderWithRouter();
     const link = screen.getByRole('link', { name: /Start speaking/i });
@@ -41,7 +38,7 @@ describe('HeroSection secondary CTA', () => {
   });
 
   it('renders the Flashcards CTA when VITE_AI_TUTOR_ENABLED is not "true"', () => {
-    (import.meta.env as Record<string, string>).VITE_AI_TUTOR_ENABLED = 'false';
+    vi.stubEnv('VITE_AI_TUTOR_ENABLED', 'false');
 
     renderWithRouter();
     // hero.try_flashcards is the key — our mock returns the key when no defaultValue

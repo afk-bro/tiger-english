@@ -44,7 +44,13 @@ export function RecordingPanel({
     return (
       <div className="fixed bottom-20 inset-x-0 z-20">
         <div className="mx-auto max-w-2xl px-4 flex justify-center">
-          <p className="text-sm text-gray-500">…</p>
+          <p
+            role="status"
+            aria-live="polite"
+            className="text-sm text-gray-500"
+          >
+            {t('tutor.session.processing', { defaultValue: 'Processing…' })}
+          </p>
         </div>
       </div>
     );

@@ -86,9 +86,13 @@ async def health_check():
         and not settings.anthropic_api_key.startswith("sk-ant-placeholder")
     )
 
+    # ai_tutor_enabled = master flag + STT provider actually usable. In stub
+    # mode (dev/test), no API key is required; in groq mode, the key must
+    # be configured.
+    stt_ready = settings.stt_provider == "stub" or bool(settings.groq_api_key)
     return {
         "status": "ok",
-        "ai_tutor_enabled": bool(settings.ai_tutor_enabled and settings.groq_api_key),
+        "ai_tutor_enabled": bool(settings.ai_tutor_enabled and stt_ready),
         "voice_enabled": settings.ai_voice_enabled,
         "anthropic_reachable": anthropic_reachable,
         "db_reachable": db_reachable,

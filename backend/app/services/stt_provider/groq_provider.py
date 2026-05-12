@@ -19,7 +19,12 @@ class GroqSTTProvider:
         self, audio: bytes, mime_type: str, prompt: str | None = None
     ) -> TranscriptResult:
         files = {"file": ("audio.bin", audio, mime_type)}
-        data = {"model": self.model, "language": "en", "response_format": "verbose_json"}
+        # Let Whisper auto-detect the language. The AI Tutor's VI-spoken and
+        # end-lesson detectors depend on accurate Vietnamese transcription
+        # (e.g. "kết thúc bài học"); pinning language='en' would force-fit
+        # Vietnamese utterances into English phonetics and defeat both
+        # detectors.
+        data = {"model": self.model, "response_format": "verbose_json"}
         if prompt:
             data["prompt"] = prompt[:200]  # Groq prompt cap
 
