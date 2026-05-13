@@ -52,6 +52,8 @@ const DEFAULT_MAX_MS = 20_000;
  *  - iOS Chrome / Firefox / Edge use distinct tokens (CriOS / FxiOS / EdgiOS)
  *    rather than the desktop tokens. Without those checks they'd all fall
  *    through to "safari".
+ *  - Edge on Android uses "EdgA/" (alongside "Chrome/"). Without the EdgA
+ *    check it would fall through to "chrome".
  *  - iPadOS 13+ in desktop mode reports a Mac UA with no "iPad" token. The
  *    standard workaround is to check `navigator.maxTouchPoints > 1` —
  *    desktop Macs report 0. Pass it in so the function stays pure.
@@ -66,7 +68,13 @@ export function coarseUserAgent(
   const s = ua.toLowerCase();
 
   let browser: 'safari' | 'chrome' | 'firefox' | 'edge' | 'other' = 'other';
-  if (s.includes('edg/') || s.includes('edge/') || s.includes('edgios/')) browser = 'edge';
+  if (
+    s.includes('edg/') ||
+    s.includes('edge/') ||
+    s.includes('edgios/') ||
+    s.includes('edga/')
+  )
+    browser = 'edge';
   else if (s.includes('firefox/') || s.includes('fxios/')) browser = 'firefox';
   else if (s.includes('chrome/') || s.includes('crios/')) browser = 'chrome';
   else if (s.includes('safari/')) browser = 'safari';

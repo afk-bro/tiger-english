@@ -257,6 +257,17 @@ describe('useMicRecorder', () => {
       ).toEqual({ browser: 'chrome', os: 'ios' });
     });
 
+    it('detects Edge on Android via the "EdgA/" token despite "Chrome/" being present', () => {
+      // Edge Android UA includes both "Chrome/" and "EdgA/" — without the
+      // EdgA check it would bucket as chrome.
+      expect(
+        coarseUserAgent(
+          'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 ' +
+            '(KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36 EdgA/124.0.0.0',
+        ),
+      ).toEqual({ browser: 'edge', os: 'android' });
+    });
+
     it('disambiguates iPadOS desktop-mode from a real Mac via maxTouchPoints', () => {
       // iPad on iPadOS 13+ in desktop mode: UA contains "Macintosh", no
       // "iPad" token, but reports maxTouchPoints > 0. Desktop Macs report 0.
