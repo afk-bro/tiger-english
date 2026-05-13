@@ -36,15 +36,20 @@ import type {
 // own limits — these are belt-and-suspenders to fail fast on tampered or
 // malformed blobs without burning a round-trip.
 //
-// A 20s WebM/Opus recording at 48 kHz is typically <500 KB, so 5 MB sits
-// comfortably above any legitimate ceiling. The 20s recorder cap lives in
-// `useMicRecorder.ts` as `maxMs` (default 20_000).
+// A 20s WebM/Opus recording at 48 kHz is typically <500 KB, so 5 MiB
+// (5,242,880 bytes) sits comfortably above any legitimate ceiling. The 20s
+// recorder cap lives in `useMicRecorder.ts` as `maxMs` (default 20_000).
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
 
 /**
- * Error thrown by the tutor client for any non-2xx response. The status
- * and raw body are preserved so page-level hooks can branch on (e.g.)
- * 503 + body containing "stt_failed".
+ * Error thrown by the tutor client for either:
+ *  - any non-2xx HTTP response (status + raw body from the server), or
+ *  - client-side guardrail rejections in `submitTurn` (no HTTP round-trip;
+ *    status mirrors the would-be server semantics — 413 oversize, 415 bad
+ *    MIME — and `path` is prefixed with `client:` so callers can tell them
+ *    apart from server-origin errors).
+ *
+ * Page-level hooks can branch on (e.g.) 503 + body containing "stt_failed".
  */
 export class TutorAPIError extends Error {
   readonly status: number;
