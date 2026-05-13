@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import AuthHomeLegacy from "./AuthHomeLegacy";
 import { TutorHeroCard } from "@/components/home/authenticated/TutorHeroCard";
 import { ScenarioShortcutsRow } from "@/components/home/authenticated/ScenarioShortcutsRow";
@@ -23,8 +23,14 @@ function AuthHomeTutorFirst() {
   } = useActiveTutorSession();
   const { data: scenarios, isLoading: listLoading } = useScenariosList();
 
+  // Fire-once on the first null → Error transition. The ref guard prevents
+  // double-emission under React.StrictMode (which intentionally re-runs
+  // effects in dev) and on any future re-fetch attempts within the same
+  // page mount — one fetch failure should produce exactly one telemetry row.
+  const reportedFetchFailureRef = useRef(false);
   useEffect(() => {
-    if (activeError) {
+    if (activeError && !reportedFetchFailureRef.current) {
+      reportedFetchFailureRef.current = true;
       void reportTutorEvent("home.tutor_hero.active_session_fetch_failed");
     }
   }, [activeError]);

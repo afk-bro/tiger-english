@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { StrictMode } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import AuthHome from "../AuthHome";
@@ -141,6 +142,35 @@ describe("AuthHome (new, tutor-first)", () => {
       expect(mockedReport).toHaveBeenCalledWith(
         "home.tutor_hero.active_session_fetch_failed",
       ),
+    );
+  });
+
+  it("fires the fetch-failed telemetry only once under StrictMode", async () => {
+    // React.StrictMode intentionally double-invokes effects in dev. Without
+    // the ref guard in AuthHomeTutorFirst, one failing request would emit
+    // this event twice (and the same logic would double-fire on any future
+    // re-render with the same error). Pin both behaviours here.
+    mockedActive.mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: new Error("network"),
+    });
+    mockedList.mockReturnValue({ data: [], isLoading: false, error: null });
+
+    render(
+      <StrictMode>
+        <MemoryRouter>
+          <AuthHome />
+        </MemoryRouter>
+      </StrictMode>,
+    );
+
+    await waitFor(() =>
+      expect(
+        mockedReport.mock.calls.filter(
+          (c) => c[0] === "home.tutor_hero.active_session_fetch_failed",
+        ),
+      ).toHaveLength(1),
     );
   });
 });
