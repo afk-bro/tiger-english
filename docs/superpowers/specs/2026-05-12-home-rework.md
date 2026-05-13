@@ -121,8 +121,8 @@ Lives at: `src/components/home/authenticated/ContinueLessonCard.tsx`
 ## i18n
 
 New keys under `authhome.*`:
-- `authhome.tutor_hero.active.title` / `.cta`
-- `authhome.tutor_hero.featured.title` / `.cta` (uses `{{scenario}}` placeholder)
+- `authhome.tutor_hero.active.eyebrow` / `.subtitle` (interpolates `{{tasks_done}}` + `{{tasks_total}}`) / `.cta`
+- `authhome.tutor_hero.featured.eyebrow` / `.cta`
 - `authhome.tutor_hero.cold.title` / `.cta`
 - `authhome.scenario_shortcuts.heading` / `.browse_all`
 - `authhome.today_review.empty`

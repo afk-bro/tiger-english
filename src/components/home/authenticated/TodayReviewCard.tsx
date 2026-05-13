@@ -32,6 +32,7 @@ export function TodayReviewCard() {
             {t("authhome.today_review.due_count", { count })}
           </p>
           <button
+            type="button"
             onClick={() => {
               void reportTutorEvent("home.review.click", { due_count: count });
               navigate("/review");

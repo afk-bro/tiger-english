@@ -113,7 +113,9 @@ async def get_active_session(
 ):
     """Most-recently-active session for this user, or null."""
     _require_enabled()
-    return TutorSessionService(supabase, _get_stt()).get_active_session(user_id)
+    # `get_active_session` doesn't use STT — skip provider construction on this
+    # /home hot path. (`_get_stt()` may read env / construct a Groq client.)
+    return TutorSessionService(supabase, stt=None).get_active_session(user_id)
 
 
 @router.get("/me/ai-tutor/sessions/{session_id}")

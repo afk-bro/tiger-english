@@ -53,6 +53,7 @@ export function TutorHeroCard({
           })}
         </p>
         <button
+          type="button"
           data-testid="tutor-hero-cta"
           onClick={() => {
             void reportTutorEvent("home.hero.click", {
@@ -86,6 +87,7 @@ export function TutorHeroCard({
           {title}
         </h2>
         <button
+          type="button"
           data-testid="tutor-hero-cta"
           onClick={() => {
             void reportTutorEvent("home.hero.click", {
@@ -111,6 +113,7 @@ export function TutorHeroCard({
         {t("authhome.tutor_hero.cold.title")}
       </h2>
       <button
+        type="button"
         data-testid="tutor-hero-cta"
         onClick={() => {
           void reportTutorEvent("home.hero.click", { state: "cold" });

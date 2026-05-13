@@ -569,6 +569,14 @@ class TutorSessionService:
         )
         scenario = scenario_result.data
         if not scenario:
+            # Data-integrity issue: an active session row points at a missing
+            # scenario. Log so it's observable, but degrade the page gracefully
+            # (the hero falls through to the featured/cold state).
+            logger.warning(
+                "get_active_session: session %s references missing scenario %s",
+                row["id"],
+                row["scenario_id"],
+            )
             return None
 
         tasks_result = (

@@ -453,35 +453,6 @@
       "members": "{{count}} 名成员",
       "create": "创建学习小组",
       "invite": "邀请加入小组"
-    },
-    "tutor_hero": {
-      "active": {
-        "eyebrow": "Pick up where you left off",
-        "subtitle": "{{tasks_done}} of {{tasks_total}} tasks complete",
-        "cta": "Continue speaking"
-      },
-      "featured": {
-        "eyebrow": "Start speaking practice",
-        "cta": "Start"
-      },
-      "cold": {
-        "title": "Try your first conversation",
-        "cta": "Open AI Tutor"
-      }
-    },
-    "scenario_shortcuts": {
-      "heading": "Scenarios",
-      "browse_all": "Browse all →"
-    },
-    "today_review": {
-      "heading": "Today's review",
-      "due_count": "{{count}} cards due",
-      "cta": "Start review",
-      "empty": "All caught up — come back tomorrow."
-    },
-    "continue_lesson": {
-      "heading": "Lessons",
-      "cta": "Browse lessons"
     }
   },
   "auth": {

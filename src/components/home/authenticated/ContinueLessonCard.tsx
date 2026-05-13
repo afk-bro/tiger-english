@@ -10,6 +10,7 @@ export function ContinueLessonCard() {
         {t("authhome.continue_lesson.heading")}
       </h3>
       <button
+        type="button"
         onClick={() => navigate("/lessons")}
         className="self-start px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"
       >
