@@ -670,6 +670,60 @@ def test_submit_turn_passes_header_to_stub(client_with_mock_session_service):
     assert captured.get("text") == "hello world"
 
 
+def test_get_active_session_returns_null_body(client_with_mock_session_service):
+    """GET /me/ai-tutor/sessions/active returns 200 + null body when no active session."""
+    client, mock_service = client_with_mock_session_service
+    mock_service.get_active_session.return_value = None
+
+    res = client.get("/api/v1/me/ai-tutor/sessions/active")
+
+    assert res.status_code == 200
+    assert res.json() is None
+    mock_service.get_active_session.assert_called_once()
+
+
+def test_get_active_session_returns_dto_when_present(client_with_mock_session_service):
+    """GET /me/ai-tutor/sessions/active returns the serialized ActiveSessionDTO."""
+    from app.models.tutor import ActiveSessionDTO
+    from uuid import UUID
+    from datetime import datetime, timezone
+
+    client, mock_service = client_with_mock_session_service
+    dto = ActiveSessionDTO(
+        session_id=UUID("22222222-2222-2222-2222-222222222222"),
+        scenario_slug="meeting-someone-new",
+        scenario_title_en="Meeting someone new",
+        scenario_title_vi="Gặp người mới",
+        last_activity_at=datetime(2026, 5, 12, 12, 0, 0, tzinfo=timezone.utc),
+        tasks_done=2,
+        tasks_total=4,
+    )
+    mock_service.get_active_session.return_value = dto
+
+    res = client.get("/api/v1/me/ai-tutor/sessions/active")
+
+    assert res.status_code == 200
+    body = res.json()
+    assert body["session_id"] == "22222222-2222-2222-2222-222222222222"
+    assert body["scenario_slug"] == "meeting-someone-new"
+    assert body["scenario_title_en"] == "Meeting someone new"
+    assert body["scenario_title_vi"] == "Gặp người mới"
+    assert body["tasks_done"] == 2
+    assert body["tasks_total"] == 4
+
+
+def test_get_active_session_does_not_match_uuid_path(client_with_mock_session_service):
+    """The literal string 'active' is matched BEFORE /sessions/{session_id} so it
+    doesn't 422 trying to parse 'active' as a UUID."""
+    client, mock_service = client_with_mock_session_service
+    mock_service.get_active_session.return_value = None
+
+    res = client.get("/api/v1/me/ai-tutor/sessions/active")
+
+    # 200, not 422 (which is what would happen if {session_id}: UUID captured "active").
+    assert res.status_code == 200
+
+
 def test_post_event_swallows_supabase_error():
     supabase_mock = MagicMock()
     supabase_mock.table.return_value.insert.return_value.execute.side_effect = RuntimeError("db down")

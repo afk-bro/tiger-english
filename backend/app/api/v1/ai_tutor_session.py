@@ -12,6 +12,7 @@ from ...core.supabase import get_supabase_admin
 from ...models.tutor import (
     StartSessionRequest, StartSessionResponse, TurnResponse, FinishResponse,
     TutorScenarioSummary, TutorScenarioDetail, TutorEventRequest,
+    ActiveSessionDTO,
 )
 from ...services.stt_provider import GroqSTTProvider, StubSTTProvider
 from ...services.tutor_scenario_service import TutorScenarioService
@@ -100,6 +101,19 @@ async def start_session(
         )
     except ScenarioNotFoundError:
         raise HTTPException(404, "scenario_not_found")
+
+
+@router.get(
+    "/me/ai-tutor/sessions/active",
+    response_model=ActiveSessionDTO | None,
+)
+async def get_active_session(
+    user_id: UUID = Depends(get_current_user),
+    supabase=Depends(get_supabase_admin),
+):
+    """Most-recently-active session for this user, or null."""
+    _require_enabled()
+    return TutorSessionService(supabase, _get_stt()).get_active_session(user_id)
 
 
 @router.get("/me/ai-tutor/sessions/{session_id}")
