@@ -17,6 +17,7 @@ from uuid import UUID
 
 from app.core.storage import tutor_audio_url
 from app.models.tutor import (
+    ActiveSessionDTO,
     EvaluationResult,
     FinishResponse,
     StartSessionResponse,
@@ -530,6 +531,72 @@ class TutorSessionService:
                 "_reason": reason,
             },
         ).execute()
+
+    # ------------------------------------------------------------------
+    # Read: active-session lookup for the home hero card.
+    # ------------------------------------------------------------------
+
+    def get_active_session(self, user_id: UUID) -> ActiveSessionDTO | None:
+        """Return the user's most-recently-active session, or None.
+
+        Selects the latest row in `ai_tutor_sessions` with status='active'
+        for this user (ordered by last_activity_at desc, limit 1). The partial
+        unique index already enforces at-most-one per (user, scenario); this
+        method picks one across scenarios.
+        """
+        row_result = (
+            self.supabase.table("ai_tutor_sessions")
+            .select(
+                "id, scenario_id, completed_task_ids, last_activity_at, started_at"
+            )
+            .eq("user_id", str(user_id))
+            .eq("status", "active")
+            .order("last_activity_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        rows = row_result.data or []
+        if not rows:
+            return None
+        row = rows[0]
+
+        scenario_result = (
+            self.supabase.table("ai_tutor_scenarios")
+            .select("slug, title_en, title_vi")
+            .eq("id", row["scenario_id"])
+            .single()
+            .execute()
+        )
+        scenario = scenario_result.data
+        if not scenario:
+            # Data-integrity issue: an active session row points at a missing
+            # scenario. Log so it's observable, but degrade the page gracefully
+            # (the hero falls through to the featured/cold state).
+            logger.warning(
+                "get_active_session: session %s references missing scenario %s",
+                row["id"],
+                row["scenario_id"],
+            )
+            return None
+
+        tasks_result = (
+            self.supabase.table("ai_tutor_scenario_tasks")
+            .select("id", count="exact")
+            .eq("scenario_id", row["scenario_id"])
+            .execute()
+        )
+        tasks_total = tasks_result.count or 0
+        tasks_done = len(row.get("completed_task_ids") or [])
+
+        return ActiveSessionDTO(
+            session_id=row["id"],
+            scenario_slug=scenario["slug"],
+            scenario_title_en=scenario["title_en"],
+            scenario_title_vi=scenario["title_vi"],
+            last_activity_at=row.get("last_activity_at") or row["started_at"],
+            tasks_done=tasks_done,
+            tasks_total=tasks_total,
+        )
 
     # ------------------------------------------------------------------
     # Helpers.

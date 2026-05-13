@@ -461,6 +461,35 @@
       "members": "{{count}} thành viên",
       "create": "Tạo nhóm học",
       "invite": "Mời vào nhóm"
+    },
+    "tutor_hero": {
+      "active": {
+        "eyebrow": "Tiếp tục từ chỗ bạn đã dừng",
+        "subtitle": "{{tasks_done}} trong {{tasks_total}} nhiệm vụ hoàn thành",
+        "cta": "Tiếp tục nói"
+      },
+      "featured": {
+        "eyebrow": "Bắt đầu luyện nói",
+        "cta": "Bắt đầu"
+      },
+      "cold": {
+        "title": "Thử cuộc trò chuyện đầu tiên",
+        "cta": "Mở AI Tutor"
+      }
+    },
+    "scenario_shortcuts": {
+      "heading": "Các kịch bản",
+      "browse_all": "Xem tất cả →"
+    },
+    "today_review": {
+      "heading": "Ôn tập hôm nay",
+      "due_count": "{{count}} thẻ cần ôn",
+      "cta": "Bắt đầu ôn tập",
+      "empty": "Đã ôn xong — quay lại vào ngày mai."
+    },
+    "continue_lesson": {
+      "heading": "Bài học",
+      "cta": "Duyệt bài học"
     }
   },
   "auth": {

@@ -12,6 +12,7 @@ from ...core.supabase import get_supabase_admin
 from ...models.tutor import (
     StartSessionRequest, StartSessionResponse, TurnResponse, FinishResponse,
     TutorScenarioSummary, TutorScenarioDetail, TutorEventRequest,
+    ActiveSessionDTO,
 )
 from ...services.stt_provider import GroqSTTProvider, StubSTTProvider
 from ...services.tutor_scenario_service import TutorScenarioService
@@ -100,6 +101,21 @@ async def start_session(
         )
     except ScenarioNotFoundError:
         raise HTTPException(404, "scenario_not_found")
+
+
+@router.get(
+    "/me/ai-tutor/sessions/active",
+    response_model=ActiveSessionDTO | None,
+)
+async def get_active_session(
+    user_id: UUID = Depends(get_current_user),
+    supabase=Depends(get_supabase_admin),
+):
+    """Most-recently-active session for this user, or null."""
+    _require_enabled()
+    # `get_active_session` doesn't use STT — skip provider construction on this
+    # /home hot path. (`_get_stt()` may read env / construct a Groq client.)
+    return TutorSessionService(supabase, stt=None).get_active_session(user_id)
 
 
 @router.get("/me/ai-tutor/sessions/{session_id}")
@@ -221,7 +237,16 @@ async def abandon_session(
 # Frontend telemetry events (Task 5.3)
 # ----------------------------------------------------------------------
 
-_ALLOWED_FRONTEND_EVENTS = {"mic.denied", "audio.fallback", "turn.failed.network", "unsupported_browser"}
+_ALLOWED_FRONTEND_EVENTS = {
+    "mic.denied",
+    "audio.fallback",
+    "turn.failed.network",
+    "unsupported_browser",
+    "home.hero.click",
+    "home.scenario_shortcut.click",
+    "home.review.click",
+    "home.tutor_hero.active_session_fetch_failed",
+}
 
 
 @router.post("/me/ai-tutor/events", status_code=204)

@@ -1,32 +1,54 @@
-// src/pages/AuthHome.tsx
-import ContinueStudyingCard from "@/components/home/authenticated/ContinueStudyingCard";
-import RecommendedNextCard from "@/components/home/authenticated/RecommendedNextCard";
-import InviteFriendsCard from "@/components/home/authenticated/InviteFriendsCard";
-import StudyGroupsCard from "@/components/home/authenticated/StudyGroupsCard";
-import {
-  mockContinueStudying,
-  mockRecommendedItems,
-  mockInviteFriends,
-  mockStudyGroups,
-} from "@/mocks/authHome.mock";
+import { useEffect, useRef } from "react";
+import AuthHomeLegacy from "./AuthHomeLegacy";
+import { TutorHeroCard } from "@/components/home/authenticated/TutorHeroCard";
+import { ScenarioShortcutsRow } from "@/components/home/authenticated/ScenarioShortcutsRow";
+import { TodayReviewCard } from "@/components/home/authenticated/TodayReviewCard";
+import { ContinueLessonCard } from "@/components/home/authenticated/ContinueLessonCard";
+import { useActiveTutorSession } from "@/features/ai-tutor/hooks/useActiveTutorSession";
+import { useScenariosList } from "@/features/ai-tutor/hooks/useScenariosList";
+import { reportTutorEvent } from "@/features/ai-tutor/api/events";
 
 export default function AuthHome() {
+  const aiTutorEnabled = import.meta.env.VITE_AI_TUTOR_ENABLED === "true";
+  if (!aiTutorEnabled) return <AuthHomeLegacy />;
+
+  return <AuthHomeTutorFirst />;
+}
+
+function AuthHomeTutorFirst() {
+  const {
+    data: activeSession,
+    isLoading: activeLoading,
+    error: activeError,
+  } = useActiveTutorSession();
+  const { data: scenarios, isLoading: listLoading } = useScenariosList();
+
+  // Fire-once on the first null → Error transition. The ref guard prevents
+  // double-emission under React.StrictMode (which intentionally re-runs
+  // effects in dev) and on any future re-fetch attempts within the same
+  // page mount — one fetch failure should produce exactly one telemetry row.
+  const reportedFetchFailureRef = useRef(false);
+  useEffect(() => {
+    if (activeError && !reportedFetchFailureRef.current) {
+      reportedFetchFailureRef.current = true;
+      void reportTutorEvent("home.tutor_hero.active_session_fetch_failed");
+    }
+  }, [activeError]);
+
+  const featuredScenario =
+    scenarios && scenarios.length > 0 ? scenarios[0] : null;
+
   return (
     <div className="max-w-5xl mx-auto space-y-4 pt-6">
-      {/* Top row: 2/3 + 1/3 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2">
-          <ContinueStudyingCard data={mockContinueStudying} isLoading={false} />
-        </div>
-        <div className="md:col-span-1">
-          <RecommendedNextCard data={mockRecommendedItems} isLoading={false} />
-        </div>
-      </div>
-
-      {/* Bottom row: 1/2 + 1/2 */}
+      <TutorHeroCard
+        activeSession={activeSession}
+        featuredScenario={featuredScenario}
+        isLoading={activeLoading || listLoading}
+      />
+      <ScenarioShortcutsRow scenarios={scenarios} isLoading={listLoading} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <InviteFriendsCard data={mockInviteFriends} isLoading={false} />
-        <StudyGroupsCard data={mockStudyGroups} isLoading={false} />
+        <TodayReviewCard />
+        <ContinueLessonCard />
       </div>
     </div>
   );

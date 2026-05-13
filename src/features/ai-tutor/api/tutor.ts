@@ -24,6 +24,7 @@
 import { API_BASE } from "@/lib/api/config";
 import { supabase } from "@/lib/supabase";
 import type {
+  ActiveTutorSessionDTO,
   FinishResponse,
   StartSessionResponse,
   TurnResponse,
@@ -139,6 +140,13 @@ class TutorAPI {
   getSession(sessionId: string): Promise<TutorSessionDTO> {
     return this.authedFetch<TutorSessionDTO>(
       `/me/ai-tutor/sessions/${encodeURIComponent(sessionId)}`,
+      { method: "GET" },
+    );
+  }
+
+  getActiveSession(): Promise<ActiveTutorSessionDTO | null> {
+    return this.authedFetch<ActiveTutorSessionDTO | null>(
+      "/me/ai-tutor/sessions/active",
       { method: "GET" },
     );
   }
