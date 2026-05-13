@@ -19,9 +19,15 @@ vi.mock('@/features/ai-tutor/hooks/useScenariosList', () => ({
 vi.mock('@/features/review/useReviewCount', () => ({
   useReviewCount: vi.fn(() => ({ count: 0, isLoading: false })),
 }));
+vi.mock('@/features/ai-tutor/api/events', () => ({
+  reportTutorEvent: vi.fn(() => Promise.resolve()),
+}));
 
 import { useActiveTutorSession } from '@/features/ai-tutor/hooks/useActiveTutorSession';
 import { useScenariosList } from '@/features/ai-tutor/hooks/useScenariosList';
+import { reportTutorEvent } from '@/features/ai-tutor/api/events';
+
+const mockedReport = reportTutorEvent as ReturnType<typeof vi.fn>;
 
 const mockedActive = useActiveTutorSession as ReturnType<typeof vi.fn>;
 const mockedList = useScenariosList as ReturnType<typeof vi.fn>;
@@ -37,6 +43,7 @@ describe('AuthHome (new, tutor-first)', () => {
   beforeEach(() => {
     mockedActive.mockReset();
     mockedList.mockReset();
+    mockedReport.mockClear();
     vi.stubEnv('VITE_AI_TUTOR_ENABLED', 'true');
   });
 
@@ -104,5 +111,22 @@ describe('AuthHome (new, tutor-first)', () => {
     expect(screen.queryByTestId('tutor-hero-active')).toBeNull();
     expect(screen.queryByTestId('tutor-hero-featured')).toBeNull();
     expect(screen.queryByTestId('tutor-hero-cold')).toBeNull();
+  });
+
+  it('fires telemetry when useActiveTutorSession errors', async () => {
+    mockedActive.mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: new Error('network'),
+    });
+    mockedList.mockReturnValue({ data: [], isLoading: false, error: null });
+
+    renderHome();
+
+    await waitFor(() =>
+      expect(mockedReport).toHaveBeenCalledWith(
+        'home.tutor_hero.active_session_fetch_failed',
+      ),
+    );
   });
 });
