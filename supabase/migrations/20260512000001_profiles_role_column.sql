@@ -12,4 +12,4 @@ ALTER TABLE profiles
   CHECK (role IN ('user', 'teacher', 'admin'));
 
 COMMENT ON COLUMN profiles.role IS
-  'UI-gating role: ''user'' | ''teacher'' | ''admin''. Frontend route guards (RequireTeacher, RequireAdmin) read this. Backend /admin endpoints use SUPER_ADMIN_USER_IDS env allowlist as the authoritative gate, not this column.';
+  'UI-gating role: ''user'' | ''teacher'' | ''admin''. The frontend RequireTeacher route guard reads this (a RequireAdmin guard lands in a follow-up PR). Backend /admin endpoints use SUPER_ADMIN_USER_IDS env allowlist as the authoritative gate, not this column.';
