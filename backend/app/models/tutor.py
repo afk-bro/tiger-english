@@ -150,7 +150,9 @@ class FinishResponse(BaseModel):
 
 class TutorEventRequest(BaseModel):
     event_type: Literal[
-        'mic.denied', 'audio.fallback', 'turn.failed.network', 'unsupported_browser'
+        'mic.denied', 'audio.fallback', 'turn.failed.network', 'unsupported_browser',
+        'home.hero.click', 'home.scenario_shortcut.click', 'home.review.click',
+        'home.tutor_hero.active_session_fetch_failed'
     ]
     payload: dict[str, Any] = Field(default_factory=dict)
     session_id: UUID | None = None

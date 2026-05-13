@@ -235,7 +235,16 @@ async def abandon_session(
 # Frontend telemetry events (Task 5.3)
 # ----------------------------------------------------------------------
 
-_ALLOWED_FRONTEND_EVENTS = {"mic.denied", "audio.fallback", "turn.failed.network", "unsupported_browser"}
+_ALLOWED_FRONTEND_EVENTS = {
+    "mic.denied",
+    "audio.fallback",
+    "turn.failed.network",
+    "unsupported_browser",
+    "home.hero.click",
+    "home.scenario_shortcut.click",
+    "home.review.click",
+    "home.tutor_hero.active_session_fetch_failed",
+}
 
 
 @router.post("/me/ai-tutor/events", status_code=204)

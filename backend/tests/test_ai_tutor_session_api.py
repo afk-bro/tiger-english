@@ -741,3 +741,28 @@ def test_post_event_swallows_supabase_error():
 
     # Telemetry write failure must NOT fail the calling page.
     assert res.status_code == 204
+
+
+def test_post_event_accepts_new_home_events():
+    """Home-page telemetry event types are accepted by /me/ai-tutor/events."""
+    supabase_mock = MagicMock()
+    insert_mock = supabase_mock.table.return_value.insert
+    insert_mock.return_value.execute.return_value = None
+
+    app, client = _events_client(supabase_mock)
+    try:
+        with client as c:
+            for event_type in [
+                "home.hero.click",
+                "home.scenario_shortcut.click",
+                "home.review.click",
+                "home.tutor_hero.active_session_fetch_failed",
+            ]:
+                res = c.post(
+                    "/api/v1/me/ai-tutor/events",
+                    json={"event_type": event_type, "payload": {}},
+                    headers={"Authorization": "Bearer fake-token"},
+                )
+                assert res.status_code == 204, f"{event_type}: {res.status_code} {res.text}"
+    finally:
+        app.dependency_overrides.clear()
