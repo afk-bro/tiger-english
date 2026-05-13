@@ -19,6 +19,12 @@ vi.mock('@/features/review/useReviewCount', () => ({
 import { useReviewCount } from '@/features/review/useReviewCount';
 const mockedUseReviewCount = useReviewCount as ReturnType<typeof vi.fn>;
 
+vi.mock('@/features/ai-tutor/api/events', () => ({
+  reportTutorEvent: vi.fn(() => Promise.resolve()),
+}));
+import { reportTutorEvent } from '@/features/ai-tutor/api/events';
+const mockedReport = reportTutorEvent as ReturnType<typeof vi.fn>;
+
 const renderInRouter = (ui: React.ReactElement) =>
   render(<MemoryRouter>{ui}</MemoryRouter>);
 
@@ -26,6 +32,7 @@ describe('TodayReviewCard', () => {
   beforeEach(() => {
     navigateMock.mockReset();
     mockedUseReviewCount.mockReset();
+    mockedReport.mockClear();
   });
 
   it('renders a skeleton while loading', () => {
@@ -48,5 +55,6 @@ describe('TodayReviewCard', () => {
     expect(screen.getByText(/due_count 7/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button'));
     expect(navigateMock).toHaveBeenCalledWith('/review');
+    expect(mockedReport).toHaveBeenCalledWith('home.review.click', { due_count: 7 });
   });
 });

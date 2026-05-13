@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useReviewCount } from "@/features/review/useReviewCount";
+import { reportTutorEvent } from "@/features/ai-tutor/api/events";
 
 export function TodayReviewCard() {
   const { t } = useTranslation();
@@ -31,7 +32,10 @@ export function TodayReviewCard() {
             {t("authhome.today_review.due_count", { count })}
           </p>
           <button
-            onClick={() => navigate("/review")}
+            onClick={() => {
+              void reportTutorEvent('home.review.click', { due_count: count });
+              navigate("/review");
+            }}
             className="self-start px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"
           >
             {t("authhome.today_review.cta")}

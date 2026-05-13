@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ScenarioCard } from "@/features/ai-tutor/components/ScenarioCard";
 import type { TutorScenarioSummary } from "@/features/ai-tutor/types";
+import { reportTutorEvent } from "@/features/ai-tutor/api/events";
 
 interface Props {
   scenarios: TutorScenarioSummary[] | null;
@@ -43,7 +44,13 @@ export function ScenarioShortcutsRow({ scenarios, isLoading }: Props) {
       </div>
       <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
         {visible.map((s) => (
-          <div key={s.slug} className="min-w-[14rem] flex-shrink-0">
+          <div
+            key={s.slug}
+            className="min-w-[14rem] flex-shrink-0"
+            onClick={() =>
+              void reportTutorEvent('home.scenario_shortcut.click', { scenario_slug: s.slug })
+            }
+          >
             <ScenarioCard scenario={s} />
           </div>
         ))}

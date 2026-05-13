@@ -116,7 +116,14 @@ export interface FinishResponse {
 }
 
 export type FrontendEventType =
-  | 'mic.denied' | 'audio.fallback' | 'turn.failed.network' | 'unsupported_browser';
+  | 'mic.denied'
+  | 'audio.fallback'
+  | 'turn.failed.network'
+  | 'unsupported_browser'
+  | 'home.hero.click'
+  | 'home.scenario_shortcut.click'
+  | 'home.review.click'
+  | 'home.tutor_hero.active_session_fetch_failed';
 
 export interface ActiveTutorSessionDTO {
   session_id: string;

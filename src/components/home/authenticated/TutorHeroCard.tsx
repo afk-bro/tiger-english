@@ -4,6 +4,7 @@ import type {
   ActiveTutorSessionDTO,
   TutorScenarioSummary,
 } from "@/features/ai-tutor/types";
+import { reportTutorEvent } from "@/features/ai-tutor/api/events";
 
 interface Props {
   activeSession: ActiveTutorSessionDTO | null;
@@ -53,11 +54,16 @@ export function TutorHeroCard({
         </p>
         <button
           data-testid="tutor-hero-cta"
-          onClick={() =>
+          onClick={() => {
+            void reportTutorEvent('home.hero.click', {
+              state: 'active',
+              scenario_slug: activeSession.scenario_slug,
+              session_id: activeSession.session_id,
+            });
             navigate(
               `/ai-tutor/scenarios/${activeSession.scenario_slug}/session/${activeSession.session_id}`,
-            )
-          }
+            );
+          }}
           className="self-start px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"
         >
           {t("authhome.tutor_hero.active.cta")}
@@ -81,9 +87,13 @@ export function TutorHeroCard({
         </h2>
         <button
           data-testid="tutor-hero-cta"
-          onClick={() =>
-            navigate(`/ai-tutor/scenarios/${featuredScenario.slug}/briefing`)
-          }
+          onClick={() => {
+            void reportTutorEvent('home.hero.click', {
+              state: 'featured',
+              scenario_slug: featuredScenario.slug,
+            });
+            navigate(`/ai-tutor/scenarios/${featuredScenario.slug}/briefing`);
+          }}
           className="self-start px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"
         >
           {t("authhome.tutor_hero.featured.cta")}
@@ -102,7 +112,10 @@ export function TutorHeroCard({
       </h2>
       <button
         data-testid="tutor-hero-cta"
-        onClick={() => navigate("/ai-tutor")}
+        onClick={() => {
+          void reportTutorEvent('home.hero.click', { state: 'cold' });
+          navigate("/ai-tutor");
+        }}
         className="self-start px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"
       >
         {t("authhome.tutor_hero.cold.cta")}

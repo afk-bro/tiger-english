@@ -1,12 +1,19 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { ScenarioShortcutsRow } from '../ScenarioShortcutsRow';
-import type { TutorScenarioSummary } from '@/features/ai-tutor/types';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }),
 }));
+
+vi.mock('@/features/ai-tutor/api/events', () => ({
+  reportTutorEvent: vi.fn(() => Promise.resolve()),
+}));
+import { reportTutorEvent } from '@/features/ai-tutor/api/events';
+const mockedReport = reportTutorEvent as ReturnType<typeof vi.fn>;
+
+import { ScenarioShortcutsRow } from '../ScenarioShortcutsRow';
+import type { TutorScenarioSummary } from '@/features/ai-tutor/types';
 
 const renderInRouter = (ui: React.ReactElement) =>
   render(<MemoryRouter>{ui}</MemoryRouter>);
@@ -17,6 +24,10 @@ const scenarios: TutorScenarioSummary[] = [
 ];
 
 describe('ScenarioShortcutsRow', () => {
+  beforeEach(() => {
+    mockedReport.mockClear();
+  });
+
   it('renders nothing when list is empty', () => {
     const { container } = renderInRouter(<ScenarioShortcutsRow scenarios={[]} isLoading={false} />);
     expect(container.firstChild).toBeNull();
@@ -40,5 +51,8 @@ describe('ScenarioShortcutsRow', () => {
     expect(linkA).toHaveAttribute('href', '/ai-tutor/scenarios/a/phrasebook');
     expect(linkB).toHaveAttribute('href', '/ai-tutor/scenarios/b/phrasebook');
     expect(screen.getByRole('link', { name: /browse_all/ })).toHaveAttribute('href', '/ai-tutor');
+
+    fireEvent.click(linkA);
+    expect(mockedReport).toHaveBeenCalledWith('home.scenario_shortcut.click', { scenario_slug: 'a' });
   });
 });
