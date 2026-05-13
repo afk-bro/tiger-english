@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import AuthHome from "../AuthHome";
@@ -46,6 +46,12 @@ describe("AuthHome (new, tutor-first)", () => {
     mockedList.mockReset();
     mockedReport.mockClear();
     vi.stubEnv("VITE_AI_TUTOR_ENABLED", "true");
+  });
+
+  // Prevent the env stub set above (and the `'false'` stub in the legacy-path
+  // test) from leaking into later tests in the same Vitest worker.
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("renders the active-session hero when there is an active session", async () => {
