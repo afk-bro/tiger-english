@@ -241,6 +241,39 @@ describe("tutorAPI.abandonSession", () => {
   });
 });
 
+describe("tutorAPI.getActiveSession", () => {
+  it("returns the parsed ActiveTutorSessionDTO on 200", async () => {
+    const body = {
+      session_id: "s1",
+      scenario_slug: "meeting-someone-new",
+      scenario_title_en: "Meeting someone new",
+      scenario_title_vi: "Gặp người mới",
+      last_activity_at: "2026-05-12T12:00:00Z",
+      tasks_done: 2,
+      tasks_total: 4,
+    };
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, body));
+
+    const { tutorAPI } = await import("../tutor");
+    const result = await tutorAPI.getActiveSession();
+
+    expect(result).toEqual(body);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toMatch(/\/me\/ai-tutor\/sessions\/active$/);
+    expect(init.method).toBe("GET");
+    expect(getHeader(init, "authorization")).toBe("Bearer fake-token");
+  });
+
+  it("returns null when the server responds with null body", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, null));
+
+    const { tutorAPI } = await import("../tutor");
+    const result = await tutorAPI.getActiveSession();
+
+    expect(result).toBeNull();
+  });
+});
+
 describe("tutorAPI auth", () => {
   it("throws a clear error when there is no Supabase session", async () => {
     mockGetSession.mockResolvedValue({ data: { session: null } });

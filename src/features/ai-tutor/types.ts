@@ -117,3 +117,13 @@ export interface FinishResponse {
 
 export type FrontendEventType =
   | 'mic.denied' | 'audio.fallback' | 'turn.failed.network' | 'unsupported_browser';
+
+export interface ActiveTutorSessionDTO {
+  session_id: string;
+  scenario_slug: string;
+  scenario_title_en: string;
+  scenario_title_vi: string;
+  last_activity_at: string;
+  tasks_done: number;
+  tasks_total: number;
+}
