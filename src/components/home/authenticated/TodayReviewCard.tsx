@@ -33,7 +33,7 @@ export function TodayReviewCard() {
           </p>
           <button
             onClick={() => {
-              void reportTutorEvent('home.review.click', { due_count: count });
+              void reportTutorEvent("home.review.click", { due_count: count });
               navigate("/review");
             }}
             className="self-start px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"

@@ -1,26 +1,26 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { useActiveTutorSession } from '../useActiveTutorSession';
-import { tutorAPI } from '@/features/ai-tutor/api/tutor';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import { useActiveTutorSession } from "../useActiveTutorSession";
+import { tutorAPI } from "@/features/ai-tutor/api/tutor";
 
-vi.mock('@/features/ai-tutor/api/tutor', () => ({
+vi.mock("@/features/ai-tutor/api/tutor", () => ({
   tutorAPI: { getActiveSession: vi.fn() },
 }));
 
 const mockedGet = tutorAPI.getActiveSession as ReturnType<typeof vi.fn>;
 
-describe('useActiveTutorSession', () => {
+describe("useActiveTutorSession", () => {
   beforeEach(() => {
     mockedGet.mockReset();
   });
 
-  it('starts in loading state, then resolves to data', async () => {
+  it("starts in loading state, then resolves to data", async () => {
     const session = {
-      session_id: 's1',
-      scenario_slug: 'meeting-someone-new',
-      scenario_title_en: 'Meeting someone new',
-      scenario_title_vi: 'Gặp người mới',
-      last_activity_at: '2026-05-12T12:00:00Z',
+      session_id: "s1",
+      scenario_slug: "meeting-someone-new",
+      scenario_title_en: "Meeting someone new",
+      scenario_title_vi: "Gặp người mới",
+      last_activity_at: "2026-05-12T12:00:00Z",
       tasks_done: 2,
       tasks_total: 4,
     };
@@ -35,7 +35,7 @@ describe('useActiveTutorSession', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('resolves to null when no active session exists', async () => {
+  it("resolves to null when no active session exists", async () => {
     mockedGet.mockResolvedValueOnce(null);
 
     const { result } = renderHook(() => useActiveTutorSession());
@@ -45,8 +45,8 @@ describe('useActiveTutorSession', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('captures error and clears loading', async () => {
-    const err = new Error('boom');
+  it("captures error and clears loading", async () => {
+    const err = new Error("boom");
     mockedGet.mockRejectedValueOnce(err);
 
     const { result } = renderHook(() => useActiveTutorSession());

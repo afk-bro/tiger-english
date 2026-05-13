@@ -48,7 +48,9 @@ export function ScenarioShortcutsRow({ scenarios, isLoading }: Props) {
             key={s.slug}
             className="min-w-[14rem] flex-shrink-0"
             onClick={() =>
-              void reportTutorEvent('home.scenario_shortcut.click', { scenario_slug: s.slug })
+              void reportTutorEvent("home.scenario_shortcut.click", {
+                scenario_slug: s.slug,
+              })
             }
           >
             <ScenarioCard scenario={s} />

@@ -200,21 +200,46 @@ describe("tutorAPI.submitTurn", () => {
 
   it("accepts MIME types with codec parameters, mixed case, and whitespace", async () => {
     // Normalization branch: strips ";codecs=opus", trims, lowercases.
-    fetchMock.mockResolvedValueOnce(jsonResponse(200, {
-      transcript: "ok",
-      evaluation: { kind: "evaluated", task_completed: true, severity: "none", correction: null, should_advance: true, matched_pattern: null },
-      session: { id: "sess-1", scenario_slug: "s", status: "active", current_task_id: null, completed_task_ids: [], mistake_count: 0, xp_awarded: 0, started_at: "", last_activity_at: "", completed_at: null },
-      new_turns: [],
-      current_task_id: null,
-      end_lesson_detected: false,
-      tasks_done: 1,
-      tasks_total: 1,
-    }));
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(200, {
+        transcript: "ok",
+        evaluation: {
+          kind: "evaluated",
+          task_completed: true,
+          severity: "none",
+          correction: null,
+          should_advance: true,
+          matched_pattern: null,
+        },
+        session: {
+          id: "sess-1",
+          scenario_slug: "s",
+          status: "active",
+          current_task_id: null,
+          completed_task_ids: [],
+          mistake_count: 0,
+          xp_awarded: 0,
+          started_at: "",
+          last_activity_at: "",
+          completed_at: null,
+        },
+        new_turns: [],
+        current_task_id: null,
+        end_lesson_detected: false,
+        tasks_done: 1,
+        tasks_total: 1,
+      }),
+    );
     const blob = new Blob(["x"], { type: "audio/webm" });
     const { tutorAPI } = await import("../tutor");
 
     await expect(
-      tutorAPI.submitTurn("sess-1", blob, "  AUDIO/WebM ;codecs=opus", "task-1"),
+      tutorAPI.submitTurn(
+        "sess-1",
+        blob,
+        "  AUDIO/WebM ;codecs=opus",
+        "task-1",
+      ),
     ).resolves.toBeDefined();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -279,7 +304,9 @@ describe("tutorAPI auth", () => {
     mockGetSession.mockResolvedValue({ data: { session: null } });
     const { tutorAPI } = await import("../tutor");
 
-    await expect(tutorAPI.listScenarios()).rejects.toThrow(/not authenticated/i);
+    await expect(tutorAPI.listScenarios()).rejects.toThrow(
+      /not authenticated/i,
+    );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

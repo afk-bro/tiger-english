@@ -1,14 +1,14 @@
-export type SessionStatus = 'active' | 'completed' | 'abandoned';
-export type Severity = 'none' | 'minor' | 'major';
-export type Speaker = 'ai' | 'user';
-export type EvaluationKind = 'evaluated' | 'vi_spoken';
+export type SessionStatus = "active" | "completed" | "abandoned";
+export type Severity = "none" | "minor" | "major";
+export type Speaker = "ai" | "user";
+export type EvaluationKind = "evaluated" | "vi_spoken";
 
 export interface TutorScenarioSummary {
   slug: string;
   title_en: string;
   title_vi: string;
   level: string;
-  mode: 'course' | 'free_talk';
+  mode: "course" | "free_talk";
   is_free: boolean;
 }
 
@@ -34,7 +34,7 @@ export interface TutorPhrase {
 export interface TutorScenarioDetail {
   id: string;
   slug: string;
-  mode: 'course' | 'free_talk';
+  mode: "course" | "free_talk";
   level: string;
   title_en: string;
   title_vi: string;
@@ -93,7 +93,7 @@ export interface TutorSessionDTO {
 
 export interface StartSessionResponse {
   session_id: string;
-  status: 'active';
+  status: "active";
   current_task_id: string;
   opening_turn: TutorTurnDTO;
 }
@@ -116,14 +116,14 @@ export interface FinishResponse {
 }
 
 export type FrontendEventType =
-  | 'mic.denied'
-  | 'audio.fallback'
-  | 'turn.failed.network'
-  | 'unsupported_browser'
-  | 'home.hero.click'
-  | 'home.scenario_shortcut.click'
-  | 'home.review.click'
-  | 'home.tutor_hero.active_session_fetch_failed';
+  | "mic.denied"
+  | "audio.fallback"
+  | "turn.failed.network"
+  | "unsupported_browser"
+  | "home.hero.click"
+  | "home.scenario_shortcut.click"
+  | "home.review.click"
+  | "home.tutor_hero.active_session_fetch_failed";
 
 export interface ActiveTutorSessionDTO {
   session_id: string;

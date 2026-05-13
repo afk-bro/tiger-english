@@ -55,8 +55,8 @@ export function TutorHeroCard({
         <button
           data-testid="tutor-hero-cta"
           onClick={() => {
-            void reportTutorEvent('home.hero.click', {
-              state: 'active',
+            void reportTutorEvent("home.hero.click", {
+              state: "active",
               scenario_slug: activeSession.scenario_slug,
               session_id: activeSession.session_id,
             });
@@ -88,8 +88,8 @@ export function TutorHeroCard({
         <button
           data-testid="tutor-hero-cta"
           onClick={() => {
-            void reportTutorEvent('home.hero.click', {
-              state: 'featured',
+            void reportTutorEvent("home.hero.click", {
+              state: "featured",
               scenario_slug: featuredScenario.slug,
             });
             navigate(`/ai-tutor/scenarios/${featuredScenario.slug}/briefing`);
@@ -113,7 +113,7 @@ export function TutorHeroCard({
       <button
         data-testid="tutor-hero-cta"
         onClick={() => {
-          void reportTutorEvent('home.hero.click', { state: 'cold' });
+          void reportTutorEvent("home.hero.click", { state: "cold" });
           navigate("/ai-tutor");
         }}
         className="self-start px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium"

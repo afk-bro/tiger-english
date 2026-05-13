@@ -16,13 +16,16 @@ export default function AuthHome() {
 }
 
 function AuthHomeTutorFirst() {
-  const { data: activeSession, isLoading: activeLoading, error: activeError } =
-    useActiveTutorSession();
+  const {
+    data: activeSession,
+    isLoading: activeLoading,
+    error: activeError,
+  } = useActiveTutorSession();
   const { data: scenarios, isLoading: listLoading } = useScenariosList();
 
   useEffect(() => {
     if (activeError) {
-      void reportTutorEvent('home.tutor_hero.active_session_fetch_failed');
+      void reportTutorEvent("home.tutor_hero.active_session_fetch_failed");
     }
   }, [activeError]);
 
