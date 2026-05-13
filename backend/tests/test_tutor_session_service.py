@@ -777,6 +777,83 @@ def test_abandon_session_calls_rpc(mock_supabase, sample_user_id):
     }
 
 
+def test_get_active_session_returns_none_when_no_active(mock_supabase, sample_user_id):
+    """Service returns None when the user has no active sessions."""
+    from app.services.tutor_session_service import TutorSessionService
+
+    # Configure the sessions table to return an empty list.
+    sessions_mock = MagicMock()
+    sessions_mock.select.return_value = sessions_mock
+    sessions_mock.eq.return_value = sessions_mock
+    sessions_mock.order.return_value = sessions_mock
+    sessions_mock.limit.return_value = sessions_mock
+    sessions_mock.execute.return_value.data = []
+
+    mock_supabase.table.side_effect = lambda name: {
+        "ai_tutor_sessions": sessions_mock,
+    }[name]
+
+    service = TutorSessionService(mock_supabase)
+    result = service.get_active_session(sample_user_id)
+
+    assert result is None
+
+
+def test_get_active_session_returns_latest_across_scenarios(mock_supabase, sample_user_id):
+    """When an active session exists, return its compact projection."""
+    from app.services.tutor_session_service import TutorSessionService
+
+    scenario_id = "11111111-1111-1111-1111-111111111111"
+    session_row = {
+        "id": "22222222-2222-2222-2222-222222222222",
+        "scenario_id": scenario_id,
+        "completed_task_ids": ["t1", "t2"],
+        "last_activity_at": "2026-05-12T12:00:00Z",
+        "started_at": "2026-05-12T11:00:00Z",
+    }
+    scenario_row = {
+        "slug": "meeting-someone-new",
+        "title_en": "Meeting someone new",
+        "title_vi": "Gặp người mới",
+    }
+
+    sessions_mock = MagicMock()
+    sessions_mock.select.return_value = sessions_mock
+    sessions_mock.eq.return_value = sessions_mock
+    sessions_mock.order.return_value = sessions_mock
+    sessions_mock.limit.return_value = sessions_mock
+    sessions_mock.execute.return_value.data = [session_row]
+
+    scenarios_mock = MagicMock()
+    scenarios_mock.select.return_value = scenarios_mock
+    scenarios_mock.eq.return_value = scenarios_mock
+    scenarios_mock.single.return_value = scenarios_mock
+    scenarios_mock.execute.return_value.data = scenario_row
+
+    tasks_mock = MagicMock()
+    tasks_mock.select.return_value = tasks_mock
+    tasks_mock.eq.return_value = tasks_mock
+    tasks_mock.execute.return_value.count = 4
+    tasks_mock.execute.return_value.data = [{"id": f"t{i}"} for i in range(4)]
+
+    mock_supabase.table.side_effect = lambda name: {
+        "ai_tutor_sessions": sessions_mock,
+        "ai_tutor_scenarios": scenarios_mock,
+        "ai_tutor_scenario_tasks": tasks_mock,
+    }[name]
+
+    service = TutorSessionService(mock_supabase)
+    result = service.get_active_session(sample_user_id)
+
+    assert result is not None
+    assert str(result.session_id) == session_row["id"]
+    assert result.scenario_slug == "meeting-someone-new"
+    assert result.scenario_title_en == "Meeting someone new"
+    assert result.scenario_title_vi == "Gặp người mới"
+    assert result.tasks_done == 2
+    assert result.tasks_total == 4
+
+
 def test_abandon_session_silent_on_already_abandoned(mock_supabase, sample_user_id):
     """Already-terminal session → no raise. We mirror the RPC's idempotency.
 
