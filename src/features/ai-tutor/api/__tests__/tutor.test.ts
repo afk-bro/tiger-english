@@ -164,6 +164,61 @@ describe("tutorAPI.submitTurn", () => {
     expect(form.get("current_task_id")).toBe("task-1");
   });
 
+  it("rejects oversize blobs client-side without issuing fetch (413)", async () => {
+    // Allocates a 5 MiB + 1 byte buffer. Cheap (~5 MB heap), tolerable in
+    // jsdom; the alternative would be mocking Blob.size which adds noise.
+    const oversize = new Blob([new Uint8Array(5 * 1024 * 1024 + 1)], {
+      type: "audio/webm",
+    });
+    const { tutorAPI, TutorAPIError } = await import("../tutor");
+
+    const err = await tutorAPI
+      .submitTurn("sess-1", oversize, "audio/webm", "task-1")
+      .catch((e) => e);
+    expect(err).toBeInstanceOf(TutorAPIError);
+    expect(err).toMatchObject({
+      path: "client:submitTurn:invalid_blob",
+      status: 413,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-audio MIME types client-side without issuing fetch (415)", async () => {
+    const blob = new Blob(["x"], { type: "video/mp4" });
+    const { tutorAPI, TutorAPIError } = await import("../tutor");
+
+    const err = await tutorAPI
+      .submitTurn("sess-1", blob, "video/mp4", "task-1")
+      .catch((e) => e);
+    expect(err).toBeInstanceOf(TutorAPIError);
+    expect(err).toMatchObject({
+      path: "client:submitTurn:invalid_blob",
+      status: 415,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts MIME types with codec parameters, mixed case, and whitespace", async () => {
+    // Normalization branch: strips ";codecs=opus", trims, lowercases.
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, {
+      transcript: "ok",
+      evaluation: { kind: "evaluated", task_completed: true, severity: "none", correction: null, should_advance: true, matched_pattern: null },
+      session: { id: "sess-1", scenario_slug: "s", status: "active", current_task_id: null, completed_task_ids: [], mistake_count: 0, xp_awarded: 0, started_at: "", last_activity_at: "", completed_at: null },
+      new_turns: [],
+      current_task_id: null,
+      end_lesson_detected: false,
+      tasks_done: 1,
+      tasks_total: 1,
+    }));
+    const blob = new Blob(["x"], { type: "audio/webm" });
+    const { tutorAPI } = await import("../tutor");
+
+    await expect(
+      tutorAPI.submitTurn("sess-1", blob, "  AUDIO/WebM ;codecs=opus", "task-1"),
+    ).resolves.toBeDefined();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("throws an error containing the diagnostic body when the STT pipeline returns 503", async () => {
     fetchMock.mockResolvedValueOnce(
       jsonResponse(503, { code: "stt_failed", detail: "Whisper unavailable" }),

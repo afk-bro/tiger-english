@@ -32,10 +32,24 @@ import type {
   TutorSessionDTO,
 } from "@/features/ai-tutor/types";
 
+// Client-side guardrails for the multipart audio upload. The backend has its
+// own limits — these are belt-and-suspenders to fail fast on tampered or
+// malformed blobs without burning a round-trip.
+//
+// A 20s WebM/Opus recording at 48 kHz is typically <500 KB, so 5 MiB
+// (5,242,880 bytes) sits comfortably above any legitimate ceiling. The 20s
+// recorder cap lives in `useMicRecorder.ts` as `maxMs` (default 20_000).
+const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
+
 /**
- * Error thrown by the tutor client for any non-2xx response. The status
- * and raw body are preserved so page-level hooks can branch on (e.g.)
- * 503 + body containing "stt_failed".
+ * Error thrown by the tutor client for either:
+ *  - any non-2xx HTTP response (status + raw body from the server), or
+ *  - client-side guardrail rejections in `submitTurn` (no HTTP round-trip;
+ *    status mirrors the would-be server semantics — 413 oversize, 415 bad
+ *    MIME — and `path` is prefixed with `client:` so callers can tell them
+ *    apart from server-origin errors).
+ *
+ * Page-level hooks can branch on (e.g.) 503 + body containing "stt_failed".
  */
 export class TutorAPIError extends Error {
   readonly status: number;
@@ -142,12 +156,36 @@ class TutorAPI {
     });
   }
 
-  submitTurn(
+  async submitTurn(
     sessionId: string,
     audioBlob: Blob,
     mimeType: string,
     currentTaskId: string,
   ): Promise<TurnResponse> {
+    // Client-side validation — reject obviously bad blobs before they
+    // touch the wire. Status codes mirror semantics: 413 (Payload Too Large)
+    // for size, 415 (Unsupported Media Type) for MIME. Both fall through to
+    // the page's existing network-error toast via useTutorSession's catch.
+    // `async` here ensures these throws surface as promise rejections.
+    if (audioBlob.size > MAX_AUDIO_BYTES) {
+      throw new TutorAPIError(
+        "client:submitTurn:invalid_blob",
+        413,
+        `audio blob too large: ${audioBlob.size} > ${MAX_AUDIO_BYTES}`,
+      );
+    }
+    // Normalize MIME before checking: strip codec parameters
+    // (e.g. "audio/webm;codecs=opus"), trim whitespace, lowercase. Some
+    // platforms report "AUDIO/WEBM" or trailing spaces; without
+    // normalization those would falsely reject.
+    const baseMime = mimeType.split(";")[0].trim().toLowerCase();
+    if (!baseMime.startsWith("audio/")) {
+      throw new TutorAPIError(
+        "client:submitTurn:invalid_blob",
+        415,
+        `unsupported mime type: ${mimeType}`,
+      );
+    }
     const form = new FormData();
     form.append("audio", audioBlob, `audio.${mimeTypeToExt(mimeType)}`);
     form.append("current_task_id", currentTaskId);
