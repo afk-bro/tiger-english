@@ -52,6 +52,7 @@ const truthyProfile = {
   last_name: 'User',
   native_language: 'vi' as string | null,
   timezone: null,
+  role: 'user' as const,
 };
 
 const setProfile = (profile: UserStore['profile']) => {

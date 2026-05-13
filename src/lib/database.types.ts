@@ -573,6 +573,7 @@ export type Database = {
           id: string
           last_name: string
           native_language: string | null
+          role: string
           target_cefr_level: string | null
           timezone: string | null
           username: string
@@ -585,6 +586,7 @@ export type Database = {
           id: string
           last_name: string
           native_language?: string | null
+          role?: string
           target_cefr_level?: string | null
           timezone?: string | null
           username: string
@@ -597,6 +599,7 @@ export type Database = {
           id?: string
           last_name?: string
           native_language?: string | null
+          role?: string
           target_cefr_level?: string | null
           timezone?: string | null
           username?: string

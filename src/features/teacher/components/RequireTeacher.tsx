@@ -2,15 +2,16 @@ import { Navigate } from "react-router-dom";
 import { useUserStore } from "@/stores/useUserStore";
 import type { ReactNode } from "react";
 
-type ProfileWithRole = {
-  role?: string | null;
-};
-
 export default function RequireTeacher({ children }: { children: ReactNode }) {
-  const rawProfile = useUserStore((s) => s.profile);
+  const profile = useUserStore((s) => s.profile);
   const sessionLoading = useUserStore((s) => s.sessionLoading);
+  const profileLoading = useUserStore((s) => s.profileLoading);
 
-  if (sessionLoading) {
+  // Hold the spinner while EITHER the session or the profile is still
+  // loading. AppInitializer flips sessionLoading→false before awaiting
+  // fetchProfile() resolves, so without the profileLoading gate the guard
+  // would briefly see a null profile and redirect real teachers to /home.
+  if (sessionLoading || profileLoading) {
     return (
       <div role="status" className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
@@ -18,9 +19,7 @@ export default function RequireTeacher({ children }: { children: ReactNode }) {
     );
   }
 
-  const profile = rawProfile as (typeof rawProfile & ProfileWithRole) | null;
-  const role = profile?.role;
-  const isTeacher = role === "teacher" || role === "admin";
+  const isTeacher = profile?.role === "teacher" || profile?.role === "admin";
 
   if (!isTeacher) {
     return <Navigate to="/home" replace />;
