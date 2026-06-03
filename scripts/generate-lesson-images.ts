@@ -1,7 +1,7 @@
 // scripts/generate-lesson-images.ts
-// Author-time CLI that generates lesson illustrations via Leonardo and writes
-// per-unit sidecar JSON. Reads backend/.env directly via dotenv. Never runs
-// in the browser. See docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md.
+// Author-time CLI that resolves lesson illustrations via Iconify + Pixabay and
+// writes per-unit sidecar JSON. Reads backend/.env directly via dotenv. Never
+// runs in the browser. See docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md.
 
 import { config as loadDotenv } from "dotenv";
 import { readFileSync, writeFileSync, existsSync } from "fs";
@@ -11,7 +11,8 @@ import { createInterface } from "readline";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { computePromptHash, MODEL_ID, IMAGE_DIM } from "./lesson-image-config";
+import { resolveIcon, makeIconifyFetchers } from "./lib/icon-resolver";
+import { resolvePhoto, makePixabayFetchers } from "./lib/photo-resolver";
 import { units } from "../src/features/lessons/data/units";
 import { lookupSection } from "../src/features/lessons/data/sectionRegistry";
 import { lookupExercise } from "../src/features/lessons/data/exerciseRegistry";
@@ -68,7 +69,12 @@ async function confirm(question: string): Promise<boolean> {
   });
 }
 
-type SidecarEntry = { url: string; promptHash: string; model: string; generatedAt: string };
+type SidecarEntry = {
+  url: string;
+  source: "icon" | "photo";
+  ref: string; // icon name (the query that resolved) or photo query
+  generatedAt: string;
+};
 type Sidecar = Record<string, SidecarEntry>;
 
 function readSidecar(unitSlug: string): Sidecar {
@@ -77,97 +83,6 @@ function readSidecar(unitSlug: string): Sidecar {
   return JSON.parse(readFileSync(path, "utf-8")) as Sidecar;
 }
 
-const LEONARDO_BASE = "https://cloud.leonardo.ai/api/rest/v1";
-
-// Universal negative prompt — applied to every generation. Keeps text /
-// captions / writing artifacts out of the output (Leonardo's models
-// will happily inline garbled fake words on books, clocks, signs, etc.
-// without this).
-const NEGATIVE_PROMPT = "text, letters, words, writing, captions, numbers, watermark, signature";
-const HASH_POSTPROCESS = "nobg";
-
-async function leonardoStartGeneration(prompt: string, apiKey: string): Promise<string> {
-  const res = await fetch(`${LEONARDO_BASE}/generations`, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      prompt,
-      negative_prompt: NEGATIVE_PROMPT,
-      modelId: MODEL_ID,
-      width: IMAGE_DIM.width,
-      height: IMAGE_DIM.height,
-      num_images: 1,
-    }),
-  });
-  if (!res.ok) throw new Error(`Leonardo start: ${res.status} ${await res.text()}`);
-  const body = await res.json() as { sdGenerationJob?: { generationId: string } };
-  const id = body.sdGenerationJob?.generationId;
-  if (!id) throw new Error(`Leonardo start: no generationId in response`);
-  return id;
-}
-
-type CompletedGeneration = { url: string; imageId: string };
-
-async function leonardoPoll(id: string, apiKey: string, timeoutMs = 60000): Promise<CompletedGeneration> {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    await new Promise((r) => setTimeout(r, 2000));
-    const res = await fetch(`${LEONARDO_BASE}/generations/${id}`, {
-      headers: { "Authorization": `Bearer ${apiKey}` },
-    });
-    if (!res.ok) throw new Error(`Leonardo poll: ${res.status}`);
-    const body = await res.json() as { generations_by_pk?: { status: string; generated_images: { id: string; url: string }[] } };
-    const gen = body.generations_by_pk;
-    if (gen?.status === "COMPLETE") {
-      const first = gen.generated_images[0];
-      if (!first?.url || !first?.id) throw new Error(`Leonardo poll: no image url/id`);
-      return { url: first.url, imageId: first.id };
-    }
-    if (gen?.status === "FAILED") throw new Error(`Leonardo poll: status FAILED`);
-  }
-  throw new Error(`Leonardo poll: timeout after ${timeoutMs}ms`);
-}
-
-// Background-removal post-processing via Leonardo's /variations/nobg
-// endpoint. Costs ~5 credits per image on top of the ~2 for the
-// original generation, but the resulting RGBA PNG drops the solid
-// backdrop the model would otherwise paint, which makes lesson
-// thumbnails composite cleanly onto any tile color.
-async function leonardoStartNobg(imageId: string, apiKey: string): Promise<string> {
-  const res = await fetch(`${LEONARDO_BASE}/variations/nobg`, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ id: imageId }),
-  });
-  if (!res.ok) throw new Error(`Leonardo nobg start: ${res.status} ${await res.text()}`);
-  const body = await res.json() as { sdNobgJob?: { id: string } };
-  const id = body.sdNobgJob?.id;
-  if (!id) throw new Error(`Leonardo nobg start: no job id in response`);
-  return id;
-}
-
-async function leonardoPollNobg(jobId: string, apiKey: string, timeoutMs = 90000): Promise<string> {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    await new Promise((r) => setTimeout(r, 2000));
-    const res = await fetch(`${LEONARDO_BASE}/variations/${jobId}`, {
-      headers: { "Authorization": `Bearer ${apiKey}` },
-    });
-    if (!res.ok) throw new Error(`Leonardo nobg poll: ${res.status}`);
-    // Response shape:
-    //   { generated_image_variation_generic: [{ url, status, ... }] }
-    const body = await res.json() as {
-      generated_image_variation_generic?: { url: string; status: string }[];
-    };
-    const variation = body.generated_image_variation_generic?.[0];
-    if (variation?.status === "COMPLETE") {
-      if (!variation.url) throw new Error(`Leonardo nobg poll: no url`);
-      return variation.url;
-    }
-    if (variation?.status === "FAILED") throw new Error(`Leonardo nobg poll: status FAILED`);
-  }
-  throw new Error(`Leonardo nobg poll: timeout after ${timeoutMs}ms`);
-}
 
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastErr: unknown;
@@ -212,38 +127,31 @@ async function main() {
   const sidecar = readSidecar(args.unit);
   const toGenerate: Candidate[] = [];
   const skipped: Candidate[] = [];
+  const noQuery: Candidate[] = [];
   for (const cand of candidates) {
-    const hash = computePromptHash(cand.prompt, { negativePrompt: NEGATIVE_PROMPT, postprocess: HASH_POSTPROCESS });
-    const entry = sidecar[cand.id];
-    if (!args.force && entry && entry.promptHash === hash) {
-      skipped.push(cand);
-    } else {
-      toGenerate.push(cand);
-    }
+    if (!cand.query) { noQuery.push(cand); continue; }
+    if (!args.force && sidecar[cand.id]?.url) skipped.push(cand);
+    else toGenerate.push(cand);
   }
 
-  console.log(`[lesson-images] plan: generate=${toGenerate.length} skip=${skipped.length}`);
-  for (const cand of toGenerate) console.log(`  + ${cand.kind} ${cand.id}`);
-  for (const cand of skipped) console.log(`  ↷ ${cand.kind} ${cand.id} (unchanged)`);
+  console.log(`[lesson-images] plan: resolve=${toGenerate.length} skip=${skipped.length} no-query=${noQuery.length}`);
+  for (const c of toGenerate) console.log(`  + ${c.kind} ${c.id}  "${c.query}"`);
+  for (const c of skipped) console.log(`  ↷ ${c.kind} ${c.id} (already resolved)`);
+  for (const c of noQuery) console.log(`  – ${c.kind} ${c.id} SKIPPED (no query)`);
 
   if (args.dryRun) {
     console.log("[lesson-images] DRY RUN — no API calls, no writes. Exiting.");
     return;
   }
 
-  // Only require secrets when actually generating — keeps dry-run usable on
+  // Only require secrets when actually resolving — keeps dry-run usable on
   // machines/CI where these are intentionally absent.
   const env = {
-    leonardoKey: requireEnv("LEONARDO_API_KEY"),
+    pixabayKey: requireEnv("PIXABAY_API_KEY"),
     supabaseUrl: requireEnv("SUPABASE_URL"),
     supabaseSecretKey: requireEnv("SUPABASE_SECRET_KEY"),
   };
-
-  // Per-image cost = generation (~$0.04) + nobg variation (~$0.10).
-  // Real spend may differ; this is just a heads-up before confirm.
-  const costPerImage = 0.14;
-  const estimated = (toGenerate.length * costPerImage).toFixed(2);
-  console.log(`[lesson-images] ${toGenerate.length} images to generate (estimated $${estimated} at $${costPerImage}/image, includes nobg)`);
+  console.log(`[lesson-images] ${toGenerate.length} items to resolve (icons free; Pixabay free tier).`);
 
   if (!args.yes && toGenerate.length > 0) {
     const ok = await confirm("Continue? [y/N] ");
@@ -254,30 +162,25 @@ async function main() {
   }
 
   const supabase = createClient(env.supabaseUrl, env.supabaseSecretKey);
+  const iconFetchers = makeIconifyFetchers();
+  const photoFetchers = makePixabayFetchers(env.pixabayKey);
   const failed: { id: string; error: string }[] = [];
 
   for (const cand of toGenerate) {
     try {
-      // 1. Start generation
-      const id = await withRetry(() => leonardoStartGeneration(cand.prompt, env.leonardoKey));
-      // 2. Poll for the source image (returns url + image id we feed to nobg)
-      const { imageId } = await withRetry(() => leonardoPoll(id, env.leonardoKey));
-      // 3. Strip the background — produces an RGBA PNG.
-      const nobgJobId = await withRetry(() => leonardoStartNobg(imageId, env.leonardoKey));
-      const nobgUrl = await withRetry(() => leonardoPollNobg(nobgJobId, env.leonardoKey));
-      const downloadRes = await fetch(nobgUrl);
-      if (!downloadRes.ok) {
-        throw new Error(`Leonardo CDN download failed: ${downloadRes.status} ${downloadRes.statusText}`);
+      const query = cand.query as string; // toGenerate is filtered to query-bearing
+      const iconBytes = await withRetry(() => resolveIcon(query, iconFetchers));
+      const bytes = iconBytes ?? (await withRetry(() => resolvePhoto(query, photoFetchers)));
+      if (!bytes) {
+        failed.push({ id: cand.id, error: `no icon or photo for "${query}"` });
+        console.error(`✗ ${cand.kind} ${cand.id}: UNRESOLVED "${query}"`);
+        if (args.bail) break;
+        continue;
       }
-      const pngBytes = Buffer.from(await downloadRes.arrayBuffer());
-      const publicUrl = await withRetry(() => uploadToStorage(supabase, args.unit, cand.id, pngBytes));
-      sidecar[cand.id] = {
-        url: publicUrl,
-        promptHash: computePromptHash(cand.prompt, { negativePrompt: NEGATIVE_PROMPT, postprocess: HASH_POSTPROCESS }),
-        model: MODEL_ID,
-        generatedAt: new Date().toISOString(),
-      };
-      console.log(`✓ ${cand.kind} ${cand.id}`);
+      const source: "icon" | "photo" = iconBytes ? "icon" : "photo";
+      const publicUrl = await withRetry(() => uploadToStorage(supabase, args.unit, cand.id, bytes));
+      sidecar[cand.id] = { url: publicUrl, source, ref: query, generatedAt: new Date().toISOString() };
+      console.log(`✓ ${cand.kind} ${cand.id} [${source}] "${query}"`);
     } catch (e) {
       failed.push({ id: cand.id, error: (e as Error).message });
       console.error(`✗ ${cand.kind} ${cand.id}: ${(e as Error).message}`);
