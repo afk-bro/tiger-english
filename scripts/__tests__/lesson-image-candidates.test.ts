@@ -77,7 +77,8 @@ describe("buildCandidates — match exercises", () => {
     expect(bookPair).toMatchObject({ kind: "match-pair", id: "u2-match-book", query: "book" });
     expect(bookPair).not.toHaveProperty("prompt");
 
-    expect(pairCandidates[1].id).toBe("u2-match-pencil");
+    const pencilPair = candidates.find((c) => c.id === "u2-match-pencil");
+    expect(pencilPair).toMatchObject({ kind: "match-pair", id: "u2-match-pencil", query: "pencil" });
   });
 
   it("does not emit pair candidates when the exercise registry has no entry", () => {

@@ -57,9 +57,6 @@ export function buildCandidates(deps: CandidateDeps): Candidate[] {
           // used for function words, abstracts, and items where any
           // generated image is more likely to confuse than help.
           if (item.noImage) continue;
-          // query is always item.word — the clean noun the resolver looks up.
-          // imagePrompt (if present) was the old Leonardo prompt; it is no
-          // longer used here.
           out.push({ kind: "vocab", id: item.id, query: item.word });
         }
       } else if (block.type === "dialogue" && block.imagePrompt) {
