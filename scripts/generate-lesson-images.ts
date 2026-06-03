@@ -83,7 +83,6 @@ function readSidecar(unitSlug: string): Sidecar {
   return JSON.parse(readFileSync(path, "utf-8")) as Sidecar;
 }
 
-
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {
@@ -191,7 +190,7 @@ async function main() {
   const sidecarPath = resolve(REPO_ROOT, `src/features/lessons/data/images/${args.unit}.images.json`);
   writeFileSync(sidecarPath, JSON.stringify(sidecar, null, 2) + "\n");
   console.log(`[lesson-images] Wrote ${sidecarPath}`);
-  console.log(`[lesson-images] generated=${toGenerate.length - failed.length} skipped=${skipped.length} failed=${failed.length}`);
+  console.log(`[lesson-images] resolved=${toGenerate.length - failed.length} skipped=${skipped.length} failed=${failed.length}`);
   if (failed.length > 0 && !args.allowFail) process.exit(1);
 }
 
