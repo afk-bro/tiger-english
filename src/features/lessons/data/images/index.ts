@@ -15,11 +15,7 @@ export type SidecarEntry = {
 
 export type UnitSidecar = Record<string, SidecarEntry>;
 
-// Sidecar JSON on disk may predate the current SidecarEntry shape (e.g.
-// Leonardo-era entries carrying promptHash/model). The runtime only reads
-// `url`, so we narrow through `unknown`; a `--force` regenerate rewrites the
-// files to the current shape.
 export const unitImagesSidecars: Record<string, UnitSidecar> = {
-  "unit-1": unit1 as unknown as UnitSidecar,
-  "unit-2": unit2 as unknown as UnitSidecar,
+  "unit-1": unit1 as UnitSidecar,
+  "unit-2": unit2 as UnitSidecar,
 };
