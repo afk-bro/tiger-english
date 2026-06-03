@@ -46,6 +46,7 @@
     "@anthropic-ai/sdk": "^0.80.0",
     "@eslint/js": "^9.25.0",
     "@playwright/test": "^1.59.1",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.3",
