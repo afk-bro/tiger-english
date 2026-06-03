@@ -19,8 +19,8 @@ describe("resolveIcon", () => {
 
   it("applies the alias map before lookup", async () => {
     const fetchSvg = vi.fn().mockResolvedValue("<svg></svg>");
-    await resolveIcon("world map", { fetchSvg }, () => Buffer.from("x"));
-    expect(fetchSvg).toHaveBeenCalledWith("twemoji", "world-map");
+    await resolveIcon("rubbish bin", { fetchSvg }, () => Buffer.from("x"));
+    expect(fetchSvg).toHaveBeenCalledWith("twemoji", "wastebasket");
   });
 
   it("returns null on a miss (no fetchSvg result)", async () => {

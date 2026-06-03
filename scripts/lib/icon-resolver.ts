@@ -11,7 +11,6 @@ export const ICON_PX = 512;
 // Known vocab-word -> Twemoji-name mismatches. Grow this as the dry-run
 // surfaces UNRESOLVED items that DO have a sensible emoji.
 const ALIASES: Record<string, string> = {
-  "world-map": "world-map",
   bin: "wastebasket",
   "rubbish-bin": "wastebasket",
   rubber: "eraser",
