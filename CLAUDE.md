@@ -186,7 +186,8 @@ SECRET_KEY=
 ALLOWED_ORIGINS=["http://localhost:5173"]
 ENVIRONMENT=development
 ANTHROPIC_API_KEY=    # required for /me/ai-tutor/* and /me/conversations/turn; absent → 503 ai_disabled
-LEONARDO_API_KEY=     # used by scripts/generate-lesson-images.ts via dotenv (not yet read by FastAPI runtime)
+LEONARDO_API_KEY=     # DORMANT — kept for history; the lesson-image pipeline no longer calls Leonardo
+PIXABAY_API_KEY=      # photo fallback for scripts/generate-lesson-images.ts; NEVER read at runtime
 AI_TUTOR_ENABLED=              # master opt-in for ALL AI tutor surfaces — gates both the new /api/v1/me/ai-tutor/sessions/* speech endpoints AND the legacy /me/ai-tutor/{explain,correct,practice,writing-coach} + /me/conversations/turn endpoints. (Pre-existing @property derived from anthropic_api_key was replaced by this explicit flag in feat/ai-tutor-spec1; both ANTHROPIC_API_KEY and this flag must be set to enable conversation/explain.)
 GROQ_API_KEY=                  # required when AI_TUTOR_ENABLED=true and STT_PROVIDER=groq
 GROQ_STT_MODEL=whisper-large-v3 # configurable; swap for whisper-large-v3-turbo etc.
@@ -221,7 +222,11 @@ The app is organized around **Lessons / Practice / Review**:
 
 ## Lesson images
 
-Author-time pipeline that fills `src/features/lessons/data/images/<unit>.images.json` with Leonardo-generated illustrations and uploads them to the public Supabase Storage bucket `lesson-images`. Runtime hydrates `imageUrl` onto items via `lookupSection` / `getUnit`; lesson components branch on the field.
+Author-time pipeline that fills `src/features/lessons/data/images/<unit>.images.json` with icons or photos and uploads them to the public Supabase Storage bucket `lesson-images`. Runtime hydrates `imageUrl` onto items via `lookupSection` / `getUnit`; lesson components branch on the field.
+
+**How the pipeline resolves images:** for each vocab/match-pair word it queries the Iconify API for a matching Twemoji icon and rasterizes it to a 512×512 transparent PNG using `@resvg/resvg-js`. When no icon matches, it falls back to a Pixabay photo search. The resulting PNG is uploaded to `lesson-images` and the sidecar entry records `{ url, source: "icon" | "photo", ref, generatedAt }`. The Supabase secret key (`SUPABASE_SECRET_KEY`) and, for the photo path, `PIXABAY_API_KEY` (from `backend/.env`) are read server-side only by the script — never bundled into the client.
+
+**Twemoji icons are CC-BY 4.0** (© Twitter, Inc. and contributors); Pixabay photos require no attribution.
 
 ```bash
 npm run lesson-images -- --unit unit-2 --dry-run    # plan only
@@ -229,8 +234,6 @@ npm run lesson-images -- --unit unit-2              # execute (asks for confirma
 npm run lesson-images -- --unit unit-2 --force      # regenerate everything (ignore prompt-hash)
 npm run lesson-images -- --unit unit-2 --item <id>  # regenerate one item
 ```
-
-The Leonardo API key (`LEONARDO_API_KEY` in `backend/.env`) and Supabase secret key (`SUPABASE_SECRET_KEY`) are read server-side only by the script — never bundled into the client.
 
 `buildCandidates` (in `scripts/lib/lesson-image-candidates.ts`) enumerates: unit-level, section-level, vocab-list items, dialogue blocks, exercise blocks, and per-pair entries on match exercises (each `MatchExercise.pairs[]` item with an `imagePrompt`). Pair candidates are keyed by `pair.id` in the same flat sidecar keyspace as vocab items, so `hydrateMatchExercise` can look them up at runtime. Match exercises with no sidecar entries fall back to the `fallback` emoji glyph from the pair data.
 
@@ -241,8 +244,8 @@ Image URLs are normally served from `/storage/v1/object/public/` and the `srcSet
 - non-empty `imageAlt` → `alt="<text>"` (informative; described to screen readers)
 Image-prompt exercises ("choose what's in the picture") MUST set `imageAlt` so the question stays answerable for SR users.
 
-Spec: `docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md`.
-Plan: `docs/superpowers/plans/2026-05-02-lesson-image-generation.md`.
+Spec: `docs/superpowers/specs/2026-06-03-lesson-image-icon-photo-sourcing-design.md`.
+Plan: `docs/superpowers/plans/2026-06-03-lesson-images-icon-photo-sourcing.md`.
 
 ## AI Tutor audio
 
