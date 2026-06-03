@@ -4,7 +4,7 @@
 // Lives here (not inside ExerciseBlock.tsx) so non-React callers — most
 // importantly scripts/generate-lesson-images.ts — can enumerate exercise
 // data without pulling in the React tree. The pipeline needs this to
-// emit per-pair Leonardo candidates for `match` exercises, which the
+// emit per-pair image candidates for `match` exercises, which the
 // SectionBlock alone doesn't expose (it only carries `exerciseId`).
 
 import * as unit1Exercises from "./exercises/unit-1";
