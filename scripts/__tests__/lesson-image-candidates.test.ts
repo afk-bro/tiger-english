@@ -1,6 +1,6 @@
 /**
  * Tests for buildCandidates — the enumerator that turns lesson data
- * into a flat list of Leonardo image candidates. Pins the per-pair
+ * into a flat list of image candidates. Pins the per-pair
  * enumeration for match exercises (the primary reason this module
  * exists separate from the script) plus the existing kinds.
  */
@@ -72,10 +72,12 @@ describe("buildCandidates — match exercises", () => {
 
     const pairCandidates = candidates.filter((c) => c.kind === "match-pair");
     expect(pairCandidates).toHaveLength(2);
-    expect(pairCandidates[0].id).toBe("u2-match-book");
-    expect(pairCandidates[0].prompt).toMatch(/^open book illustration, .+isolated/);
+
+    const bookPair = candidates.find((c) => c.id === "u2-match-book");
+    expect(bookPair).toMatchObject({ kind: "match-pair", id: "u2-match-book", query: "book" });
+    expect(bookPair).not.toHaveProperty("prompt");
+
     expect(pairCandidates[1].id).toBe("u2-match-pencil");
-    expect(pairCandidates[1].prompt).toMatch(/^yellow pencil, .+isolated/);
   });
 
   it("does not emit pair candidates when the exercise registry has no entry", () => {
@@ -151,7 +153,6 @@ describe("buildCandidates — match exercises", () => {
     expect(exerciseLevel).toEqual({
       kind: "exercise",
       id: "u2-activities-match-1-block",
-      prompt: "header image for the match exercise",
     });
     // And we still get the per-pair candidates.
     expect(candidates.filter((c) => c.kind === "match-pair")).toHaveLength(2);
@@ -183,7 +184,7 @@ describe("buildCandidates — other kinds (regression for the existing flow)", (
           type: "vocab-list",
           items: [
             { id: "u1-v-hello", word: "hello", translations: {}, imagePrompt: "wave hello" },
-            // No imagePrompt — falls back to templateVocabPrompt(word).
+            // No imagePrompt — query falls back to item.word.
             { id: "u1-v-bye", word: "bye", translations: {} },
           ],
         },
@@ -201,10 +202,9 @@ describe("buildCandidates — other kinds (regression for the existing flow)", (
       "vocab:u1-v-bye",
       "dialogue:u1-d-1",
     ]);
-    // Custom imagePrompt overrides the word but still picks up
-    // OBJECT_STYLE_SUFFIX so all vocab thumbnails share style.
-    expect(candidates.find((c) => c.id === "u1-v-hello")?.prompt).toMatch(/^wave hello, .+isolated/);
-    expect(candidates.find((c) => c.id === "u1-v-bye")?.prompt).toMatch(/^bye, .+isolated/);
+    // Vocab candidates carry query: item.word regardless of imagePrompt.
+    expect(candidates.find((c) => c.id === "u1-v-hello")).toMatchObject({ kind: "vocab", query: "hello" });
+    expect(candidates.find((c) => c.id === "u1-v-bye")).toMatchObject({ kind: "vocab", query: "bye" });
   });
 });
 
@@ -245,5 +245,8 @@ describe("buildCandidates — vocab item noImage skip", () => {
     const candidates = buildCandidates(deps);
     const ids = candidates.filter((c) => c.kind === "vocab").map((c) => c.id);
     expect(ids).toEqual(["u1-v-pencil"]);
+
+    const pencil = candidates.find((c) => c.id === "u1-v-pencil");
+    expect(pencil).toMatchObject({ kind: "vocab", query: "pencil" });
   });
 });
