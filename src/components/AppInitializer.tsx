@@ -3,6 +3,10 @@ import { useEffect } from "react";
 import { useUserStore } from "@/stores/useUserStore";
 import { supabase } from "@/lib/supabase";
 import { authAPI } from "@/lib/api/auth";
+import {
+  hydrateLessonProgressFromBackend,
+  resetLessonProgress,
+} from "@/features/lessons/useLessonProgressStore";
 
 async function captureTimezoneIfMissing() {
   const { profile, session } = useUserStore.getState();
@@ -37,8 +41,10 @@ export default function AppInitializer() {
       setSession(session);
       if (session) {
         fetchProfile().then(() => captureTimezoneIfMissing());
+        void hydrateLessonProgressFromBackend();
       } else {
         clearProfile();
+        resetLessonProgress();
       }
     });
 
@@ -48,8 +54,10 @@ export default function AppInitializer() {
       setSessionLoading(false);
       if (session) {
         fetchProfile().then(() => captureTimezoneIfMissing());
+        void hydrateLessonProgressFromBackend();
       } else {
         clearProfile();
+        resetLessonProgress();
       }
     }).catch(() => {
       setSessionLoading(false);

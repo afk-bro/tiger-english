@@ -15,6 +15,9 @@ type LessonProgressState = {
   markVisited: (unitSlug: string, sectionKey: SectionKey) => void;
   markCompleted: (unitSlug: string, sectionKey: SectionKey) => void;
   toggleCompleted: (unitSlug: string, sectionKey: SectionKey) => void;
+  hydrateCompletedSections: (
+    sections: Array<{ unitSlug: string; sectionKey: SectionKey }>,
+  ) => void;
   setLastVisited: (unitSlug: string, sectionKey: SectionKey) => void;
   getSectionProgress: (
     unitSlug: string,
@@ -97,6 +100,21 @@ export const useLessonProgressStore = create<LessonProgressState>(
       }
     },
 
+    hydrateCompletedSections: (sections) => {
+      if (sections.length === 0) return;
+      set((state) => {
+        const progress = { ...state.progress };
+        for (const { unitSlug, sectionKey } of sections) {
+          const key = makeKey(unitSlug, sectionKey);
+          const current = progress[key] ?? DEFAULT_PROGRESS;
+          // Only ever sets completed:true — never clobbers visited or an
+          // in-session completion, so a hydrate/interaction race can't lose data.
+          progress[key] = { ...current, completed: true };
+        }
+        return { progress };
+      });
+    },
+
     setLastVisited: (unitSlug, sectionKey) => {
       set((state) => ({
         lastVisitedSectionKey: {
@@ -120,3 +138,37 @@ export const useLessonProgressStore = create<LessonProgressState>(
     },
   }),
 );
+
+/**
+ * Load the user's completed sections from the backend into the store. The
+ * store is otherwise in-memory only, so without this every reload forgets
+ * completion — which means `allCompleted` (and the unit-complete celebration)
+ * could only ever fire transiently within a single uninterrupted session.
+ * Called on auth from AppInitializer, mirroring how the profile is hydrated.
+ *
+ * Fire-and-forget: writes still persist independently, so on failure we
+ * degrade silently and the next load retries.
+ */
+export async function hydrateLessonProgressFromBackend(): Promise<void> {
+  try {
+    const summary = await ProgressAPI.getSummary();
+    if (!summary) return; // no session
+    useLessonProgressStore.getState().hydrateCompletedSections(
+      summary.sections_completed.map((s) => ({
+        unitSlug: s.unit_slug,
+        sectionKey: s.section_key as SectionKey,
+      })),
+    );
+  } catch {
+    // Network/auth error — leave the store as-is; completion simply won't
+    // pre-populate this session.
+  }
+}
+
+/**
+ * Clear all in-memory progress. Called on sign-out so one user's completion
+ * can't leak into the next user's session on a shared browser.
+ */
+export function resetLessonProgress(): void {
+  useLessonProgressStore.setState({ progress: {}, lastVisitedSectionKey: {} });
+}
