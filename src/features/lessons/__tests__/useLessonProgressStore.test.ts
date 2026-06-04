@@ -215,6 +215,44 @@ describe("hydrateLessonProgressFromBackend", () => {
     await expect(hydrateLessonProgressFromBackend()).resolves.toBeUndefined();
     expect(useLessonProgressStore.getState().progress).toEqual({});
   });
+
+  it("discards a result that resolves after a reset (no cross-user leakage)", async () => {
+    // Summary fetch is in-flight when the user signs out.
+    let resolveSummary!: (v: unknown) => void;
+    vi.mocked(ProgressAPI.getSummary).mockReturnValue(
+      new Promise((r) => { resolveSummary = r; }) as never,
+    );
+    const inFlight = hydrateLessonProgressFromBackend();
+
+    // Sign-out happens before the fetch resolves.
+    resetLessonProgress();
+
+    // Now the previous user's summary lands — it must NOT repopulate the store.
+    resolveSummary({
+      sections_completed: [
+        { unit_slug: "unit-1", section_key: "overview", completed_at: "x" },
+      ],
+    });
+    await inFlight;
+
+    expect(useLessonProgressStore.getState().progress).toEqual({});
+  });
+
+  it("ignores section keys that aren't real sections", async () => {
+    vi.mocked(ProgressAPI.getSummary).mockResolvedValue({
+      sections_completed: [
+        { unit_slug: "unit-1", section_key: "overview", completed_at: "x" },
+        { unit_slug: "unit-1", section_key: "bogus-section", completed_at: "x" },
+      ],
+    } as never);
+
+    await hydrateLessonProgressFromBackend();
+
+    const s = useLessonProgressStore.getState();
+    expect(s.getSectionProgress("unit-1", "overview").completed).toBe(true);
+    // The unknown key must not have been written into the store.
+    expect(s.progress["unit-1:bogus-section"]).toBeUndefined();
+  });
 });
 
 describe("resetLessonProgress", () => {

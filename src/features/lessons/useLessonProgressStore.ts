@@ -1,6 +1,7 @@
 // src/features/lessons/useLessonProgressStore.ts
 import { create } from "zustand";
 import { ProgressAPI } from "@/lib/api/progress";
+import { SECTION_ORDER } from "./lesson.types";
 import type { SectionKey, SectionMeta } from "./lesson.types";
 
 export type SectionProgress = {
@@ -139,6 +140,17 @@ export const useLessonProgressStore = create<LessonProgressState>(
   }),
 );
 
+// Monotonic guard so a fire-and-forget hydration can't apply stale data
+// after the session changed. `resetLessonProgress` and each new hydration
+// bump it; a hydration only writes its result if its captured token is
+// still current when the (async) summary fetch resolves. Without this, a
+// sign-out / user-switch that happens mid-fetch would let the previous
+// user's completions repopulate the store after the reset.
+let hydrationToken = 0;
+
+const isKnownSectionKey = (key: string): key is SectionKey =>
+  (SECTION_ORDER as string[]).includes(key);
+
 /**
  * Load the user's completed sections from the backend into the store. The
  * store is otherwise in-memory only, so without this every reload forgets
@@ -150,14 +162,23 @@ export const useLessonProgressStore = create<LessonProgressState>(
  * degrade silently and the next load retries.
  */
 export async function hydrateLessonProgressFromBackend(): Promise<void> {
+  const token = ++hydrationToken;
   try {
     const summary = await ProgressAPI.getSummary();
     if (!summary) return; // no session
+    // Session changed (sign-out / switch / re-hydrate) while we were
+    // fetching — discard so we don't repopulate with stale/other-user data.
+    if (token !== hydrationToken) return;
     useLessonProgressStore.getState().hydrateCompletedSections(
-      summary.sections_completed.map((s) => ({
-        unitSlug: s.unit_slug,
-        sectionKey: s.section_key as SectionKey,
-      })),
+      summary.sections_completed
+        // Validate against the known section keys rather than blind-casting —
+        // an unexpected backend value must not silently land in the store
+        // (and would otherwise hide schema drift from TypeScript).
+        .filter((s) => isKnownSectionKey(s.section_key))
+        .map((s) => ({
+          unitSlug: s.unit_slug,
+          sectionKey: s.section_key as SectionKey,
+        })),
     );
   } catch {
     // Network/auth error — leave the store as-is; completion simply won't
@@ -167,8 +188,10 @@ export async function hydrateLessonProgressFromBackend(): Promise<void> {
 
 /**
  * Clear all in-memory progress. Called on sign-out so one user's completion
- * can't leak into the next user's session on a shared browser.
+ * can't leak into the next user's session on a shared browser. Bumping the
+ * hydration token also cancels any in-flight hydration started before sign-out.
  */
 export function resetLessonProgress(): void {
+  hydrationToken++;
   useLessonProgressStore.setState({ progress: {}, lastVisitedSectionKey: {} });
 }
