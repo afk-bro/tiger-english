@@ -29,6 +29,11 @@ export function makePixabayFetchers(apiKey: string): PhotoFetchers {
       u.searchParams.set("per_page", "3"); // Pixabay minimum is 3
       u.searchParams.set("safesearch", "true");
       const res = await fetch(u);
+      // 429/5xx are transient (Pixabay throttles bursts) — throw so the
+      // caller's withRetry backoff kicks in. Other non-ok = clean miss.
+      if (res.status === 429 || res.status >= 500) {
+        throw new Error(`Pixabay search ${res.status}`);
+      }
       if (!res.ok) return null;
       const json = (await res.json()) as { hits?: { webformatURL?: string }[] };
       return json.hits?.[0]?.webformatURL ?? null;
