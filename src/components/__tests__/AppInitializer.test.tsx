@@ -28,6 +28,15 @@ vi.mock('@/stores/useUserStore', () => ({
   ),
 }));
 
+const { mockHydrateLessonProgress, mockResetLessonProgress } = vi.hoisted(() => ({
+  mockHydrateLessonProgress: vi.fn(),
+  mockResetLessonProgress: vi.fn(),
+}));
+vi.mock('@/features/lessons/useLessonProgressStore', () => ({
+  hydrateLessonProgressFromBackend: mockHydrateLessonProgress,
+  resetLessonProgress: mockResetLessonProgress,
+}));
+
 import AppInitializer from '../AppInitializer';
 
 function setup() {
@@ -160,5 +169,47 @@ describe('AppInitializer', () => {
     });
 
     expect(mockClearProfile).toHaveBeenCalledTimes(1);
+  });
+
+  it('hydrates lesson progress when a session exists on mount', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { user: { id: '1' } } } });
+
+    await act(async () => {
+      render(<AppInitializer />);
+    });
+
+    expect(mockHydrateLessonProgress).toHaveBeenCalledTimes(1);
+    expect(mockResetLessonProgress).not.toHaveBeenCalled();
+  });
+
+  it('resets (not hydrates) lesson progress when no session on mount', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: null } });
+
+    await act(async () => {
+      render(<AppInitializer />);
+    });
+
+    expect(mockHydrateLessonProgress).not.toHaveBeenCalled();
+    expect(mockResetLessonProgress).toHaveBeenCalledTimes(1);
+  });
+
+  it('resets lesson progress on SIGNED_OUT (no leakage between users)', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { user: { id: '1' } } } });
+    let capturedCallback: ((event: string, session: unknown) => void) | null = null;
+    mockOnAuthStateChange.mockImplementation((cb) => {
+      capturedCallback = cb;
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+
+    await act(async () => {
+      render(<AppInitializer />);
+    });
+    mockResetLessonProgress.mockClear();
+
+    await act(async () => {
+      capturedCallback?.('SIGNED_OUT', null);
+    });
+
+    expect(mockResetLessonProgress).toHaveBeenCalledTimes(1);
   });
 });

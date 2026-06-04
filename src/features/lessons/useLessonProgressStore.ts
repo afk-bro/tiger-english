@@ -1,6 +1,7 @@
 // src/features/lessons/useLessonProgressStore.ts
 import { create } from "zustand";
 import { ProgressAPI } from "@/lib/api/progress";
+import { SECTION_ORDER } from "./lesson.types";
 import type { SectionKey, SectionMeta } from "./lesson.types";
 
 export type SectionProgress = {
@@ -15,6 +16,9 @@ type LessonProgressState = {
   markVisited: (unitSlug: string, sectionKey: SectionKey) => void;
   markCompleted: (unitSlug: string, sectionKey: SectionKey) => void;
   toggleCompleted: (unitSlug: string, sectionKey: SectionKey) => void;
+  hydrateCompletedSections: (
+    sections: Array<{ unitSlug: string; sectionKey: SectionKey }>,
+  ) => void;
   setLastVisited: (unitSlug: string, sectionKey: SectionKey) => void;
   getSectionProgress: (
     unitSlug: string,
@@ -97,6 +101,21 @@ export const useLessonProgressStore = create<LessonProgressState>(
       }
     },
 
+    hydrateCompletedSections: (sections) => {
+      if (sections.length === 0) return;
+      set((state) => {
+        const progress = { ...state.progress };
+        for (const { unitSlug, sectionKey } of sections) {
+          const key = makeKey(unitSlug, sectionKey);
+          const current = progress[key] ?? DEFAULT_PROGRESS;
+          // Only ever sets completed:true — never clobbers visited or an
+          // in-session completion, so a hydrate/interaction race can't lose data.
+          progress[key] = { ...current, completed: true };
+        }
+        return { progress };
+      });
+    },
+
     setLastVisited: (unitSlug, sectionKey) => {
       set((state) => ({
         lastVisitedSectionKey: {
@@ -120,3 +139,59 @@ export const useLessonProgressStore = create<LessonProgressState>(
     },
   }),
 );
+
+// Monotonic guard so a fire-and-forget hydration can't apply stale data
+// after the session changed. `resetLessonProgress` and each new hydration
+// bump it; a hydration only writes its result if its captured token is
+// still current when the (async) summary fetch resolves. Without this, a
+// sign-out / user-switch that happens mid-fetch would let the previous
+// user's completions repopulate the store after the reset.
+let hydrationToken = 0;
+
+const isKnownSectionKey = (key: string): key is SectionKey =>
+  (SECTION_ORDER as string[]).includes(key);
+
+/**
+ * Load the user's completed sections from the backend into the store. The
+ * store is otherwise in-memory only, so without this every reload forgets
+ * completion — which means `allCompleted` (and the unit-complete celebration)
+ * could only ever fire transiently within a single uninterrupted session.
+ * Called on auth from AppInitializer, mirroring how the profile is hydrated.
+ *
+ * Fire-and-forget: writes still persist independently, so on failure we
+ * degrade silently and the next load retries.
+ */
+export async function hydrateLessonProgressFromBackend(): Promise<void> {
+  const token = ++hydrationToken;
+  try {
+    const summary = await ProgressAPI.getSummary();
+    if (!summary) return; // no session
+    // Session changed (sign-out / switch / re-hydrate) while we were
+    // fetching — discard so we don't repopulate with stale/other-user data.
+    if (token !== hydrationToken) return;
+    useLessonProgressStore.getState().hydrateCompletedSections(
+      summary.sections_completed
+        // Validate against the known section keys rather than blind-casting —
+        // an unexpected backend value must not silently land in the store
+        // (and would otherwise hide schema drift from TypeScript).
+        .filter((s) => isKnownSectionKey(s.section_key))
+        .map((s) => ({
+          unitSlug: s.unit_slug,
+          sectionKey: s.section_key as SectionKey,
+        })),
+    );
+  } catch {
+    // Network/auth error — leave the store as-is; completion simply won't
+    // pre-populate this session.
+  }
+}
+
+/**
+ * Clear all in-memory progress. Called on sign-out so one user's completion
+ * can't leak into the next user's session on a shared browser. Bumping the
+ * hydration token also cancels any in-flight hydration started before sign-out.
+ */
+export function resetLessonProgress(): void {
+  hydrationToken++;
+  useLessonProgressStore.setState({ progress: {}, lastVisitedSectionKey: {} });
+}
