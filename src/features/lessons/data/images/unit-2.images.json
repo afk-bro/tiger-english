@@ -1,21 +1,21 @@
 {
   "u2-v-board": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-board.png",
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-board.jpg",
     "source": "photo",
-    "ref": "board",
-    "generatedAt": "2026-06-04T00:59:26.374Z"
+    "ref": "https://pixabay.com/get/g39cc25ea97d0476b2e4997cb8d14200a4d3aca15090e443ce83555e427b82f05aed3e95328c7383bae8eac6f52016e9563687311ff2d5ef41abc5ab8b9ae44fc_640.jpg",
+    "generatedAt": "2026-06-04T08:41:06.970Z"
   },
   "u2-v-book": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-book.png",
     "source": "icon",
-    "ref": "book",
-    "generatedAt": "2026-06-04T01:02:54.976Z"
+    "ref": "blue-book",
+    "generatedAt": "2026-06-04T08:41:08.058Z"
   },
   "u2-v-bookshelf": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-bookshelf.png",
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-bookshelf.jpg",
     "source": "photo",
-    "ref": "bookshelf",
-    "generatedAt": "2026-06-04T01:02:57.240Z"
+    "ref": "https://pixabay.com/get/g1403d99abaf3407259bf9f55de05ec3e90ec0c365741d2f2a0e5c04810ad86a53bcaa205ed3bba85b8707291ed60ca70bcfec7e308bf9f722fbe2cccf33ef0a4_640.jpg",
+    "generatedAt": "2026-06-04T08:45:13.715Z"
   },
   "u2-v-bulletin-board": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-bulletin-board.png",
@@ -27,96 +27,96 @@
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-chair.png",
     "source": "icon",
     "ref": "chair",
-    "generatedAt": "2026-06-04T01:03:00.964Z"
+    "generatedAt": "2026-06-04T08:41:20.145Z"
   },
   "u2-v-clock": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-clock.png",
     "source": "icon",
-    "ref": "clock",
-    "generatedAt": "2026-06-04T01:03:02.243Z"
+    "ref": "alarm-clock",
+    "generatedAt": "2026-06-04T08:41:21.382Z"
   },
   "u2-v-computer": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-computer.png",
     "source": "icon",
-    "ref": "computer",
-    "generatedAt": "2026-06-04T01:03:02.967Z"
+    "ref": "desktop-computer",
+    "generatedAt": "2026-06-04T08:41:22.001Z"
   },
   "u2-v-desk": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-desk.png",
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-desk.jpg",
     "source": "photo",
-    "ref": "desk",
-    "generatedAt": "2026-06-04T01:07:15.341Z"
+    "ref": "https://pixabay.com/get/gbd509a918f0fbccefe5477774dc8ae21041eab278a6e175fa870e9455e3490cf144ff109414598306708eb180f3e4ec2cf36f750bee3236c541c1a59d736a6de_640.jpg",
+    "generatedAt": "2026-06-04T08:38:15.551Z"
   },
   "u2-v-dictionary": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-dictionary.png",
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-dictionary.jpg",
     "source": "photo",
-    "ref": "dictionary",
-    "generatedAt": "2026-06-04T01:03:10.747Z"
+    "ref": "https://pixabay.com/get/g79b6191816a35b7bb6a9ae7f2c6f5b68a24d9e2dc10148513ddcc22b362fb8cff3ed52249db075a1163e24a505cd4e38bd2bdffb10fb2ebb89e43796ea00f094_640.jpg",
+    "generatedAt": "2026-06-04T08:41:34.588Z"
   },
   "u2-v-globe": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-globe.png",
     "source": "icon",
-    "ref": "globe",
-    "generatedAt": "2026-06-04T01:03:11.832Z"
+    "ref": "globe-with-meridians",
+    "generatedAt": "2026-06-04T08:41:35.591Z"
   },
   "u2-v-map": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-map.png",
     "source": "icon",
-    "ref": "map",
-    "generatedAt": "2026-06-04T01:03:13.123Z"
+    "ref": "world-map",
+    "generatedAt": "2026-06-04T08:41:37.068Z"
   },
   "u2-v-notebook": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-notebook.png",
     "source": "icon",
     "ref": "notebook",
-    "generatedAt": "2026-06-04T01:03:14.562Z"
+    "generatedAt": "2026-06-04T08:41:38.394Z"
   },
   "u2-v-pen": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-pen.png",
     "source": "icon",
     "ref": "pen",
-    "generatedAt": "2026-06-04T01:03:16.015Z"
+    "generatedAt": "2026-06-04T08:41:39.849Z"
   },
   "u2-v-pencil": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-pencil.png",
     "source": "icon",
     "ref": "pencil",
-    "generatedAt": "2026-06-04T01:03:17.357Z"
+    "generatedAt": "2026-06-04T08:41:41.291Z"
   },
   "u2-v-ruler": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-ruler.png",
     "source": "icon",
-    "ref": "ruler",
-    "generatedAt": "2026-06-04T01:03:18.800Z"
+    "ref": "straight-ruler",
+    "generatedAt": "2026-06-04T08:41:42.570Z"
   },
   "u2-v-table": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-table.png",
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-table.jpg",
     "source": "photo",
-    "ref": "table",
-    "generatedAt": "2026-06-04T01:03:23.026Z"
+    "ref": "https://pixabay.com/get/g2204e3e78f1e65bcc2a2e92d3c4627c97254c6e1a4ea42fe73b7b907a6e6e8ef1495d288fcb5df909ce4f633242d9b0a9f833e72d79db2d5dd9fd2f4f86c639f_640.jpg",
+    "generatedAt": "2026-06-04T08:46:14.092Z"
   },
   "u2-match-book": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-book.png",
     "source": "icon",
-    "ref": "book",
-    "generatedAt": "2026-06-04T01:03:24.056Z"
+    "ref": "blue-book",
+    "generatedAt": "2026-06-04T08:41:48.704Z"
   },
   "u2-match-pencil": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-pencil.png",
     "source": "icon",
     "ref": "pencil",
-    "generatedAt": "2026-06-04T01:03:25.400Z"
+    "generatedAt": "2026-06-04T08:41:49.972Z"
   },
   "u2-match-chair": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-chair.png",
     "source": "icon",
     "ref": "chair",
-    "generatedAt": "2026-06-04T01:03:26.933Z"
+    "generatedAt": "2026-06-04T08:41:51.350Z"
   },
   "u2-match-clock": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-clock.png",
     "source": "icon",
-    "ref": "clock",
-    "generatedAt": "2026-06-04T01:03:28.281Z"
+    "ref": "alarm-clock",
+    "generatedAt": "2026-06-04T08:41:52.846Z"
   }
 }

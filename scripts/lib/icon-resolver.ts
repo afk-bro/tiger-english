@@ -62,11 +62,16 @@ export function iconNameMatchesQuery(query: string, iconName: string): boolean {
     .every((word) => nameTokens.has(word));
 }
 
+/** Resolved icon: the rasterized PNG bytes plus the actual Twemoji name that
+ *  was used (recorded as sidecar `ref` — may differ from the query, e.g.
+ *  "book" → "closed-book"). */
+export type IconResult = { bytes: Buffer; ref: string };
+
 export async function resolveIcon(
   query: string,
   fetchers: IconFetchers,
   rasterize: (svg: string) => Buffer = rasterizeSvg,
-): Promise<Buffer | null> {
+): Promise<IconResult | null> {
   const norm = normalizeIconQuery(query);
   if (FORCE_PHOTO.has(norm)) return null;
 
@@ -81,7 +86,7 @@ export async function resolveIcon(
 
   const svg = await fetchers.fetchSvg(ICON_SET, name);
   if (!svg) return null;
-  return rasterize(svg);
+  return { bytes: rasterize(svg), ref: name };
 }
 
 // Real Iconify fetchers. Both throw on 429/5xx so the caller's withRetry

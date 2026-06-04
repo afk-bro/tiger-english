@@ -224,14 +224,14 @@ The app is organized around **Lessons / Practice / Review**:
 
 Author-time pipeline that fills `src/features/lessons/data/images/<unit>.images.json` with icons or photos and uploads them to the public Supabase Storage bucket `lesson-images`. Runtime hydrates `imageUrl` onto items via `lookupSection` / `getUnit`; lesson components branch on the field.
 
-**How the pipeline resolves images:** for each vocab/match-pair word it queries the Iconify API for a matching Twemoji icon and rasterizes it to a 512×512 transparent PNG using `@resvg/resvg-js`. When no icon matches, it falls back to a Pixabay photo search. The resulting PNG is uploaded to `lesson-images` and the sidecar entry records `{ url, source: "icon" | "photo", ref, generatedAt }`. The Supabase secret key (`SUPABASE_SECRET_KEY`) and, for the photo path, `PIXABAY_API_KEY` (from `backend/.env`) are read server-side only by the script — never bundled into the client.
+**How the pipeline resolves images:** for each vocab/match-pair word it queries the Iconify API for a matching Twemoji icon and rasterizes it to a 512×512 transparent PNG using `@resvg/resvg-js`. When no icon matches, it falls back to a Pixabay photo search. The result is uploaded to `lesson-images` with the correct content-type/extension (icons as `.png`/`image/png`, photos as `.jpg`/`image/jpeg`) and the sidecar entry records `{ url, source: "icon" | "photo", ref, generatedAt }` — where `ref` is the resolved provenance (the actual Twemoji icon name, e.g. `closed-book`, or the Pixabay photo URL), not the bare query. The Supabase secret key (`SUPABASE_SECRET_KEY`) and, for the photo path, `PIXABAY_API_KEY` (from `backend/.env`) are read server-side only by the script — never bundled into the client.
 
 **Twemoji icons are CC-BY 4.0** (© Twitter, Inc. and contributors); Pixabay photos require no attribution.
 
 ```bash
 npm run lesson-images -- --unit unit-2 --dry-run    # plan only
 npm run lesson-images -- --unit unit-2              # execute (asks for confirmation)
-npm run lesson-images -- --unit unit-2 --force      # regenerate everything (ignore prompt-hash)
+npm run lesson-images -- --unit unit-2 --force      # re-resolve + re-upload everything, even items already in the sidecar
 npm run lesson-images -- --unit unit-2 --item <id>  # regenerate one item
 ```
 

@@ -10,13 +10,18 @@ export type PhotoFetchers = {
   download: (url: string) => Promise<Buffer | null>;
 };
 
+/** Resolved photo: the bytes plus the source URL, recorded as sidecar `ref`. */
+export type PhotoResult = { bytes: Buffer; ref: string };
+
 export async function resolvePhoto(
   query: string,
   fetchers: PhotoFetchers,
-): Promise<Buffer | null> {
+): Promise<PhotoResult | null> {
   const url = await fetchers.search(query);
   if (!url) return null;
-  return fetchers.download(url);
+  const bytes = await fetchers.download(url);
+  if (!bytes) return null;
+  return { bytes, ref: url };
 }
 
 export function makePixabayFetchers(
@@ -43,6 +48,11 @@ export function makePixabayFetchers(
     },
     download: async (url) => {
       const res = await fetchImpl(url);
+      // Mirror search: a throttled/transient download should be retried by
+      // the caller's withRetry, not treated as a permanent miss.
+      if (res.status === 429 || res.status >= 500) {
+        throw new Error(`Pixabay download ${res.status}`);
+      }
       if (!res.ok) return null;
       return Buffer.from(await res.arrayBuffer());
     },

@@ -29,7 +29,9 @@ describe("resolveIcon", () => {
     expect(searchName).toHaveBeenCalledWith("twemoji", "book");
     expect(fetchSvg).toHaveBeenCalledWith("twemoji", "closed-book");
     expect(rasterize).toHaveBeenCalledWith("<svg></svg>");
-    expect(out?.toString()).toBe("PNG");
+    expect(out?.bytes.toString()).toBe("PNG");
+    // ref records the *resolved* name, not the query.
+    expect(out?.ref).toBe("closed-book");
   });
 
   it("applies the alias override and skips search entirely", async () => {

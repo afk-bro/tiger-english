@@ -511,6 +511,7 @@
       "collapse_sidebar": "ย่อแถบด้านข้าง"
     },
     "footer": "© {{year}} Tiger English — สงวนลิขสิทธิ์",
+    "footer_attribution": "Emoji artwork by Twemoji (© Twitter, Inc. and contributors, licensed CC-BY 4.0).",
     "coming_soon": "เร็วๆ นี้",
     "sidebar": {
       "title": "Tiger English",

@@ -1,7 +1,7 @@
 # Lesson Image Sourcing: Icons + Photo Fallback (replacing Leonardo)
 
 **Date:** 2026-06-03
-**Status:** Design — pending implementation
+**Status:** Implemented (PR #159)
 **Supersedes the image *source*** of `docs/superpowers/specs/2026-05-02-lesson-image-generation-design.md` (candidate enumeration, sidecar, upload, and runtime hydration from that spec are retained).
 
 ## Problem

@@ -96,12 +96,19 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   throw lastErr;
 }
 
-async function uploadToStorage(supabase: SupabaseClient, unitSlug: string, key: string, bytes: Buffer): Promise<string> {
+async function uploadToStorage(
+  supabase: SupabaseClient,
+  unitSlug: string,
+  key: string,
+  bytes: Buffer,
+  contentType: string,
+  ext: string,
+): Promise<string> {
   // Object names can include only [a-zA-Z0-9_\-./]; sidecar keys may contain ":".
   const safeKey = key.replace(/[^a-zA-Z0-9_-]/g, "_");
-  const path = `${unitSlug}/${safeKey}.png`;
+  const path = `${unitSlug}/${safeKey}.${ext}`;
   const { error } = await supabase.storage.from("lesson-images").upload(path, bytes, {
-    contentType: "image/png",
+    contentType,
     upsert: true,
   });
   if (error) throw error;
@@ -173,18 +180,33 @@ async function main() {
   for (const cand of toGenerate) {
     try {
       const query = cand.query as string; // toGenerate is filtered to query-bearing
-      const iconBytes = await withRetry(() => resolveIcon(query, iconFetchers));
-      const bytes = iconBytes ?? (await withRetry(() => resolvePhoto(query, photoFetchers)));
-      if (!bytes) {
+      const icon = await withRetry(() => resolveIcon(query, iconFetchers));
+      // Icons rasterize to PNG; Pixabay photos are JPEG. Carry the right
+      // content-type/extension so the stored object isn't mislabeled, and
+      // record the *resolved* ref (icon name / photo URL), not the query.
+      const resolved = icon
+        ? { ...icon, source: "icon" as const, contentType: "image/png", ext: "png" }
+        : await withRetry(() => resolvePhoto(query, photoFetchers)).then((photo) =>
+            photo
+              ? { ...photo, source: "photo" as const, contentType: "image/jpeg", ext: "jpg" }
+              : null,
+          );
+      if (!resolved) {
         failed.push({ id: cand.id, error: `no icon or photo for "${query}"` });
         console.error(`✗ ${cand.kind} ${cand.id}: UNRESOLVED "${query}"`);
         if (args.bail) break;
         continue;
       }
-      const source: "icon" | "photo" = iconBytes ? "icon" : "photo";
-      const publicUrl = await withRetry(() => uploadToStorage(supabase, args.unit, cand.id, bytes));
-      sidecar[cand.id] = { url: publicUrl, source, ref: query, generatedAt: new Date().toISOString() };
-      console.log(`✓ ${cand.kind} ${cand.id} [${source}] "${query}"`);
+      const publicUrl = await withRetry(() =>
+        uploadToStorage(supabase, args.unit, cand.id, resolved.bytes, resolved.contentType, resolved.ext),
+      );
+      sidecar[cand.id] = {
+        url: publicUrl,
+        source: resolved.source,
+        ref: resolved.ref,
+        generatedAt: new Date().toISOString(),
+      };
+      console.log(`✓ ${cand.kind} ${cand.id} [${resolved.source}] "${query}" → ${resolved.ref}`);
     } catch (e) {
       failed.push({ id: cand.id, error: (e as Error).message });
       console.error(`✗ ${cand.kind} ${cand.id}: ${(e as Error).message}`);
