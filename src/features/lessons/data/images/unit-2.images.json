@@ -1,1 +1,122 @@
-{}
+{
+  "u2-v-board": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-board.png",
+    "source": "photo",
+    "ref": "board",
+    "generatedAt": "2026-06-04T00:59:26.374Z"
+  },
+  "u2-v-book": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-book.png",
+    "source": "icon",
+    "ref": "book",
+    "generatedAt": "2026-06-04T01:02:54.976Z"
+  },
+  "u2-v-bookshelf": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-bookshelf.png",
+    "source": "photo",
+    "ref": "bookshelf",
+    "generatedAt": "2026-06-04T01:02:57.240Z"
+  },
+  "u2-v-bulletin-board": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-bulletin-board.png",
+    "source": "photo",
+    "ref": "bulletin board",
+    "generatedAt": "2026-06-04T01:02:59.901Z"
+  },
+  "u2-v-chair": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-chair.png",
+    "source": "icon",
+    "ref": "chair",
+    "generatedAt": "2026-06-04T01:03:00.964Z"
+  },
+  "u2-v-clock": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-clock.png",
+    "source": "icon",
+    "ref": "clock",
+    "generatedAt": "2026-06-04T01:03:02.243Z"
+  },
+  "u2-v-computer": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-computer.png",
+    "source": "icon",
+    "ref": "computer",
+    "generatedAt": "2026-06-04T01:03:02.967Z"
+  },
+  "u2-v-desk": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-desk.png",
+    "source": "photo",
+    "ref": "desk",
+    "generatedAt": "2026-06-04T01:07:15.341Z"
+  },
+  "u2-v-dictionary": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-dictionary.png",
+    "source": "photo",
+    "ref": "dictionary",
+    "generatedAt": "2026-06-04T01:03:10.747Z"
+  },
+  "u2-v-globe": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-globe.png",
+    "source": "icon",
+    "ref": "globe",
+    "generatedAt": "2026-06-04T01:03:11.832Z"
+  },
+  "u2-v-map": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-map.png",
+    "source": "icon",
+    "ref": "map",
+    "generatedAt": "2026-06-04T01:03:13.123Z"
+  },
+  "u2-v-notebook": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-notebook.png",
+    "source": "icon",
+    "ref": "notebook",
+    "generatedAt": "2026-06-04T01:03:14.562Z"
+  },
+  "u2-v-pen": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-pen.png",
+    "source": "icon",
+    "ref": "pen",
+    "generatedAt": "2026-06-04T01:03:16.015Z"
+  },
+  "u2-v-pencil": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-pencil.png",
+    "source": "icon",
+    "ref": "pencil",
+    "generatedAt": "2026-06-04T01:03:17.357Z"
+  },
+  "u2-v-ruler": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-ruler.png",
+    "source": "icon",
+    "ref": "ruler",
+    "generatedAt": "2026-06-04T01:03:18.800Z"
+  },
+  "u2-v-table": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-table.png",
+    "source": "photo",
+    "ref": "table",
+    "generatedAt": "2026-06-04T01:03:23.026Z"
+  },
+  "u2-match-book": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-book.png",
+    "source": "icon",
+    "ref": "book",
+    "generatedAt": "2026-06-04T01:03:24.056Z"
+  },
+  "u2-match-pencil": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-pencil.png",
+    "source": "icon",
+    "ref": "pencil",
+    "generatedAt": "2026-06-04T01:03:25.400Z"
+  },
+  "u2-match-chair": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-chair.png",
+    "source": "icon",
+    "ref": "chair",
+    "generatedAt": "2026-06-04T01:03:26.933Z"
+  },
+  "u2-match-clock": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-clock.png",
+    "source": "icon",
+    "ref": "clock",
+    "generatedAt": "2026-06-04T01:03:28.281Z"
+  }
+}
