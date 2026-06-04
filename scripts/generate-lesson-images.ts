@@ -13,6 +13,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { resolveIcon, makeIconifyFetchers } from "./lib/icon-resolver";
 import { resolvePhoto, makePixabayFetchers } from "./lib/photo-resolver";
+import { createRateLimitedFetch } from "./lib/throttle";
 import { units } from "../src/features/lessons/data/units";
 import { lookupSection } from "../src/features/lessons/data/sectionRegistry";
 import { lookupExercise } from "../src/features/lessons/data/exerciseRegistry";
@@ -161,8 +162,12 @@ async function main() {
   }
 
   const supabase = createClient(env.supabaseUrl, env.supabaseSecretKey);
-  const iconFetchers = makeIconifyFetchers();
-  const photoFetchers = makePixabayFetchers(env.pixabayKey);
+  // One shared rate-limited fetch across both providers keeps the COMBINED
+  // outbound request rate under the tightest provider budget (Pixabay:
+  // 100 req / 60s → 600ms min interval; 700ms gives headroom).
+  const rateLimitedFetch = createRateLimitedFetch(700);
+  const iconFetchers = makeIconifyFetchers(rateLimitedFetch);
+  const photoFetchers = makePixabayFetchers(env.pixabayKey, rateLimitedFetch);
   const failed: { id: string; error: string }[] = [];
 
   for (const cand of toGenerate) {

@@ -1,5 +1,17 @@
 import { describe, it, expect, vi } from "vitest";
-import { resolveIcon, normalizeIconQuery } from "../icon-resolver";
+import { resolveIcon, normalizeIconQuery, iconNameMatchesQuery } from "../icon-resolver";
+
+describe("iconNameMatchesQuery", () => {
+  it("accepts when every query word is a whole token in the icon name", () => {
+    expect(iconNameMatchesQuery("map", "world-map")).toBe(true);
+    expect(iconNameMatchesQuery("ruler", "straight-ruler")).toBe(true);
+    expect(iconNameMatchesQuery("chair", "chair")).toBe(true);
+  });
+  it("rejects substring-only fuzzy matches", () => {
+    expect(iconNameMatchesQuery("table", "potable-water")).toBe(false);
+    expect(iconNameMatchesQuery("desk", "desktop-computer")).toBe(false);
+  });
+});
 
 describe("normalizeIconQuery", () => {
   it("lowercases, trims, strips a leading article, collapses whitespace", () => {
@@ -45,5 +57,31 @@ describe("resolveIcon", () => {
     const out = await resolveIcon("book", { searchName, fetchSvg }, rasterize);
     expect(out).toBeNull();
     expect(rasterize).not.toHaveBeenCalled();
+  });
+
+  it("rejects a fuzzy search hit that fails the guard (falls through to null)", async () => {
+    // "table" -> search returns "potable-water"; guard rejects it.
+    const searchName = vi.fn().mockResolvedValue("potable-water");
+    const fetchSvg = vi.fn();
+    const out = await resolveIcon("table", { searchName, fetchSvg }, () => Buffer.from("x"));
+    expect(out).toBeNull();
+    expect(fetchSvg).not.toHaveBeenCalled();
+  });
+
+  it("skips icon resolution for FORCE_PHOTO words without searching", async () => {
+    const searchName = vi.fn();
+    const fetchSvg = vi.fn();
+    const out = await resolveIcon("board", { searchName, fetchSvg }, () => Buffer.from("x"));
+    expect(out).toBeNull();
+    expect(searchName).not.toHaveBeenCalled();
+  });
+
+  it("trusts an alias even when it would fail the token guard", async () => {
+    // "rubbish bin" -> "wastebasket": no shared token, but the alias is explicit.
+    const searchName = vi.fn();
+    const fetchSvg = vi.fn().mockResolvedValue("<svg></svg>");
+    await resolveIcon("rubbish bin", { searchName, fetchSvg }, () => Buffer.from("x"));
+    expect(searchName).not.toHaveBeenCalled();
+    expect(fetchSvg).toHaveBeenCalledWith("twemoji", "wastebasket");
   });
 });

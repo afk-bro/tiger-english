@@ -19,7 +19,10 @@ export async function resolvePhoto(
   return fetchers.download(url);
 }
 
-export function makePixabayFetchers(apiKey: string): PhotoFetchers {
+export function makePixabayFetchers(
+  apiKey: string,
+  fetchImpl: typeof fetch = fetch,
+): PhotoFetchers {
   return {
     search: async (query) => {
       const u = new URL("https://pixabay.com/api/");
@@ -28,7 +31,7 @@ export function makePixabayFetchers(apiKey: string): PhotoFetchers {
       u.searchParams.set("image_type", "photo");
       u.searchParams.set("per_page", "3"); // Pixabay minimum is 3
       u.searchParams.set("safesearch", "true");
-      const res = await fetch(u);
+      const res = await fetchImpl(u);
       // 429/5xx are transient (Pixabay throttles bursts) — throw so the
       // caller's withRetry backoff kicks in. Other non-ok = clean miss.
       if (res.status === 429 || res.status >= 500) {
@@ -39,7 +42,7 @@ export function makePixabayFetchers(apiKey: string): PhotoFetchers {
       return json.hits?.[0]?.webformatURL ?? null;
     },
     download: async (url) => {
-      const res = await fetch(url);
+      const res = await fetchImpl(url);
       if (!res.ok) return null;
       return Buffer.from(await res.arrayBuffer());
     },
