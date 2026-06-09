@@ -8,8 +8,8 @@ import unit2 from "./unit-2.images.json";
 
 export type SidecarEntry = {
   url: string;
-  promptHash: string;
-  model: string;
+  source: "icon" | "photo";
+  ref: string;
   generatedAt: string;
 };
 

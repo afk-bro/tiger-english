@@ -11,11 +11,11 @@ import type { MatchExercise } from "@/components/exercises/exercises.types";
 import type { UnitSidecar } from "../data/images";
 
 const sidecarFixture: UnitSidecar = {
-  __unit__: { url: "https://example/unit.png", promptHash: "h1", model: "m", generatedAt: "t" },
-  "__section__:vocabulary": { url: "https://example/sec.png", promptHash: "h2", model: "m", generatedAt: "t" },
-  "u2-v-classroom": { url: "https://example/word.png", promptHash: "h3", model: "m", generatedAt: "t" },
-  "u2-d-1": { url: "https://example/dialogue.png", promptHash: "h4", model: "m", generatedAt: "t" },
-  "u2-ex-1": { url: "https://example/exercise.png", promptHash: "h5", model: "m", generatedAt: "t" },
+  __unit__: { url: "https://example/unit.png", source: "icon", ref: "classroom", generatedAt: "t" },
+  "__section__:vocabulary": { url: "https://example/sec.png", source: "icon", ref: "vocabulary", generatedAt: "t" },
+  "u2-v-classroom": { url: "https://example/word.png", source: "icon", ref: "classroom", generatedAt: "t" },
+  "u2-d-1": { url: "https://example/dialogue.png", source: "photo", ref: "dialogue", generatedAt: "t" },
+  "u2-ex-1": { url: "https://example/exercise.png", source: "photo", ref: "exercise", generatedAt: "t" },
 };
 
 const unit: Unit = {
@@ -127,9 +127,9 @@ describe("hydrateMatchExercise", () => {
 
   it("populates imageUrl on each pair that has a sidecar entry", () => {
     const sidecar: UnitSidecar = {
-      "u2-match-book": { url: "https://example/book.png", promptHash: "h1", model: "m", generatedAt: "t" },
-      "u2-match-pencil": { url: "https://example/pencil.png", promptHash: "h2", model: "m", generatedAt: "t" },
-      "u2-match-chair": { url: "https://example/chair.png", promptHash: "h3", model: "m", generatedAt: "t" },
+      "u2-match-book": { url: "https://example/book.png", source: "icon", ref: "book", generatedAt: "t" },
+      "u2-match-pencil": { url: "https://example/pencil.png", source: "icon", ref: "pencil", generatedAt: "t" },
+      "u2-match-chair": { url: "https://example/chair.png", source: "icon", ref: "chair", generatedAt: "t" },
     };
     const result = hydrateMatchExercise(baseExercise, sidecar);
     expect(result.pairs[0].imageUrl).toBe("https://example/book.png");
@@ -139,7 +139,7 @@ describe("hydrateMatchExercise", () => {
 
   it("leaves pairs without a sidecar entry untouched (fallback path)", () => {
     const sidecar: UnitSidecar = {
-      "u2-match-book": { url: "https://example/book.png", promptHash: "h1", model: "m", generatedAt: "t" },
+      "u2-match-book": { url: "https://example/book.png", source: "icon", ref: "book", generatedAt: "t" },
     };
     const result = hydrateMatchExercise(baseExercise, sidecar);
     expect(result.pairs[0].imageUrl).toBe("https://example/book.png");
@@ -157,7 +157,7 @@ describe("hydrateMatchExercise", () => {
 
   it("does not mutate the input exercise", () => {
     const sidecar: UnitSidecar = {
-      "u2-match-book": { url: "https://example/book.png", promptHash: "h1", model: "m", generatedAt: "t" },
+      "u2-match-book": { url: "https://example/book.png", source: "icon", ref: "book", generatedAt: "t" },
     };
     hydrateMatchExercise(baseExercise, sidecar);
     expect(baseExercise.pairs[0].imageUrl).toBeUndefined();
@@ -167,7 +167,7 @@ describe("hydrateMatchExercise", () => {
     // Sidecar may contain stale entries from a previous shape — the
     // helper should only look at the pair IDs present in the exercise.
     const sidecar: UnitSidecar = {
-      "u2-match-typewriter": { url: "https://example/old.png", promptHash: "h", model: "m", generatedAt: "t" },
+      "u2-match-typewriter": { url: "https://example/old.png", source: "icon", ref: "typewriter", generatedAt: "t" },
     };
     expect(hydrateMatchExercise(baseExercise, sidecar)).toBe(baseExercise);
   });

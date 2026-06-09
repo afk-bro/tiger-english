@@ -42,7 +42,8 @@ export type MatchPair = {
   word: string;
   imageUrl?: string;
   imageAlt?: string;
-  /** Leonardo prompt — read by scripts/generate-lesson-images.ts. */
+  /** Presence signals the lesson-images pipeline to resolve an icon/photo
+   *  for this pair; the search query itself is taken from `word`. */
   imagePrompt?: string;
   /** Visual fallback (emoji or 1–2 char glyph) shown when imageUrl is missing. */
   fallback?: string;

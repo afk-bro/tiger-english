@@ -99,9 +99,8 @@ export type VocabItem = {
   /**
    * Set to true for vocabulary that doesn't depict a clear physical
    * object (function words, abstract concepts, environments, places).
-   * Items marked `noImage` are not enumerated by the lesson-images
-   * pipeline. Saves Leonardo credits AND avoids "guess what an
-   * abstract concept looks like" hallucinations from the model.
+   * Items marked `noImage` are skipped by the lesson-images pipeline —
+   * abstract concepts have no clear icon/photo to resolve.
    */
   noImage?: boolean;
 };

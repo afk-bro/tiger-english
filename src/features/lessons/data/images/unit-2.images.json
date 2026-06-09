@@ -1,122 +1,122 @@
 {
-  "u2-v-pencil": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-pencil.png",
-    "promptHash": "be8789846251df5fc19cba3ba077b5b9047422865a74f8027e3a27884ba21322",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:29:40.462Z"
-  },
   "u2-v-board": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-board.png",
-    "promptHash": "7808b6e648d5ece34eda43b50091b41883c2c0f0cd2edd79e790838f149322e2",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:30:16.535Z"
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-board.jpg",
+    "source": "photo",
+    "ref": "https://pixabay.com/get/g39cc25ea97d0476b2e4997cb8d14200a4d3aca15090e443ce83555e427b82f05aed3e95328c7383bae8eac6f52016e9563687311ff2d5ef41abc5ab8b9ae44fc_640.jpg",
+    "generatedAt": "2026-06-04T08:41:06.970Z"
   },
   "u2-v-book": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-book.png",
-    "promptHash": "dc3e847aa6e224032c0b5a2ada457bca59cd1255c0ba297fe6ca7e12cf6a03d9",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:30:27.898Z"
+    "source": "icon",
+    "ref": "blue-book",
+    "generatedAt": "2026-06-04T08:41:08.058Z"
   },
   "u2-v-bookshelf": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-bookshelf.png",
-    "promptHash": "0a52c6a9b8cee94891733ad5385c0e5b036e0136ca1ad59ad6e7a0b02c2d94c0",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:46:00.408Z"
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-bookshelf.jpg",
+    "source": "photo",
+    "ref": "https://pixabay.com/get/g1403d99abaf3407259bf9f55de05ec3e90ec0c365741d2f2a0e5c04810ad86a53bcaa205ed3bba85b8707291ed60ca70bcfec7e308bf9f722fbe2cccf33ef0a4_640.jpg",
+    "generatedAt": "2026-06-04T08:45:13.715Z"
   },
   "u2-v-bulletin-board": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-bulletin-board.png",
-    "promptHash": "69749262adc1f1299485cf57a9ac5f6e27e6ebd4fef4726f549b4b7c30a2fe55",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:46:26.736Z"
+    "source": "photo",
+    "ref": "bulletin board",
+    "generatedAt": "2026-06-04T01:02:59.901Z"
   },
   "u2-v-chair": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-chair.png",
-    "promptHash": "b1a1e34da2fe8d7303af7a91bd831d681ae54ff7e2806038685a266e4c70a42b",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:31:02.466Z"
+    "source": "icon",
+    "ref": "chair",
+    "generatedAt": "2026-06-04T08:41:20.145Z"
   },
   "u2-v-clock": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-clock.png",
-    "promptHash": "d673cfd2e7236dcf7dd4b200a83e6b74bbb8ed580367d8be5fc42376f211ad6e",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:31:14.849Z"
+    "source": "icon",
+    "ref": "alarm-clock",
+    "generatedAt": "2026-06-04T08:41:21.382Z"
   },
   "u2-v-computer": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-computer.png",
-    "promptHash": "75a7024505d4ded46d27d5498355d86bcc825e83583bc676dffcaf53e0af55eb",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:31:26.141Z"
+    "source": "icon",
+    "ref": "desktop-computer",
+    "generatedAt": "2026-06-04T08:41:22.001Z"
   },
   "u2-v-desk": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-desk.png",
-    "promptHash": "473706fd274cf03a5b7e492d22cedbdfc73266979448b2849622bac7ce3a7d58",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:31:43.146Z"
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-desk.jpg",
+    "source": "photo",
+    "ref": "https://pixabay.com/get/gbd509a918f0fbccefe5477774dc8ae21041eab278a6e175fa870e9455e3490cf144ff109414598306708eb180f3e4ec2cf36f750bee3236c541c1a59d736a6de_640.jpg",
+    "generatedAt": "2026-06-04T08:38:15.551Z"
   },
   "u2-v-dictionary": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-dictionary.png",
-    "promptHash": "e0fc15605ea64a1d88db630317725928bbd1974b9736b22c18ce9c1553b76107",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:31:57.596Z"
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-dictionary.jpg",
+    "source": "photo",
+    "ref": "https://pixabay.com/get/g79b6191816a35b7bb6a9ae7f2c6f5b68a24d9e2dc10148513ddcc22b362fb8cff3ed52249db075a1163e24a505cd4e38bd2bdffb10fb2ebb89e43796ea00f094_640.jpg",
+    "generatedAt": "2026-06-04T08:41:34.588Z"
   },
   "u2-v-globe": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-globe.png",
-    "promptHash": "86209303a7a5d3df701bb2093b4d795dc6d583b68cc0ad5f3f7607cc274417f0",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:32:07.343Z"
+    "source": "icon",
+    "ref": "globe-with-meridians",
+    "generatedAt": "2026-06-04T08:41:35.591Z"
   },
   "u2-v-map": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-map.png",
-    "promptHash": "4be2b544aee76179a461910b1217429564a5e7f836bfffc4ea3ac79fee573218",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:46:40.524Z"
+    "source": "icon",
+    "ref": "world-map",
+    "generatedAt": "2026-06-04T08:41:37.068Z"
   },
   "u2-v-notebook": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-notebook.png",
-    "promptHash": "fa46043eab8d8238e6eaa0deb47ebcdfc1471afa70d9079b414788dce9975f66",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:32:35.614Z"
+    "source": "icon",
+    "ref": "notebook",
+    "generatedAt": "2026-06-04T08:41:38.394Z"
   },
   "u2-v-pen": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-pen.png",
-    "promptHash": "9cb4f5b84306673c9515b96b66a201c18e3dc6289a76e7a95fb1b1402324b7e0",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:46:51.793Z"
+    "source": "icon",
+    "ref": "pen",
+    "generatedAt": "2026-06-04T08:41:39.849Z"
+  },
+  "u2-v-pencil": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-pencil.png",
+    "source": "icon",
+    "ref": "pencil",
+    "generatedAt": "2026-06-04T08:41:41.291Z"
   },
   "u2-v-ruler": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-ruler.png",
-    "promptHash": "902b4c87e7aef1e70eac5cee9caf3114b147002784ba85fb75b89a9d3840a32f",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T11:57:17.630Z"
+    "source": "icon",
+    "ref": "straight-ruler",
+    "generatedAt": "2026-06-04T08:41:42.570Z"
   },
   "u2-v-table": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-table.png",
-    "promptHash": "f700ca524397cbc08b6320c0af49bf21550d7da3cda8c0771aaa4575529279ed",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:33:19.103Z"
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-v-table.jpg",
+    "source": "photo",
+    "ref": "https://pixabay.com/get/g2204e3e78f1e65bcc2a2e92d3c4627c97254c6e1a4ea42fe73b7b907a6e6e8ef1495d288fcb5df909ce4f633242d9b0a9f833e72d79db2d5dd9fd2f4f86c639f_640.jpg",
+    "generatedAt": "2026-06-04T08:46:14.092Z"
   },
   "u2-match-book": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-book.png",
-    "promptHash": "9581b1d2ee2ac834e95ad6bcf50f3b0ed079fa6892ef4343c662cc4bf500ff96",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:33:35.436Z"
-  },
-  "u2-match-chair": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-chair.png",
-    "promptHash": "4ad6b1853541a4c58440d36db7961ade52c585556379a235ca93a9016a55bbaf",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:34:04.852Z"
-  },
-  "u2-match-clock": {
-    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-clock.png",
-    "promptHash": "91fdd9c8b0ddd01f90580f5c448b3be8cfbb398d0ad7d6db383941b9ff72ddf9",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:34:16.129Z"
+    "source": "icon",
+    "ref": "blue-book",
+    "generatedAt": "2026-06-04T08:41:48.704Z"
   },
   "u2-match-pencil": {
     "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-pencil.png",
-    "promptHash": "d64a3f3ae2481d9a6d0924d5655ff00f9a9d3b0fd6d05bf1252a12ea8eda21b2",
-    "model": "1dd50843-d653-4516-a8e3-f0238ee453ff",
-    "generatedAt": "2026-05-08T08:34:34.636Z"
+    "source": "icon",
+    "ref": "pencil",
+    "generatedAt": "2026-06-04T08:41:49.972Z"
+  },
+  "u2-match-chair": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-chair.png",
+    "source": "icon",
+    "ref": "chair",
+    "generatedAt": "2026-06-04T08:41:51.350Z"
+  },
+  "u2-match-clock": {
+    "url": "https://lndqijpppdzjkzvrvymh.supabase.co/storage/v1/object/public/lesson-images/unit-2/u2-match-clock.png",
+    "source": "icon",
+    "ref": "alarm-clock",
+    "generatedAt": "2026-06-04T08:41:52.846Z"
   }
 }

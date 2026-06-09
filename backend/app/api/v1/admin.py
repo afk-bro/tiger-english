@@ -21,11 +21,17 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 def _require_super_admin(user_id: UUID = Depends(get_current_user)) -> UUID:
     """Dependency that gates endpoints to super-admin users only.
 
-    In development mode (no super-admin IDs configured), all authenticated
-    users are treated as super-admin so the dashboard is visible.
+    Fails closed: when no super-admin IDs are configured, access is denied in
+    any environment other than development. Only in development (where the
+    allowlist is intentionally left empty) are authenticated users treated as
+    super-admin so the dashboard is visible without configuring UUIDs.
     """
     admin_ids = settings.super_admin_ids
-    if admin_ids and str(user_id) not in admin_ids:
+    if not admin_ids:
+        if settings.environment != "development":
+            raise HTTPException(status_code=403, detail="Super-admin access required")
+        return user_id
+    if str(user_id) not in admin_ids:
         raise HTTPException(status_code=403, detail="Super-admin access required")
     return user_id
 

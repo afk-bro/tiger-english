@@ -548,6 +548,7 @@
       "collapse_sidebar": "Collapse sidebar"
     },
     "footer": "© {{year}} Tiger English — All rights reserved.",
+    "footer_attribution": "Emoji artwork by Twemoji (© Twitter, Inc. and contributors, licensed CC-BY 4.0).",
     "coming_soon": "coming soon",
     "sidebar": {
       "title": "Tiger English",
